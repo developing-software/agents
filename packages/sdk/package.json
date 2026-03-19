@@ -1,7 +1,7 @@
 {
   "name": "@agents/sdk",
-  "module": "index.ts",
   "type": "module",
+  "module": "index.ts",
   "scripts": {
     "openapi-ts": "openapi-ts"
   },

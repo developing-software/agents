@@ -23,7 +23,7 @@ beforeAll(async () => {
   });
 
   const pat = await Actor.provide("user", { userID, clientID: "test" }, () =>
-    Api.Personal.create()
+    Api.Personal.create(),
   );
   token = pat.token;
 
@@ -39,18 +39,12 @@ beforeAll(async () => {
 afterAll(async () => {
   // Clean up token and user created during setup
   if (tokenID) {
-    await Actor.provide("user", { userID, clientID: "test" }, () =>
-      Api.Personal.remove(tokenID)
-    );
+    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(tokenID));
   }
   // Delete the personal access token used to auth
-  const pat = await Actor.provide("user", { userID, clientID: "test" }, () =>
-    Api.Personal.list()
-  );
+  const pat = await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.list());
   for (const t of pat) {
-    await Actor.provide("user", { userID, clientID: "test" }, () =>
-      Api.Personal.remove(t.id)
-    );
+    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
   }
 });
 

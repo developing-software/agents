@@ -33,7 +33,12 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       if (hostname === "localhost") return true;
       if (hostname.endsWith(".localhost")) return true;
       try {
-        if (await Api.Client.verifyRedirect({ id: input.clientID, redirectURI: url.origin + url.pathname }))
+        if (
+          await Api.Client.verifyRedirect({
+            id: input.clientID,
+            redirectURI: url.origin + url.pathname,
+          })
+        )
           return true;
       } catch (err) {
         console.error("verifyRedirect failed:", err);

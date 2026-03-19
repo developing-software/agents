@@ -1,4 +1,4 @@
-import { bigint, char, json, timestamp as rawTs } from "drizzle-orm/pg-core";
+import { bigint, char, timestamp as rawTs } from "drizzle-orm/pg-core";
 
 export const ulid = (name: string) => char(name, { length: 26 + 4 });
 

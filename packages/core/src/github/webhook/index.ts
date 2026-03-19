@@ -1,4 +1,8 @@
-import { Webhooks, type EmitterWebhookEventName, type EmitterWebhookEvent } from "@octokit/webhooks";
+import {
+  Webhooks,
+  type EmitterWebhookEventName,
+  type EmitterWebhookEvent,
+} from "@octokit/webhooks";
 import { ErrorCodes, VisibleError } from "../../error";
 import { registerHandlers } from "./handlers";
 
@@ -11,7 +15,8 @@ export namespace GitHubWebhook {
   }
 
   function getInstance(): Webhooks {
-    if (!instance) throw new Error("GitHubWebhook not initialized — call GitHubWebhook.init(secret) at startup");
+    if (!instance)
+      throw new Error("GitHubWebhook not initialized — call GitHubWebhook.init(secret) at startup");
     return instance;
   }
 

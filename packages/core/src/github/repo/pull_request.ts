@@ -23,7 +23,12 @@ export namespace GithubPullRequest {
       const existing = await tx
         .select()
         .from(githubPullRequestTable)
-        .where(and(eq(githubPullRequestTable.repoId, input.repoId), eq(githubPullRequestTable.number, input.number)))
+        .where(
+          and(
+            eq(githubPullRequestTable.repoId, input.repoId),
+            eq(githubPullRequestTable.number, input.number),
+          ),
+        )
         .then((rows) => rows[0]);
 
       if (existing) {
@@ -41,7 +46,11 @@ export namespace GithubPullRequest {
         return existing.id;
       }
 
-      log.info("upsert pull_request", { repoId: input.repoId, number: input.number, state: input.state });
+      log.info("upsert pull_request", {
+        repoId: input.repoId,
+        number: input.number,
+        state: input.state,
+      });
       const id = createID("githubPullRequest");
       await tx.insert(githubPullRequestTable).values({
         id,
@@ -61,7 +70,9 @@ export namespace GithubPullRequest {
     return db
       .select()
       .from(githubPullRequestTable)
-      .where(and(eq(githubPullRequestTable.repoId, repoId), eq(githubPullRequestTable.number, number)))
+      .where(
+        and(eq(githubPullRequestTable.repoId, repoId), eq(githubPullRequestTable.number, number)),
+      )
       .then((rows) => rows[0] ?? null);
   }
 }

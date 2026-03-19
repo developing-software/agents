@@ -13,7 +13,12 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
     const owner = account && "login" in account ? account.login : "";
     log.info("installation created", { installationId: payload.installation.id, owner });
     for (const r of payload.repositories ?? []) {
-      await GithubRepo.upsert({ installationId: payload.installation.id, owner, repo: r.name, fullName: r.full_name });
+      await GithubRepo.upsert({
+        installationId: payload.installation.id,
+        owner,
+        repo: r.name,
+        fullName: r.full_name,
+      });
     }
   });
 
@@ -25,14 +30,25 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
   webhook.on("installation_repositories.added", async ({ payload }) => {
     const account = payload.installation.account;
     const owner = account && "login" in account ? account.login : "";
-    log.info("repositories added", { installationId: payload.installation.id, count: payload.repositories_added.length });
+    log.info("repositories added", {
+      installationId: payload.installation.id,
+      count: payload.repositories_added.length,
+    });
     for (const r of payload.repositories_added) {
-      await GithubRepo.upsert({ installationId: payload.installation.id, owner, repo: r.name, fullName: r.full_name });
+      await GithubRepo.upsert({
+        installationId: payload.installation.id,
+        owner,
+        repo: r.name,
+        fullName: r.full_name,
+      });
     }
   });
 
   webhook.on("installation_repositories.removed", async ({ payload }) => {
-    log.info("repositories removed", { installationId: payload.installation.id, count: payload.repositories_removed.length });
+    log.info("repositories removed", {
+      installationId: payload.installation.id,
+      count: payload.repositories_removed.length,
+    });
     for (const r of payload.repositories_removed) {
       await GithubRepo.removeByFullName(r.full_name);
     }
@@ -40,7 +56,11 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
 
   // Issues
   webhook.on("issues", async ({ payload }) => {
-    log.info("issue event", { action: payload.action, repo: payload.repository.full_name, number: payload.issue.number });
+    log.info("issue event", {
+      action: payload.action,
+      repo: payload.repository.full_name,
+      number: payload.issue.number,
+    });
     const repo = await GithubRepo.findByFullName(payload.repository.full_name);
     if (!repo) return;
     await GithubIssue.upsert({
@@ -48,14 +68,20 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
       number: payload.issue.number,
       title: payload.issue.title,
       state: payload.issue.state ?? "",
-      labels: (payload.issue.labels ?? []).map((l) => (l && typeof l === "object" ? (l.name ?? "") : String(l))),
+      labels: (payload.issue.labels ?? []).map((l) =>
+        l && typeof l === "object" ? (l.name ?? "") : String(l),
+      ),
       body: payload.issue.body ?? undefined,
     });
   });
 
   // Pull requests
   webhook.on("pull_request", async ({ payload }) => {
-    log.info("pull_request event", { action: payload.action, repo: payload.repository.full_name, number: payload.pull_request.number });
+    log.info("pull_request event", {
+      action: payload.action,
+      repo: payload.repository.full_name,
+      number: payload.pull_request.number,
+    });
     const repo = await GithubRepo.findByFullName(payload.repository.full_name);
     if (!repo) return;
     await GithubPullRequest.upsert({

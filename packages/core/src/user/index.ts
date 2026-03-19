@@ -38,18 +38,24 @@ export namespace User {
     });
   export type Info = z.infer<typeof Info>;
 
-  export const create = fn(Info.pick({ email: true, username: true, avatarUrl: true }).partial({ username: true, avatarUrl: true }), async (input) => {
-    const id = createID("user");
-    await createTransaction(async (tx) => {
-      await tx.insert(userTable).values({
-        id,
-        email: input.email,
-        username: input.username,
-        avatarUrl: input.avatarUrl,
+  export const create = fn(
+    Info.pick({ email: true, username: true, avatarUrl: true }).partial({
+      username: true,
+      avatarUrl: true,
+    }),
+    async (input) => {
+      const id = createID("user");
+      await createTransaction(async (tx) => {
+        await tx.insert(userTable).values({
+          id,
+          email: input.email,
+          username: input.username,
+          avatarUrl: input.avatarUrl,
+        });
       });
-    });
-    return id;
-  });
+      return id;
+    },
+  );
 
   export const merge = fn(z.string().array(), async (ids) => {
     const primary = ids.shift();

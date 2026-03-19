@@ -22,7 +22,9 @@ export namespace GithubIssue {
       const existing = await tx
         .select()
         .from(githubIssueTable)
-        .where(and(eq(githubIssueTable.repoId, input.repoId), eq(githubIssueTable.number, input.number)))
+        .where(
+          and(eq(githubIssueTable.repoId, input.repoId), eq(githubIssueTable.number, input.number)),
+        )
         .then((rows) => rows[0]);
 
       if (existing) {
