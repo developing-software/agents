@@ -1,0 +1,31 @@
+{
+  "name": "@agents/core",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "module": "index.ts",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "db:push": "drizzle-kit push",
+    "db:gen": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "postgres": "^3.4.8",
+    "remeda": "^2.33.1",
+    "resend": "^6.9.3",
+    "ulid": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "drizzle-kit": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

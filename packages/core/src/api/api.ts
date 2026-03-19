@@ -1,0 +1,245 @@
+import { z } from "zod";
+import { fn } from "../util/fn";
+import { and, db, eq, isNull } from "../drizzle";
+import { apiClientTable, apiPersonalTokenTable } from "./api.sql";
+import { createID } from "../util/id";
+import { Actor } from "../actor";
+import { randomBytes } from "crypto";
+// import { Resource } from "sst";
+import { Common } from "../common";
+import { Examples } from "../examples";
+import { useTransaction } from "../drizzle/transaction";
+import { ErrorCodes, VisibleError } from "../error";
+
+export namespace Api {
+  export namespace Client {
+    export const Info = z
+      .object({
+        id: z.string().meta({
+          description: Common.IdDescription,
+          example: Examples.App.id,
+        }),
+        name: z.string().meta({
+          description: "Name of the app.",
+          example: Examples.App.name,
+        }),
+        redirectURI: z.string().meta({
+          description: "Redirect URI of the app.",
+          example: Examples.App.redirectURI,
+        }),
+        secret: z.string().meta({
+          description: "OAuth 2.0 client secret of the app (obfuscated).",
+          example: Examples.App.secret,
+        }),
+      })
+      .meta({
+        ref: "App",
+        description: "An OAuth 2.0 client app.",
+        example: Examples.App,
+      });
+
+    export type Info = z.infer<typeof Info>;
+
+    export const create = fn(
+      Info.pick({
+        name: true,
+        redirectURI: true,
+      }),
+      async (input) => {
+        const id = createID("apiClient");
+        const secret = createID("apiSecret");
+        await db.insert(apiClientTable).values({
+          id,
+          secret,
+          name: input.name,
+          redirectURI: input.redirectURI,
+          userID: Actor.userID(),
+        });
+        return {
+          id,
+          secret,
+        };
+      },
+    );
+
+    export const verifyRedirect = fn(
+      Info.pick({
+        id: true,
+        redirectURI: true,
+      }),
+      async (input) => {
+        const match = await db
+          .select({ id: apiClientTable.id })
+          .from(apiClientTable)
+          .where(
+            and(eq(apiClientTable.id, input.id), eq(apiClientTable.redirectURI, input.redirectURI)),
+          );
+        return match.length === 1;
+      },
+    );
+
+    export async function list(): Promise<Info[]> {
+      return db
+        .select()
+        .from(apiClientTable)
+        .where(and(eq(apiClientTable.userID, Actor.userID()), isNull(apiClientTable.timeDeleted)))
+        .then((rows) => rows.map(serialize));
+    }
+
+    export const remove = fn(Info.shape.id, (input) =>
+      useTransaction(async (tx) => {
+        const response = await tx
+          .delete(apiClientTable)
+          .where(and(eq(apiClientTable.id, input), eq(apiClientTable.userID, Actor.userID())))
+          .returning({ id: apiClientTable.id });
+        if (response.length === 0) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            "App not found",
+          );
+        }
+      }),
+    );
+
+    function obfuscate(secret: string) {
+      const [prefix, id] = secret.split("_");
+      const last4 = id?.slice(-4);
+      return `${prefix}_******${last4}`;
+    }
+
+    function serialize(input: typeof apiClientTable.$inferSelect): z.infer<typeof Info> {
+      return {
+        id: input.id,
+        name: input.name,
+        redirectURI: input.redirectURI,
+        secret: obfuscate(input.secret),
+      };
+    }
+
+    export const fromID = fn(Info.shape.id, (id) =>
+      useTransaction(async (tx) => {
+        const rows = await tx
+          .select()
+          .from(apiClientTable)
+          .where(and(eq(apiClientTable.id, id), eq(apiClientTable.userID, Actor.userID())))
+          .limit(1);
+        return rows.map(serialize).at(0);
+      }),
+    );
+  }
+
+  export namespace Personal {
+    export const Info = z
+      .object({
+        id: z.string().meta({
+          description: Common.IdDescription,
+          example: Examples.Token.id,
+        }),
+        created: z.string().datetime().meta({
+          description: "The created time for the token.",
+          example: Examples.Token.created,
+        }),
+        token: z.string().meta({
+          description: "Personal access token (obfuscated).",
+          example: Examples.Token.token,
+        }),
+      })
+      .meta({
+        ref: "Token",
+        description: "A personal access token used to access the API.",
+        example: Examples.Token,
+      });
+
+    export type Info = z.infer<typeof Info>;
+
+    export async function create() {
+      const id = createID("apiPersonal");
+      // const prefix = Resource.App.stage === "production" ? "live" : "test";
+      const prefix = process.env.NODE_ENV === "production" ? "live" : "test";
+      const token = `tok_${prefix}_` + randomBytes(10).toString("hex");
+      await db.insert(apiPersonalTokenTable).values({
+        id,
+        token,
+        userID: Actor.userID(),
+      });
+
+      return {
+        id,
+        token,
+      };
+    }
+
+    export const remove = fn(Info.shape.id, (input) =>
+      useTransaction(async (tx) => {
+        const response = await tx
+          .delete(apiPersonalTokenTable)
+          .where(
+            and(
+              eq(apiPersonalTokenTable.id, input),
+              eq(apiPersonalTokenTable.userID, Actor.userID()),
+            ),
+          )
+          .returning({ id: apiPersonalTokenTable.id });
+        if (response.length === 0) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            "Token not found",
+          );
+        }
+      }),
+    );
+
+    export async function list(): Promise<Info[]> {
+      return db
+        .select()
+        .from(apiPersonalTokenTable)
+        .where(
+          and(
+            eq(apiPersonalTokenTable.userID, Actor.userID()),
+            isNull(apiPersonalTokenTable.timeDeleted),
+          ),
+        )
+        .then((rows) => rows.map(serialize));
+    }
+
+    function obfuscate(token: string) {
+      const [prefix, stage, id] = token.split("_");
+      const last4 = id?.slice(-4);
+      return `${prefix}_${stage}_******${last4}`;
+    }
+
+    function serialize(input: typeof apiPersonalTokenTable.$inferSelect): z.infer<typeof Info> {
+      return {
+        id: input.id,
+        created: input.timeCreated.toISOString(),
+        token: obfuscate(input.token),
+      };
+    }
+
+    export const fromID = fn(Info.shape.id, (id) =>
+      useTransaction(async (tx) => {
+        const rows = await tx
+          .select()
+          .from(apiPersonalTokenTable)
+          .where(
+            and(eq(apiPersonalTokenTable.id, id), eq(apiPersonalTokenTable.userID, Actor.userID())),
+          )
+          .limit(1);
+        return rows.map(serialize).at(0);
+      }),
+    );
+
+    export async function fromToken(token: string) {
+      return db
+        .select({
+          id: apiPersonalTokenTable.id,
+          userID: apiPersonalTokenTable.userID,
+        })
+        .from(apiPersonalTokenTable)
+        .where(eq(apiPersonalTokenTable.token, token))
+        .then((rows) => rows.at(0));
+    }
+  }
+}
