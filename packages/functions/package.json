@@ -6,7 +6,7 @@
   "module": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "dev:auth": "PORT=3001 bun run --hot src/auth/index.ts",
+    "dev:auth": "PORT=3002 bun run --hot src/auth/index.ts",
     "test": "bun test"
   },
   "dependencies": {

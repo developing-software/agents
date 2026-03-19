@@ -84,9 +84,7 @@ export const validator = function <S extends z.ZodType, Target extends keyof Val
                   : issue.path
                 : undefined,
               message: issue.message,
-              // @ts-expect-error
               expected: issue.expected,
-              // @ts-expect-error
               received: issue.received,
             })),
           },

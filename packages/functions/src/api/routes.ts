@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { openAPIRouteHandler } from "hono-openapi";
+import { generateSpecs } from "hono-openapi";
 import { logger } from "hono/logger";
 import { HTTPException } from "hono/http-exception";
 import { VisibleError, ErrorCodes, type ErrorResponseType } from "@agents/core/error";
@@ -62,32 +62,33 @@ export const routes = app
     );
   });
 
-app.get(
-  "/openapi.json",
-  openAPIRouteHandler(routes, {
-    documentation: {
-      info: {
-        title: "API",
-        description: "",
-        version: packageJson.version ?? "1.0.0",
-      },
-      components: {
-        securitySchemes: {
-          Bearer: {
-            type: "http",
-            scheme: "bearer",
-            bearerFormat: "JWT",
-          },
+// Generate spec eagerly at module load, before any resolver mutations can occur.
+// Hot-reload re-evaluates this module, so resolvers are always fresh on each generation.
+const openApiSpec = generateSpecs(routes, {
+  documentation: {
+    info: {
+      title: "API",
+      description: "",
+      version: packageJson.version ?? "1.0.0",
+    },
+    components: {
+      securitySchemes: {
+        Bearer: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
         },
       },
-      security: [{ Bearer: [] }],
-      servers: [
-        { description: "Local", url: "http://localhost:3000" },
-        { description: "Production", url: process.env.API_URL ?? "http://localhost:3000" },
-      ],
     },
-  }),
-);
+    security: [{ Bearer: [] }],
+    servers: [
+      { description: "Local", url: process.env.API_URL ?? "http://localhost:3000" },
+      { description: "Production", url: process.env.API_URL ?? "http://localhost:3000" },
+    ],
+  },
+});
+
+app.get("/openapi.json", async (c) => c.json(await openApiSpec));
 
 app.get("/openapi", (_c) => OpenApiUI.Default());
 
