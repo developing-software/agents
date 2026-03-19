@@ -7,7 +7,7 @@ import { CodeProvider } from "@openauthjs/openauth/provider/code";
 import { CodeUI } from "@openauthjs/openauth/ui/code";
 import { Select } from "@openauthjs/openauth/ui/select";
 // import { TwitchProvider } from "@openauthjs/openauth/provider/twitch";
-// import { GithubProvider } from "@openauthjs/openauth/provider/github";
+import { GithubProvider } from "@openauthjs/openauth/provider/github";
 import { subjects } from "./subject";
 import { THEME_OPENAUTH } from "@openauthjs/openauth/ui/theme";
 // import { Resource } from "sst";
@@ -32,22 +32,11 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
     theme: THEME_OPENAUTH,
     select: Select(),
     providers: {
-      password: PasswordProvider(
-        PasswordUI({
-          validatePassword: z.string().min(8, { error: "Password must be at least 8 characters" }),
-          sendCode: async (email, code) => {
-            await Template.sendLoginCode(email!, code);
-          },
-        }),
-      ),
-      code: CodeProvider<{ email: string }>(
-        CodeUI({
-          mode: "email",
-          sendCode: async (claims, code) => {
-            await Template.sendLoginCode(claims.email!, code);
-          },
-        }),
-      ),
+      github: GithubProvider({
+        clientID: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+        scopes: ["email", "profile"],
+      }),
     },
     allow: async (input, _req) => {
       if (process.env.SST_DEV) return true;
@@ -75,12 +64,27 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
 
       let email = undefined as string | undefined;
 
-      if (value.provider === "code") {
-        email = value.claims.email;
-      }
+      // if (value.provider === "code") {
+      //   email = value.claims.email;
+      // }
 
-      if (value.provider === "password") {
-        email = value.email;
+      // if (value.provider === "password") {
+      //   email = value.email;
+      // }
+      if (value.provider === "github") {
+        const access = value.tokenset.access;
+        const response = await fetch("https://api.github.com/user/emails", {
+          headers: {
+            Authorization: `token ${access}`,
+            Accept: "application/vnd.github.v3+json",
+          },
+        });
+        const emails = (await response.json()) as any[];
+        const primary = emails.find((email: any) => email.primary);
+        if (!primary.verified) {
+          throw new Error("Email not verified");
+        }
+        email = primary.email;
       }
 
       if (email) {
