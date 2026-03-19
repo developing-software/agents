@@ -15,7 +15,7 @@ export namespace LinkApi {
     const shortLink = await ShortLink.fromSlug(id);
     if (shortLink) {
       // Fire-and-forget click tracking
-      ShortLink.incrementClick(id).catch(() => { });
+      ShortLink.incrementClick(id).catch(() => {});
       return ctx.redirect(shortLink.url);
     }
 

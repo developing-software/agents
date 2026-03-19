@@ -30,7 +30,6 @@ export namespace User {
     });
   export type Info = z.infer<typeof Info>;
 
-
   export const create = fn(Info.pick({ email: true }), async (input) => {
     const id = createID("user");
     await createTransaction(async (tx) => {

@@ -31,8 +31,7 @@ export namespace Actor {
 
   export interface Public {
     type: "public";
-    properties: {
-    };
+    properties: {};
   }
 
   export type Info = User | Public | Token | System;
@@ -48,7 +47,6 @@ export namespace Actor {
       `You don't have permission to access this resource.`,
     );
   }
-
 
   export async function assertFlag(flag: keyof UserFlags) {
     return useTransaction((tx) =>

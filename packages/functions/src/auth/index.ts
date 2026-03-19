@@ -43,9 +43,7 @@ export function createAuth(storage: StorageAdapter) {
         CodeUI({
           mode: "email",
           sendCode: async (claims, code) => {
-
             await Template.sendLoginCode(claims.email!, code);
-
           },
         }),
       ),
