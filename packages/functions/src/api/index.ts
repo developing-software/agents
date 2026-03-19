@@ -4,8 +4,8 @@ import { app, routes } from "./routes";
 
 export type Routes = typeof routes;
 
-import auth from "../auth";
-
+import { createAuth } from "../auth";
+const auth = createAuth();
 const port = parseInt(process.env.PORT!) || 3000;
 console.log(`Running at http://localhost:${port}`);
 

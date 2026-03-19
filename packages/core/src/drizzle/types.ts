@@ -1,5 +1,4 @@
 import { bigint, char, json, timestamp as rawTs } from "drizzle-orm/pg-core";
-import type { Address } from "../address";
 
 export const ulid = (name: string) => char(name, { length: 26 + 4 });
 
@@ -27,4 +26,3 @@ export const timestamps = {
   // .default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
   timeDeleted: timestamp("time_deleted"),
 };
-export const address = (name: string) => json(name).$type<Address.Inner>();

@@ -20,8 +20,9 @@ import { logger } from "hono/logger";
 import z from "zod";
 import { Template } from "@agents/core/email/template";
 import type { StorageAdapter } from "@openauthjs/openauth/storage/storage";
+import { MemoryStorage } from "@openauthjs/openauth/storage/memory";
 
-export function createAuth(storage: StorageAdapter) {
+export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
   return issuer({
     subjects,
     storage,
