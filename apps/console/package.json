@@ -14,9 +14,12 @@
   },
   "dependencies": {
     "@agents/core": "workspace:*",
-    "@agents/functions": "workspace:*"
+    "@agents/functions": "workspace:*",
+    "@agents/sdk": "workspace:*",
+    "hono": "catalog:"
   },
   "devDependencies": {
+    "@types/bun": "catalog:",
     "@sveltejs/adapter-cloudflare": "^7.2.6",
     "@sveltejs/kit": "^2.50.2",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",

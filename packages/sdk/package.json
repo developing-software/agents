@@ -1,5 +1,5 @@
 {
-  "name": "sdk",
+  "name": "@agents/sdk",
   "module": "index.ts",
   "type": "module",
   "scripts": {
