@@ -32,7 +32,7 @@
         system:
         import inputs.nixpkgs {
           inherit system;
-          overlays = [ inputs.bun2nix.overlays.default ];
+          overlays = [ ];
           config.allowUnfree = true;
         }
       );
