@@ -13,6 +13,8 @@ export const userTable = table("user", {
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }),
   fingerprint: varchar("fingerprint", { length: 255 }).unique(),
+  username: varchar("username", { length: 255 }).unique(),
+  avatarUrl: varchar("avatar_url", { length: 500 }),
   // stripeCustomerID: varchar("stripe_customer_id", { length: 255 })
   //   .unique()
   //   .notNull(),

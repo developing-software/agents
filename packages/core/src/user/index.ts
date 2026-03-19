@@ -22,6 +22,14 @@ export namespace User {
         description: "Email address of the user.",
         example: Examples.User.email,
       }),
+      username: z.string().nullable().meta({
+        description: "GitHub username of the user.",
+        example: "octocat",
+      }),
+      avatarUrl: z.string().nullable().meta({
+        description: "Avatar URL of the user.",
+        example: "https://avatars.githubusercontent.com/u/1",
+      }),
     })
     .meta({
       ref: "User",
@@ -30,12 +38,14 @@ export namespace User {
     });
   export type Info = z.infer<typeof Info>;
 
-  export const create = fn(Info.pick({ email: true }), async (input) => {
+  export const create = fn(Info.pick({ email: true, username: true, avatarUrl: true }).partial({ username: true, avatarUrl: true }), async (input) => {
     const id = createID("user");
     await createTransaction(async (tx) => {
       await tx.insert(userTable).values({
         id,
         email: input.email,
+        username: input.username,
+        avatarUrl: input.avatarUrl,
       });
     });
     return id;
@@ -51,9 +61,11 @@ export namespace User {
   });
 
   export const update = fn(
-    Info.pick({ name: true, email: true, id: true }).partial({
+    Info.pick({ name: true, email: true, id: true, username: true, avatarUrl: true }).partial({
       name: true,
       email: true,
+      username: true,
+      avatarUrl: true,
     }),
     (input) =>
       useTransaction(async (tx) => {
@@ -67,6 +79,8 @@ export namespace User {
           .set({
             name: input.name,
             email: input.email,
+            username: input.username,
+            avatarUrl: input.avatarUrl,
           })
           .where(eq(userTable.id, input.id));
       }),
@@ -78,6 +92,16 @@ export namespace User {
         .select()
         .from(userTable)
         .where(eq(userTable.id, id))
+        .then((rows) => rows.map(serialize).at(0)),
+    ),
+  );
+
+  export const fromUsername = fn(z.string(), async (username) =>
+    useTransaction(async (tx) =>
+      tx
+        .select()
+        .from(userTable)
+        .where(and(eq(userTable.username, username), isNull(userTable.timeDeleted)))
         .then((rows) => rows.map(serialize).at(0)),
     ),
   );
@@ -98,7 +122,8 @@ export namespace User {
       id: input.id,
       name: input.name,
       email: input.email,
-      // stripeCustomerID: input.stripeCustomerID,
+      username: input.username ?? null,
+      avatarUrl: input.avatarUrl ?? null,
     };
   }
 }
