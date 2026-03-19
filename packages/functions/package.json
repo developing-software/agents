@@ -1,0 +1,26 @@
+{
+  "name": "@agents/functions",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev:auth": "PORT=3001 bun run --hot src/auth/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@agents/core": "workspace:*",
+    "@hono/standard-validator": "^0.2.1",
+    "@openauthjs/openauth": "^0.4.3",
+    "hono": "catalog:",
+    "hono-openapi": "^1.1.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
