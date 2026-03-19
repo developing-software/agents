@@ -1,0 +1,85 @@
+name: Codex - Implement Issue
+run-name: "codex/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: codex-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  implement:
+    if: github.event.label.name == 'codex'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Pre-install before Codex runs — its sandbox disables network access
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - uses: ./.github/actions/implement
+        with:
+          pr_prefix: codex
+          harness: codex
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Codex
+        id: run-codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt: |
+            Implement the following GitHub issue in this repository:
+
+            Title: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            Make the necessary code changes to implement this feature or fix.
+            Follow the existing code style, naming conventions, and patterns in the codebase.
+            Refer to AGENTS.md for project structure and guidelines.
+            Do NOT commit, push, or open a pull request — only modify the files.
+
+      - name: Print step outputs
+        if: always()
+        env:
+          OUTPUTS: ${{ toJSON(steps.run-codex.outputs) }}
+        run: echo "$OUTPUTS"
+
+      - name: Capture result
+        if: always()
+        env:
+          FINAL_MESSAGE: ${{ steps.run-codex.outputs.final-message }}
+        run: |
+          if [ -z "$IMPLEMENT_METRICS" ] || [ -z "$FINAL_MESSAGE" ]; then
+            exit 0
+          fi
+          LAST_MSG=$(printf '%s' "$FINAL_MESSAGE" | tr '\n' ' ')
+          [ -n "$LAST_MSG" ] && printf 'result=%s\n' "$LAST_MSG" >> "$IMPLEMENT_METRICS"
+
+      - name: Upload artifacts
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/codex-artifacts"
+          [ -f "${IMPLEMENT_METRICS:-}" ] && cp "$IMPLEMENT_METRICS" "$RUNNER_TEMP/codex-artifacts/metrics.txt"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-issue-${{ github.event.issue.number }}
+          path: ${{ runner.temp }}/codex-artifacts/
+          if-no-files-found: ignore
+
+      - uses: ./.github/actions/test
+        with:
+          install: "false"

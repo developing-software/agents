@@ -1,0 +1,108 @@
+name: Claude - Implement Issue
+run-name: "claude/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: claude-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  implement:
+    if: github.event.label.name == 'claude'
+    runs-on: ubuntu-latest
+    env:
+      CLAUDE_MODEL: claude-sonnet-4-6
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - uses: ./.github/actions/implement
+        with:
+          pr_prefix: claude
+          harness: claude-code
+          model: ${{ env.CLAUDE_MODEL }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Claude Code
+        id: run-claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: --model ${{ env.CLAUDE_MODEL }} --output-format stream-json --verbose --dangerously-skip-permissions
+          show_full_output: "true"
+          prompt: |
+            Implement the following GitHub issue:
+
+            Title: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            Make the necessary code changes to implement this feature or fix.
+            Follow the existing code style, naming conventions, and patterns in the codebase.
+            Do NOT commit, push, or open a pull request — only modify the files.
+          additional_permissions: |
+            actions: read
+
+      - name: Capture token usage
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.run-claude.outputs.execution_file }}
+          SESSION_ID: ${{ steps.run-claude.outputs.session_id }}
+        run: |
+          [ -n "$SESSION_ID" ] && printf 'session_id=%s\n' "$SESSION_ID" >> "$IMPLEMENT_METRICS"
+
+          if [ -z "$IMPLEMENT_METRICS" ] || [ ! -f "${EXECUTION_FILE:-}" ]; then
+            exit 0
+          fi
+
+          RESULT=$(jq -c '.[] | select(.type == "result")' "$EXECUTION_FILE" 2>/dev/null | tail -1)
+          [ -z "$RESULT" ] && exit 0
+
+          INPUT=$(printf '%s' "$RESULT" | jq -r '.usage.input_tokens // empty')
+          OUTPUT=$(printf '%s' "$RESULT" | jq -r '.usage.output_tokens // empty')
+          CACHE_READ=$(printf '%s' "$RESULT" | jq -r '.usage.cache_read_input_tokens // empty')
+          CACHE_CREATE=$(printf '%s' "$RESULT" | jq -r '.usage.cache_creation_input_tokens // empty')
+          TURNS=$(printf '%s' "$RESULT" | jq -r '.num_turns // empty')
+          COST=$(printf '%s' "$RESULT" | jq -r '.total_cost_usd // empty')
+          LAST_MSG=$(printf '%s' "$RESULT" | jq -r '.result // empty' | tr '\n' ' ')
+          [ -n "$INPUT" ]        && printf 'input_tokens=%s\n'                 "$INPUT"        >> "$IMPLEMENT_METRICS"
+          [ -n "$OUTPUT" ]       && printf 'output_tokens=%s\n'                "$OUTPUT"       >> "$IMPLEMENT_METRICS"
+          [ -n "$CACHE_READ" ]   && printf 'cache_read_input_tokens=%s\n'      "$CACHE_READ"   >> "$IMPLEMENT_METRICS"
+          [ -n "$CACHE_CREATE" ] && printf 'cache_creation_input_tokens=%s\n'  "$CACHE_CREATE" >> "$IMPLEMENT_METRICS"
+          [ -n "$TURNS" ]        && printf 'num_turns=%s\n'                    "$TURNS"        >> "$IMPLEMENT_METRICS"
+          [ -n "$COST" ]         && printf 'cost_usd=%s\n'                     "$COST"         >> "$IMPLEMENT_METRICS"
+          [ -n "$LAST_MSG" ]     && printf 'result=%s\n'                       "$LAST_MSG"     >> "$IMPLEMENT_METRICS"
+
+      - name: Upload artifacts
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.run-claude.outputs.execution_file }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/claude-artifacts"
+          [ -f "${EXECUTION_FILE:-}" ] && cp "$EXECUTION_FILE" "$RUNNER_TEMP/claude-artifacts/execution.json"
+          [ -f "${IMPLEMENT_METRICS:-}" ] && cp "$IMPLEMENT_METRICS" "$RUNNER_TEMP/claude-artifacts/metrics.txt"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: claude-issue-${{ github.event.issue.number }}
+          path: ${{ runner.temp }}/claude-artifacts/
+          if-no-files-found: ignore
+
+      - uses: ./.github/actions/test
+        with:
+          install: "false"
