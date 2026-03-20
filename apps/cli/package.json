@@ -2,9 +2,15 @@
   "name": "cli",
   "private": true,
   "type": "module",
-  "module": "index.ts",
+  "module": "src/index.ts",
+  "dependencies": {
+    "@agents/core": "workspace:*",
+    "@agents/functions": "workspace:*",
+    "@agents/sdk": "workspace:*",
+    "hono": "catalog:"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "catalog:"
   },
   "peerDependencies": {
     "typescript": "^5"

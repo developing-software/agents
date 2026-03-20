@@ -1,14 +1,10 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { Hono } from "hono";
 import { app } from "@agents/functions/src/api/routes";
 import { User } from "@agents/core/user/index";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
 import { DevAgentSdk } from "@agents/sdk";
 import { createClient } from "@agents/sdk/client";
-
-// Route the Hono app the same way the console does
-const api = new Hono().route("/api", app);
 
 let userID: string;
 let token: string;
@@ -30,8 +26,9 @@ beforeAll(async () => {
   sdk = new DevAgentSdk({
     client: createClient({
       auth: () => token,
-      baseUrl: "http://localhost/api",
-      fetch: (input, init) => Promise.resolve(api.fetch(new Request(input, init as RequestInit))),
+      baseUrl: "http://localhost",
+      // @ts-expect-error idk why this is needed
+      fetch: (input, init) => app.fetch(new Request(input as string, init as RequestInit)),
     }),
   });
 });
@@ -134,7 +131,8 @@ describe("auth errors", () => {
       client: createClient({
         auth: () => "tok_invalid",
         baseUrl: "http://localhost/api",
-        fetch: (input, init) => Promise.resolve(api.fetch(new Request(input, init as RequestInit))),
+        // @ts-expect-error idk why this is needed
+        fetch: (input, init) => app.fetch(new Request(input as string, init as RequestInit)),
       }),
     });
     const { error } = await badSdk.getProfile();
