@@ -1,105 +1,59 @@
-Default to using Bun instead of Node.js.
+# Agents
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Use `bunx <package> <command>` instead of `npx <package> <command>`
-- Bun automatically loads .env, so don't use dotenv.
+Monorepo for reusable GitHub/agent actions and a console to track GitHub and agent activity — collecting metrics and traces for analysis.
 
-## APIs
+## Packages
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+- `packages/core` — shared business logic, DB schema, GitHub integration, actor/context system
+- `packages/functions` — Hono API server (port 3000), OpenAPI-documented endpoints
+- `packages/console` — SvelteKit dashboard (Cloudflare Workers)
+- `packages/cli` — CLI tool
+- `packages/sdk/ts` — TypeScript SDK auto-generated from OpenAPI spec
+- `actions/implement` — reusable GitHub Action for AI-driven implementation
 
-## Testing
+## Runtime
 
-Use `bun test` to run tests.
+Use **Bun** everywhere.
 
-```ts#index.test.ts
-import { test, expect } from "bun:test";
+- `bun <file>`, `bun test`, `bun install`, `bun run <script>`, `bunx <pkg>`
+- `.env` loads automatically
+- `Bun.file` for file I/O, `Bun.$\`cmd\`` for shell commands
 
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+## Stack
+
+- **API:** Hono (not `Bun.serve` directly)
+- **Database:** Postgres via Drizzle ORM with `Bun.sql` — schema in `*.sql.ts` files
+- **Auth:** OpenAuth (OAuth) + personal tokens
+- **Frontend:** SvelteKit + Tailwind (not React)
+- **IDs:** ULIDs
+
+## Key Patterns
+
+**Actor context** — every operation runs under an actor (`user`, `system`, `token`, `public`):
+```ts
+import { useActor } from "@agents/core/actor"
+const actor = useActor()
 ```
 
-## Frontend
-
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
-
-Server:
-
-```ts#index.ts
-import index from "./index.html"
-
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
+**Errors** — use `VisibleError` for client-safe errors:
+```ts
+import { VisibleError } from "@agents/core/error"
+throw new VisibleError("not_found", 404, "Resource not found")
 ```
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
-
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
+**Database** — use Drizzle via the shared `db` instance:
+```ts
+import { db } from "@agents/core/drizzle"
 ```
 
-With the following `frontend.tsx`:
-
-```tsx#frontend.tsx
-import React from "react";
-import { createRoot } from "react-dom/client";
-
-// import .css files directly and it works
-import './index.css';
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
+## Commands
 
 ```sh
-bun --hot ./index.ts
+bun run fmt          # format (oxfmt)
+bun run lint         # lint (oxlint)
+bun run typecheck    # type check
+bun test             # run tests
+bun run db:gen       # generate migrations
+bun run db:push      # apply migrations
+bun run gen:spec     # generate OpenAPI spec (packages/functions)
 ```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
