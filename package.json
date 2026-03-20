@@ -22,7 +22,6 @@
     "packages": [
       "packages/*",
       "packages/sdk/ts",
-      "apps/*",
       "scripts"
     ]
   },
