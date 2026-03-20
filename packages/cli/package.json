@@ -11,11 +11,13 @@
     "src/lib/**/*.ts"
   ],
   "scripts": {
-    "build": "bun build ./src/cli.ts --compile --outfile dist/dev-agents",
-    "build:all": "npm run build:macos && npm run build:linux && npm run build:windows",
-    "build:macos": "bun build ./src/cli.ts --compile --target=bun-darwin-arm64 --outfile dist/dev-agents-macos",
-    "build:linux": "bun build ./src/cli.ts --compile --target=bun-linux-x64 --outfile dist/dev-agents-linux",
-    "build:windows": "bun build ./src/cli.ts --compile --target=bun-windows-x64 --outfile dist/dev-agents.exe"
+    "build": "bun build.ts bun dist/dev-agents",
+    "build:macos-arm": "bun build.ts bun-darwin-arm64 dist/dev-agents-macos-arm",
+    "build:macos-x64": "bun build.ts bun-darwin-x64 dist/dev-agents-macos-x64",
+    "build:linux": "bun build.ts bun-linux-x64 dist/dev-agents-linux",
+    "build:linux-arm": "bun build.ts bun-linux-arm64 dist/dev-agents-linux-arm",
+    "build:windows": "bun build.ts bun-windows-x64 dist/dev-agents-windows.exe",
+    "build:all": "bun run build:macos-arm && bun run build:macos-x64 && bun run build:linux && bun run build:linux-arm && bun run build:windows"
   },
   "dependencies": {
     "@agents/core": "workspace:*",
