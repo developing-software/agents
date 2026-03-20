@@ -5,8 +5,8 @@ export default $config({
       name: "agents",
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
-      home: "local",
-      providers: { railway: "0.4.4" },
+      home: "cloudflare",
+      providers: { railway: "0.4.4", planetscale: "0.4.1" },
     };
   },
   console: {
@@ -17,9 +17,7 @@ export default $config({
           await $`bun sst remove`;
           return;
         }
-        await $`bun run build`
-          .cwd("./apps/console");
-
+        await $`bun run build`.cwd("./apps/console");
         await $`bun sst deploy`;
         // if (event.type === "branch" && event.branch === "dev")
         //   await $`bun run test`.cwd("./packages/functions");
