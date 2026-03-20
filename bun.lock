@@ -89,7 +89,7 @@
         "typescript": "^5",
       },
     },
-    "packages/sdk": {
+    "packages/sdk/ts": {
       "name": "@agents/sdk",
       "devDependencies": {
         "@hey-api/openapi-ts": "0.94.3",
@@ -132,7 +132,7 @@
 
     "@agents/functions": ["@agents/functions@workspace:packages/functions"],
 
-    "@agents/sdk": ["@agents/sdk@workspace:packages/sdk"],
+    "@agents/sdk": ["@agents/sdk@workspace:packages/sdk/ts"],
 
     "@azure-rest/core-client": ["@azure-rest/core-client@2.5.1", "", { "dependencies": { "@azure/abort-controller": "^2.1.2", "@azure/core-auth": "^1.10.0", "@azure/core-rest-pipeline": "^1.22.0", "@azure/core-tracing": "^1.3.0", "@typespec/ts-http-runtime": "^0.3.0", "tslib": "^2.6.2" } }, "sha512-EHaOXW0RYDKS5CFffnixdyRPak5ytiCtU7uXDcP/uiY+A6jFRwNGzzJBiznkCzvi5EYpY+YWinieqHb0oY916A=="],
 

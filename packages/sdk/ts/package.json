@@ -1,0 +1,15 @@
+{
+  "name": "@agents/sdk",
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "gen": "bun run build.ts"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.94.3",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
