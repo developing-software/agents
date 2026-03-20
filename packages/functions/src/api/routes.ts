@@ -1,10 +1,8 @@
 import { Hono } from "hono";
-import { generateSpecs } from "hono-openapi";
 import { logger } from "hono/logger";
 import { HTTPException } from "hono/http-exception";
 import { VisibleError, ErrorCodes, type ErrorResponseType } from "@agents/core/error";
 import { Log } from "@agents/core/util/log";
-import packageJson from "../../package.json";
 import { ProfileApi } from "./handler/profile";
 import { getRuntimeKey } from "hono/adapter";
 import { AppApi } from "./handler/app";
@@ -14,7 +12,6 @@ import { GitHubApi } from "./handler/github";
 import { auth } from "./middleware";
 
 import { Homepage } from "../ui/homepage";
-import { OpenApiUI } from "../ui/openapi";
 
 const log = Log.create({ namespace: "api" });
 
@@ -61,36 +58,6 @@ export const routes = app
       500,
     );
   });
-
-// Generate spec eagerly at module load, before any resolver mutations can occur.
-// Hot-reload re-evaluates this module, so resolvers are always fresh on each generation.
-const openApiSpec = generateSpecs(routes, {
-  documentation: {
-    info: {
-      title: "API",
-      description: "",
-      version: packageJson.version ?? "1.0.0",
-    },
-    components: {
-      securitySchemes: {
-        Bearer: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-    security: [{ Bearer: [] }],
-    servers: [
-      { description: "Local", url: process.env.API_URL ?? "http://localhost:3000" },
-      { description: "Production", url: process.env.API_URL ?? "http://localhost:3000" },
-    ],
-  },
-});
-
-app.get("/openapi.json", async (c) => c.json(await openApiSpec));
-
-app.get("/openapi", (_c) => OpenApiUI.Default());
 
 app.get("/", Homepage).get("/healthz", async (c) => {
   const runtime = getRuntimeKey();
