@@ -36,17 +36,17 @@ beforeAll(async () => {
   });
 });
 
-// afterAll(async () => {
-//   // Clean up token and user created during setup
-//   if (tokenID) {
-//     await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(tokenID));
-//   }
-//   // Delete the personal access token used to auth
-//   const pat = await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.list());
-//   for (const t of pat) {
-//     await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
-//   }
-// });
+afterAll(async () => {
+  // Clean up token and user created during setup
+  if (tokenID) {
+    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(tokenID));
+  }
+  // Delete the personal access token used to auth
+  const pat = await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.list());
+  for (const t of pat) {
+    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
+  }
+});
 
 describe("profile", () => {
   test("getProfile returns the current user", async () => {
@@ -57,7 +57,8 @@ describe("profile", () => {
 
   test("putProfile updates name and email", async () => {
     const { data, error } = await sdk.putProfile({
-      name: "SDK Test", email: `updated+${Date.now()}@example.com`
+      name: "SDK Test",
+      email: `updated+${Date.now()}@example.com`,
     });
     expect(error).toBeUndefined();
     expect(data?.user.name).toBe("SDK Test");
@@ -73,9 +74,9 @@ describe("apps", () => {
 
   test("postApp creates an app", async () => {
     const { data, error } = await sdk.postApp({
-      name: "Test App", redirectURI: "http://localhost/callback"
-    },
-    );
+      name: "Test App",
+      redirectURI: "http://localhost/callback",
+    });
     expect(error).toBeUndefined();
     expect(data?.id).toBeDefined();
     appID = data!.id;

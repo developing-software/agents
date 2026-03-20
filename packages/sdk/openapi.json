@@ -71,13 +71,7 @@
             "example": "https://avatars.githubusercontent.com/u/1"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "email",
-          "username",
-          "avatarUrl"
-        ],
+        "required": ["id", "name", "email", "username", "avatarUrl"],
         "description": "A user.",
         "example": {
           "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -92,9 +86,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": [
-          "user"
-        ],
+        "required": ["user"],
         "description": "Updated user profile information.",
         "example": {
           "user": {
@@ -118,45 +110,28 @@
               "internal"
             ],
             "description": "The error type category",
-            "examples": [
-              "validation",
-              "authentication"
-            ]
+            "examples": ["validation", "authentication"]
           },
           "code": {
             "type": "string",
             "description": "Machine-readable error code identifier",
-            "examples": [
-              "invalid_parameter",
-              "missing_required_field",
-              "unauthorized"
-            ]
+            "examples": ["invalid_parameter", "missing_required_field", "unauthorized"]
           },
           "message": {
             "type": "string",
             "description": "Human-readable error message",
-            "examples": [
-              "The request was invalid",
-              "Authentication required"
-            ]
+            "examples": ["The request was invalid", "Authentication required"]
           },
           "param": {
             "description": "The parameter that caused the error (if applicable)",
-            "examples": [
-              "email",
-              "user_id"
-            ],
+            "examples": ["email", "user_id"],
             "type": "string"
           },
           "details": {
             "description": "Additional error context information"
           }
         },
-        "required": [
-          "type",
-          "code",
-          "message"
-        ],
+        "required": ["type", "code", "message"],
         "description": "Permission error"
       },
       "App": {
@@ -183,12 +158,7 @@
             "example": "sec_******XXXX"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "redirectURI",
-          "secret"
-        ],
+        "required": ["id", "name", "redirectURI", "secret"],
         "description": "App.",
         "example": {
           "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -218,11 +188,7 @@
             "example": "pat_test_******XXXX"
           }
         },
-        "required": [
-          "id",
-          "created",
-          "token"
-        ],
+        "required": ["id", "created", "token"],
         "description": "Personal access token.",
         "example": {
           "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -251,9 +217,7 @@
     "/profile": {
       "get": {
         "operationId": "getProfile",
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "summary": "Get profile",
         "description": "Get the current user's profile.",
         "responses": {
@@ -323,9 +287,7 @@
       },
       "put": {
         "operationId": "putProfile",
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "summary": "Update profile",
         "description": "Update the current user's profile.",
         "responses": {
@@ -424,10 +386,7 @@
                     "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                   }
                 },
-                "required": [
-                  "name",
-                  "email"
-                ],
+                "required": ["name", "email"],
                 "description": "The user's updated profile information.",
                 "example": {
                   "name": "John Doe",
@@ -442,9 +401,7 @@
     "/app": {
       "get": {
         "operationId": "getApp",
-        "tags": [
-          "App (OAuth)"
-        ],
+        "tags": ["App (OAuth)"],
         "summary": "List apps",
         "description": "List the current user's registered apps.",
         "responses": {
@@ -527,9 +484,7 @@
       },
       "post": {
         "operationId": "postApp",
-        "tags": [
-          "App (OAuth)"
-        ],
+        "tags": ["App (OAuth)"],
         "summary": "Create app",
         "description": "Create an app.",
         "responses": {
@@ -550,10 +505,7 @@
                       "example": "sec_******XXXX"
                     }
                   },
-                  "required": [
-                    "id",
-                    "secret"
-                  ]
+                  "required": ["id", "secret"]
                 },
                 "example": {
                   "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -639,10 +591,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name",
-                  "redirectURI"
-                ],
+                "required": ["name", "redirectURI"],
                 "description": "Basic app information.",
                 "example": {
                   "name": "Example App",
@@ -657,9 +606,7 @@
     "/app/{id}": {
       "get": {
         "operationId": "getAppById",
-        "tags": [
-          "App (OAuth)"
-        ],
+        "tags": ["App (OAuth)"],
         "summary": "Get app",
         "description": "Get the app with the given ID.",
         "responses": {
@@ -755,9 +702,7 @@
       },
       "delete": {
         "operationId": "deleteAppById",
-        "tags": [
-          "App (OAuth)"
-        ],
+        "tags": ["App (OAuth)"],
         "summary": "Delete app",
         "description": "Delete the app with the given ID.",
         "responses": {
@@ -882,9 +827,7 @@
     "/token": {
       "get": {
         "operationId": "getToken",
-        "tags": [
-          "Token"
-        ],
+        "tags": ["Token"],
         "summary": "List tokens",
         "description": "List the current user's personal access tokens.",
         "responses": {
@@ -965,9 +908,7 @@
       },
       "post": {
         "operationId": "postToken",
-        "tags": [
-          "Token"
-        ],
+        "tags": ["Token"],
         "summary": "Create token",
         "description": "Create a personal access token.",
         "responses": {
@@ -988,10 +929,7 @@
                       "example": "pat_test_******XXXX"
                     }
                   },
-                  "required": [
-                    "id",
-                    "token"
-                  ]
+                  "required": ["id", "token"]
                 },
                 "example": {
                   "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -1052,9 +990,7 @@
     "/token/{id}": {
       "get": {
         "operationId": "getTokenById",
-        "tags": [
-          "Token"
-        ],
+        "tags": ["Token"],
         "summary": "Get token",
         "description": "Get the personal access token with the given ID.",
         "responses": {
@@ -1149,9 +1085,7 @@
       },
       "delete": {
         "operationId": "deleteTokenById",
-        "tags": [
-          "Token"
-        ],
+        "tags": ["Token"],
         "summary": "Delete token",
         "description": "Delete the personal access token with the given ID.",
         "responses": {
