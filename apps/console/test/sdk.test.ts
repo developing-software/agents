@@ -4,8 +4,8 @@ import { app } from "@agents/functions/src/api/routes";
 import { User } from "@agents/core/user/index";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
-import { DevAgentSdk } from "@agents/sdk/src/agents";
-import { createClient } from "@agents/sdk/src/agents/client";
+import { DevAgentSdk } from "@agents/sdk";
+import { createClient } from "@agents/sdk/client";
 
 // Route the Hono app the same way the console does
 const api = new Hono().route("/api", app);
@@ -57,7 +57,7 @@ describe("profile", () => {
 
   test("putProfile updates name and email", async () => {
     const { data, error } = await sdk.putProfile({
-      body: { name: "SDK Test", email: `updated+${Date.now()}@example.com` },
+      name: "SDK Test", email: `updated+${Date.now()}@example.com`
     });
     expect(error).toBeUndefined();
     expect(data?.user.name).toBe("SDK Test");
@@ -73,8 +73,9 @@ describe("apps", () => {
 
   test("postApp creates an app", async () => {
     const { data, error } = await sdk.postApp({
-      body: { name: "Test App", redirectURI: "http://localhost/callback" },
-    });
+      name: "Test App", redirectURI: "http://localhost/callback"
+    },
+    );
     expect(error).toBeUndefined();
     expect(data?.id).toBeDefined();
     appID = data!.id;
@@ -86,13 +87,13 @@ describe("apps", () => {
   });
 
   test("getAppById returns the app", async () => {
-    const { data, error } = await sdk.getAppById({ path: { id: appID } });
+    const { data, error } = await sdk.getAppById({ id: appID });
     expect(error).toBeUndefined();
     expect(data?.id).toBe(appID);
   });
 
   test("deleteAppById removes the app", async () => {
-    const { data, error } = await sdk.deleteAppById({ path: { id: appID } });
+    const { data, error } = await sdk.deleteAppById({ id: appID });
     expect(error).toBeUndefined();
     expect(data).toBe("ok");
   });
@@ -113,13 +114,13 @@ describe("tokens", () => {
   });
 
   test("getTokenById returns the token", async () => {
-    const { data, error } = await sdk.getTokenById({ path: { id: tokenID } });
+    const { data, error } = await sdk.getTokenById({ id: tokenID });
     expect(error).toBeUndefined();
     expect(data?.id).toBe(tokenID);
   });
 
   test("deleteTokenById removes the token", async () => {
-    const { data, error } = await sdk.deleteTokenById({ path: { id: tokenID } });
+    const { data, error } = await sdk.deleteTokenById({ id: tokenID });
     expect(error).toBeUndefined();
     expect(data).toBe("ok");
     tokenID = ""; // mark as already deleted so afterAll skips it
