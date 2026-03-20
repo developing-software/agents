@@ -8,7 +8,7 @@ const { test, validateOpenAPIRoute } = setupApiTest();
 describe("app", () => {
   test("GET /app", async () => {
     const response = await validateOpenAPIRoute("get", "/app");
-    expect(response.data).toBeArray();
+    expect(response).toBeArray();
   });
 
   test("GET /app/:id", async () => {
@@ -19,8 +19,8 @@ describe("app", () => {
     const response = await validateOpenAPIRoute("get", "/app/:id", {
       id: appID,
     });
-    expect(response.data.id).toBe(appID);
-    expect(response.data.name).toBe(Examples.App.name);
+    expect(response.id).toBe(appID);
+    expect(response.name).toBe(Examples.App.name);
   });
 
   test("POST /app", async () => {
@@ -28,7 +28,7 @@ describe("app", () => {
       name: Examples.App.name,
       redirectURI: Examples.App.redirectURI,
     });
-    const created = await Api.Client.fromID(response.data.id);
+    const created = await Api.Client.fromID(response.id);
     expect(created).toBeDefined();
     expect(created!.name).toBe(Examples.App.name);
   });

@@ -1,4 +1,4 @@
-import { app } from "../../src/api/routes";
+import spec from "../../../sdk/openapi.json";
 
 type OpenAPISchema = {
   type?: string;
@@ -35,22 +35,10 @@ type OpenAPIDocument = {
  * Single source of truth: the `/openapi.json` route.
  */
 export class SchemaValidator {
-  private static spec: OpenAPIDocument | null = null;
-  private static specPromise: Promise<void> | null = null;
-
   // ── Spec access ──────────────────────────────────────────────
 
   private static async getSpec(): Promise<OpenAPIDocument> {
-    if (this.spec) return this.spec;
-    if (!this.specPromise) {
-      this.specPromise = (async () => {
-        const res = await app.request("/openapi.json");
-        if (!res.ok) throw new Error(`Failed to fetch OpenAPI spec: ${res.status}`);
-        this.spec = (await res.json()) as OpenAPIDocument;
-      })();
-    }
-    await this.specPromise;
-    return this.spec!;
+    return spec as OpenAPIDocument;
   }
 
   // ── Path matching ────────────────────────────────────────────

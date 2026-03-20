@@ -8,9 +8,9 @@ const { test, validateOpenAPIRoute } = setupApiTest();
 describe("profile", () => {
   test("GET /profile", async () => {
     const response = await validateOpenAPIRoute("get", "/profile");
-    expect(response.data).toBeDefined();
-    expect(response.data.user).toBeDefined();
-    expect(response.data.user.id).toBeDefined();
+    expect(response).toBeDefined();
+    expect(response.user).toBeDefined();
+    expect(response.user.id).toBeDefined();
   });
 
   test("PUT /profile", async () => {
@@ -21,13 +21,13 @@ describe("profile", () => {
 
     const response = await validateOpenAPIRoute("put", "/profile", undefined, profileData);
 
-    expect(response.data).toBeDefined();
-    expect(response.data.user).toBeDefined();
-    expect(response.data.user.name).toBe(profileData.name);
-    expect(response.data.user.email).toBe(profileData.email);
+    expect(response).toBeDefined();
+    expect(response.user).toBeDefined();
+    expect(response.user.name).toBe(profileData.name);
+    expect(response.user.email).toBe(profileData.email);
 
     // Verify the user was actually updated in the database
-    const userId = response.data.user.id;
+    const userId = response.user.id;
     const user = await User.fromID(userId);
     expect(user).toBeDefined();
     expect(user!.name).toBe(profileData.name);
