@@ -27,7 +27,7 @@ export namespace AppApi {
                     example: [Examples.App],
                   }),
                 ),
-                example: { data: [Examples.App] },
+                example: [Examples.App],
               },
             },
             description: "List of apps.",
@@ -40,7 +40,7 @@ export namespace AppApi {
       authRequired,
       async (c) => {
         const apps = await Api.Client.list();
-        return c.json({ data: apps }, 200);
+        return c.json(apps, 200);
       },
     )
     .get(
@@ -59,7 +59,7 @@ export namespace AppApi {
                     example: Examples.App,
                   }),
                 ),
-                example: { data: Examples.App },
+                example: Examples.App,
               },
             },
             description: "App.",
@@ -89,7 +89,7 @@ export namespace AppApi {
             "App not found",
           );
         }
-        return c.json({ data }, 200);
+        return c.json(data, 200);
       },
     )
     .post(
@@ -114,9 +114,7 @@ export namespace AppApi {
                     }),
                   }),
                 ),
-                example: {
-                  data: { id: Examples.App.id, secret: Examples.App.secret },
-                },
+                example: { id: Examples.App.id, secret: Examples.App.secret },
               },
             },
             description: "OAuth 2.0 client ID and secret.",
@@ -141,7 +139,7 @@ export namespace AppApi {
       async (c) => {
         log.info("Creating new app");
         const app = await Api.Client.create(c.req.valid("json"));
-        return c.json({ data: app }, 200);
+        return c.json(app, 200);
       },
     )
     .delete(
@@ -155,7 +153,7 @@ export namespace AppApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
-                example: { data: "ok" },
+                example: "ok",
               },
             },
             description: "App was deleted successfully.",
@@ -180,7 +178,7 @@ export namespace AppApi {
       async (c) => {
         const param = c.req.valid("param");
         await Api.Client.remove(param.id);
-        return c.json({ data: "ok" as const }, 200);
+        return c.json("ok" as const, 200);
       },
     );
 }

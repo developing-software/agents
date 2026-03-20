@@ -6,11 +6,7 @@ import { Actor } from "@agents/core/actor";
 import { getTokens } from "./auth";
 
 export function Result<T extends z.ZodType>(schema: T) {
-  return resolver(
-    z.object({
-      data: schema,
-    }),
-  );
+  return resolver(schema);
 }
 
 export const noop: MiddlewareHandler = (_c, next) => next();

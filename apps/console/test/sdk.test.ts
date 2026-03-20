@@ -36,23 +36,23 @@ beforeAll(async () => {
   });
 });
 
-afterAll(async () => {
-  // Clean up token and user created during setup
-  if (tokenID) {
-    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(tokenID));
-  }
-  // Delete the personal access token used to auth
-  const pat = await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.list());
-  for (const t of pat) {
-    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
-  }
-});
+// afterAll(async () => {
+//   // Clean up token and user created during setup
+//   if (tokenID) {
+//     await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(tokenID));
+//   }
+//   // Delete the personal access token used to auth
+//   const pat = await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.list());
+//   for (const t of pat) {
+//     await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
+//   }
+// });
 
 describe("profile", () => {
   test("getProfile returns the current user", async () => {
     const { data, error } = await sdk.getProfile();
     expect(error).toBeUndefined();
-    expect(data?.data?.user.id).toBe(userID);
+    expect(data?.user.id).toBe(userID);
   });
 
   test("putProfile updates name and email", async () => {
@@ -60,7 +60,7 @@ describe("profile", () => {
       body: { name: "SDK Test", email: `updated+${Date.now()}@example.com` },
     });
     expect(error).toBeUndefined();
-    expect(data?.data?.user.name).toBe("SDK Test");
+    expect(data?.user.name).toBe("SDK Test");
   });
 });
 
@@ -68,7 +68,7 @@ describe("apps", () => {
   test("getApp returns empty list initially", async () => {
     const { data, error } = await sdk.getApp();
     expect(error).toBeUndefined();
-    expect(Array.isArray(data?.data)).toBe(true);
+    expect(Array.isArray(data)).toBe(true);
   });
 
   test("postApp creates an app", async () => {
@@ -76,25 +76,25 @@ describe("apps", () => {
       body: { name: "Test App", redirectURI: "http://localhost/callback" },
     });
     expect(error).toBeUndefined();
-    expect(data?.data?.id).toBeDefined();
-    appID = data!.data!.id;
+    expect(data?.id).toBeDefined();
+    appID = data!.id;
   });
 
   test("getApp lists the created app", async () => {
     const { data } = await sdk.getApp();
-    expect(data?.data?.some((a) => a.id === appID)).toBe(true);
+    expect(data?.some((a) => a.id === appID)).toBe(true);
   });
 
   test("getAppById returns the app", async () => {
     const { data, error } = await sdk.getAppById({ path: { id: appID } });
     expect(error).toBeUndefined();
-    expect(data?.data?.id).toBe(appID);
+    expect(data?.id).toBe(appID);
   });
 
   test("deleteAppById removes the app", async () => {
     const { data, error } = await sdk.deleteAppById({ path: { id: appID } });
     expect(error).toBeUndefined();
-    expect(data?.data).toBe("ok");
+    expect(data).toBe("ok");
   });
 });
 
@@ -102,26 +102,26 @@ describe("tokens", () => {
   test("getToken returns list of tokens", async () => {
     const { data, error } = await sdk.getToken();
     expect(error).toBeUndefined();
-    expect(Array.isArray(data?.data)).toBe(true);
+    expect(Array.isArray(data)).toBe(true);
   });
 
   test("postToken creates a token", async () => {
     const { data, error } = await sdk.postToken();
     expect(error).toBeUndefined();
-    expect(data?.data?.token).toStartWith("tok_");
-    tokenID = data!.data!.id;
+    expect(data?.token).toStartWith("tok_");
+    tokenID = data!.id;
   });
 
   test("getTokenById returns the token", async () => {
     const { data, error } = await sdk.getTokenById({ path: { id: tokenID } });
     expect(error).toBeUndefined();
-    expect(data?.data?.id).toBe(tokenID);
+    expect(data?.id).toBe(tokenID);
   });
 
   test("deleteTokenById removes the token", async () => {
     const { data, error } = await sdk.deleteTokenById({ path: { id: tokenID } });
     expect(error).toBeUndefined();
-    expect(data?.data).toBe("ok");
+    expect(data).toBe("ok");
     tokenID = ""; // mark as already deleted so afterAll skips it
   });
 });

@@ -34,7 +34,7 @@ export namespace ProfileApi {
                     example: Examples.Profile,
                   }),
                 ),
-                example: { data: Examples.Profile },
+                example: Examples.Profile,
               },
             },
             description: "User profile information.",
@@ -47,7 +47,7 @@ export namespace ProfileApi {
       authRequired,
       async (c) => {
         const user = await User.fromID(Actor.userID());
-        return c.json({ data: { user } }, 200);
+        return c.json({ user }, 200);
       },
     )
     .put(
@@ -66,7 +66,7 @@ export namespace ProfileApi {
                     example: Examples.Profile,
                   }),
                 ),
-                example: { data: Examples.Profile },
+                example: Examples.Profile,
               },
             },
             description: "Updated user profile information.",
@@ -89,7 +89,7 @@ export namespace ProfileApi {
         const id = Actor.userID();
         await User.update({ id, ...c.req.valid("json") });
         const user = await User.fromID(id);
-        return c.json({ data: { user } }, 200);
+        return c.json({ user }, 200);
       },
     );
 }

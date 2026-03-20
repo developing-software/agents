@@ -24,7 +24,7 @@ export namespace TokenApi {
                     example: [Examples.Token],
                   }),
                 ),
-                example: { data: [Examples.Token] },
+                example: [Examples.Token],
               },
             },
             description: "List of personal access tokens.",
@@ -37,7 +37,7 @@ export namespace TokenApi {
       authRequired,
       async (c) => {
         const tokens = await Api.Personal.list();
-        return c.json({ data: tokens }, 200);
+        return c.json(tokens, 200);
       },
     )
     .get(
@@ -56,7 +56,7 @@ export namespace TokenApi {
                     example: Examples.Token,
                   }),
                 ),
-                example: { data: Examples.Token },
+                example: Examples.Token,
               },
             },
             description: "Personal access token.",
@@ -86,7 +86,7 @@ export namespace TokenApi {
             "Token not found",
           );
         }
-        return c.json({ data }, 200);
+        return c.json(data, 200);
       },
     )
     .post(
@@ -112,9 +112,7 @@ export namespace TokenApi {
                     }),
                   }),
                 ),
-                example: {
-                  data: { id: Examples.Token.id, token: Examples.Token.token },
-                },
+                example: { id: Examples.Token.id, token: Examples.Token.token },
               },
             },
             description: "Personal access token ID and value.",
@@ -127,7 +125,7 @@ export namespace TokenApi {
       authRequired,
       async (c) => {
         const token = await Api.Personal.create();
-        return c.json({ data: token }, 200);
+        return c.json(token, 200);
       },
     )
     .delete(
@@ -141,7 +139,7 @@ export namespace TokenApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
-                example: { data: "ok" },
+                example: "ok",
               },
             },
             description: "Personal access token was deleted successfully.",
@@ -165,7 +163,7 @@ export namespace TokenApi {
       async (c) => {
         const param = c.req.valid("param");
         await Api.Personal.remove(param.id);
-        return c.json({ data: "ok" as const }, 200);
+        return c.json("ok" as const, 200);
       },
     );
 }
