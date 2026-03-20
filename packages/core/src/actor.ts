@@ -108,7 +108,7 @@ export namespace Actor {
     type: T,
     properties: Extract<Info, { type: T }>["properties"],
     fn: Next,
-  ) {
+  ): ReturnType<Next> {
     return Context.provide({ type, properties } as any, () =>
       Log.provide(
         {

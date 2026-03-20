@@ -101,7 +101,7 @@ describe("tokens", () => {
   test("getToken returns list of tokens", async () => {
     const { data, error } = await sdk.getToken();
     expect(error).toBeUndefined();
-    expect(Array.isArray(data)).toBe(true);
+    expect(data).toBeArray();
   });
 
   test("postToken creates a token", async () => {
