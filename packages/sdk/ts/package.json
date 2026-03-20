@@ -2,6 +2,12 @@
   "name": "@agents/sdk",
   "type": "module",
   "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts",
+    "./core": "./src/core/index.ts",
+    "./*": "./src/*.ts"
+  },
   "scripts": {
     "gen": "bun run build.ts"
   },
