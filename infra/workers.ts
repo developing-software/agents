@@ -22,7 +22,7 @@ const environment = {
 };
 const authKv = new sst.cloudflare.Kv("AuthKv", {});
 
-new sst.cloudflare.Worker("MyAuthWorker", {
+const auth = new sst.cloudflare.Worker("MyAuthWorker", {
   handler: "./packages/workers/src/auth.ts",
   domain: $interpolate`auth.${domain}`,
   url: true,
@@ -63,7 +63,7 @@ new sst.cloudflare.Worker("MyAuthWorker", {
   },
 });
 
-new sst.cloudflare.Worker("console", {
+const console = new sst.cloudflare.Worker("console", {
   handler: "./packages/console/.svelte-kit/cloudflare/_worker.js",
   url: true,
   domain,
@@ -89,6 +89,11 @@ new sst.cloudflare.Worker("console", {
     },
   },
 });
+
+export const outputs = {
+  auth: auth.url,
+  console: console.url,
+};
 
 
 // if ($dev) {

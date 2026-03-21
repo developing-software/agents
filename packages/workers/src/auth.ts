@@ -14,8 +14,8 @@ let app: ReturnType<typeof createAuth> | null = null
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     if (!app) app = createAuth(CloudflareStorage({ namespace: (env.AuthKv) }))
-    return withDatabase(env.HYPERDRIVE.connectionString, () =>
-      app!.fetch(request, env, ctx),
-    )
+    // return withDatabase(process.env.DATABASE_URL, () =>
+    return await app!.fetch(request, env, ctx)
+    // )
   },
 }

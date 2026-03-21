@@ -1,6 +1,6 @@
 export const CONFIG_PATH = `${process.env.HOME}/.config/dev-agents/config.json`;
-export const API_BASE = process.env.API_URL ?? "http://localhost:5173/api";
-export const AUTH_ISSUER = process.env.AUTH_URL ?? "http://localhost:3002";
+export const API_BASE = process.env.API_URL ?? "https://agents.developing.company/api";
+export const AUTH_ISSUER = process.env.AUTH_URL ?? "https://auth.agents.developing.company";
 
 export type Config = { token: string; baseUrl: string };
 

@@ -16,7 +16,8 @@
     "@agents/core": "workspace:*",
     "@agents/functions": "workspace:*",
     "@agents/sdk": "workspace:*",
-    "hono": "catalog:"
+    "hono": "catalog:",
+    "sst": "catalog:"
   },
   "devDependencies": {
     "@sveltejs/adapter-cloudflare": "^7.2.6",

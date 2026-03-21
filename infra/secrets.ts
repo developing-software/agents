@@ -1,3 +1,4 @@
+export const DatabaseURL = new sst.Secret("DatabaseURL");
 export const ResendApiKey = new sst.Secret("ResendApiKey");
 export const SenderEmailDomain = new sst.Secret("SenderEmailDomain");
 export const GitHubClientId = new sst.Secret("GitHubClientId");
