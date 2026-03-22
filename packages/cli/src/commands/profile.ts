@@ -13,7 +13,10 @@ export default {
 
     if (!sub || sub === "get") {
       const { data, error } = await withSpinner("Fetching profile", () => sdk.getProfile());
-      if (error) { log.error((error as any).message ?? "Failed to fetch profile"); process.exit(1); }
+      if (error) {
+        log.error((error as any).message ?? "Failed to fetch profile");
+        process.exit(1);
+      }
       console.log(JSON.stringify(data, null, 2));
       return;
     }
@@ -27,7 +30,10 @@ export default {
       const { data, error } = await withSpinner("Updating profile", () =>
         sdk.putProfile({ name: options.name ?? "", email: options.email ?? "" }),
       );
-      if (error) { log.error((error as any).message ?? "Failed to update profile"); process.exit(1); }
+      if (error) {
+        log.error((error as any).message ?? "Failed to update profile");
+        process.exit(1);
+      }
       console.log(JSON.stringify(data, null, 2));
       return;
     }

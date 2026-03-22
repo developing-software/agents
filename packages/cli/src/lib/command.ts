@@ -1,4 +1,3 @@
-
 export type CommandHandler = (args: string[]) => Promise<void> | void;
 
 export interface Command {

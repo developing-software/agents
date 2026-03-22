@@ -13,7 +13,10 @@ export default {
 
     if (!sub || sub === "list") {
       const { data, error } = await withSpinner("Fetching apps", () => sdk.getApp());
-      if (error) { log.error((error as any).message ?? "Failed to fetch apps"); process.exit(1); }
+      if (error) {
+        log.error((error as any).message ?? "Failed to fetch apps");
+        process.exit(1);
+      }
       console.log(JSON.stringify(data, null, 2));
       return;
     }
@@ -27,16 +30,25 @@ export default {
       const { data, error } = await withSpinner("Creating app", () =>
         sdk.postApp({ name: options.name, redirectURI: options["redirect-uri"] }),
       );
-      if (error) { log.error((error as any).message ?? "Failed to create app"); process.exit(1); }
+      if (error) {
+        log.error((error as any).message ?? "Failed to create app");
+        process.exit(1);
+      }
       console.log(JSON.stringify(data, null, 2));
       return;
     }
 
     if (sub === "delete") {
       const id = args[1];
-      if (!id) { log.error("Provide app ID: dev-agents app delete <id>"); process.exit(1); }
+      if (!id) {
+        log.error("Provide app ID: dev-agents app delete <id>");
+        process.exit(1);
+      }
       const { error } = await withSpinner(`Deleting app ${id}`, () => sdk.deleteAppById({ id }));
-      if (error) { log.error((error as any).message ?? "Failed to delete app"); process.exit(1); }
+      if (error) {
+        log.error((error as any).message ?? "Failed to delete app");
+        process.exit(1);
+      }
       log.success("App deleted.");
       return;
     }

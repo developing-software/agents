@@ -30,20 +30,23 @@ Use **Bun** everywhere.
 ## Key Patterns
 
 **Actor context** — every operation runs under an actor (`user`, `system`, `token`, `public`):
+
 ```ts
-import { useActor } from "@agents/core/actor"
-const actor = useActor()
+import { useActor } from "@agents/core/actor";
+const actor = useActor();
 ```
 
 **Errors** — use `VisibleError` for client-safe errors:
+
 ```ts
-import { VisibleError } from "@agents/core/error"
-throw new VisibleError("not_found", 404, "Resource not found")
+import { VisibleError } from "@agents/core/error";
+throw new VisibleError("not_found", 404, "Resource not found");
 ```
 
 **Database** — use Drizzle via the shared `db` instance:
+
 ```ts
-import { db } from "@agents/core/drizzle"
+import { db } from "@agents/core/drizzle";
 ```
 
 ## Commands

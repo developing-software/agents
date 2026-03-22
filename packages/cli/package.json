@@ -1,8 +1,6 @@
 {
   "name": "cli",
   "private": true,
-  "type": "module",
-  "module": "src/index.ts",
   "bin": {
     "dev-agents": "src/cli.ts"
   },
@@ -10,6 +8,8 @@
     "src/cli.ts",
     "src/lib/**/*.ts"
   ],
+  "type": "module",
+  "module": "src/index.ts",
   "scripts": {
     "build": "bun build.ts bun dist/dev-agents",
     "build:macos-arm": "bun build.ts bun-darwin-arm64 dist/dev-agents-macos-arm",

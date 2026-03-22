@@ -12,10 +12,7 @@ export async function prompt(question: string): Promise<string> {
 }
 
 // Yes/No confirmation prompt
-export async function confirm(
-  question: string,
-  defaultValue = false
-): Promise<boolean> {
+export async function confirm(question: string, defaultValue = false): Promise<boolean> {
   const hint = defaultValue ? "[Y/n]" : "[y/N]";
   const answer = await prompt(`${question} ${hint} `);
 
@@ -24,10 +21,7 @@ export async function confirm(
 }
 
 // Select from a list of options
-export async function select<T extends string>(
-  question: string,
-  options: T[]
-): Promise<T> {
+export async function select<T extends string>(question: string, options: T[]): Promise<T> {
   console.log(question);
 
   options.forEach((opt, i) => {

@@ -21,7 +21,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       github: GithubProvider({
         clientID: process.env.GITHUB_CLIENT_ID!,
         clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-        scopes: ["email", "profile"],
+        scopes: ["user:email", "read:user", "user"],
       }),
     },
     allow: async (input, _req) => {

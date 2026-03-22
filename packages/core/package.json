@@ -5,7 +5,10 @@
   "sideEffects": false,
   "module": "index.ts",
   "exports": {
-    "./*": "./src/*.ts"
+    "./*": [
+      "./src/*.ts",
+      "./src/*/index.ts"
+    ]
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

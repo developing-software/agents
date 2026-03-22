@@ -40,15 +40,21 @@ export default {
 
           if (error) {
             reject(new Error(u.searchParams.get("error_description") ?? error));
-            return new Response("<html><body>Authentication failed. You can close this tab.</body></html>", {
-              headers: { "Content-Type": "text/html" },
-            });
+            return new Response(
+              "<html><body>Authentication failed. You can close this tab.</body></html>",
+              {
+                headers: { "Content-Type": "text/html" },
+              },
+            );
           }
           if (code) {
             resolve(code);
-            return new Response("<html><body>Login successful! You can close this tab.</body></html>", {
-              headers: { "Content-Type": "text/html" },
-            });
+            return new Response(
+              "<html><body>Login successful! You can close this tab.</body></html>",
+              {
+                headers: { "Content-Type": "text/html" },
+              },
+            );
           }
           reject(new Error("No code received"));
           return new Response("Unexpected request", { status: 400 });

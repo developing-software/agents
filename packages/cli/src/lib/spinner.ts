@@ -43,10 +43,7 @@ export class Spinner {
 }
 
 // Helper function for running async tasks with a spinner
-export async function withSpinner<T>(
-  message: string,
-  task: () => Promise<T>
-): Promise<T> {
+export async function withSpinner<T>(message: string, task: () => Promise<T>): Promise<T> {
   const spinner = new Spinner(message);
   spinner.start();
 
