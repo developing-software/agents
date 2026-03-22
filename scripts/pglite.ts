@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 import { $ } from "bun";
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
