@@ -39,12 +39,14 @@ export const auth: MiddlewareHandler = async (c, next) => {
     }
 
     const result = await authClient.verify(subjects, bearerToken);
-    if (result.err)
+    if (result.err) {
+      console.error(result.err);
       throw new VisibleError(
         "authentication",
         ErrorCodes.Authentication.INVALID_TOKEN,
         "Invalid bearer token",
       );
+    }
     if (result.subject.type === "user") {
       return Actor.provide(
         "user",

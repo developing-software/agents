@@ -14,7 +14,7 @@ import {
 
 export const authClient = createClient({
   clientID: "api",
-  issuer: process.env.AUTH_URL ?? "http://localhost:3002",
+  issuer: process.env.AUTH_URL ?? "https://auth.agents.developing.company",
 });
 // export const authClient = issuer.request
 

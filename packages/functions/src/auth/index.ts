@@ -59,9 +59,18 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       const username = profile.login;
       const avatarUrl = profile.avatar_url;
 
-      const matching = await User.fromEmail(email);
+      // const matching = await User.fromEmail(email)
+      const matching = (await User.fromEmail(username));
 
-      if (matching.length === 0) {
+      if (matching?.length === 0) {
+        const matchingByUsername = await User.fromUsername(username);
+        if (matchingByUsername?.length === 1) {
+          const user = matchingByUsername[0]!;
+          if (user.email !== email || user.avatarUrl !== avatarUrl)
+            await User.update({ id: user.id, email, avatarUrl });
+          return ctx.subject("user", { userID: user.id });
+        }
+
         const id = await User.create({ email, username, avatarUrl });
         return ctx.subject("user", { userID: id });
       }

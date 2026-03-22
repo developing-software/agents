@@ -11,6 +11,7 @@ import {
 import { domain } from './stage.ts'
 
 const environment = {
+  AUTH_URL: $interpolate`https://auth.${domain}`,
   RESEND_API_KEY: ResendApiKey.value,
   SENDER_EMAIL_DOMAIN: SenderEmailDomain.value,
   GITHUB_CLIENT_ID: GitHubClientId.value,

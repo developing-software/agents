@@ -108,7 +108,7 @@ export namespace User {
         .select()
         .from(userTable)
         .where(and(eq(userTable.username, username), isNull(userTable.timeDeleted)))
-        .then((rows) => rows.map(serialize).at(0)),
+        .then((rows) => rows.map(serialize)),
     ),
   );
 
