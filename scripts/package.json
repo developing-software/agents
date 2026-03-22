@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "db:migrate": "bunx sst shell bun \"scripts/migrate.ts\""
+    "db:migrate": "bunx sst shell bun \"migrate.ts\""
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.14",
