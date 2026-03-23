@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { db } from "../../drizzle/index";
 import { createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
@@ -74,5 +74,13 @@ export namespace GithubPullRequest {
         and(eq(githubPullRequestTable.repoId, repoId), eq(githubPullRequestTable.number, number)),
       )
       .then((rows) => rows[0] ?? null);
+  }
+
+  export async function listByRepo(repoId: string) {
+    return db
+      .select()
+      .from(githubPullRequestTable)
+      .where(eq(githubPullRequestTable.repoId, repoId))
+      .orderBy(desc(githubPullRequestTable.timeUpdated));
   }
 }

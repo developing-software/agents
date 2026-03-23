@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "../../drizzle/index";
 import { createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
@@ -83,5 +83,12 @@ export namespace GithubRepo {
       .from(githubRepoTable)
       .where(eq(githubRepoTable.fullName, fullName))
       .then((rows) => rows.find((r) => !r.timeDeleted) ?? null);
+  }
+
+  export async function list() {
+    return db
+      .select()
+      .from(githubRepoTable)
+      .where(isNull(githubRepoTable.timeDeleted));
   }
 }

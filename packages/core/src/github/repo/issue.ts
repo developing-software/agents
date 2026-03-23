@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { db } from "../../drizzle/index";
 import { createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
@@ -62,5 +62,13 @@ export namespace GithubIssue {
       .from(githubIssueTable)
       .where(and(eq(githubIssueTable.repoId, repoId), eq(githubIssueTable.number, number)))
       .then((rows) => rows[0] ?? null);
+  }
+
+  export async function listByRepo(repoId: string) {
+    return db
+      .select()
+      .from(githubIssueTable)
+      .where(eq(githubIssueTable.repoId, repoId))
+      .orderBy(desc(githubIssueTable.timeUpdated));
   }
 }
