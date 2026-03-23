@@ -60,7 +60,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       const avatarUrl = profile.avatar_url;
 
       // const matching = await User.fromEmail(email)
-      const matching = (await User.fromEmail(username));
+      const matching = await User.fromEmail(username);
 
       if (matching?.length === 0) {
         const matchingByUsername = await User.fromUsername(username);

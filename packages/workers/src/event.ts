@@ -1,9 +1,7 @@
 import { Log } from "@agents/core/util/log";
 import type { MessageBatch } from "@cloudflare/workers-types";
 
-interface Env {
-
-}
+interface Env {}
 
 const log = Log.create({ namespace: "workers.event" });
 
@@ -14,7 +12,7 @@ export default {
         body: message.body,
         attempts: message.attempts,
       });
-      message.ack()
+      message.ack();
     }
   },
 };

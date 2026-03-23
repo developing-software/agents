@@ -73,7 +73,6 @@ export default {
     const { challenge, url } = await authClient.authorize(CALLBACK_URL, "code", {
       pkce: true,
       provider: "github",
-
     });
 
     log.info("Opening browser to authenticate...");

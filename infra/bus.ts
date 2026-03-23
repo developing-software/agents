@@ -10,4 +10,25 @@ bus.subscribe({
   link: [
     database,
   ],
+  transform: {
+    worker: (args) => {
+      // args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
+      //   ...bindings,
+      //   {
+      //     type: "hyperdrive",
+      //     name: "HYPERDRIVE",
+      //     id: hyperdrive.id,
+      //   },
+      // ]);
+      args.observability = {
+        enabled: true,
+        headSamplingRate: 1,
+        logs: {
+          enabled: true,
+          invocationLogs: true,
+          headSamplingRate: 1,
+        },
+      };
+    },
+  },
 })
