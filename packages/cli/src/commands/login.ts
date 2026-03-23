@@ -68,11 +68,12 @@ export default {
   name: "login",
   description: "Authenticate via GitHub OAuth",
   handler: async (_args) => {
-    const authClient = createAuthClient({ clientID: "cli", issuer: AUTH_ISSUER });
+    const authClient = createAuthClient({ clientID: "api", issuer: AUTH_ISSUER });
 
     const { challenge, url } = await authClient.authorize(CALLBACK_URL, "code", {
       pkce: true,
       provider: "github",
+
     });
 
     log.info("Opening browser to authenticate...");

@@ -23,12 +23,15 @@ export default {
 
     if (sub === "create") {
       const { options } = parseArguments(args.slice(1));
-      if (!options.name || !options["redirect-uri"]) {
+      const name = options.name;
+      const redirectURI = options["redirect-uri"];
+
+      if (!name || !redirectURI) {
         log.error("Provide --name and --redirect-uri");
         process.exit(1);
       }
       const { data, error } = await withSpinner("Creating app", () =>
-        sdk.postApp({ name: options.name, redirectURI: options["redirect-uri"] }),
+        sdk.postApp({ name, redirectURI }),
       );
       if (error) {
         log.error((error as any).message ?? "Failed to create app");

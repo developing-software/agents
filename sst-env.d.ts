@@ -50,8 +50,9 @@ import * as cloudflare from "@cloudflare/workers-types";
 declare module "sst" {
   export interface Resource {
     "AuthKv": cloudflare.KVNamespace
-    "MyAuthWorker": cloudflare.Service
-    "console": cloudflare.Service
+    "AuthWorker": cloudflare.Service
+    "Bus": cloudflare.Queue
+    "Console": cloudflare.Service
   }
 }
 

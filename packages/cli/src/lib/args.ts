@@ -25,16 +25,16 @@ export function parseArguments(argv: string[]): ParsedArgs {
       }
       if (value !== undefined) {
         options[key] = value;
-      } else if (argv[i + 1] && !argv[i + 1].startsWith("-")) {
-        options[key] = argv[++i];
+      } else if (argv[i + 1] && !argv[i + 1]?.startsWith("-")) {
+        options[key] = argv[++i]!;
       } else {
         flags[key] = true;
       }
     } else if (arg.startsWith("-")) {
       // Short option: -n value or -f
       const key = arg.slice(1);
-      if (argv[i + 1] && !argv[i + 1].startsWith("-")) {
-        options[key] = argv[++i];
+      if (argv[i + 1] && !argv[i + 1]?.startsWith("-")) {
+        options[key] = argv[++i]!;
       } else {
         flags[key] = true;
       }

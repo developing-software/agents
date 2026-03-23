@@ -20,8 +20,8 @@ const spec = await generateSpecs(routes, {
     },
     security: [{ Bearer: [] }],
     servers: [
-      { description: "Local", url: process.env.API_URL ?? "http://localhost:3000" },
-      { description: "Production", url: process.env.API_URL ?? "http://localhost:3000" },
+      { description: "Local", url: process.env.API_URL ?? "https://agents-dev.developing.company/api" },
+      { description: "Production", url: process.env.API_URL ?? "https://agents.developing.company/api" },
     ],
   },
 });

@@ -47,7 +47,7 @@ export namespace AuthApi {
 
       return c.json({ sub: verified.subject }, 200);
     })
-    .get("/api/callback", async (c) => {
+    .get("/callback", async (c) => {
       const { code, error, error_description } = c.req.query();
       const url = new URL(c.req.url);
       if (error || error_description) {
@@ -64,7 +64,7 @@ export namespace AuthApi {
       }
 
       const apiUrl = process.env.API_URL ?? url.origin;
-      const exchanged = await authClient.exchange(code, `${apiUrl}/api/callback`);
+      const exchanged = await authClient.exchange(code, `${apiUrl}/callback`);
 
       if (exchanged.err) return c.json({ message: "Failed to exchange code" }, 400);
 

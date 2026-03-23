@@ -17,7 +17,7 @@ export async function getSdk() {
     process.exit(1);
   }
 
-  const authClient = createAuthClient({ clientID: "cli", issuer: AUTH_ISSUER });
+  const authClient = createAuthClient({ clientID: "api", issuer: AUTH_ISSUER });
   const refreshed = await authClient.refresh(config.refresh, { access: config.access });
 
   if (refreshed.err) {

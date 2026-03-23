@@ -1,36 +1,17 @@
 import { database } from "./database.ts";
-import {
-  ResendApiKey,
-  SenderEmailDomain,
-  GitHubClientId,
-  GitHubClientSecret,
-  GitHubWebhookSecret,
-  GitHubAppId,
-  GitHubAppPrivateKey,
-} from "./secrets";
+import { environment } from "./secrets";
 import { domain } from './stage.ts'
 
-const environment = {
-  AUTH_URL: $interpolate`https://auth.${domain}`,
-  RESEND_API_KEY: ResendApiKey.value,
-  SENDER_EMAIL_DOMAIN: SenderEmailDomain.value,
-  GITHUB_CLIENT_ID: GitHubClientId.value,
-  GITHUB_CLIENT_SECRET: GitHubClientSecret.value,
-  GITHUB_WEBHOOK_SECRET: GitHubWebhookSecret.value,
-  GITHUB_APP_ID: GitHubAppId.value,
-  GITHUB_APP_PRIVATE_KEY: GitHubAppPrivateKey.value,
-  DATABASE_URL: database.properties.url,
-};
+
 const authKv = new sst.cloudflare.Kv("AuthKv", {});
 
-const auth = new sst.cloudflare.Worker("MyAuthWorker", {
+const auth = new sst.cloudflare.Worker("AuthWorker", {
   handler: "./packages/workers/src/auth.ts",
   domain: $interpolate`auth.${domain}`,
   url: true,
   placement: {
-    mode: "smart",
+    region: "aws:sa-east-1",
   },
-
   link: [
     authKv,
     database
@@ -64,7 +45,7 @@ const auth = new sst.cloudflare.Worker("MyAuthWorker", {
   },
 });
 
-const console = new sst.cloudflare.Worker("console", {
+const console = new sst.cloudflare.Worker("Console", {
   handler: "./packages/console/.svelte-kit/cloudflare/_worker.js",
   url: true,
   domain,
@@ -75,6 +56,9 @@ const console = new sst.cloudflare.Worker("console", {
   link: [
     database
   ],
+  placement: {
+    region: "aws:sa-east-1"
+  },
   transform: {
     worker: (args) => {
       args.compatibilityFlags = ["nodejs_compat"];
