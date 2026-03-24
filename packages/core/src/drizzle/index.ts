@@ -8,24 +8,26 @@ import { createContext } from "../context";
 const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
 const log = Log.create({ namespace: "drizzle" });
 
-const clientCache = new Map<string, PostgresJsDatabase>();
+let clientCache: PostgresJsDatabase | undefined
 
 function createDb(url: string): PostgresJsDatabase {
-  if (clientCache.has(url)) return clientCache.get(url)!;
-  const client = pg(url, { connect_timeout: 10 });
+  // if (clientCache.has(url)) return clientCache.get(url)!;
+  if (clientCache) return clientCache;
+  const client = pg(url, { connect_timeout: 10, prepare: false, });
   const database = drizzle({
     client,
     logger:
       process.env.DRIZZLE_LOG === "true"
         ? {
-            logQuery(query, params) {
-              log.info("query", { query });
-              log.info("params", { params });
-            },
-          }
+          logQuery(query, params) {
+            log.info("query", { query });
+            log.info("params", { params });
+          },
+        }
         : undefined,
   });
-  clientCache.set(url, database);
+  // clientCache.set(url, database);
+  clientCache = database;
   return database;
 }
 

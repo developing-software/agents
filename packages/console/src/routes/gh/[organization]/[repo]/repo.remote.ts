@@ -10,7 +10,7 @@ export const dispatchAction = command(
     repo: z.string(),
     workflow_id: z.string(),
     ref: z.string().default("main"),
-    inputs: z.record(z.string()).optional(),
+    inputs: z.record(z.string(), z.any()).optional(),
   }),
   async ({ organization, repo, workflow_id, ref, inputs }) => {
     const found = await GithubRepo.findByFullName(`${organization}/${repo}`);

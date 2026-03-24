@@ -3,7 +3,7 @@ import { redirect } from "@sveltejs/kit";
 import { GithubRepo } from "@agents/core/github/repo/index";
 
 export const load: PageServerLoad = async ({ locals }) => {
-  if (!locals.userID) redirect(302, "/");
+  if (!locals.userID) throw redirect(302, "/");
 
   try {
     const repos = await GithubRepo.list();

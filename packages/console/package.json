@@ -17,7 +17,6 @@
     "@agents/functions": "workspace:*",
     "@agents/sdk": "workspace:*",
     "@openauthjs/openauth": "^0.4.3",
-    "hono": "catalog:",
     "sst": "catalog:",
     "zod": "catalog:"
   },

@@ -110,6 +110,7 @@ const console = new sst.cloudflare.Worker("Console", {
   },
   transform: {
     worker: (args) => {
+      args.compatibilityDate = "2026-03-19";
       args.compatibilityFlags = ["nodejs_compat"];
       args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
         ...bindings,
