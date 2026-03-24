@@ -11,7 +11,7 @@ declare global {
 
     // interface Error {}
     interface Locals {
-      user: import("@agents/core/user/index").User.Info | null;
+      userID: string | null;
     }
     // interface PageData {}
     // interface PageState {}

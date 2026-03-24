@@ -1,5 +1,6 @@
 <script lang="ts">
-  let { data } = $props();
+  import type { PageProps } from './$types';
+  let { data }: PageProps = $props();
 
   let filter = $state<'all' | 'open' | 'closed' | 'merged'>('open');
 

@@ -24,6 +24,12 @@ const branch = planetscale.getBranchOutput({
   organization: cluster.organization,
   database: cluster.name,
 })
+
+
+const hyprdrive = cloudflare.getHyperdriveConfig({
+  accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+  hyperdriveId: "ebb41070546a4f5baf5bf1a37877f13c"
+})
 // // new planetscale.
 // const password = new planetscale.
 

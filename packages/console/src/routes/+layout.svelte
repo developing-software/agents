@@ -1,8 +1,9 @@
 <script lang="ts">
+  import type { LayoutProps } from './$types';
   import './layout.css';
   import favicon from '$lib/assets/favicon.svg';
 
-  let { data, children } = $props();
+  let { data, children }: LayoutProps = $props();
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -15,26 +16,16 @@
     </a>
 
     <div class="flex items-center gap-3">
-      {#if data.user}
-        <span class="flex items-center gap-2 text-sm text-gray-300">
-          {#if data.user.avatarUrl}
-            <img
-              src={data.user.avatarUrl}
-              alt={data.user.username ?? ''}
-              class="h-6 w-6 rounded-full"
-            />
-          {/if}
-          {data.user.username ?? data.user.email}
-        </span>
+      {#if data.userID}
         <a
-          href="/api/logout"
+          href="/logout"
           class="rounded-md px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
         >
           Sign out
         </a>
       {:else}
         <a
-          href="/api/login"
+          href="/login"
           class="rounded-md bg-gray-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-600 transition-colors"
         >
           Sign in with GitHub

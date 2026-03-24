@@ -12,7 +12,7 @@ const clientCache = new Map<string, PostgresJsDatabase>();
 
 function createDb(url: string): PostgresJsDatabase {
   if (clientCache.has(url)) return clientCache.get(url)!;
-  const client = pg(url);
+  const client = pg(url, { connect_timeout: 10 });
   const database = drizzle({
     client,
     logger:
@@ -42,6 +42,7 @@ export function useDatabase(): PostgresJsDatabase {
     return DatabaseContext.use().db;
   } catch {
     // Fallback for non-worker environments (dev, scripts, tests)
+    log.warn("no database context, falling back to env");
     return createDb(process.env.DATABASE_URL || DEFAULT_URL);
   }
 }

@@ -1,4 +1,4 @@
-import { eq, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../drizzle/index";
 import { createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
@@ -86,9 +86,13 @@ export namespace GithubRepo {
   }
 
   export async function list() {
+    return db.select().from(githubRepoTable).where(isNull(githubRepoTable.timeDeleted));
+  }
+
+  export async function listByOwner(owner: string) {
     return db
       .select()
       .from(githubRepoTable)
-      .where(isNull(githubRepoTable.timeDeleted));
+      .where(and(eq(githubRepoTable.owner, owner), isNull(githubRepoTable.timeDeleted)));
   }
 }

@@ -53,8 +53,10 @@
         "@agents/core": "workspace:*",
         "@agents/functions": "workspace:*",
         "@agents/sdk": "workspace:*",
+        "@openauthjs/openauth": "^0.4.3",
         "hono": "catalog:",
         "sst": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@sveltejs/adapter-cloudflare": "^7.2.6",
@@ -126,6 +128,7 @@
         "@agents/core": "workspace:*",
         "@agents/functions": "workspace:*",
         "@openauthjs/openauth": "^0.4.3",
+        "hono": "catalog:",
       },
       "devDependencies": {
         "@cloudflare/workers-types": "4.20260301.1",

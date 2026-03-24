@@ -44,9 +44,15 @@ export namespace GitHubApi {
       return c.json({ ok: true }, 200);
     })
 
-    // List all repos
+    // List repos — optional ?owner= or ?installation_id= filter
     .get("/repos", authRequired, async (c) => {
-      const repos = await GithubRepo.list();
+      const owner = c.req.query("owner");
+      const installationId = c.req.query("installation_id");
+      if (installationId) {
+        const repo = await GithubRepo.findByInstallationId(Number(installationId));
+        return c.json(repo ? [repo] : [], 200);
+      }
+      const repos = owner ? await GithubRepo.listByOwner(owner) : await GithubRepo.list();
       return c.json(repos, 200);
     })
 
@@ -98,7 +104,7 @@ export namespace GitHubApi {
         z.object({
           workflow_id: z.string(),
           ref: z.string().default("main"),
-          inputs: z.record(z.string()).optional(),
+          inputs: z.record(z.string(), z.any()).optional(),
         }),
       ),
       async (c) => {

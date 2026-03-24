@@ -1,14 +1,15 @@
 <script lang="ts">
+  import type { LayoutProps } from './$types';
   import { page } from '$app/state';
 
-  let { data, children } = $props();
+  let { data, children }: LayoutProps = $props();
 
-  const tabs = [
+  const tabs = $derived([
     { label: 'Overview', href: `/gh/${data.organization}/${data.repoName}` },
     { label: 'Issues', href: `/gh/${data.organization}/${data.repoName}/issues` },
     { label: 'Pull Requests', href: `/gh/${data.organization}/${data.repoName}/pulls` },
     { label: 'Actions', href: `/gh/${data.organization}/${data.repoName}/actions` },
-  ];
+  ]);
 
   function isActive(href: string) {
     return page.url.pathname === href;

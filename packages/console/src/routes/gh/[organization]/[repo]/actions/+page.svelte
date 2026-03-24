@@ -1,13 +1,14 @@
 <script lang="ts">
+  import type { PageProps } from './$types';
   import { page } from '$app/state';
   import { dispatchAction } from '../repo.remote';
 
-  let { data } = $props();
+  let { data }: PageProps = $props();
 
   const { organization, repo } = page.params;
 
   let workflowId = $state('implement.yml');
-  let ref = $state(data.defaultBranch);
+  let ref = $derived(data.defaultBranch);
   let inputsJson = $state('{}');
   let status = $state<'idle' | 'running' | 'done' | 'error'>('idle');
   let errorMsg = $state('');
@@ -25,6 +26,11 @@
     status = 'running';
     errorMsg = '';
     try {
+      if(!organization || !repo) {
+        errorMsg = 'Organization and repo are required';
+        status = 'error';
+        return;
+      }
       await dispatchAction({ organization, repo, workflow_id: workflowId, ref, inputs });
       status = 'done';
     } catch (e) {

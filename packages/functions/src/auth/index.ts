@@ -46,6 +46,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       return false;
     },
     success: async (ctx, value, _req) => {
+      try {
       const octokit = GitHub.fromToken(value.tokenset.access);
       const [{ data: emails }, { data: profile }] = await Promise.all([
         octokit.rest.users.listEmailsForAuthenticatedUser(),
@@ -59,8 +60,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       const username = profile.login;
       const avatarUrl = profile.avatar_url;
 
-      // const matching = await User.fromEmail(email)
-      const matching = await User.fromEmail(username);
+      const matching = await User.fromEmail(email);
 
       if (matching?.length === 0) {
         const matchingByUsername = await User.fromUsername(username);
@@ -85,6 +85,16 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       const id = await User.merge(matching.map((x) => x.id));
       if (id) await User.update({ id, username, avatarUrl });
       return ctx.subject("user", { userID: id! });
+      } catch (err: any) {
+        console.error("auth success error", {
+          message: err?.message,
+          code: err?.code,
+          detail: err?.detail,
+          hint: err?.hint,
+          stack: err?.stack,
+        });
+        throw err;
+      }
     },
   }).use(logger());
 }

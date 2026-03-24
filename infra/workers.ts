@@ -24,26 +24,70 @@ const auth = new sst.cloudflare.Worker("AuthWorker", {
   },
   transform: {
     worker: (args) => {
-      // args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
-      //   ...bindings,
-      //   {
-      //     type: "hyperdrive",
-      //     name: "HYPERDRIVE",
-      //     id: hyperdrive.id,
-      //   },
-      // ]);
+      args.compatibilityFlags = ["nodejs_compat"];
+      args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
+        ...bindings,
+        {
+          type: "hyperdrive",
+          name: "HYPERDRIVE",
+          id: "ebb41070546a4f5baf5bf1a37877f13c",
+        },
+      ]);
       args.observability = {
         enabled: true,
         headSamplingRate: 1,
         logs: {
           enabled: true,
-          invocationLogs: true,
+          invocationLogs: false,
           headSamplingRate: 1,
         },
       };
     },
   },
 });
+
+
+const api = new sst.cloudflare.Worker("Api", {
+  handler: "./packages/workers/src/api.ts",
+  domain: $interpolate`api.${domain}`,
+  url: true,
+  placement: {
+    region: "aws:sa-east-1",
+  },
+  link: [
+    authKv,
+    database
+  ],
+  environment,
+  build: {
+    loader: {
+      ".css": "text",
+    },
+  },
+  transform: {
+    worker: (args) => {
+      args.compatibilityFlags = ["nodejs_compat"];
+      args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
+        ...bindings,
+        {
+          type: "hyperdrive",
+          name: "HYPERDRIVE",
+          id: "ebb41070546a4f5baf5bf1a37877f13c",
+        },
+      ]);
+      args.observability = {
+        enabled: true,
+        headSamplingRate: 1,
+        logs: {
+          enabled: true,
+          invocationLogs: false,
+          headSamplingRate: 1,
+        },
+      };
+    },
+  },
+});
+
 
 const console = new sst.cloudflare.Worker("Console", {
   handler: "./packages/console/.svelte-kit/cloudflare/_worker.js",
@@ -62,12 +106,20 @@ const console = new sst.cloudflare.Worker("Console", {
   transform: {
     worker: (args) => {
       args.compatibilityFlags = ["nodejs_compat"];
+      args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
+        ...bindings,
+        {
+          type: "hyperdrive",
+          name: "HYPERDRIVE",
+          id: "ebb41070546a4f5baf5bf1a37877f13c",
+        },
+      ]);
       args.observability = {
         enabled: true,
         headSamplingRate: 1,
         logs: {
           enabled: true,
-          invocationLogs: true,
+          invocationLogs: false,
           headSamplingRate: 1,
         },
       };
@@ -78,6 +130,7 @@ const console = new sst.cloudflare.Worker("Console", {
 export const outputs = {
   auth: auth.url,
   console: console.url,
+  api: api.url,
 };
 
 

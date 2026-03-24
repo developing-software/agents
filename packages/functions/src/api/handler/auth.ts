@@ -22,7 +22,7 @@ export namespace AuthApi {
         }
       }
 
-      const apiUrl = process.env.API_URL ?? `http://${c.req.header("host")}`;
+      const apiUrl = process.env.API_URL ?? new URL(c.req.url).origin;
       const { url } = await authClient.authorize(`${apiUrl}/api/callback`, "code");
       return c.redirect(url);
     })
@@ -64,9 +64,12 @@ export namespace AuthApi {
       }
 
       const apiUrl = process.env.API_URL ?? url.origin;
-      const exchanged = await authClient.exchange(code, `${apiUrl}/callback`);
+      const exchanged = await authClient.exchange(code, `${apiUrl}/api/callback`);
 
-      if (exchanged.err) return c.json({ message: "Failed to exchange code" }, 400);
+      if (exchanged.err) {
+        log.warn("exchange failed", { error: exchanged.err, redirectUri: `${apiUrl}/api/callback` });
+        return c.json({ message: "Failed to exchange code", error: String(exchanged.err) }, 400);
+      }
 
       await setTokens(c, exchanged.tokens.access, exchanged.tokens.refresh);
 
