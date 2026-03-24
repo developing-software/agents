@@ -47,14 +47,6 @@ export function useDatabase(): PostgresJsDatabase {
   }
 }
 
-export const db: PostgresJsDatabase = new Proxy({} as PostgresJsDatabase, {
-  get(_target, prop, receiver) {
-    const real = useDatabase();
-    const value = Reflect.get(real, prop, receiver);
-    return typeof value === "function" ? value.bind(real) : value;
-  },
-});
-
 export async function healthcheck(): Promise<{ status: "ok" | "degraded"; message: string }> {
   try {
     await useDatabase().execute(sql`SELECT 1`);

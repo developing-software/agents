@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { fn } from "../util/fn";
-import { and, db, eq, isNull } from "../drizzle";
+import { and, eq, isNull } from "../drizzle";
 import { apiClientTable, apiPersonalTokenTable } from "./api.sql";
 import { createID } from "../util/id";
 import { Actor } from "../actor";
@@ -48,13 +48,15 @@ export namespace Api {
       async (input) => {
         const id = createID("apiClient");
         const secret = createID("apiSecret");
-        await db.insert(apiClientTable).values({
-          id,
-          secret,
-          name: input.name,
-          redirectURI: input.redirectURI,
-          userID: Actor.userID(),
-        });
+        await useTransaction((tx) =>
+          tx.insert(apiClientTable).values({
+            id,
+            secret,
+            name: input.name,
+            redirectURI: input.redirectURI,
+            userID: Actor.userID(),
+          }),
+        );
         return {
           id,
           secret,
@@ -68,22 +70,29 @@ export namespace Api {
         redirectURI: true,
       }),
       async (input) => {
-        const match = await db
-          .select({ id: apiClientTable.id })
-          .from(apiClientTable)
-          .where(
-            and(eq(apiClientTable.id, input.id), eq(apiClientTable.redirectURI, input.redirectURI)),
-          );
+        const match = await useTransaction((tx) =>
+          tx
+            .select({ id: apiClientTable.id })
+            .from(apiClientTable)
+            .where(
+              and(
+                eq(apiClientTable.id, input.id),
+                eq(apiClientTable.redirectURI, input.redirectURI),
+              ),
+            ),
+        );
         return match.length === 1;
       },
     );
 
     export async function list(): Promise<Info[]> {
-      return db
-        .select()
-        .from(apiClientTable)
-        .where(and(eq(apiClientTable.userID, Actor.userID()), isNull(apiClientTable.timeDeleted)))
-        .then((rows) => rows.map(serialize));
+      return useTransaction((tx) =>
+        tx
+          .select()
+          .from(apiClientTable)
+          .where(and(eq(apiClientTable.userID, Actor.userID()), isNull(apiClientTable.timeDeleted)))
+          .then((rows) => rows.map(serialize)),
+      );
     }
 
     export const remove = fn(Info.shape.id, (input) =>
@@ -158,11 +167,13 @@ export namespace Api {
       // const prefix = Resource.App.stage === "production" ? "live" : "test";
       const prefix = process.env.NODE_ENV === "production" ? "live" : "test";
       const token = `tok_${prefix}_` + randomBytes(10).toString("hex");
-      await db.insert(apiPersonalTokenTable).values({
-        id,
-        token,
-        userID: Actor.userID(),
-      });
+      await useTransaction((tx) =>
+        tx.insert(apiPersonalTokenTable).values({
+          id,
+          token,
+          userID: Actor.userID(),
+        }),
+      );
 
       return {
         id,
@@ -192,16 +203,18 @@ export namespace Api {
     );
 
     export async function list(): Promise<Info[]> {
-      return db
-        .select()
-        .from(apiPersonalTokenTable)
-        .where(
-          and(
-            eq(apiPersonalTokenTable.userID, Actor.userID()),
-            isNull(apiPersonalTokenTable.timeDeleted),
-          ),
-        )
-        .then((rows) => rows.map(serialize));
+      return useTransaction((tx) =>
+        tx
+          .select()
+          .from(apiPersonalTokenTable)
+          .where(
+            and(
+              eq(apiPersonalTokenTable.userID, Actor.userID()),
+              isNull(apiPersonalTokenTable.timeDeleted),
+            ),
+          )
+          .then((rows) => rows.map(serialize)),
+      );
     }
 
     function obfuscate(token: string) {
@@ -232,14 +245,16 @@ export namespace Api {
     );
 
     export async function fromToken(token: string) {
-      return db
-        .select({
-          id: apiPersonalTokenTable.id,
-          userID: apiPersonalTokenTable.userID,
-        })
-        .from(apiPersonalTokenTable)
-        .where(eq(apiPersonalTokenTable.token, token))
-        .then((rows) => rows.at(0));
+      return useTransaction((tx) =>
+        tx
+          .select({
+            id: apiPersonalTokenTable.id,
+            userID: apiPersonalTokenTable.userID,
+          })
+          .from(apiPersonalTokenTable)
+          .where(eq(apiPersonalTokenTable.token, token))
+          .then((rows) => rows.at(0)),
+      );
     }
   }
 }

@@ -96,6 +96,11 @@ const console = new sst.cloudflare.Worker("Console", {
   assets: {
     directory: "./packages/console/.svelte-kit/cloudflare",
   },
+  build: {
+    loader: {
+      ".css": "text",
+    },
+  },
   environment,
   link: [
     database

@@ -5,7 +5,6 @@ export const load: PageServerLoad = ({ locals, url }) => {
   const installationId = url.searchParams.get("installation_id");
   const setupAction = url.searchParams.get("setup_action");
 
-
   return {
     userID: locals.userID ?? null,
     installation:

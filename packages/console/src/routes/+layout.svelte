@@ -6,7 +6,9 @@
   let { data, children }: LayoutProps = $props();
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head>
+  <link rel="icon" href={favicon} />
+</svelte:head>
 
 <div class="flex min-h-screen flex-col bg-gray-950 text-gray-100">
   <nav class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-3">

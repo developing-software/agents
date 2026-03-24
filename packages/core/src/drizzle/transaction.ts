@@ -5,7 +5,7 @@ import {
   type PgQueryResultHKT,
 } from "drizzle-orm/pg-core";
 import type { ExtractTablesWithRelations } from "drizzle-orm/relations";
-import { db } from ".";
+import { useDatabase } from ".";
 import { createContext } from "../context";
 
 export type Transaction = PgAsyncTransaction<
@@ -14,7 +14,7 @@ export type Transaction = PgAsyncTransaction<
   ExtractTablesWithRelations<Record<any, never>, Record<any, never>>
 >;
 
-type TxOrDb = Transaction | typeof db;
+type TxOrDb = Transaction | ReturnType<typeof useDatabase>;
 
 const TransactionContext = createContext<{
   tx: Transaction;
@@ -26,7 +26,7 @@ export async function useTransaction<T>(callback: (trx: TxOrDb) => Promise<T>) {
     const { tx } = TransactionContext.use();
     return callback(tx);
   } catch {
-    return callback(db);
+    return callback(useDatabase());
   }
 }
 
@@ -48,7 +48,7 @@ export async function createTransaction<T>(
     return callback(tx);
   } catch {
     const effects: (() => void | Promise<void>)[] = [];
-    const result = await db.transaction(
+    const result = await useDatabase().transaction(
       async (tx) => {
         return TransactionContext.provide({ tx, effects }, () => callback(tx));
       },

@@ -1,6 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { db } from "../../drizzle/index";
-import { createTransaction } from "../../drizzle/transaction";
+import { useTransaction, createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
 import { Log } from "../../util/log";
 import { githubRepoTable } from "./repo.sql";
@@ -55,44 +54,56 @@ export namespace GithubRepo {
 
   export async function remove(installationId: number) {
     log.info("remove repo", { installationId });
-    await db
-      .update(githubRepoTable)
-      .set({ timeDeleted: new Date() })
-      .where(eq(githubRepoTable.installationId, installationId));
+    return await useTransaction(async (tx) =>
+      await tx
+        .update(githubRepoTable)
+        .set({ timeDeleted: new Date() })
+        .where(eq(githubRepoTable.installationId, installationId)),
+    );
   }
 
   export async function removeByFullName(fullName: string) {
     log.info("remove repo by fullName", { fullName });
-    await db
-      .update(githubRepoTable)
-      .set({ timeDeleted: new Date() })
-      .where(eq(githubRepoTable.fullName, fullName));
+    return await useTransaction(async (tx) =>
+      await tx
+        .update(githubRepoTable)
+        .set({ timeDeleted: new Date() })
+        .where(eq(githubRepoTable.fullName, fullName)),
+    );
   }
 
   export async function findByInstallationId(installationId: number) {
-    return db
-      .select()
-      .from(githubRepoTable)
-      .where(eq(githubRepoTable.installationId, installationId))
-      .then((rows) => rows[0] ?? null);
+    return await useTransaction(async (tx) =>
+      await tx
+        .select()
+        .from(githubRepoTable)
+        .where(eq(githubRepoTable.installationId, installationId))
+        .then((rows) => rows[0] ?? null),
+    );
   }
 
   export async function findByFullName(fullName: string) {
-    return db
-      .select()
-      .from(githubRepoTable)
-      .where(eq(githubRepoTable.fullName, fullName))
-      .then((rows) => rows.find((r) => !r.timeDeleted) ?? null);
+    return await useTransaction(async (tx) =>
+      await tx
+        .select()
+        .from(githubRepoTable)
+        .where(eq(githubRepoTable.fullName, fullName))
+        .then((rows) => rows.find((r) => !r.timeDeleted) ?? null),
+    );
   }
 
   export async function list() {
-    return db.select().from(githubRepoTable).where(isNull(githubRepoTable.timeDeleted));
+    return await useTransaction(async (tx) =>
+      await tx.select().from(githubRepoTable).where(isNull(githubRepoTable.timeDeleted)),
+    );
   }
 
   export async function listByOwner(owner: string) {
-    return db
-      .select()
-      .from(githubRepoTable)
-      .where(and(eq(githubRepoTable.owner, owner), isNull(githubRepoTable.timeDeleted)));
+    return await useTransaction(async (tx) =>
+      await tx
+        .select()
+        .from(githubRepoTable)
+        .where(and(eq(githubRepoTable.owner, owner), isNull(githubRepoTable.timeDeleted))),
+    );
   }
 }

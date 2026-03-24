@@ -1,6 +1,5 @@
 import { and, eq, desc } from "drizzle-orm";
-import { db } from "../../drizzle/index";
-import { createTransaction } from "../../drizzle/transaction";
+import { useTransaction, createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
 import { Log } from "../../util/log";
 import { githubIssueTable } from "./repo.sql";
@@ -57,18 +56,22 @@ export namespace GithubIssue {
   }
 
   export async function findByRepoAndNumber(repoId: string, number: number) {
-    return db
-      .select()
-      .from(githubIssueTable)
-      .where(and(eq(githubIssueTable.repoId, repoId), eq(githubIssueTable.number, number)))
-      .then((rows) => rows[0] ?? null);
+    return await useTransaction(async (tx) =>
+      await tx
+        .select()
+        .from(githubIssueTable)
+        .where(and(eq(githubIssueTable.repoId, repoId), eq(githubIssueTable.number, number)))
+        .then((rows) => rows[0] ?? null),
+    );
   }
 
   export async function listByRepo(repoId: string) {
-    return db
-      .select()
-      .from(githubIssueTable)
-      .where(eq(githubIssueTable.repoId, repoId))
-      .orderBy(desc(githubIssueTable.timeUpdated));
+    return await useTransaction(async (tx) =>
+      await tx
+        .select()
+        .from(githubIssueTable)
+        .where(eq(githubIssueTable.repoId, repoId))
+        .orderBy(desc(githubIssueTable.timeUpdated)),
+    );
   }
 }

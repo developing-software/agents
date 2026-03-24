@@ -47,44 +47,44 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
     },
     success: async (ctx, value, _req) => {
       try {
-      const octokit = GitHub.fromToken(value.tokenset.access);
-      const [{ data: emails }, { data: profile }] = await Promise.all([
-        octokit.rest.users.listEmailsForAuthenticatedUser(),
-        octokit.rest.users.getAuthenticated(),
-      ]);
+        const octokit = GitHub.fromToken(value.tokenset.access);
+        const [{ data: emails }, { data: profile }] = await Promise.all([
+          octokit.rest.users.listEmailsForAuthenticatedUser(),
+          octokit.rest.users.getAuthenticated(),
+        ]);
 
-      const primary = emails.find((e) => e.primary);
-      if (!primary?.verified) throw new Error("Email not verified");
+        const primary = emails.find((e) => e.primary);
+        if (!primary?.verified) throw new Error("Email not verified");
 
-      const { email } = primary;
-      const username = profile.login;
-      const avatarUrl = profile.avatar_url;
+        const { email } = primary;
+        const username = profile.login;
+        const avatarUrl = profile.avatar_url;
 
-      const matching = await User.fromEmail(email);
+        const matching = await User.fromEmail(email);
 
-      if (matching?.length === 0) {
-        const matchingByUsername = await User.fromUsername(username);
-        if (matchingByUsername?.length === 1) {
-          const user = matchingByUsername[0]!;
-          if (user.email !== email || user.avatarUrl !== avatarUrl)
-            await User.update({ id: user.id, email, avatarUrl });
+        if (matching?.length === 0) {
+          const matchingByUsername = await User.fromUsername(username);
+          if (matchingByUsername?.length === 1) {
+            const user = matchingByUsername[0]!;
+            if (user.email !== email || user.avatarUrl !== avatarUrl)
+              await User.update({ id: user.id, email, avatarUrl });
+            return ctx.subject("user", { userID: user.id });
+          }
+
+          const id = await User.create({ email, username, avatarUrl });
+          return ctx.subject("user", { userID: id });
+        }
+
+        if (matching.length === 1) {
+          const user = matching[0]!;
+          if (user.username !== username || user.avatarUrl !== avatarUrl)
+            await User.update({ id: user.id, username, avatarUrl });
           return ctx.subject("user", { userID: user.id });
         }
 
-        const id = await User.create({ email, username, avatarUrl });
-        return ctx.subject("user", { userID: id });
-      }
-
-      if (matching.length === 1) {
-        const user = matching[0]!;
-        if (user.username !== username || user.avatarUrl !== avatarUrl)
-          await User.update({ id: user.id, username, avatarUrl });
-        return ctx.subject("user", { userID: user.id });
-      }
-
-      const id = await User.merge(matching.map((x) => x.id));
-      if (id) await User.update({ id, username, avatarUrl });
-      return ctx.subject("user", { userID: id! });
+        const id = await User.merge(matching.map((x) => x.id));
+        if (id) await User.update({ id, username, avatarUrl });
+        return ctx.subject("user", { userID: id! });
       } catch (err: any) {
         console.error("auth success error", {
           message: err?.message,

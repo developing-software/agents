@@ -67,7 +67,10 @@ export namespace AuthApi {
       const exchanged = await authClient.exchange(code, `${apiUrl}/api/callback`);
 
       if (exchanged.err) {
-        log.warn("exchange failed", { error: exchanged.err, redirectUri: `${apiUrl}/api/callback` });
+        log.warn("exchange failed", {
+          error: exchanged.err,
+          redirectUri: `${apiUrl}/api/callback`,
+        });
         return c.json({ message: "Failed to exchange code", error: String(exchanged.err) }, 400);
       }
 

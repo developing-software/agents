@@ -1,6 +1,5 @@
 import { and, eq, desc } from "drizzle-orm";
-import { db } from "../../drizzle/index";
-import { createTransaction } from "../../drizzle/transaction";
+import { useTransaction, createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
 import { Log } from "../../util/log";
 import { githubPullRequestTable } from "./repo.sql";
@@ -67,20 +66,24 @@ export namespace GithubPullRequest {
   }
 
   export async function findByRepoAndNumber(repoId: string, number: number) {
-    return db
-      .select()
-      .from(githubPullRequestTable)
-      .where(
-        and(eq(githubPullRequestTable.repoId, repoId), eq(githubPullRequestTable.number, number)),
-      )
-      .then((rows) => rows[0] ?? null);
+    return await useTransaction(async (tx) =>
+      await tx
+        .select()
+        .from(githubPullRequestTable)
+        .where(
+          and(eq(githubPullRequestTable.repoId, repoId), eq(githubPullRequestTable.number, number)),
+        )
+        .then((rows) => rows[0] ?? null),
+    );
   }
 
   export async function listByRepo(repoId: string) {
-    return db
-      .select()
-      .from(githubPullRequestTable)
-      .where(eq(githubPullRequestTable.repoId, repoId))
-      .orderBy(desc(githubPullRequestTable.timeUpdated));
+    return await useTransaction(async (tx) =>
+      await tx
+        .select()
+        .from(githubPullRequestTable)
+        .where(eq(githubPullRequestTable.repoId, repoId))
+        .orderBy(desc(githubPullRequestTable.timeUpdated)),
+    );
   }
 }

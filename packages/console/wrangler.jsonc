@@ -10,4 +10,10 @@
   },
   "workers_dev": true,
   "preview_urls": true,
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "ebb41070546a4f5baf5bf1a37877f13c",
+    },
+  ],
 }

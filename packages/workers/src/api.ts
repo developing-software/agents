@@ -1,4 +1,4 @@
-import { withDatabase } from '@agents/core/drizzle/index'
+import { withDatabase } from "@agents/core/drizzle/index";
 import { routes } from "@agents/functions/src/api/routes";
 import type { ExecutionContext } from "@cloudflare/workers-types";
 import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare";
@@ -9,13 +9,10 @@ interface Env {
   [key: string]: unknown;
 }
 
-const app = new Hono()
-  .route("/api", routes)
+const app = new Hono().route("/api", routes);
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    return await withDatabase(env.HYPERDRIVE.connectionString, () =>
-      app!.fetch(request, env, ctx)
-    )
+    return await withDatabase(env.HYPERDRIVE.connectionString, () => app!.fetch(request, env, ctx));
   },
 };

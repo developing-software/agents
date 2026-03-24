@@ -15,8 +15,8 @@
   "dependencies": {
     "@agents/core": "workspace:*",
     "@agents/functions": "workspace:*",
-    "@openauthjs/openauth": "^0.4.3",
     "@agents/sdk": "workspace:*",
+    "@openauthjs/openauth": "^0.4.3",
     "hono": "catalog:",
     "sst": "catalog:",
     "zod": "catalog:"
