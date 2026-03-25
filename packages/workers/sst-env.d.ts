@@ -53,7 +53,6 @@ declare module "sst" {
     "AuthKv": cloudflare.KVNamespace
     "AuthWorker": cloudflare.Service
     "Bus": cloudflare.Queue
-    "Console": cloudflare.Service
   }
 }
 

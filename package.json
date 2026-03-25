@@ -3,13 +3,14 @@
   "private": true,
   "workspaces": {
     "catalog": {
-      "@types/bun": "1.3.10",
-      "drizzle-kit": "^1.0.0-beta.16-ea816b6",
-      "drizzle-orm": "^1.0.0-beta.16-ea816b6",
+      "@types/bun": "1.3.11",
+      "drizzle-kit": "^1.0.0-beta.19",
+      "drizzle-orm": "^1.0.0-beta.19",
       "hono": "^4.11.3",
       "ulid": "^3.0.2",
       "zod": "^4.3.5",
-      "sst": "4.5.1"
+      "sst": "4.5.7",
+      "typescript": "^6"
     },
     "catalogs": {
       "build": {},
@@ -40,10 +41,10 @@
   "devDependencies": {
     "@cloudflare/workers-types": "4.20260317.1",
     "@types/bun": "catalog:",
-    "oxfmt": "^0.41.0",
-    "oxlint": "^1.56.0"
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "catalog:"
   }
 }

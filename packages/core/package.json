@@ -33,6 +33,6 @@
     "drizzle-kit": "catalog:"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "catalog:"
   }
 }
