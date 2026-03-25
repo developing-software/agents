@@ -1,6 +1,5 @@
 import { domain } from "./stage";
 
-export const DatabaseURL = new sst.Secret("DatabaseURL");
 export const ResendApiKey = new sst.Secret("ResendApiKey");
 export const SenderEmailDomain = new sst.Secret("SenderEmailDomain");
 export const GitHubClientId = new sst.Secret("GitHubClientId");
@@ -19,6 +18,5 @@ export const environment = {
   GITHUB_CLIENT_SECRET: GitHubClientSecret.value,
   GITHUB_WEBHOOK_SECRET: GitHubWebhookSecret.value,
   GITHUB_APP_ID: GitHubAppId.value,
-  GITHUB_APP_PRIVATE_KEY: GitHubAppPrivateKey.value,
-  DATABASE_URL: DatabaseURL.value,
+  GITHUB_APP_PRIVATE_KEY: GitHubAppPrivateKey.value
 };

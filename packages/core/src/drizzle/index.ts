@@ -4,6 +4,8 @@ export * from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import pg from "postgres";
 import { createContext } from "../context";
+import { Resource } from "sst/resource";
+
 
 const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
 const log = Log.create({ namespace: "drizzle" });
@@ -45,7 +47,7 @@ export function useDatabase(): PostgresJsDatabase {
   } catch {
     // Fallback for non-worker environments (dev, scripts, tests)
     log.warn("no database context, falling back to env");
-    return createDb(process.env.DATABASE_URL || DEFAULT_URL);
+    return createDb(process.env.DATABASE_URL ?? Resource.Database.url ?? DEFAULT_URL);
   }
 }
 

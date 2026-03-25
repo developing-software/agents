@@ -6,7 +6,7 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "cloudflare",
-      providers: { railway: "0.4.4", planetscale: "0.4.1" },
+      providers: { railway: "0.4.4", planetscale: "1.0.0" },
     };
   },
   console: {

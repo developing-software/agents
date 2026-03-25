@@ -8,12 +8,13 @@ import "sst"
 declare module "sst" {
   export interface Resource {
     "Database": {
+      "database": string
+      "host": string
+      "password": string
+      "port": number
       "type": "sst.sst.Linkable"
       "url": string
-    }
-    "DatabaseURL": {
-      "type": "sst.sst.Secret"
-      "value": string
+      "username": string
     }
     "GitHubAppId": {
       "type": "sst.sst.Secret"
@@ -53,6 +54,7 @@ declare module "sst" {
     "AuthKv": cloudflare.KVNamespace
     "AuthWorker": cloudflare.Service
     "Bus": cloudflare.Queue
+    "Console": cloudflare.Service
   }
 }
 
