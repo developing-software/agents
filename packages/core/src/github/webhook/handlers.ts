@@ -93,7 +93,7 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
     let installationId = payload.installation?.id;
     if (!installationId) {
       const grepo = await GithubRepo.findByFullName(payload.repository.full_name).catch(() => null);
-      installationId = grepo?.installationId
+      installationId = grepo?.installationId;
       if (!installationId) {
         log.info("pull_request event with no installationId", {
           action: payload.action,
@@ -101,8 +101,7 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
           number: payload.pull_request.number,
           installationId,
         });
-
-      };
+      }
     }
 
     log.info("pull_request event", {

@@ -16,17 +16,16 @@ function createDb(url: string): PostgresJsDatabase {
     logger:
       process.env.DRIZZLE_LOG === "true"
         ? {
-          logQuery(query, params) {
-            log.info("query", { query });
-            log.info("params", { params });
-          },
-        }
+            logQuery(query, params) {
+              log.info("query", { query });
+              log.info("params", { params });
+            },
+          }
         : undefined,
   });
 }
 
 const DatabaseContext = createContext<{ db: PostgresJsDatabase }>();
-
 
 // Singleton fallback
 let db: PostgresJsDatabase | undefined;

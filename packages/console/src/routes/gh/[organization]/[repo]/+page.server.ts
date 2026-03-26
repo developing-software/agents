@@ -6,10 +6,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const { repo } = await parent();
   if (!repo) return { issues: [], pulls: [] };
 
-  const [issues, pulls] = await Promise.all([
-    GithubIssue.list(repo),
-    GithubPullRequest.list(repo),
-  ]);
+  const [issues, pulls] = await Promise.all([GithubIssue.list(repo), GithubPullRequest.list(repo)]);
 
   return {
     issues: issues.slice(0, 5),

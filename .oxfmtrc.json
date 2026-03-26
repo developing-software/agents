@@ -1,9 +1,4 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [
-    "**/node_modules/**",
-    "**/dist/**",
-    "infra/**",
-    "**/sst-env.d.ts"
-  ]
+  "ignorePatterns": ["**/node_modules/**", "**/dist/**", "infra/**", "**/sst-env.d.ts"]
 }
