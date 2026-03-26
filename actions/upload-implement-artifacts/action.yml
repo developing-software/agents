@@ -8,7 +8,7 @@ inputs:
   api_url:
     description: Agents API base URL
     required: false
-    default: https://agents-dev.developing.company/api
+    default: https://api.agents.developing.company/api
 
 runs:
   using: node20

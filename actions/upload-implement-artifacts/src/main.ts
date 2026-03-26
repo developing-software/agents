@@ -3,7 +3,7 @@ import { join } from "path";
 import * as core from "@actions/core";
 
 const agentsToken = core.getInput("agents_token");
-const apiUrl = core.getInput("api_url") || "https://agents-dev.developing.company/api";
+const apiUrl = core.getInput("api_url") || "https://api.agents.developing.company/api";
 const eventId = process.env.IMPLEMENT_EVENT_ID;
 const metricsPath = process.env.IMPLEMENT_METRICS;
 const artifactDir = process.env.IMPLEMENT_ARTIFACT_DIR;
