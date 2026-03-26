@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import type { PageProps } from './$types';
-  let { data }: PageProps = $props();
+  let { data, form }: PageProps = $props();
 </script>
 
 <div class="grid gap-6 md:grid-cols-2">
@@ -80,3 +81,29 @@
     {/if}
   </section>
 </div>
+
+<section class="mt-6 rounded-lg border border-gray-800 p-4">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-sm font-semibold text-gray-200">Agent Token</h2>
+      <p class="mt-0.5 text-xs text-gray-500">
+        Generate a token and add it as <code class="text-gray-300">AGENTS_TOKEN</code> in your repo's Actions secrets.
+      </p>
+    </div>
+    <form method="POST" action="?/installToken" use:enhance>
+      <button
+        type="submit"
+        class="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500"
+      >
+        Generate token
+      </button>
+    </form>
+  </div>
+
+  {#if form?.token}
+    <div class="mt-3 rounded bg-gray-900 p-3">
+      <p class="mb-1 text-xs text-gray-400">Copy this token — it won't be shown again.</p>
+      <code class="break-all text-xs text-green-400">{form.token}</code>
+    </div>
+  {/if}
+</section>

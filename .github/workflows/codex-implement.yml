@@ -26,10 +26,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: ./actions/implement
+      - uses: ./actions/implement-metrics
         with:
           pr_prefix: codex
           harness: codex
+          agents_token: ${{ secrets.AGENTS_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -50,35 +51,15 @@ jobs:
             Refer to AGENTS.md for project structure and guidelines.
             Do NOT commit, push, or open a pull request — only modify the files.
 
-      - name: Print step outputs
-        if: always()
-        env:
-          OUTPUTS: ${{ toJSON(steps.run-codex.outputs) }}
-        run: echo "$OUTPUTS"
-
-      - name: Capture result
-        if: always()
-        env:
-          FINAL_MESSAGE: ${{ steps.run-codex.outputs.final-message }}
-        run: |
-          if [ -z "$IMPLEMENT_METRICS" ] || [ -z "$FINAL_MESSAGE" ]; then
-            exit 0
-          fi
-          LAST_MSG=$(printf '%s' "$FINAL_MESSAGE" | tr '\n' ' ')
-          [ -n "$LAST_MSG" ] && printf 'result=%s\n' "$LAST_MSG" >> "$IMPLEMENT_METRICS"
-
-      - name: Upload artifacts
-        if: always()
-        run: |
-          mkdir -p "$RUNNER_TEMP/codex-artifacts"
-          [ -f "${IMPLEMENT_METRICS:-}" ] && cp "$IMPLEMENT_METRICS" "$RUNNER_TEMP/codex-artifacts/metrics.txt"
-
-      - uses: actions/upload-artifact@v4
+      - uses: ./actions/collect-codex-metrics
         if: always()
         with:
-          name: codex-issue-${{ github.event.issue.number }}
-          path: ${{ runner.temp }}/codex-artifacts/
-          if-no-files-found: ignore
+          final_message: ${{ steps.run-codex.outputs.final-message }}
+
+      - uses: ./actions/upload-implement-artifacts
+        if: always()
+        with:
+          agents_token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./.github/actions/test
         with:
