@@ -136,10 +136,7 @@ export namespace GitHubApi {
       validator(
         "param",
         z.object({
-          id: GithubEvent.Info.shape.id.meta({
-            description: "ID of the event to attach the artifact to.",
-            example: Examples.GithubEvent.id,
-          }),
+          id: GithubEvent.Info.shape.id,
         }),
       ),
       async (c) => {
