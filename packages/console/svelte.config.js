@@ -16,9 +16,13 @@ const config = {
   vitePlugin: {
     dynamicCompileOptions: ({ filename }) =>
       filename.includes("node_modules") ? undefined : { runes: true },
-    // inspector: {
+    inspector: {
+      toggleKeyCombo: 'control-shift',
+      holdMode: true,
+      showToggleButton: 'always',
+      toggleButtonPos: 'bottom-right',
 
-    // }
+    },
   },
 };
 
