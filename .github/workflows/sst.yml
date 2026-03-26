@@ -44,7 +44,8 @@ jobs:
       #   run: bun typecheck
 
       - name: build console
-        run: bun run build --cwd packages/console
+        run: bun run build
+        working-directory: packages/console
 
       - name: Deploy
         env:
