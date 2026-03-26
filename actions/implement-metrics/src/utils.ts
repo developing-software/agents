@@ -1,6 +1,8 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { appendFileSync, existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
+import { createClient, createConfig } from "@agents/sdk/client";
+import { DevAgentSdk } from "@agents/sdk";
 
 export interface GitHubContext {
   token: string;
@@ -16,15 +18,6 @@ export interface IssuePayload {
   number: number;
   title: string;
   body: string;
-}
-
-export interface ImplementEvent {
-  type: string;
-  repoFullName: string;
-  issueNumber: number;
-  pullRequestNumber?: number;
-  timestamp: string;
-  payload: Record<string, unknown>;
 }
 
 export function readEventPayload(): { issue: IssuePayload } {
@@ -49,7 +42,7 @@ export function getContext(): GitHubContext {
   const runUrl = `https://github.com/${repository}/actions/runs/${runId}`;
   const prPrefix = core.getInput("pr_prefix") || core.getState("pr_prefix");
 
-  return { token, repository, owner, repo, runId, runUrl, prPrefix };
+  return { token, repository, owner: owner!, repo: repo!, runId, runUrl, prPrefix };
 }
 
 export function readCustomMetrics(filePath: string): Record<string, string> {
@@ -65,18 +58,6 @@ export function readCustomMetrics(filePath: string): Record<string, string> {
   );
 }
 
-export function appendEvent(filePath: string, event: ImplementEvent): void {
-  appendFileSync(filePath, JSON.stringify(event) + "\n");
-}
-
-export function readEvents(filePath: string): ImplementEvent[] {
-  if (!filePath || !existsSync(filePath)) return [];
-  return readFileSync(filePath, "utf8")
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => JSON.parse(line) as ImplementEvent);
-}
-
 export async function execWithOutput(cmd: string, args: string[]): Promise<string> {
   let output = "";
   await exec.exec(cmd, args, {
@@ -86,4 +67,15 @@ export async function execWithOutput(cmd: string, args: string[]): Promise<strin
     },
   });
   return output.trim();
+}
+
+export function createApiClient(token: string, baseUrl: string): DevAgentSdk {
+  return new DevAgentSdk({
+    client: createClient(
+      createConfig({
+        baseUrl,
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ),
+  });
 }

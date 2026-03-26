@@ -1,4 +1,4 @@
-# Agents
+# Dev Agents
 
 Monorepo for reusable GitHub/agent actions and a console to track GitHub and agent activity — collecting metrics and traces for analysis.
 

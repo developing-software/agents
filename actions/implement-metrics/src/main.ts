@@ -2,7 +2,7 @@ import { join } from "path";
 import { appendFileSync } from "fs";
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { appendEvent, getContext, readEventPayload } from "./utils";
+import { createApiClient, getContext, readEventPayload } from "./utils";
 
 async function run() {
   const startMs = Date.now();
@@ -14,9 +14,7 @@ async function run() {
   const runnerTemp = process.env.RUNNER_TEMP;
   if (!runnerTemp) throw new Error("RUNNER_TEMP not set");
   const metricsFile = join(runnerTemp, ".implement-metrics");
-  const eventsFile = join(runnerTemp, ".implement-events");
   core.exportVariable("IMPLEMENT_METRICS", metricsFile);
-  core.exportVariable("IMPLEMENT_EVENTS_FILE", eventsFile);
 
   const harness = core.getInput("harness");
   const model = core.getInput("model");
@@ -32,18 +30,32 @@ async function run() {
   core.saveState("run_url", ctx.runUrl);
   core.saveState("base_branch", core.getInput("base_branch"));
 
-  appendEvent(eventsFile, {
-    type: "implement.started",
-    repoFullName: ctx.repository,
-    issueNumber: issue.number,
-    timestamp: new Date().toISOString(),
-    payload: {
-      harness: harness || null,
-      model: model || null,
-      branch,
-      runUrl: ctx.runUrl,
-    },
-  });
+  // Post implement.started event via API
+  const agentsToken = core.getInput("agents_token");
+  const apiUrl = core.getInput("api_url");
+  if (agentsToken) {
+    try {
+      const sdk = createApiClient(agentsToken, apiUrl);
+      const { data } = await sdk.postGithubEvents({
+        repoFullName: ctx.repository,
+        issueNumber: issue.number,
+        source: "action",
+        type: "implement.started",
+        payload: {
+          harness: harness || null,
+          model: model || null,
+          branch,
+          runUrl: ctx.runUrl,
+        },
+      });
+      if (data?.id) {
+        core.saveState("start_event_id", data.id);
+        core.exportVariable("IMPLEMENT_EVENT_ID", data.id);
+      }
+    } catch (err) {
+      core.warning(`Failed to post implement.started event: ${err}`);
+    }
+  }
 
   // Git config
   await exec.exec("git", ["config", "user.name", "github-actions[bot]"]);

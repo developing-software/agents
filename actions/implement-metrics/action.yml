@@ -17,6 +17,13 @@ inputs:
   metadata:
     description: Extra key=value metrics to include in the summary, one per line
     required: false
+  agents_token:
+    description: Personal access token for posting events to the Agents API
+    required: false
+  api_url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
 
 runs:
   using: node20

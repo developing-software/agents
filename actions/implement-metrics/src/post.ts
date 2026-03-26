@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { appendEvent, execWithOutput, readCustomMetrics, readEventPayload } from "./utils";
+import { createApiClient, execWithOutput, readCustomMetrics, readEventPayload } from "./utils";
 
 async function run() {
   const prPrefix = core.getState("pr_prefix");
@@ -8,6 +8,7 @@ async function run() {
   const startMs = startMsStr ? parseInt(startMsStr, 10) : Date.now();
   const branch = core.getState("branch");
   const runUrl = core.getState("run_url");
+  const startEventId = core.getState("start_event_id");
 
   if (!branch) {
     core.warning("No branch state found — main step likely failed, skipping post.");
@@ -23,17 +24,11 @@ async function run() {
   if (!token) throw new Error("GITHUB_TOKEN not set");
 
   const repository = process.env.GITHUB_REPOSITORY ?? "";
-  const eventsFile = process.env.IMPLEMENT_EVENTS_FILE ?? "";
-
   const { issue } = readEventPayload();
 
   // Re-configure git credentials — the agent may have modified git config,
   // and post hooks run in a context where checkout's credential helper
-  // may no longer be active. Store via extraheader (not in URL) to avoid
-  // token appearing in process list or logs.
-  //
-  // actions/checkout sets the extraheader at the local repo level. Unset it
-  // first to avoid a duplicate Authorization header when we set ours globally.
+  // may no longer be active.
   await exec.exec(
     "git",
     ["config", "--local", "--unset-all", "http.https://github.com/.extraheader"],
@@ -65,12 +60,12 @@ async function run() {
   let linesRemoved = 0;
   for (const line of diffStat.split("\n").filter(Boolean)) {
     const [added, removed] = line.split("\t");
-    linesAdded += parseInt(added) || 0;
-    linesRemoved += parseInt(removed) || 0;
+    linesAdded += parseInt(added!) || 0;
+    linesRemoved += parseInt(removed!) || 0;
   }
   const durationMs = Date.now() - startMs;
 
-  // Resolve base branch: explicit input → repo default → hardcoded fallback
+  // Resolve base branch
   let baseBranch = core.getState("base_branch");
   if (!baseBranch) {
     try {
@@ -109,26 +104,27 @@ async function run() {
     core.warning(`PR creation failed: ${err}. May already exist.`);
   }
 
-  // Parse PR number from URL
   const prNumberMatch = prUrl.match(/\/pull\/(\d+)/);
   const pullRequestNumber = prNumberMatch ? parseInt(prNumberMatch[1]!) : undefined;
 
-  // Emit completed event
-  if (eventsFile) {
-    appendEvent(eventsFile, {
-      type: "implement.completed",
-      repoFullName: repository,
-      issueNumber: issue.number,
-      pullRequestNumber,
-      timestamp: new Date().toISOString(),
-      payload: {
-        linesAdded,
-        linesRemoved,
-        durationMs,
-        prUrl,
-        runUrl,
-      },
-    });
+  // Post implement.completed event via API
+  const agentsToken = core.getInput("agents_token");
+  const apiUrl = core.getInput("api_url");
+  if (agentsToken) {
+    const sdk = createApiClient(agentsToken, apiUrl);
+    try {
+      await sdk.postGithubEvents({
+        repoFullName: repository,
+        issueNumber: issue.number,
+        pullRequestNumber,
+        parentEventId: startEventId || null,
+        source: "action",
+        type: "implement.completed",
+        payload: { linesAdded, linesRemoved, durationMs, prUrl, runUrl },
+      });
+    } catch (err) {
+      core.warning(`Failed to post implement.completed event: ${err}`);
+    }
   }
 
   // Write job summary

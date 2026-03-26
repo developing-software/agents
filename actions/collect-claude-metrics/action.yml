@@ -1,0 +1,58 @@
+name: Collect Claude Code Metrics
+description: Capture token usage and stage artifacts from a claude-code-action step
+
+inputs:
+  execution_file:
+    description: Path to the execution JSON file from claude-code-action
+    required: false
+  session_id:
+    description: Session ID from claude-code-action
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - uses: developing-software/agents/actions/write-metric@main
+      if: inputs.session_id != ''
+      with:
+        key: session_id
+        value: ${{ inputs.session_id }}
+
+    - name: Capture token usage
+      if: always()
+      shell: bash
+      env:
+        EXECUTION_FILE: ${{ inputs.execution_file }}
+      run: |
+        if [ -z "$IMPLEMENT_METRICS" ] || [ ! -f "${EXECUTION_FILE:-}" ]; then
+          exit 0
+        fi
+
+        RESULT=$(jq -c '.[] | select(.type == "result")' "$EXECUTION_FILE" 2>/dev/null | tail -1)
+        [ -z "$RESULT" ] && exit 0
+
+        INPUT=$(printf '%s' "$RESULT"        | jq -r '.usage.input_tokens // empty')
+        OUTPUT=$(printf '%s' "$RESULT"       | jq -r '.usage.output_tokens // empty')
+        CACHE_READ=$(printf '%s' "$RESULT"   | jq -r '.usage.cache_read_input_tokens // empty')
+        CACHE_CREATE=$(printf '%s' "$RESULT" | jq -r '.usage.cache_creation_input_tokens // empty')
+        TURNS=$(printf '%s' "$RESULT"        | jq -r '.num_turns // empty')
+        COST=$(printf '%s' "$RESULT"         | jq -r '.total_cost_usd // empty')
+        LAST_MSG=$(printf '%s' "$RESULT"     | jq -r '.result // empty' | tr '\n' ' ')
+
+        [ -n "$INPUT" ]        && printf 'input_tokens=%s\n'                "$INPUT"        >> "$IMPLEMENT_METRICS"
+        [ -n "$OUTPUT" ]       && printf 'output_tokens=%s\n'               "$OUTPUT"       >> "$IMPLEMENT_METRICS"
+        [ -n "$CACHE_READ" ]   && printf 'cache_read_input_tokens=%s\n'     "$CACHE_READ"   >> "$IMPLEMENT_METRICS"
+        [ -n "$CACHE_CREATE" ] && printf 'cache_creation_input_tokens=%s\n' "$CACHE_CREATE" >> "$IMPLEMENT_METRICS"
+        [ -n "$TURNS" ]        && printf 'num_turns=%s\n'                   "$TURNS"        >> "$IMPLEMENT_METRICS"
+        [ -n "$COST" ]         && printf 'cost_usd=%s\n'                    "$COST"         >> "$IMPLEMENT_METRICS"
+        [ -n "$LAST_MSG" ]     && printf 'result=%s\n'                      "$LAST_MSG"     >> "$IMPLEMENT_METRICS"
+
+    - name: Stage artifacts
+      if: always()
+      shell: bash
+      env:
+        EXECUTION_FILE: ${{ inputs.execution_file }}
+      run: |
+        mkdir -p "$RUNNER_TEMP/implement-artifacts"
+        [ -f "${EXECUTION_FILE:-}" ] && cp "$EXECUTION_FILE" "$RUNNER_TEMP/implement-artifacts/execution.json"
+        echo "IMPLEMENT_ARTIFACT_DIR=$RUNNER_TEMP/implement-artifacts" >> "$GITHUB_ENV"
