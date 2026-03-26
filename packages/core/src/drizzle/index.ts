@@ -16,20 +16,25 @@ function createDb(url: string): PostgresJsDatabase {
     logger:
       process.env.DRIZZLE_LOG === "true"
         ? {
-            logQuery(query, params) {
-              log.info("query", { query });
-              log.info("params", { params });
-            },
-          }
+          logQuery(query, params) {
+            log.info("query", { query });
+            log.info("params", { params });
+          },
+        }
         : undefined,
   });
 }
 
 const DatabaseContext = createContext<{ db: PostgresJsDatabase }>();
 
+
+// Singleton fallback
+let db: PostgresJsDatabase | undefined;
+
 /** Wrap a request handler — worker calls this once per request */
 export function withDatabase<T>(url: string, fn: () => T): T {
-  return DatabaseContext.provide({ db: createDb(url) }, fn);
+  db ??= createDb(url);
+  return DatabaseContext.provide({ db }, fn);
 }
 
 /** All business logic calls this — no manual init needed */
@@ -39,7 +44,8 @@ export function useDatabase(): PostgresJsDatabase {
   } catch {
     // Fallback for non-worker environments (dev, scripts, tests)
     log.warn("no database context, falling back to env");
-    return createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
+    db ??= createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
+    return db;
   }
 }
 
