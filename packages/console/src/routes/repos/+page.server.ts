@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       orgs: [...byOrg.entries()].map(([org, repos]) => ({ org, repos })),
     };
   } catch (error) {
+    console.error(error);
     return {
       orgs: [],
     };

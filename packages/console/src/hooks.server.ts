@@ -1,6 +1,5 @@
 import type { Handle, HandleServerError } from "@sveltejs/kit";
-import { authClient, getTokens, setTokens, verifyUser } from "$lib/auth";
-import { subjects } from "@agents/functions/src/auth/subject";
+import { verifyUser } from "$lib/auth";
 import { Log } from "@agents/core/util/log";
 import { VisibleError } from "@agents/core/error";
 import { dev } from "$app/environment";

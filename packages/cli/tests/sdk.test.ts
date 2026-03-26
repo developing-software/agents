@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { describe, test, expect, beforeAll } from "bun:test";
 import { app } from "@agents/functions/src/api/routes";
 import { User } from "@agents/core/user/index";
 import { Api } from "@agents/core/api/api";

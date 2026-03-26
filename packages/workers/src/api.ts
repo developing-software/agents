@@ -1,7 +1,7 @@
 import { withDatabase } from "@agents/core/drizzle/index";
 import { routes } from "@agents/functions/src/api/routes";
 import type { ExecutionContext } from "@cloudflare/workers-types";
-import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare";
+// import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare";
 import { Hono } from "hono";
 
 interface Env {
