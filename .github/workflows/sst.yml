@@ -1,0 +1,56 @@
+name: sst
+
+on:
+  push:
+    branches:
+      - dev
+      - prod
+
+concurrency:
+  group: ${{ github.ref }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            .sst
+          key: ${{ runner.os }}-sst
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '22'
+
+      # - run: 'curl -fsSL https://ion.sst.dev/install | bash'
+
+      - name: deps
+        run: bun install --frozen-lockfile
+
+      # - name: typecheck
+      #   run: bun typecheck
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_DEFAULT_ACCOUNT_ID:
+            ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+          PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
+          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+
+        run: |
+          bunx sst install
+          bunx sst deploy --stage=${GITHUB_REF_NAME}
