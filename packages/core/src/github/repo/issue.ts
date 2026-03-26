@@ -56,22 +56,24 @@ export namespace GithubIssue {
   }
 
   export async function findByRepoAndNumber(repoId: string, number: number) {
-    return await useTransaction(async (tx) =>
-      await tx
-        .select()
-        .from(githubIssueTable)
-        .where(and(eq(githubIssueTable.repoId, repoId), eq(githubIssueTable.number, number)))
-        .then((rows) => rows[0] ?? null),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubIssueTable)
+          .where(and(eq(githubIssueTable.repoId, repoId), eq(githubIssueTable.number, number)))
+          .then((rows) => rows[0] ?? null),
     );
   }
 
   export async function listByRepo(repoId: string) {
-    return await useTransaction(async (tx) =>
-      await tx
-        .select()
-        .from(githubIssueTable)
-        .where(eq(githubIssueTable.repoId, repoId))
-        .orderBy(desc(githubIssueTable.timeUpdated)),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubIssueTable)
+          .where(eq(githubIssueTable.repoId, repoId))
+          .orderBy(desc(githubIssueTable.timeUpdated)),
     );
   }
 }

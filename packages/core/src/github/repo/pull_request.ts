@@ -66,24 +66,29 @@ export namespace GithubPullRequest {
   }
 
   export async function findByRepoAndNumber(repoId: string, number: number) {
-    return await useTransaction(async (tx) =>
-      await tx
-        .select()
-        .from(githubPullRequestTable)
-        .where(
-          and(eq(githubPullRequestTable.repoId, repoId), eq(githubPullRequestTable.number, number)),
-        )
-        .then((rows) => rows[0] ?? null),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubPullRequestTable)
+          .where(
+            and(
+              eq(githubPullRequestTable.repoId, repoId),
+              eq(githubPullRequestTable.number, number),
+            ),
+          )
+          .then((rows) => rows[0] ?? null),
     );
   }
 
   export async function listByRepo(repoId: string) {
-    return await useTransaction(async (tx) =>
-      await tx
-        .select()
-        .from(githubPullRequestTable)
-        .where(eq(githubPullRequestTable.repoId, repoId))
-        .orderBy(desc(githubPullRequestTable.timeUpdated)),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubPullRequestTable)
+          .where(eq(githubPullRequestTable.repoId, repoId))
+          .orderBy(desc(githubPullRequestTable.timeUpdated)),
     );
   }
 }

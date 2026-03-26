@@ -55,7 +55,6 @@ const api = new sst.cloudflare.Worker("Api", {
     region: "aws:sa-east-1",
   },
   link: [
-    authKv,
     database
   ],
   environment,
@@ -97,9 +96,7 @@ const console = new sst.cloudflare.Worker("Console", {
     directory: "./packages/console/.svelte-kit/cloudflare",
   },
   build: {
-    loader: {
-      ".css": "text",
-    },
+
   },
   environment,
   link: [

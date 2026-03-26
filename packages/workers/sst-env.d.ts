@@ -4,59 +4,59 @@
 /* deno-fmt-ignore-file */
 /* biome-ignore-all lint: auto-generated */
 
-import "sst"
+import "sst";
 declare module "sst" {
   export interface Resource {
-    "Database": {
-      "database": string
-      "host": string
-      "password": string
-      "port": number
-      "type": "sst.sst.Linkable"
-      "url": string
-      "username": string
-    }
-    "GitHubAppId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GitHubAppPrivateKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GitHubClientId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GitHubClientSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GitHubWebhookSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "ResendApiKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "SenderEmailDomain": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
+    Database: {
+      database: string;
+      host: string;
+      password: string;
+      port: number;
+      type: "sst.sst.Linkable";
+      url: string;
+      username: string;
+    };
+    GitHubAppId: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GitHubAppPrivateKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GitHubClientId: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GitHubClientSecret: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GitHubWebhookSecret: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    ResendApiKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    SenderEmailDomain: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
   }
 }
-// cloudflare 
+// cloudflare
 import * as cloudflare from "@cloudflare/workers-types";
 declare module "sst" {
   export interface Resource {
-    "Api": cloudflare.Service
-    "AuthKv": cloudflare.KVNamespace
-    "AuthWorker": cloudflare.Service
-    "Bus": cloudflare.Queue
-    "Console": cloudflare.Service
+    Api: cloudflare.Service;
+    AuthKv: cloudflare.KVNamespace;
+    AuthWorker: cloudflare.Service;
+    Bus: cloudflare.Queue;
+    Console: cloudflare.Service;
   }
 }
 
-import "sst"
-export {}
+import "sst";
+export {};

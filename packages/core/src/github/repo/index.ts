@@ -54,56 +54,62 @@ export namespace GithubRepo {
 
   export async function remove(installationId: number) {
     log.info("remove repo", { installationId });
-    return await useTransaction(async (tx) =>
-      await tx
-        .update(githubRepoTable)
-        .set({ timeDeleted: new Date() })
-        .where(eq(githubRepoTable.installationId, installationId)),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .update(githubRepoTable)
+          .set({ timeDeleted: new Date() })
+          .where(eq(githubRepoTable.installationId, installationId)),
     );
   }
 
   export async function removeByFullName(fullName: string) {
     log.info("remove repo by fullName", { fullName });
-    return await useTransaction(async (tx) =>
-      await tx
-        .update(githubRepoTable)
-        .set({ timeDeleted: new Date() })
-        .where(eq(githubRepoTable.fullName, fullName)),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .update(githubRepoTable)
+          .set({ timeDeleted: new Date() })
+          .where(eq(githubRepoTable.fullName, fullName)),
     );
   }
 
   export async function findByInstallationId(installationId: number) {
-    return await useTransaction(async (tx) =>
-      await tx
-        .select()
-        .from(githubRepoTable)
-        .where(eq(githubRepoTable.installationId, installationId))
-        .then((rows) => rows[0] ?? null),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubRepoTable)
+          .where(eq(githubRepoTable.installationId, installationId))
+          .then((rows) => rows[0] ?? null),
     );
   }
 
   export async function findByFullName(fullName: string) {
-    return await useTransaction(async (tx) =>
-      await tx
-        .select()
-        .from(githubRepoTable)
-        .where(eq(githubRepoTable.fullName, fullName))
-        .then((rows) => rows.find((r) => !r.timeDeleted) ?? null),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubRepoTable)
+          .where(eq(githubRepoTable.fullName, fullName))
+          .then((rows) => rows.find((r) => !r.timeDeleted) ?? null),
     );
   }
 
   export async function list() {
-    return await useTransaction(async (tx) =>
-      await tx.select().from(githubRepoTable).where(isNull(githubRepoTable.timeDeleted)),
+    return await useTransaction(
+      async (tx) =>
+        await tx.select().from(githubRepoTable).where(isNull(githubRepoTable.timeDeleted)),
     );
   }
 
   export async function listByOwner(owner: string) {
-    return await useTransaction(async (tx) =>
-      await tx
-        .select()
-        .from(githubRepoTable)
-        .where(and(eq(githubRepoTable.owner, owner), isNull(githubRepoTable.timeDeleted))),
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubRepoTable)
+          .where(and(eq(githubRepoTable.owner, owner), isNull(githubRepoTable.timeDeleted))),
     );
   }
 }
