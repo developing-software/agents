@@ -114,9 +114,7 @@ export namespace GithubRepo {
         await tx
           .select()
           .from(githubRepoTable)
-          .where(
-            and(eq(githubRepoTable.userId, userID), isNull(githubRepoTable.timeDeleted)),
-          ),
+          .where(and(eq(githubRepoTable.userId, userID), isNull(githubRepoTable.timeDeleted))),
     );
   }
 

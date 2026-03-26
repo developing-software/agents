@@ -33,17 +33,17 @@ beforeAll(async () => {
   });
 });
 
-afterAll(async () => {
-  // Clean up token and user created during setup
-  if (tokenID) {
-    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(tokenID));
-  }
-  // Delete the personal access token used to auth
-  const pat = await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.list());
-  for (const t of pat) {
-    await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
-  }
-});
+// afterAll(async () => {
+//   // Clean up token and user created during setup
+//   if (tokenID) {
+//     await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(tokenID));
+//   }
+//   // Delete the personal access token used to auth
+//   const pat = await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.list());
+//   for (const t of pat) {
+//     await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
+//   }
+// });
 
 describe("profile", () => {
   test("getProfile returns the current user", async () => {

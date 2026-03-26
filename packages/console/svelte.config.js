@@ -17,11 +17,10 @@ const config = {
     dynamicCompileOptions: ({ filename }) =>
       filename.includes("node_modules") ? undefined : { runes: true },
     inspector: {
-      toggleKeyCombo: 'control-shift',
+      toggleKeyCombo: "control-shift",
       holdMode: true,
-      showToggleButton: 'always',
-      toggleButtonPos: 'bottom-right',
-
+      showToggleButton: "always",
+      toggleButtonPos: "bottom-right",
     },
   },
 };

@@ -3,14 +3,8 @@ import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig, type PluginOption } from "vite";
 
-
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    sveltekit(),
-    devtoolsJson(),
-    cloudflaredPg()
-  ],
+  plugins: [tailwindcss(), sveltekit(), devtoolsJson(), cloudflaredPg()],
 });
 
 function cloudflaredPg(): PluginOption {
