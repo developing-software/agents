@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { page } from '$app/state';
+  import { untrack } from 'svelte';
   import { dispatchAction, listWorkflowRuns } from '../repo.remote';
 
   let { data }: PageProps = $props();
@@ -11,8 +12,7 @@
   type Run = Awaited<ReturnType<typeof listWorkflowRuns>>[0];
 
   let selectedWorkflow = $state<Workflow | null>(null);
-  const { defaultBranch } = data;
-  let ref = $state(defaultBranch);
+  let ref = $state(untrack(() => data.defaultBranch));
   let inputPairs = $state<{ key: string; value: string }[]>([]);
   let status = $state<'idle' | 'running' | 'done' | 'error'>('idle');
   let errorMsg = $state('');
@@ -25,7 +25,7 @@
     status = 'idle';
     errorMsg = '';
     inputPairs = [];
-    ref = defaultBranch;
+    ref = data.defaultBranch;
     await loadRuns();
   }
 
