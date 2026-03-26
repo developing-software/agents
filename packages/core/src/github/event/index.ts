@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
@@ -97,7 +97,7 @@ export namespace GithubEvent {
 
   export async function listByRepo(
     repoId: string,
-    opts?: { issueNumber?: number; pullRequestNumber?: number },
+    opts?: { issueNumber?: number; pullRequestNumber?: number; limit?: number },
   ): Promise<Info[]> {
     return useTransaction(async (tx) => {
       const conditions = [eq(githubEventTable.repoId, repoId)];
@@ -105,12 +105,13 @@ export namespace GithubEvent {
         conditions.push(eq(githubEventTable.issueNumber, opts.issueNumber));
       if (opts?.pullRequestNumber !== undefined)
         conditions.push(eq(githubEventTable.pullRequestNumber, opts.pullRequestNumber));
-      return tx
+      let query = tx
         .select()
         .from(githubEventTable)
         .where(and(...conditions))
-        .orderBy(githubEventTable.timeCreated)
-        .then((rows) => rows.map(serialize));
+        .orderBy(desc(githubEventTable.timeCreated));
+      if (opts?.limit !== undefined) query = query.limit(opts.limit) as typeof query;
+      return query.then((rows) => rows.map(serialize));
     });
   }
 
