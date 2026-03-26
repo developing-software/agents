@@ -2,12 +2,14 @@ import { and, eq, isNull } from "drizzle-orm";
 import { useTransaction, createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
 import { Log } from "../../util/log";
+import { Actor } from "../../actor";
 import { githubRepoTable } from "./repo.sql";
 
 const log = Log.create({ namespace: "github.repo" });
 
 export namespace GithubRepo {
   export interface UpsertInput {
+    userId?: string;
     installationId: number;
     owner: string;
     repo: string;
@@ -27,6 +29,7 @@ export namespace GithubRepo {
         await tx
           .update(githubRepoTable)
           .set({
+            userId: input.userId,
             owner: input.owner,
             repo: input.repo,
             fullName: input.fullName,
@@ -42,6 +45,7 @@ export namespace GithubRepo {
       const id = createID("githubRepo");
       await tx.insert(githubRepoTable).values({
         id,
+        userId: input.userId,
         installationId: input.installationId,
         owner: input.owner,
         repo: input.repo,
@@ -86,30 +90,50 @@ export namespace GithubRepo {
   }
 
   export async function findByFullName(fullName: string) {
+    const userID = Actor.userID();
     return await useTransaction(
       async (tx) =>
         await tx
           .select()
           .from(githubRepoTable)
-          .where(eq(githubRepoTable.fullName, fullName))
-          .then((rows) => rows.find((r) => !r.timeDeleted) ?? null),
+          .where(
+            and(
+              eq(githubRepoTable.fullName, fullName),
+              eq(githubRepoTable.userId, userID),
+              isNull(githubRepoTable.timeDeleted),
+            ),
+          )
+          .then((rows) => rows[0] ?? null),
     );
   }
 
   export async function list() {
-    return await useTransaction(
-      async (tx) =>
-        await tx.select().from(githubRepoTable).where(isNull(githubRepoTable.timeDeleted)),
-    );
-  }
-
-  export async function listByOwner(owner: string) {
+    const userID = Actor.userID();
     return await useTransaction(
       async (tx) =>
         await tx
           .select()
           .from(githubRepoTable)
-          .where(and(eq(githubRepoTable.owner, owner), isNull(githubRepoTable.timeDeleted))),
+          .where(
+            and(eq(githubRepoTable.userId, userID), isNull(githubRepoTable.timeDeleted)),
+          ),
+    );
+  }
+
+  export async function listByOwner(owner: string) {
+    const userID = Actor.userID();
+    return await useTransaction(
+      async (tx) =>
+        await tx
+          .select()
+          .from(githubRepoTable)
+          .where(
+            and(
+              eq(githubRepoTable.owner, owner),
+              eq(githubRepoTable.userId, userID),
+              isNull(githubRepoTable.timeDeleted),
+            ),
+          ),
     );
   }
 }

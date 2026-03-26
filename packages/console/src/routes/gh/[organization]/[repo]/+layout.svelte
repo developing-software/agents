@@ -6,13 +6,16 @@
 
   const tabs = $derived([
     { label: 'Overview', href: `/gh/${data.organization}/${data.repoName}` },
+    { label: 'Files', href: `/gh/${data.organization}/${data.repoName}/tree` },
     { label: 'Issues', href: `/gh/${data.organization}/${data.repoName}/issues` },
     { label: 'Pull Requests', href: `/gh/${data.organization}/${data.repoName}/pulls` },
     { label: 'Actions', href: `/gh/${data.organization}/${data.repoName}/actions` },
   ]);
 
   function isActive(href: string) {
-    return page.url.pathname === href;
+    return href.includes('/tree')
+      ? page.url.pathname.startsWith(href)
+      : page.url.pathname === href;
   }
 </script>
 

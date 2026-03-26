@@ -2,6 +2,7 @@ import type { GitHubWebhook } from "./index";
 import { GithubRepo } from "../repo/index";
 import { GithubIssue } from "../repo/issue";
 import { GithubPullRequest } from "../repo/pull_request";
+import { User } from "../../user/index";
 import { Log } from "../../util/log";
 
 const log = Log.create({ namespace: "github.webhook" });
@@ -12,8 +13,11 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
     const account = payload.installation.account;
     const owner = account && "login" in account ? account.login : "";
     log.info("installation created", { installationId: payload.installation.id, owner });
+    const users = await User.fromUsername(payload.sender.login);
+    const userId = users[0]?.id;
     for (const r of payload.repositories ?? []) {
       await GithubRepo.upsert({
+        userId,
         installationId: payload.installation.id,
         owner,
         repo: r.name,
@@ -34,8 +38,11 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
       installationId: payload.installation.id,
       count: payload.repositories_added.length,
     });
+    const users = await User.fromUsername(payload.sender.login);
+    const userId = users[0]?.id;
     for (const r of payload.repositories_added) {
       await GithubRepo.upsert({
+        userId,
         installationId: payload.installation.id,
         owner,
         repo: r.name,
