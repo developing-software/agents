@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { generateToken } from './repo.remote';
+  import GitHubLink from '$lib/GitHubLink.svelte';
   let { data }: PageProps = $props();
 
   let token = $state<string | null>(null);
@@ -251,7 +252,7 @@
                 ? 'bg-green-500'
                 : 'bg-purple-500'}"
             ></span>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <p class="truncate text-sm text-gray-100">#{issue.number} {issue.title}</p>
               {#if issue.labels && issue.labels.length > 0}
                 <div class="mt-1 flex flex-wrap gap-1">
@@ -263,6 +264,7 @@
                 </div>
               {/if}
             </div>
+            <GitHubLink href={issue.htmlUrl} />
           </li>
         {/each}
       </ul>
@@ -294,12 +296,13 @@
                   ? 'bg-purple-500'
                   : 'bg-red-500'}"
             ></span>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <p class="truncate text-sm text-gray-100">#{pr.number} {pr.title}</p>
               <p class="mt-0.5 text-xs text-gray-500">
                 {pr.headBranch} → {pr.baseBranch}
               </p>
             </div>
+            <GitHubLink href={pr.htmlUrl} />
           </li>
         {/each}
       </ul>
