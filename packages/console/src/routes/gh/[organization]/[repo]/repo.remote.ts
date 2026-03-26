@@ -1,7 +1,7 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
 import { GithubRepo } from "@agents/core/github/repo/index";
-import { GitHub } from "@agents/core/github/client";
+import { GithubWorkflow } from "@agents/core/github/repo/workflow";
 import { error } from "@sveltejs/kit";
 
 export const dispatchAction = command(
@@ -16,14 +16,7 @@ export const dispatchAction = command(
     const found = await GithubRepo.findByFullName(`${organization}/${repo}`);
     if (!found) error(404, `Repository ${organization}/${repo} not found`);
 
-    const octokit = await GitHub.appClient(found.installationId);
-    await octokit.rest.actions.createWorkflowDispatch({
-      owner: organization,
-      repo,
-      workflow_id,
-      ref,
-      inputs,
-    });
+    await GithubWorkflow.dispatch(found, workflow_id, ref, inputs);
   },
 );
 
@@ -37,23 +30,6 @@ export const listWorkflowRuns = query(
     const found = await GithubRepo.findByFullName(`${organization}/${repo}`);
     if (!found) error(404, `Repository ${organization}/${repo} not found`);
 
-    const octokit = await GitHub.appClient(found.installationId);
-    const { data } = await octokit.rest.actions.listWorkflowRuns({
-      owner: organization,
-      repo,
-      workflow_id,
-      per_page: 20,
-    });
-
-    return data.workflow_runs.map((run) => ({
-      id: run.id,
-      status: run.status as string | null,
-      conclusion: run.conclusion as string | null,
-      headBranch: run.head_branch,
-      commitMessage: run.head_commit?.message?.split("\n")[0] ?? "",
-      actor: run.actor?.login ?? "unknown",
-      createdAt: run.created_at,
-      htmlUrl: run.html_url,
-    }));
+    return GithubWorkflow.Run.list(found, workflow_id);
   },
 );

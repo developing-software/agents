@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import type { GithubWorkflow } from "@agents/core/github/repo/workflow";
   import { page } from '$app/state';
   import { untrack } from 'svelte';
   import { dispatchAction, listWorkflowRuns } from '../repo.remote';
@@ -8,19 +9,16 @@
 
   const { organization, repo } = page.params;
 
-  type Workflow = (typeof data.workflows)[0];
-  type Run = Awaited<ReturnType<typeof listWorkflowRuns>>[0];
-
-  let selectedWorkflow = $state<Workflow | null>(null);
+  let selectedWorkflow = $state<GithubWorkflow.Info | null>(null);
   let ref = $state(untrack(() => data.defaultBranch));
   let inputPairs = $state<{ key: string; value: string }[]>([]);
   let status = $state<'idle' | 'running' | 'done' | 'error'>('idle');
   let errorMsg = $state('');
 
-  let runs = $state<Run[]>([]);
+  let runs = $state<GithubWorkflow.Run.Info[]>([]);
   let runsLoading = $state(false);
 
-  async function selectWorkflow(wf: Workflow) {
+  async function selectWorkflow(wf: GithubWorkflow.Info) {
     selectedWorkflow = wf;
     status = 'idle';
     errorMsg = '';
@@ -30,7 +28,7 @@
   }
 
   async function loadRuns() {
-    if (!selectedWorkflow) return;
+    if (!selectedWorkflow || !organization || !repo) return;
     runsLoading = true;
     try {
       runs = await listWorkflowRuns({ organization, repo, workflow_id: selectedWorkflow.id });
@@ -42,7 +40,7 @@
   }
 
   async function run() {
-    if (!selectedWorkflow) return;
+    if (!selectedWorkflow || !organization || !repo) return;
     const inputs: Record<string, string> = {};
     for (const { key, value } of inputPairs) {
       if (key.trim()) inputs[key.trim()] = value;

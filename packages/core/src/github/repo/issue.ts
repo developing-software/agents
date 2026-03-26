@@ -1,4 +1,5 @@
 import { GitHub } from "../client";
+import { z } from "zod";
 
 export namespace GithubIssue {
   export interface RepoRef {
@@ -6,6 +7,14 @@ export namespace GithubIssue {
     owner: string;
     repo: string;
   }
+  export const Info = z.object({
+    number: z.number(),
+    title: z.string(),
+    state: z.string(),
+    labels: z.array(z.string()),
+    body: z.string().optional().nullable(),
+  });
+  export type Info = z.infer<typeof Info>;
 
   export async function list(repo: RepoRef) {
     const octokit = await GitHub.appClient(repo.installationId);
@@ -17,13 +26,7 @@ export namespace GithubIssue {
     });
     return data
       .filter((i) => !i.pull_request)
-      .map((i) => ({
-        number: i.number,
-        title: i.title,
-        state: i.state,
-        labels: i.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))),
-        body: i.body ?? undefined,
-      }));
+      .map(serialize);
   }
 
   export async function get(repo: RepoRef, issueNumber: number) {
@@ -33,12 +36,22 @@ export namespace GithubIssue {
       repo: repo.repo,
       issue_number: issueNumber,
     });
+    return serialize(data);
+  }
+
+  function serialize(issue: {
+    number: number;
+    title: string;
+    state: string;
+    labels: (string | { name?: string })[];
+    body?: string | null;
+  }): Info {
     return {
-      number: data.number,
-      title: data.title,
-      state: data.state,
-      labels: data.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))),
-      body: data.body ?? undefined,
+      number: issue.number,
+      title: issue.title,
+      state: issue.state,
+      labels: issue.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))),
+      body: issue.body ?? "",
     };
   }
 }

@@ -1,28 +1,15 @@
 import type { PageServerLoad } from "./$types";
-import { GitHub } from "@agents/core/github/client";
+import { GithubWorkflow } from "@agents/core/github/repo/workflow";
 
 export const load: PageServerLoad = async ({ parent }) => {
-  const { repo, organization, repoName } = await parent();
+  const { repo } = await parent();
   const defaultBranch = repo?.defaultBranch ?? "main";
 
   if (!repo) return { defaultBranch, workflows: [] };
 
   try {
-    const octokit = await GitHub.appClient(repo.installationId);
-    const { data } = await octokit.rest.actions.listRepoWorkflows({
-      owner: organization,
-      repo: repoName,
-      per_page: 50,
-    });
-    return {
-      defaultBranch,
-      workflows: data.workflows.map((w) => ({
-        id: w.id,
-        name: w.name,
-        path: w.path,
-        state: w.state,
-      })),
-    };
+    const workflows = await GithubWorkflow.list(repo);
+    return { defaultBranch, workflows };
   } catch {
     return { defaultBranch, workflows: [] };
   }
