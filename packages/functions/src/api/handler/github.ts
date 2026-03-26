@@ -112,18 +112,7 @@ export namespace GitHubApi {
         const body = c.req.valid("json");
         const found = await getRepoOrThrow(owner, repo);
 
-        const appId = process.env.GITHUB_APP_ID;
-        const privateKey = process.env.GITHUB_PRIVATE_KEY;
-        if (!appId || !privateKey) {
-          throw new VisibleError(
-            "internal",
-            ErrorCodes.Server.INTERNAL_ERROR,
-            "GitHub App credentials not configured",
-          );
-        }
-
-        const app = GitHub.fromApp({ appId, privateKey });
-        const octokit = await GitHub.installationClient(app, found.installationId);
+        const octokit = await GitHub.appClient(found.installationId);
         await octokit.rest.actions.createWorkflowDispatch({
           owner,
           repo,

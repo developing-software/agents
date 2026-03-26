@@ -1,6 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { App } from "@octokit/app";
 import { createContext } from "../context";
+import { VisibleError } from "../error";
 
 export namespace GitHub {
   export interface AppConfig {
@@ -20,11 +21,21 @@ export namespace GitHub {
       appId: config.appId,
       privateKey: config.privateKey,
       webhooks: config.webhookSecret ? { secret: config.webhookSecret } : undefined,
+      Octokit,
     });
   }
 
   export async function installationClient(app: App, installationId: number): Promise<Octokit> {
     return app.getInstallationOctokit(installationId) as unknown as Octokit;
+  }
+
+  export async function appClient(installationId: number): Promise<Octokit> {
+    const appId = process.env.GITHUB_APP_ID;
+    const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+    if (!appId || !privateKey)
+      throw new VisibleError("internal", "internal_error", "GitHub App credentials not configured");
+    const app = fromApp({ appId, privateKey });
+    return installationClient(app, installationId);
   }
 
   export function provide<R>(client: Octokit, fn: () => R): R {

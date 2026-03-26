@@ -48,6 +48,6 @@ export const database = new sst.Linkable("Database", {
     username: role.username,
     password: role.password,
     port: 5432,
-    url: $interpolate`postgresql://${role.username}:${role.password}@${role.accessHostUrl}/${cluster.name}?sslmode=require`,
+    url: $interpolate`postgresql://${role.username}:${role.password}@${role.accessHostUrl}/postgres?sslmode=require`,
   },
 })

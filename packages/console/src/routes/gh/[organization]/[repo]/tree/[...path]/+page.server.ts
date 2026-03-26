@@ -2,16 +2,11 @@ import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { GitHub } from "@agents/core/github/client";
 
-export const load: PageServerLoad = async ({ params, parent, platform }) => {
+export const load: PageServerLoad = async ({ params, parent }) => {
   const { repo } = await parent();
   if (!repo) error(404, "Repository not found");
 
-  const appId = platform?.env?.GITHUB_APP_ID ?? process.env.GITHUB_APP_ID;
-  const privateKey = platform?.env?.GITHUB_PRIVATE_KEY ?? process.env.GITHUB_PRIVATE_KEY;
-  if (!appId || !privateKey) error(500, "GitHub App credentials not configured");
-
-  const app = GitHub.fromApp({ appId, privateKey });
-  const octokit = await GitHub.installationClient(app, repo.installationId);
+  const octokit = await GitHub.appClient(repo.installationId);
 
   const path = params.path ?? "";
 

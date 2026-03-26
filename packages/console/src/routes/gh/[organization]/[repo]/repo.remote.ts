@@ -16,12 +16,7 @@ export const dispatchAction = command(
     const found = await GithubRepo.findByFullName(`${organization}/${repo}`);
     if (!found) error(404, `Repository ${organization}/${repo} not found`);
 
-    const appId = process.env.GITHUB_APP_ID;
-    const privateKey = process.env.GITHUB_PRIVATE_KEY;
-    if (!appId || !privateKey) error(500, "GitHub App credentials not configured");
-
-    const app = GitHub.fromApp({ appId, privateKey });
-    const octokit = await GitHub.installationClient(app, found.installationId);
+    const octokit = await GitHub.appClient(found.installationId);
     await octokit.rest.actions.createWorkflowDispatch({
       owner: organization,
       repo,
