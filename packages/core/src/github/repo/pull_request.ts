@@ -14,6 +14,7 @@ export namespace GithubPullRequest {
     state: z.string(),
     headBranch: z.string(),
     baseBranch: z.string(),
+    htmlUrl: z.string(),
   });
   export type Info = z.infer<typeof Info>;
 
@@ -45,6 +46,7 @@ export namespace GithubPullRequest {
     merged_at?: string | null;
     head: { ref: string };
     base: { ref: string };
+    html_url: string;
   }): Info {
     return {
       number: pr.number,
@@ -52,6 +54,7 @@ export namespace GithubPullRequest {
       state: pr.merged_at ? "merged" : pr.state,
       headBranch: pr.head.ref,
       baseBranch: pr.base.ref,
+      htmlUrl: pr.html_url,
     };
   }
 }

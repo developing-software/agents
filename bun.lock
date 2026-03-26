@@ -28,6 +28,15 @@
         "@types/node": "^22.0.0",
       },
     },
+    "actions/upload-implement-artifacts": {
+      "name": "upload-implement-artifacts-action",
+      "dependencies": {
+        "@actions/core": "^1.10.1",
+      },
+      "devDependencies": {
+        "@types/node": "^22.0.0",
+      },
+    },
     "packages/cli": {
       "name": "cli",
       "bin": {
@@ -1024,6 +1033,8 @@
     "universal-github-app-jwt": ["universal-github-app-jwt@2.2.2", "", {}, "sha512-dcmbeSrOdTnsjGjUfAlqNDJrhxXizjAz94ija9Qw8YkZ1uu0d+GoZzyH+Jb9tIIqvGsadUfwg+22k5aDqqwzbw=="],
 
     "universal-user-agent": ["universal-user-agent@7.0.3", "", {}, "sha512-TmnEAEAsBJVZM/AADELsK76llnwcf9vMKuPz8JflO1frO8Lchitr0fNaN9d+Ap0BjKtqWqd/J17qeDnXh8CL2A=="],
+
+    "upload-implement-artifacts-action": ["upload-implement-artifacts-action@workspace:actions/upload-implement-artifacts"],
 
     "uuid": ["uuid@11.1.0", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A=="],
 

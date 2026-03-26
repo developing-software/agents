@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import GitHubLink from '$lib/GitHubLink.svelte';
   let { data }: PageProps = $props();
 
   let filter = $state<'all' | 'open' | 'closed' | 'merged'>('open');
@@ -51,6 +52,7 @@
             </p>
           </div>
           <span class="text-xs text-gray-500 capitalize">{pr.state}</span>
+          <GitHubLink href={pr.htmlUrl} />
         </li>
       {/each}
     </ul>

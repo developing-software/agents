@@ -8,42 +8,8 @@ inputs:
   api_url:
     description: Agents API base URL
     required: false
-    default: https://agents-dev.developing.company/api
+    default: https://api.agents.developing.company/api
 
 runs:
-  using: composite
-  steps:
-    - name: Upload artifacts to API
-      if: env.IMPLEMENT_EVENT_ID != ''
-      shell: bash
-      env:
-        AGENTS_TOKEN: ${{ inputs.agents_token }}
-        API_URL: ${{ inputs.api_url }}
-      run: |
-        upload_file() {
-          local name="$1"
-          local path="$2"
-          local content_type="$3"
-          curl -sf -X POST \
-            -H "Authorization: Bearer $AGENTS_TOKEN" \
-            -F "name=$name" \
-            -F "file=@${path};type=${content_type}" \
-            "$API_URL/events/$IMPLEMENT_EVENT_ID/artifacts" \
-            || echo "Warning: failed to upload $name"
-        }
-
-        if [ -f "${IMPLEMENT_METRICS:-}" ]; then
-          upload_file "metrics.txt" "$IMPLEMENT_METRICS" "text/plain"
-        fi
-
-        if [ -d "${IMPLEMENT_ARTIFACT_DIR:-}" ]; then
-          for filepath in "$IMPLEMENT_ARTIFACT_DIR"/*; do
-            [ -f "$filepath" ] || continue
-            name="$(basename "$filepath")"
-            case "$name" in
-              *.json) content_type="application/json" ;;
-              *)      content_type="text/plain" ;;
-            esac
-            upload_file "$name" "$filepath" "$content_type"
-          done
-        fi
+  using: node20
+  main: dist/main.js

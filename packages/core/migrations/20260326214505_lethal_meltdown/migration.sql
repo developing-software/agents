@@ -1,0 +1,2 @@
+ALTER TABLE "github_event" ADD COLUMN "parent_event_id" char(30);--> statement-breakpoint
+ALTER TABLE "github_event" ADD CONSTRAINT "github_event_parent_event_id_github_event_id_fkey" FOREIGN KEY ("parent_event_id") REFERENCES "github_event"("id") ON DELETE SET NULL;

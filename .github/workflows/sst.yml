@@ -3,7 +3,7 @@ name: sst
 on:
   push:
     branches:
-      - dev
+      # - dev
       - prod
 
 concurrency:
