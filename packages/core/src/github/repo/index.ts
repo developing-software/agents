@@ -1,13 +1,47 @@
 import { and, eq, isNull } from "drizzle-orm";
+import { z } from "zod";
 import { useTransaction, createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
 import { Log } from "../../util/log";
 import { Actor } from "../../actor";
+import { Common } from "../../common";
+import { Examples } from "../../examples";
 import { githubRepoTable } from "./repo.sql";
 
 const log = Log.create({ namespace: "github.repo" });
 
 export namespace GithubRepo {
+  export const Info = z
+    .object({
+      id: z.string().meta({
+        description: Common.IdDescription,
+        example: Examples.GithubRepo.id,
+      }),
+      owner: z.string().meta({
+        description: "Repository owner login.",
+        example: Examples.GithubRepo.owner,
+      }),
+      repo: z.string().meta({
+        description: "Repository name.",
+        example: Examples.GithubRepo.repo,
+      }),
+      fullName: z.string().meta({
+        description: "Full repository name in `owner/repo` format.",
+        example: Examples.GithubRepo.fullName,
+      }),
+      defaultBranch: z.string().nullable().meta({
+        description: "Default branch of the repository.",
+        example: Examples.GithubRepo.defaultBranch,
+      }),
+    })
+    .meta({
+      ref: "GithubRepo",
+      description: "A connected GitHub repository.",
+      example: Examples.GithubRepo,
+    });
+
+  export type Info = z.infer<typeof Info>;
+
   export interface UpsertInput {
     userId?: string;
     installationId: number;
@@ -107,18 +141,19 @@ export namespace GithubRepo {
     );
   }
 
-  export async function list() {
+  export async function list(): Promise<Info[]> {
     const userID = Actor.userID();
     return await useTransaction(
       async (tx) =>
         await tx
           .select()
           .from(githubRepoTable)
-          .where(and(eq(githubRepoTable.userId, userID), isNull(githubRepoTable.timeDeleted))),
+          .where(and(eq(githubRepoTable.userId, userID), isNull(githubRepoTable.timeDeleted)))
+          .then((rows) => rows.map(serialize)),
     );
   }
 
-  export async function listByOwner(owner: string) {
+  export async function listByOwner(owner: string): Promise<Info[]> {
     const userID = Actor.userID();
     return await useTransaction(
       async (tx) =>
@@ -131,7 +166,18 @@ export namespace GithubRepo {
               eq(githubRepoTable.userId, userID),
               isNull(githubRepoTable.timeDeleted),
             ),
-          ),
+          )
+          .then((rows) => rows.map(serialize)),
     );
+  }
+
+  export function serialize(row: typeof githubRepoTable.$inferSelect): Info {
+    return {
+      id: row.id,
+      owner: row.owner,
+      repo: row.repo,
+      fullName: row.fullName,
+      defaultBranch: row.defaultBranch ?? null,
+    };
   }
 }

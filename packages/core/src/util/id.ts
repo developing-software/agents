@@ -7,8 +7,7 @@ export const prefixes = {
   apiSecret: "sec",
   link: "lnk",
   githubRepo: "grp",
-  githubIssue: "gis",
-  githubPullRequest: "gpr",
+  githubEvent: "gev",
 } as const;
 
 export function createID(prefix: keyof typeof prefixes): string {

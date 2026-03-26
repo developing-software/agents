@@ -1,88 +1,13 @@
-import { and, eq } from "drizzle-orm";
-import { useTransaction, createTransaction } from "../../drizzle/transaction";
-import { createID } from "../../util/id";
-import { Log } from "../../util/log";
 import { GitHub } from "../client";
-import { githubPullRequestTable } from "./repo.sql";
-
-const log = Log.create({ namespace: "github.pull_request" });
 
 export namespace GithubPullRequest {
-  export interface UpsertInput {
-    repoId: string;
-    number: number;
-    title: string;
-    state: string;
-    headBranch: string;
-    baseBranch: string;
-    issueId?: string;
+  export interface RepoRef {
+    installationId: number;
+    owner: string;
+    repo: string;
   }
 
-  export async function upsert(input: UpsertInput) {
-    return createTransaction(async (tx) => {
-      const existing = await tx
-        .select()
-        .from(githubPullRequestTable)
-        .where(
-          and(
-            eq(githubPullRequestTable.repoId, input.repoId),
-            eq(githubPullRequestTable.number, input.number),
-          ),
-        )
-        .then((rows) => rows[0]);
-
-      if (existing) {
-        await tx
-          .update(githubPullRequestTable)
-          .set({
-            title: input.title,
-            state: input.state,
-            headBranch: input.headBranch,
-            baseBranch: input.baseBranch,
-            issueId: input.issueId ?? existing.issueId,
-            timeUpdated: new Date(),
-          })
-          .where(eq(githubPullRequestTable.id, existing.id));
-        return existing.id;
-      }
-
-      log.info("upsert pull_request", {
-        repoId: input.repoId,
-        number: input.number,
-        state: input.state,
-      });
-      const id = createID("githubPullRequest");
-      await tx.insert(githubPullRequestTable).values({
-        id,
-        repoId: input.repoId,
-        number: input.number,
-        title: input.title,
-        state: input.state,
-        headBranch: input.headBranch,
-        baseBranch: input.baseBranch,
-        issueId: input.issueId,
-      });
-      return id;
-    });
-  }
-
-  export async function findByRepoAndNumber(repoId: string, number: number) {
-    return await useTransaction(
-      async (tx) =>
-        await tx
-          .select()
-          .from(githubPullRequestTable)
-          .where(
-            and(
-              eq(githubPullRequestTable.repoId, repoId),
-              eq(githubPullRequestTable.number, number),
-            ),
-          )
-          .then((rows) => rows[0] ?? null),
-    );
-  }
-
-  export async function listByRepo(repo: { installationId: number; owner: string; repo: string }) {
+  export async function list(repo: RepoRef) {
     const octokit = await GitHub.appClient(repo.installationId);
     const { data } = await octokit.rest.pulls.list({
       owner: repo.owner,
@@ -97,5 +22,21 @@ export namespace GithubPullRequest {
       headBranch: pr.head.ref,
       baseBranch: pr.base.ref,
     }));
+  }
+
+  export async function get(repo: RepoRef, pullNumber: number) {
+    const octokit = await GitHub.appClient(repo.installationId);
+    const { data } = await octokit.rest.pulls.get({
+      owner: repo.owner,
+      repo: repo.repo,
+      pull_number: pullNumber,
+    });
+    return {
+      number: data.number,
+      title: data.title,
+      state: data.merged_at ? "merged" : data.state,
+      headBranch: data.head.ref,
+      baseBranch: data.base.ref,
+    };
   }
 }

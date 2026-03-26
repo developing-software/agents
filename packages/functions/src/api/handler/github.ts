@@ -1,28 +1,14 @@
 import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { z } from "zod";
 import { GitHubWebhook } from "@agents/core/github";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
 import { GithubRepo } from "@agents/core/github/repo/index";
-import { GithubIssue } from "@agents/core/github/repo/issue";
-import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
-import { GitHub } from "@agents/core/github/client";
-import { authRequired } from "../common";
-import { z } from "zod";
-import { validator } from "../common";
+import { GithubEvent } from "@agents/core/github/event/index";
+import { Result, validator, ErrorResponses, authRequired } from "../common";
+import { Examples } from "@agents/core/examples";
 
 GitHubWebhook.init(process.env.GITHUB_WEBHOOK_SECRET ?? "dev_webhook_secret");
-
-async function getRepoOrThrow(owner: string, repo: string) {
-  const fullName = `${owner}/${repo}`;
-  const found = await GithubRepo.findByFullName(fullName);
-  if (!found) {
-    throw new VisibleError(
-      "not_found",
-      ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
-      `Repository ${fullName} not found`,
-    );
-  }
-  return found;
-}
 
 export namespace GitHubApi {
   export const route = new Hono()
@@ -44,84 +30,95 @@ export namespace GitHubApi {
       return c.json({ ok: true }, 200);
     })
 
-    // List repos — optional ?owner= or ?installation_id= filter
-    .get("/repos", authRequired, async (c) => {
-      const owner = c.req.query("owner");
-      const installationId = c.req.query("installation_id");
-      if (installationId) {
-        const repo = await GithubRepo.findByInstallationId(Number(installationId));
-        return c.json(repo ? [repo] : [], 200);
-      }
-      const repos = owner ? await GithubRepo.listByOwner(owner) : await GithubRepo.list();
-      return c.json(repos, 200);
-    })
-
-    // Get a specific repo
-    .get(
-      "/repos/:owner/:repo",
-      authRequired,
-      validator("param", z.object({ owner: z.string(), repo: z.string() })),
-      async (c) => {
-        const { owner, repo } = c.req.valid("param");
-        const found = await getRepoOrThrow(owner, repo);
-        return c.json(found, 200);
-      },
-    )
-
-    // List issues for a repo
-    .get(
-      "/repos/:owner/:repo/issues",
-      authRequired,
-      validator("param", z.object({ owner: z.string(), repo: z.string() })),
-      async (c) => {
-        const { owner, repo } = c.req.valid("param");
-        const found = await getRepoOrThrow(owner, repo);
-        const issues = await GithubIssue.listByRepo(found);
-        return c.json(issues, 200);
-      },
-    )
-
-    // List pull requests for a repo
-    .get(
-      "/repos/:owner/:repo/pulls",
-      authRequired,
-      validator("param", z.object({ owner: z.string(), repo: z.string() })),
-      async (c) => {
-        const { owner, repo } = c.req.valid("param");
-        const found = await getRepoOrThrow(owner, repo);
-        const pulls = await GithubPullRequest.listByRepo(found);
-        return c.json(pulls, 200);
-      },
-    )
-
-    // Dispatch a workflow on a repo
     .post(
-      "/repos/:owner/:repo/actions/dispatch",
+      "/events",
+      describeRoute({
+        tags: ["GitHub"],
+        summary: "Create event",
+        description:
+          "Record a GitHub or agent event linked to a repository and optionally an issue or pull request. Intended for use by `actions/implement` and other external sources.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(GithubEvent.Info),
+                example: Examples.GithubEvent,
+              },
+            },
+            description: "The created event.",
+          },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
+        },
+      }),
       authRequired,
-      validator("param", z.object({ owner: z.string(), repo: z.string() })),
       validator(
         "json",
-        z.object({
-          workflow_id: z.string(),
-          ref: z.string().default("main"),
-          inputs: z.record(z.string(), z.any()).optional(),
-        }),
+        z
+          .object({
+            repoFullName: z.string().meta({
+              description: "Full repository name in `owner/repo` format.",
+              example: Examples.GithubRepo.fullName,
+            }),
+            issueNumber: z.number().int().optional().meta({
+              description: "Issue number to link the event to.",
+              example: Examples.GithubEvent.issueNumber,
+            }),
+            pullRequestNumber: z.number().int().optional().meta({
+              description: "Pull request number to link the event to.",
+              example: 7,
+            }),
+            source: z.enum(["webhook", "action"]).meta({
+              description: "Origin of the event.",
+              example: Examples.GithubEvent.source,
+            }),
+            type: z.string().meta({
+              description: "Event type, e.g. `implement.completed`.",
+              example: Examples.GithubEvent.type,
+            }),
+            payload: z.record(z.string(), z.unknown()).optional().meta({
+              description: "Arbitrary event data.",
+              example: Examples.GithubEvent.payload,
+            }),
+          })
+          .meta({
+            description: "Event to record.",
+            example: {
+              repoFullName: Examples.GithubRepo.fullName,
+              issueNumber: Examples.GithubEvent.issueNumber,
+              source: Examples.GithubEvent.source,
+              type: Examples.GithubEvent.type,
+              payload: Examples.GithubEvent.payload,
+            },
+          }),
       ),
       async (c) => {
-        const { owner, repo } = c.req.valid("param");
         const body = c.req.valid("json");
-        const found = await getRepoOrThrow(owner, repo);
-
-        const octokit = await GitHub.appClient(found.installationId);
-        await octokit.rest.actions.createWorkflowDispatch({
-          owner,
-          repo,
-          workflow_id: body.workflow_id,
-          ref: body.ref,
-          inputs: body.inputs,
+        const repo = await GithubRepo.findByFullName(body.repoFullName);
+        if (!repo) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            `Repository ${body.repoFullName} not found`,
+          );
+        }
+        const id = await GithubEvent.create({
+          repoId: repo.id,
+          issueNumber: body.issueNumber,
+          pullRequestNumber: body.pullRequestNumber,
+          source: body.source,
+          type: body.type,
+          payload: body.payload,
         });
-
-        return c.json({ ok: true }, 200);
+        const events = await GithubEvent.listByRepo(repo.id, {
+          issueNumber: body.issueNumber,
+          pullRequestNumber: body.pullRequestNumber,
+        });
+        const event = events.find((e) => e.id === id)!;
+        return c.json(event, 200);
       },
     );
 }

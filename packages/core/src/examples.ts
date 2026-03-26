@@ -4,6 +4,25 @@ export namespace Examples {
   export const Id = (prefix: keyof typeof prefixes) =>
     `${prefixes[prefix]}_XXXXXXXXXXXXXXXXXXXXXXXXX`;
 
+  export const GithubRepo = {
+    id: Id("githubRepo"),
+    owner: "octocat",
+    repo: "hello-world",
+    fullName: "octocat/hello-world",
+    defaultBranch: "main",
+  };
+
+  export const GithubEvent = {
+    id: Id("githubEvent"),
+    repoId: Id("githubRepo"),
+    issueNumber: 42,
+    pullRequestNumber: null,
+    source: "action" as const,
+    type: "implement.completed",
+    payload: { harness: "claude-code", durationMs: 30000 },
+    timeCreated: "2024-01-01T00:00:00.000Z",
+  };
+
   export const User = {
     id: Id("user"),
     name: "John Doe",

@@ -1,7 +1,6 @@
 import type { GitHubWebhook } from "./index";
 import { GithubRepo } from "../repo/index";
-import { GithubIssue } from "../repo/issue";
-import { GithubPullRequest } from "../repo/pull_request";
+import { GithubEvent } from "../event/index";
 import { User } from "../../user/index";
 import { Log } from "../../util/log";
 
@@ -68,36 +67,64 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
       repo: payload.repository.full_name,
       number: payload.issue.number,
     });
-    const repo = await GithubRepo.findByFullName(payload.repository.full_name);
+    const installationId = payload.installation?.id;
+    if (!installationId) return;
+    const repo = await GithubRepo.findByInstallationId(installationId);
     if (!repo) return;
-    await GithubIssue.upsert({
+    await GithubEvent.create({
       repoId: repo.id,
-      number: payload.issue.number,
-      title: payload.issue.title,
-      state: payload.issue.state ?? "",
-      labels: (payload.issue.labels ?? []).map((l) =>
-        l && typeof l === "object" ? (l.name ?? "") : String(l),
-      ),
-      body: payload.issue.body ?? undefined,
+      issueNumber: payload.issue.number,
+      source: "webhook",
+      type: `issues.${payload.action}`,
+      payload: {
+        title: payload.issue.title,
+        state: payload.issue.state ?? "",
+        labels: (payload.issue.labels ?? []).map((l) =>
+          l && typeof l === "object" ? (l.name ?? "") : String(l),
+        ),
+        body: payload.issue.body ?? null,
+      },
     });
   });
 
   // Pull requests
   webhook.on("pull_request", async ({ payload }) => {
+    // @ts-expect-error idk why
+    let installationId = payload.installation?.id;
+    if (!installationId) {
+      const grepo = await GithubRepo.findByFullName(payload.repository.full_name).catch(() => null);
+      installationId = grepo?.installationId
+      if (!installationId) {
+        log.info("pull_request event with no installationId", {
+          action: payload.action,
+          repo: payload.repository.full_name,
+          number: payload.pull_request.number,
+          installationId,
+        });
+
+      };
+    }
+
     log.info("pull_request event", {
       action: payload.action,
       repo: payload.repository.full_name,
       number: payload.pull_request.number,
+      installationId: installationId,
     });
-    const repo = await GithubRepo.findByFullName(payload.repository.full_name);
+
+    const repo = await GithubRepo.findByInstallationId(installationId);
     if (!repo) return;
-    await GithubPullRequest.upsert({
+    await GithubEvent.create({
       repoId: repo.id,
-      number: payload.pull_request.number,
-      title: payload.pull_request.title,
-      state: payload.pull_request.merged ? "merged" : payload.pull_request.state,
-      headBranch: payload.pull_request.head.ref,
-      baseBranch: payload.pull_request.base.ref,
+      pullRequestNumber: payload.pull_request.number,
+      source: "webhook",
+      type: `pull_request.${payload.action}`,
+      payload: {
+        title: payload.pull_request.title,
+        state: payload.pull_request.merged ? "merged" : payload.pull_request.state,
+        headBranch: payload.pull_request.head.ref,
+        baseBranch: payload.pull_request.base.ref,
+      },
     });
   });
 }

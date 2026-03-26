@@ -7,8 +7,8 @@ export const load: PageServerLoad = async ({ parent }) => {
   if (!repo) return { issues: [], pulls: [] };
 
   const [issues, pulls] = await Promise.all([
-    GithubIssue.listByRepo(repo),
-    GithubPullRequest.listByRepo(repo),
+    GithubIssue.list(repo),
+    GithubPullRequest.list(repo),
   ]);
 
   return {
