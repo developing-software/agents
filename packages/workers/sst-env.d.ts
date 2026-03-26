@@ -51,6 +51,7 @@ import * as cloudflare from "@cloudflare/workers-types";
 declare module "sst" {
   export interface Resource {
     "Api": cloudflare.Service
+    "Artifacts": cloudflare.R2Bucket
     "AuthKv": cloudflare.KVNamespace
     "AuthWorker": cloudflare.Service
     "Bus": cloudflare.Queue

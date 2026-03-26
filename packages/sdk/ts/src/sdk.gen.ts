@@ -24,6 +24,10 @@ import type {
   GetTokenResponses,
   PostAppErrors,
   PostAppResponses,
+  PostGithubEventsByIdArtifactsErrors,
+  PostGithubEventsByIdArtifactsResponses,
+  PostGithubEventsErrors,
+  PostGithubEventsResponses,
   PostTokenErrors,
   PostTokenResponses,
   PutProfileErrors,
@@ -308,6 +312,82 @@ export class DevAgentSdk extends HeyApiClient {
     >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/token/{id}",
+      ...options,
+      ...params,
+    });
+  }
+
+  /**
+   * Create event
+   *
+   * Record a GitHub or agent event linked to a repository and optionally an issue or pull request. Intended for use by `actions/implement` and other external sources.
+   */
+  public postGithubEvents<ThrowOnError extends boolean = false>(
+    parameters: {
+      repoFullName: string;
+      parentEventId?: string | null;
+      issueNumber?: number | null;
+      pullRequestNumber?: number | null;
+      source: "webhook" | "action" | "cli" | "console";
+      type: string;
+      payload?: {
+        [key: string]: unknown;
+      };
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "body", key: "repoFullName" },
+            { in: "body", key: "parentEventId" },
+            { in: "body", key: "issueNumber" },
+            { in: "body", key: "pullRequestNumber" },
+            { in: "body", key: "source" },
+            { in: "body", key: "type" },
+            { in: "body", key: "payload" },
+          ],
+        },
+      ],
+    );
+    return (options?.client ?? this.client).post<
+      PostGithubEventsResponses,
+      PostGithubEventsErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/github/events",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    });
+  }
+
+  /**
+   * Upload artifact
+   *
+   * Upload a file artifact associated with a GitHub event.
+   */
+  public postGithubEventsByIdArtifacts<ThrowOnError extends boolean = false>(
+    parameters: {
+      id: string;
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
+    return (options?.client ?? this.client).post<
+      PostGithubEventsByIdArtifactsResponses,
+      PostGithubEventsByIdArtifactsErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/github/events/{id}/artifacts",
       ...options,
       ...params,
     });

@@ -195,6 +195,150 @@
           "token": "pat_test_******XXXX",
           "created": "2024-06-29T00:00:00.000Z"
         }
+      },
+      "GithubEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
+            "example": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX"
+          },
+          "repoId": {
+            "type": "string",
+            "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
+            "example": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX"
+          },
+          "parentEventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the parent event, if this event is part of a group.",
+            "example": null
+          },
+          "issueNumber": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Linked issue number, if any.",
+            "example": 42
+          },
+          "pullRequestNumber": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Linked pull request number, if any.",
+            "example": null
+          },
+          "source": {
+            "type": "string",
+            "enum": ["webhook", "action", "cli", "console"],
+            "description": "Origin of the event.",
+            "example": "action"
+          },
+          "type": {
+            "type": "string",
+            "description": "Event type, e.g. `issues.opened` or `implement.completed`.",
+            "example": "implement.completed"
+          },
+          "payload": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "Arbitrary event data.",
+            "example": {
+              "harness": "claude-code",
+              "durationMs": 30000
+            }
+          },
+          "timeCreated": {
+            "type": "string",
+            "description": "ISO timestamp when the event was recorded.",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "repoId",
+          "parentEventId",
+          "issueNumber",
+          "pullRequestNumber",
+          "source",
+          "type",
+          "payload",
+          "timeCreated"
+        ],
+        "description": "A recorded GitHub or agent event.",
+        "example": {
+          "id": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "repoId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "parentEventId": null,
+          "issueNumber": 42,
+          "pullRequestNumber": null,
+          "source": "action",
+          "type": "implement.completed",
+          "payload": {
+            "harness": "claude-code",
+            "durationMs": 30000
+          },
+          "timeCreated": "2024-01-01T00:00:00.000Z"
+        }
+      },
+      "GithubEventArtifact": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "R2 storage key for the artifact.",
+            "example": "artifacts/gev_XXXXXXXXXXXXXXXXXXXXXXXXX/execution.json"
+          },
+          "name": {
+            "type": "string",
+            "description": "Artifact filename.",
+            "example": "execution.json"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Artifact size in bytes.",
+            "example": 4096
+          },
+          "uploaded": {
+            "type": "string",
+            "description": "ISO timestamp when the artifact was uploaded.",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        },
+        "required": ["key", "name", "size", "uploaded"],
+        "description": "An artifact associated with a GitHub event.",
+        "example": {
+          "key": "artifacts/gev_XXXXXXXXXXXXXXXXXXXXXXXXX/execution.json",
+          "name": "execution.json",
+          "size": 4096,
+          "uploaded": "2024-01-01T00:00:00.000Z"
+        }
       }
     }
   },
@@ -206,11 +350,11 @@
   "servers": [
     {
       "description": "Local",
-      "url": "http://localhost:3000"
+      "url": "https://agents-dev.developing.company/api"
     },
     {
       "description": "Production",
-      "url": "http://localhost:3000"
+      "url": "https://agents.developing.company/api"
     }
   ],
   "paths": {
@@ -1172,6 +1316,322 @@
             },
             "required": true,
             "description": "ID of the personal token to delete."
+          }
+        ]
+      }
+    },
+    "/github/events": {
+      "post": {
+        "operationId": "postGithubEvents",
+        "tags": ["GitHub"],
+        "summary": "Create event",
+        "description": "Record a GitHub or agent event linked to a repository and optionally an issue or pull request. Intended for use by `actions/implement` and other external sources.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GithubEvent"
+                },
+                "example": {
+                  "id": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "repoId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "parentEventId": null,
+                  "issueNumber": 42,
+                  "pullRequestNumber": null,
+                  "source": "action",
+                  "type": "implement.completed",
+                  "payload": {
+                    "harness": "claude-code",
+                    "durationMs": 30000
+                  },
+                  "timeCreated": "2024-01-01T00:00:00.000Z"
+                }
+              }
+            },
+            "description": "The created event."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "rate_limit",
+                  "code": "too_many_requests",
+                  "message": "Rate limit exceeded"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "repoFullName": {
+                    "type": "string",
+                    "description": "Full repository name in `owner/repo` format.",
+                    "example": "octocat/hello-world"
+                  },
+                  "parentEventId": {
+                    "description": "Parent event ID to group related events.",
+                    "example": null,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "issueNumber": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Linked issue number, if any.",
+                    "example": 42
+                  },
+                  "pullRequestNumber": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Linked pull request number, if any.",
+                    "example": null
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["webhook", "action", "cli", "console"],
+                    "description": "Origin of the event.",
+                    "example": "action"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Event type, e.g. `issues.opened` or `implement.completed`.",
+                    "example": "implement.completed"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {},
+                    "description": "Arbitrary event data.",
+                    "example": {
+                      "harness": "claude-code",
+                      "durationMs": 30000
+                    }
+                  }
+                },
+                "required": ["repoFullName", "source", "type"],
+                "description": "Event to record.",
+                "example": {
+                  "repoFullName": "octocat/hello-world",
+                  "issueNumber": 42,
+                  "source": "action",
+                  "type": "implement.completed",
+                  "payload": {
+                    "harness": "claude-code",
+                    "durationMs": 30000
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/github/events/{id}/artifacts": {
+      "post": {
+        "operationId": "postGithubEventsByIdArtifacts",
+        "tags": ["GitHub"],
+        "summary": "Upload artifact",
+        "description": "Upload a file artifact associated with a GitHub event.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GithubEventArtifact"
+                },
+                "example": {
+                  "key": "artifacts/gev_XXXXXXXXXXXXXXXXXXXXXXXXX/execution.json",
+                  "name": "execution.json",
+                  "size": 4096,
+                  "uploaded": "2024-01-01T00:00:00.000Z"
+                }
+              }
+            },
+            "description": "The uploaded artifact metadata."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "rate_limit",
+                  "code": "too_many_requests",
+                  "message": "Rate limit exceeded"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            },
+            "required": true,
+            "description": "ID of the event to attach the artifact to."
           }
         ]
       }

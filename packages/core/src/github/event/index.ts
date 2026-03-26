@@ -164,7 +164,13 @@ export namespace GithubEvent {
       bucket: R2Bucket,
       eventId: string,
       name: string,
-      body: string | ArrayBuffer | ArrayBufferView<ArrayBufferLike> | ReadableStream<any> | Blob | null,
+      body:
+        | string
+        | ArrayBuffer
+        | ArrayBufferView<ArrayBufferLike>
+        | ReadableStream<any>
+        | Blob
+        | null,
       contentType: string,
     ): Promise<Info> {
       const key = `${keyPrefix(eventId)}${name}`;

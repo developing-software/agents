@@ -42,12 +42,7 @@ export namespace GithubWorkflow {
     });
   }
 
-  function serialize(wf: {
-    id: number;
-    name: string;
-    path: string;
-    state: string;
-  }): Info {
+  function serialize(wf: { id: number; name: string; path: string; state: string }): Info {
     return {
       id: wf.id,
       name: wf.name,

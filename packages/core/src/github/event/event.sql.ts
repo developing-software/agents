@@ -9,10 +9,9 @@ export const githubEventTable = table("github_event", {
   repoId: ulid("repo_id")
     .references(() => githubRepoTable.id, { onDelete: "cascade" })
     .notNull(),
-  parentEventId: ulid("parent_event_id").references(
-    (): AnyPgColumn => githubEventTable.id,
-    { onDelete: "set null" },
-  ),
+  parentEventId: ulid("parent_event_id").references((): AnyPgColumn => githubEventTable.id, {
+    onDelete: "set null",
+  }),
   issueNumber: integer("issue_number"),
   pullRequestNumber: integer("pull_request_number"),
   source: varchar("source", { length: 50 }).notNull(), // "webhook" | "action"

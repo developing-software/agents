@@ -24,9 +24,7 @@ export namespace GithubIssue {
       state: "all",
       per_page: 100,
     });
-    return data
-      .filter((i) => !i.pull_request)
-      .map(serialize);
+    return data.filter((i) => !i.pull_request).map(serialize);
   }
 
   export async function get(repo: RepoRef, issueNumber: number) {
