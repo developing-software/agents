@@ -1,7 +1,20 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
   import type { PageProps } from './$types';
-  let { data, form }: PageProps = $props();
+  import { generateToken } from './repo.remote';
+  let { data }: PageProps = $props();
+
+  let token = $state<string | null>(null);
+  let tokenError = $state<string | null>(null);
+
+  async function handleGenerateToken() {
+    tokenError = null;
+    try {
+      const result = await generateToken({});
+      token = result.token;
+    } catch (err) {
+      tokenError = err instanceof Error ? err.message : "Failed to generate token.";
+    }
+  }
 </script>
 
 <div class="grid gap-6 md:grid-cols-2">
@@ -90,20 +103,22 @@
         Generate a token and add it as <code class="text-gray-300">AGENTS_TOKEN</code> in your repo's Actions secrets.
       </p>
     </div>
-    <form method="POST" action="?/installToken" use:enhance>
-      <button
-        type="submit"
-        class="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500"
-      >
-        Generate token
-      </button>
-    </form>
+    <button
+      onclick={handleGenerateToken}
+      class="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500"
+    >
+      Generate token
+    </button>
   </div>
 
-  {#if form?.token}
+  {#if token}
     <div class="mt-3 rounded bg-gray-900 p-3">
       <p class="mb-1 text-xs text-gray-400">Copy this token — it won't be shown again.</p>
-      <code class="break-all text-xs text-green-400">{form.token}</code>
+      <code class="break-all text-xs text-green-400">{token}</code>
     </div>
+  {/if}
+
+  {#if tokenError}
+    <p class="mt-3 text-xs text-red-400">{tokenError}</p>
   {/if}
 </section>

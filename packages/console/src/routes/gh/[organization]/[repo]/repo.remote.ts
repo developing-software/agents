@@ -2,6 +2,8 @@ import { command, query } from "$app/server";
 import { z } from "zod";
 import { GithubRepo } from "@agents/core/github/repo/index";
 import { GithubWorkflow } from "@agents/core/github/repo/workflow";
+import { Api } from "@agents/core/api/api";
+import { Actor } from "@agents/core/actor";
 import { error } from "@sveltejs/kit";
 
 export const dispatchAction = command(
@@ -19,6 +21,11 @@ export const dispatchAction = command(
     await GithubWorkflow.dispatch(found, workflow_id, ref, inputs);
   },
 );
+
+export const generateToken = command(z.object({}), async () => {
+  const userID = Actor.userID();
+  return Actor.provide("system", { userID }, () => Api.Personal.create());
+});
 
 export const listWorkflowRuns = query(
   z.object({
