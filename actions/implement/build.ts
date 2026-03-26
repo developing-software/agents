@@ -1,11 +1,13 @@
 export {};
 
+const ROOT = import.meta.dir;
+
 const entrypoints = ["src/main.ts", "src/post.ts"];
 
 const results = await Promise.all(
   entrypoints.map((entrypoint) =>
     Bun.build({
-      entrypoints: [entrypoint],
+      entrypoints: [ROOT + "/" + entrypoint],
       outdir: "dist",
       target: "node",
     }),

@@ -15,12 +15,20 @@ export namespace Examples {
   export const GithubEvent = {
     id: Id("githubEvent"),
     repoId: Id("githubRepo"),
+    parentEventId: null,
     issueNumber: 42,
     pullRequestNumber: null,
     source: "action" as const,
     type: "implement.completed",
     payload: { harness: "claude-code", durationMs: 30000 },
     timeCreated: "2024-01-01T00:00:00.000Z",
+  };
+
+  export const GithubEventArtifact = {
+    key: `artifacts/${Id("githubEvent")}/execution.json`,
+    name: "execution.json",
+    size: 4096,
+    uploaded: "2024-01-01T00:00:00.000Z",
   };
 
   export const User = {

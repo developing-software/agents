@@ -1,5 +1,6 @@
 import { database } from "./database.ts";
 import { environment } from "./secrets.ts";
+import { r2 } from "./console.ts";
 import { domain } from './stage.ts'
 
 
@@ -11,7 +12,8 @@ const api = new sst.cloudflare.Worker("Api", {
     region: "aws:sa-east-1",
   },
   link: [
-    database
+    database,
+    r2,
   ],
   environment,
   build: {

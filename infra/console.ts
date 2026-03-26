@@ -2,6 +2,7 @@ import { database } from "./database.ts";
 import { environment } from "./secrets";
 import { domain } from './stage.ts'
 
+export const r2 = new sst.cloudflare.Bucket("Artifacts");
 
 const console = new sst.cloudflare.Worker("Console", {
   handler: "./packages/console/.svelte-kit/cloudflare/_worker.js",
@@ -15,7 +16,8 @@ const console = new sst.cloudflare.Worker("Console", {
   },
   environment,
   link: [
-    database
+    database,
+    r2
   ],
   placement: {
     region: "aws:sa-east-1"

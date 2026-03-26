@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { z } from "zod";
+import type { R2Bucket } from "@cloudflare/workers-types";
 import { GitHubWebhook } from "@agents/core/github";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
 import { GithubRepo } from "@agents/core/github/repo/index";
@@ -11,7 +12,7 @@ import { Examples } from "@agents/core/examples";
 GitHubWebhook.init(process.env.GITHUB_WEBHOOK_SECRET ?? "dev_webhook_secret");
 
 export namespace GitHubApi {
-  export const route = new Hono()
+  export const route = new Hono<{ Bindings: { Artifacts: R2Bucket } }>()
     .post("/webhook", async (c) => {
       const id = c.req.header("x-github-delivery");
       const name = c.req.header("x-github-event");
@@ -63,26 +64,15 @@ export namespace GitHubApi {
               description: "Full repository name in `owner/repo` format.",
               example: Examples.GithubRepo.fullName,
             }),
-            issueNumber: z.number().int().optional().meta({
-              description: "Issue number to link the event to.",
-              example: Examples.GithubEvent.issueNumber,
+            parentEventId: GithubEvent.Info.shape.parentEventId.optional().meta({
+              description: "Parent event ID to group related events.",
+              example: null,
             }),
-            pullRequestNumber: z.number().int().optional().meta({
-              description: "Pull request number to link the event to.",
-              example: 7,
-            }),
-            source: z.enum(["webhook", "action"]).meta({
-              description: "Origin of the event.",
-              example: Examples.GithubEvent.source,
-            }),
-            type: z.string().meta({
-              description: "Event type, e.g. `implement.completed`.",
-              example: Examples.GithubEvent.type,
-            }),
-            payload: z.record(z.string(), z.unknown()).optional().meta({
-              description: "Arbitrary event data.",
-              example: Examples.GithubEvent.payload,
-            }),
+            issueNumber: GithubEvent.Info.shape.issueNumber.optional(),
+            pullRequestNumber: GithubEvent.Info.shape.pullRequestNumber.optional(),
+            source: GithubEvent.Info.shape.source,
+            type: GithubEvent.Info.shape.type,
+            payload: GithubEvent.Info.shape.payload.optional(),
           })
           .meta({
             description: "Event to record.",
@@ -107,18 +97,89 @@ export namespace GitHubApi {
         }
         const id = await GithubEvent.create({
           repoId: repo.id,
-          issueNumber: body.issueNumber,
-          pullRequestNumber: body.pullRequestNumber,
+          parentEventId: body.parentEventId ?? undefined,
+          issueNumber: body.issueNumber ?? undefined,
+          pullRequestNumber: body.pullRequestNumber ?? undefined,
           source: body.source,
           type: body.type,
           payload: body.payload,
         });
-        const events = await GithubEvent.listByRepo(repo.id, {
-          issueNumber: body.issueNumber,
-          pullRequestNumber: body.pullRequestNumber,
-        });
-        const event = events.find((e) => e.id === id)!;
-        return c.json(event, 200);
+        const event = await GithubEvent.fromID(id);
+        return c.json(event!, 200);
+      },
+    )
+
+    .post(
+      "/events/:id/artifacts",
+      describeRoute({
+        tags: ["GitHub"],
+        summary: "Upload artifact",
+        description: "Upload a file artifact associated with a GitHub event.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(GithubEvent.Artifact.Info),
+                example: Examples.GithubEventArtifact,
+              },
+            },
+            description: "The uploaded artifact metadata.",
+          },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
+        },
+      }),
+      authRequired,
+      validator(
+        "param",
+        z.object({
+          id: GithubEvent.Info.shape.id.meta({
+            description: "ID of the event to attach the artifact to.",
+            example: Examples.GithubEvent.id,
+          }),
+        }),
+      ),
+      async (c) => {
+        const { id } = c.req.valid("param");
+        const event = await GithubEvent.fromID(id);
+        if (!event) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            `Event ${id} not found`,
+          );
+        }
+
+        const body = await c.req.parseBody();
+        const file = body["file"];
+        const name = body["name"];
+
+        if (!file || !(file instanceof File)) {
+          throw new VisibleError(
+            "validation",
+            ErrorCodes.Validation.MISSING_REQUIRED_FIELD,
+            "Missing required `file` field",
+          );
+        }
+        if (!name || typeof name !== "string") {
+          throw new VisibleError(
+            "validation",
+            ErrorCodes.Validation.MISSING_REQUIRED_FIELD,
+            "Missing required `name` field",
+          );
+        }
+
+        const artifact = await GithubEvent.Artifact.upload(
+          c.env.Artifacts,
+          id,
+          name,
+          file.stream(),
+          file.type || "application/octet-stream",
+        );
+        return c.json(artifact, 200);
       },
     );
 }

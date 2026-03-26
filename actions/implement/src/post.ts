@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { execWithOutput, readCustomMetrics, readEventPayload } from "./utils";
+import { appendEvent, execWithOutput, readCustomMetrics, readEventPayload } from "./utils";
 
 async function run() {
   const prPrefix = core.getState("pr_prefix");
@@ -21,6 +21,9 @@ async function run() {
 
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error("GITHUB_TOKEN not set");
+
+  const repository = process.env.GITHUB_REPOSITORY ?? "";
+  const eventsFile = process.env.IMPLEMENT_EVENTS_FILE ?? "";
 
   const { issue } = readEventPayload();
 
@@ -104,6 +107,28 @@ async function run() {
     ]);
   } catch (err) {
     core.warning(`PR creation failed: ${err}. May already exist.`);
+  }
+
+  // Parse PR number from URL
+  const prNumberMatch = prUrl.match(/\/pull\/(\d+)/);
+  const pullRequestNumber = prNumberMatch ? parseInt(prNumberMatch[1]!) : undefined;
+
+  // Emit completed event
+  if (eventsFile) {
+    appendEvent(eventsFile, {
+      type: "implement.completed",
+      repoFullName: repository,
+      issueNumber: issue.number,
+      pullRequestNumber,
+      timestamp: new Date().toISOString(),
+      payload: {
+        linesAdded,
+        linesRemoved,
+        durationMs,
+        prUrl,
+        runUrl,
+      },
+    });
   }
 
   // Write job summary

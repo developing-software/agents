@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { existsSync, readFileSync } from "fs";
+import { appendFileSync, existsSync, readFileSync } from "fs";
 
 export interface GitHubContext {
   token: string;
@@ -16,6 +16,15 @@ export interface IssuePayload {
   number: number;
   title: string;
   body: string;
+}
+
+export interface ImplementEvent {
+  type: string;
+  repoFullName: string;
+  issueNumber: number;
+  pullRequestNumber?: number;
+  timestamp: string;
+  payload: Record<string, unknown>;
 }
 
 export function readEventPayload(): { issue: IssuePayload } {
@@ -54,6 +63,18 @@ export function readCustomMetrics(filePath: string): Record<string, string> {
         return [line.slice(0, i).trim(), line.slice(i + 1).trim()];
       }),
   );
+}
+
+export function appendEvent(filePath: string, event: ImplementEvent): void {
+  appendFileSync(filePath, JSON.stringify(event) + "\n");
+}
+
+export function readEvents(filePath: string): ImplementEvent[] {
+  if (!filePath || !existsSync(filePath)) return [];
+  return readFileSync(filePath, "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as ImplementEvent);
 }
 
 export async function execWithOutput(cmd: string, args: string[]): Promise<string> {
