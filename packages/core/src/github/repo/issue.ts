@@ -1,7 +1,8 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { useTransaction, createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
 import { Log } from "../../util/log";
+import { GitHub } from "../client";
 import { githubIssueTable } from "./repo.sql";
 
 const log = Log.create({ namespace: "github.issue" });
@@ -66,14 +67,22 @@ export namespace GithubIssue {
     );
   }
 
-  export async function listByRepo(repoId: string) {
-    return await useTransaction(
-      async (tx) =>
-        await tx
-          .select()
-          .from(githubIssueTable)
-          .where(eq(githubIssueTable.repoId, repoId))
-          .orderBy(desc(githubIssueTable.timeUpdated)),
-    );
+  export async function listByRepo(repo: { installationId: number; owner: string; repo: string }) {
+    const octokit = await GitHub.appClient(repo.installationId);
+    const { data } = await octokit.rest.issues.listForRepo({
+      owner: repo.owner,
+      repo: repo.repo,
+      state: "all",
+      per_page: 100,
+    });
+    return data
+      .filter((i) => !i.pull_request)
+      .map((i) => ({
+        number: i.number,
+        title: i.title,
+        state: i.state,
+        labels: i.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))),
+        body: i.body ?? undefined,
+      }));
   }
 }

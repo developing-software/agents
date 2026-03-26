@@ -1,7 +1,8 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { useTransaction, createTransaction } from "../../drizzle/transaction";
 import { createID } from "../../util/id";
 import { Log } from "../../util/log";
+import { GitHub } from "../client";
 import { githubPullRequestTable } from "./repo.sql";
 
 const log = Log.create({ namespace: "github.pull_request" });
@@ -81,14 +82,20 @@ export namespace GithubPullRequest {
     );
   }
 
-  export async function listByRepo(repoId: string) {
-    return await useTransaction(
-      async (tx) =>
-        await tx
-          .select()
-          .from(githubPullRequestTable)
-          .where(eq(githubPullRequestTable.repoId, repoId))
-          .orderBy(desc(githubPullRequestTable.timeUpdated)),
-    );
+  export async function listByRepo(repo: { installationId: number; owner: string; repo: string }) {
+    const octokit = await GitHub.appClient(repo.installationId);
+    const { data } = await octokit.rest.pulls.list({
+      owner: repo.owner,
+      repo: repo.repo,
+      state: "all",
+      per_page: 100,
+    });
+    return data.map((pr) => ({
+      number: pr.number,
+      title: pr.title,
+      state: pr.merged_at ? "merged" : pr.state,
+      headBranch: pr.head.ref,
+      baseBranch: pr.base.ref,
+    }));
   }
 }

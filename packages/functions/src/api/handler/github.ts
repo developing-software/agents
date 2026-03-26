@@ -76,7 +76,7 @@ export namespace GitHubApi {
       async (c) => {
         const { owner, repo } = c.req.valid("param");
         const found = await getRepoOrThrow(owner, repo);
-        const issues = await GithubIssue.listByRepo(found.id);
+        const issues = await GithubIssue.listByRepo(found);
         return c.json(issues, 200);
       },
     )
@@ -89,7 +89,7 @@ export namespace GitHubApi {
       async (c) => {
         const { owner, repo } = c.req.valid("param");
         const found = await getRepoOrThrow(owner, repo);
-        const pulls = await GithubPullRequest.listByRepo(found.id);
+        const pulls = await GithubPullRequest.listByRepo(found);
         return c.json(pulls, 200);
       },
     )
