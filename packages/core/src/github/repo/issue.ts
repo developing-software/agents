@@ -13,6 +13,7 @@ export namespace GithubIssue {
     state: z.string(),
     labels: z.array(z.string()),
     body: z.string().optional().nullable(),
+    htmlUrl: z.string(),
   });
   export type Info = z.infer<typeof Info>;
 
@@ -43,6 +44,7 @@ export namespace GithubIssue {
     state: string;
     labels: (string | { name?: string })[];
     body?: string | null;
+    html_url: string;
   }): Info {
     return {
       number: issue.number,
@@ -50,6 +52,7 @@ export namespace GithubIssue {
       state: issue.state,
       labels: issue.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))),
       body: issue.body ?? "",
+      htmlUrl: issue.html_url,
     };
   }
 }

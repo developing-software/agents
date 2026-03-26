@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import GitHubLink from '$lib/GitHubLink.svelte';
   let { data }: PageProps = $props();
 
   let filter = $state<'all' | 'open' | 'closed'>('open');
@@ -53,6 +54,7 @@
             {/if}
           </div>
           <span class="text-xs text-gray-500 capitalize">{issue.state}</span>
+          <GitHubLink href={issue.htmlUrl} />
         </li>
       {/each}
     </ul>
