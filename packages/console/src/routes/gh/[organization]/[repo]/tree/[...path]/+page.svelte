@@ -4,15 +4,15 @@
   let { data }: PageProps = $props();
 
   function fileIcon(type: string, name: string): string {
-    if (type === 'dir') return '📁';
+    if (type === 'dir') return 'dir';
     const ext = name.split('.').pop()?.toLowerCase();
-    const icons: Record<string, string> = {
-      ts: '🟦', tsx: '🟦', js: '🟨', jsx: '🟨',
-      svelte: '🟧', vue: '🟩', py: '🐍', go: '🐹',
-      rs: '🦀', md: '📝', json: '📋', yaml: '📋', yml: '📋',
-      toml: '📋', css: '🎨', html: '🌐', sh: '⚙️',
+    const categories: Record<string, string> = {
+      ts: 'ts', tsx: 'tsx', js: 'js', jsx: 'jsx',
+      svelte: 'svelte', vue: 'vue', py: 'py', go: 'go',
+      rs: 'rs', md: 'md', json: 'json', yaml: 'yaml', yml: 'yml',
+      toml: 'toml', css: 'css', html: 'html', sh: 'sh',
     };
-    return icons[ext ?? ''] ?? '📄';
+    return categories[ext ?? ''] ?? ext ?? 'file';
   }
 
   function formatSize(bytes: number): string {
@@ -21,89 +21,113 @@
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
+  function iconColor(type: string, name: string): string {
+    if (type === 'dir') return 'var(--color-accent)';
+    const ext = name.split('.').pop()?.toLowerCase();
+    if (ext === 'ts' || ext === 'tsx') return 'var(--color-accent)';
+    if (ext === 'svelte') return 'var(--color-warning)';
+    if (ext === 'js' || ext === 'jsx') return 'var(--color-warning)';
+    if (ext === 'go') return 'var(--color-accent)';
+    if (ext === 'rs') return 'var(--color-warning)';
+    if (ext === 'py') return 'var(--color-accent)';
+    return 'var(--color-dim)';
+  }
+
   const parentHref = $derived(
     data.breadcrumbs.length > 1
-      ? `/gh/${data.organization}/${data.repoName}/tree/${data.breadcrumbs.slice(0, -1).map((c) => c.label).join('/')}`
+      ? `/gh/${data.organization}/${data.repoName}/tree/${data.breadcrumbs.slice(0, -1).map((c: { label: string }) => c.label).join('/')}`
       : `/gh/${data.organization}/${data.repoName}/tree`
   );
 </script>
 
 <div>
   <!-- Breadcrumb -->
-  <nav class="mb-5 flex items-center gap-1 font-mono text-sm" aria-label="File path">
+  <nav class="mb-4 flex items-center gap-0 font-mono" style="font-size: 12px;" aria-label="File path">
     <a
       href="/gh/{data.organization}/{data.repoName}/tree"
-      class="transition-colors hover:underline"
-      style="color: var(--color-accent);"
+      class="transition-colors"
+      style="color: var(--color-accent); text-decoration: none;"
+      onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.textDecoration = 'underline')}
+      onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.textDecoration = 'none')}
     >root</a>
     {#each data.breadcrumbs as crumb (crumb.href)}
-      <span class="select-none" style="color: var(--color-dim);">/</span>
+      <span class="select-none px-1" style="color: var(--color-dim);">/</span>
       <a
         href={crumb.href}
-        class="transition-colors hover:underline"
-        style="color: var(--color-accent);"
+        class="transition-colors"
+        style="color: var(--color-accent); text-decoration: none;"
+        onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.textDecoration = 'underline')}
+        onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.textDecoration = 'none')}
       >{crumb.label}</a>
     {/each}
   </nav>
 
-  <!-- File tree -->
-  <div
-    class="overflow-hidden rounded-lg border"
-    style="background: var(--color-surface); border-color: var(--color-border);"
-  >
-    <!-- Parent directory link -->
-    {#if data.path}
-      <a
-        href={parentHref}
-        class="flex items-center gap-3 border-b px-4 py-2.5 font-mono text-sm transition-colors"
-        style="background: var(--color-elevated); border-color: var(--color-border); color: var(--color-muted);"
-        onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
-        onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-elevated)')}
-      >
-        <span class="w-4 text-center">📁</span>
-        <span>..</span>
-      </a>
-    {/if}
-
-    <!-- Entries -->
-    {#if data.entries.length === 0}
-      <p
-        class="px-4 py-10 text-center text-sm"
-        style="color: var(--color-muted);"
-      >Empty directory</p>
-    {:else}
-      {#each data.entries as entry (entry.name)}
+  <!-- File list -->
+  {#if data.entries.length === 0 && !data.path}
+    <p class="py-6 text-center text-xs" style="color: var(--color-dim);">Empty directory</p>
+  {:else}
+    <div>
+      <!-- Parent directory row -->
+      {#if data.path}
         <a
-          href={entry.type === 'dir'
-            ? `/gh/${data.organization}/${data.repoName}/tree/${entry.path}`
-            : (entry.html_url ?? '#')}
-          target={entry.type === 'file' ? '_blank' : undefined}
-          rel={entry.type === 'file' ? 'noopener noreferrer' : undefined}
-          class="flex items-center gap-3 border-b px-4 py-2.5 font-mono text-sm transition-colors last:border-b-0"
-          style="border-color: var(--color-border);"
+          href={parentHref}
+          class="flex items-center transition-colors"
+          style="height: 24px; padding: 0 6px; text-decoration: none;"
           onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
           onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
         >
-          <!-- Icon -->
-          <span class="w-4 shrink-0 text-center">{fileIcon(entry.type, entry.name)}</span>
+          <!-- Type label placeholder -->
+          <span
+            class="shrink-0 font-mono"
+            style="width: 50px; font-size: 10px; color: transparent;"
+          >&nbsp;</span>
 
           <!-- Name -->
           <span
-            class="flex-1"
-            style={entry.type === 'dir'
-              ? 'color: var(--color-accent);'
-              : 'color: var(--color-text);'}
-          >{entry.name}</span>
-
-          <!-- Size -->
-          {#if entry.type === 'file' && entry.size != null}
-            <span
-              class="shrink-0 text-xs"
-              style="color: var(--color-muted);"
-            >{formatSize(entry.size)}</span>
-          {/if}
+            class="font-mono"
+            style="font-size: 12px; color: var(--color-dim);"
+          >..</span>
         </a>
-      {/each}
-    {/if}
-  </div>
+      {/if}
+
+      <!-- Entries -->
+      {#if data.entries.length === 0}
+        <p class="py-6 text-center text-xs" style="color: var(--color-dim);">Empty directory</p>
+      {:else}
+        {#each data.entries as entry (entry.name)}
+          <a
+            href={entry.type === 'dir'
+              ? `/gh/${data.organization}/${data.repoName}/tree/${entry.path}`
+              : (entry.html_url ?? '#')}
+            target={entry.type === 'file' ? '_blank' : undefined}
+            rel={entry.type === 'file' ? 'noopener noreferrer' : undefined}
+            class="flex items-center transition-colors"
+            style="height: 24px; padding: 0 6px; text-decoration: none;"
+            onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
+            onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+          >
+            <!-- File type label -->
+            <span
+              class="shrink-0 font-mono"
+              style="width: 50px; font-size: 10px; color: {iconColor(entry.type, entry.name)};"
+            >{fileIcon(entry.type, entry.name)}</span>
+
+            <!-- Name -->
+            <span
+              class="min-w-0 flex-1 truncate font-mono"
+              style="font-size: 12px; color: {entry.type === 'dir' ? 'var(--color-accent)' : 'var(--color-text)'};"
+            >{entry.name}</span>
+
+            <!-- Size -->
+            {#if entry.type === 'file' && entry.size != null}
+              <span
+                class="shrink-0 font-mono"
+                style="font-size: 11px; color: var(--color-dim);"
+              >{formatSize(entry.size)}</span>
+            {/if}
+          </a>
+        {/each}
+      {/if}
+    </div>
+  {/if}
 </div>

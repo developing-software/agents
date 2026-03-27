@@ -83,337 +83,607 @@
   );
 </script>
 
-<!-- ------------------------------------------------------------------ -->
-<!-- Activity Feed -->
-<!-- ------------------------------------------------------------------ -->
-<section class="mb-8">
-  <div class="mb-3 flex items-center justify-between">
-    <h2 class="text-xs font-semibold uppercase tracking-widest text-muted">Activity</h2>
-  </div>
+<div class="page-grid">
+  <!-- ============================================================ -->
+  <!-- LEFT: Activity Feed -->
+  <!-- ============================================================ -->
+  <section class="activity-section">
+    <h2 class="section-heading">Activity</h2>
 
-  {#if data.events.length === 0}
-    <div class="flex items-center justify-center py-12 text-sm text-muted">
-      No events recorded yet
-    </div>
-  {:else}
-    <ul
-      class="rounded-lg overflow-hidden border divide-y"
-      style="background: var(--color-surface); border-color: var(--color-border); --tw-divide-opacity: 1;"
-    >
-      {#each topLevelEvents as event (event.id)}
-        {@const eventChildren = childEventsByParent[event.id] ?? []}
-        <li>
-          <!-- Parent event row -->
-          {#snippet eventRowContent(ev: typeof event)}
+    {#if data.events.length === 0}
+      <p class="empty-text">No events</p>
+    {:else}
+      <div class="timeline">
+        {#each topLevelEvents as event (event.id)}
+          {@const eventChildren = childEventsByParent[event.id] ?? []}
+
+          <!-- Shared inner content for event rows -->
+          {#snippet eventRowInner(ev: typeof event, isChild: boolean)}
             <span
-              class="h-1.5 w-1.5 shrink-0 rounded-full"
-              style="background: {eventDotColor(ev.type)}; box-shadow: 0 0 6px {eventDotColor(ev.type)};"
+              class="event-dot"
+              class:event-dot-child={isChild}
+              style="background: {eventDotColor(ev.type)};"
             ></span>
-            <span class="font-mono text-xs text-text min-w-0 flex-1 truncate">{ev.type}</span>
             <span
-              class="font-mono text-xs px-1.5 py-0.5 rounded shrink-0"
+              class="event-type"
+              class:event-type-child={isChild}
+            >{ev.type}</span>
+            <span
+              class="source-badge"
               style={sourceBadgeStyle(ev.source)}
             >{ev.source}</span>
             {#if ev.issueNumber}
               <a
                 href="/gh/{data.organization}/{data.repoName}/issues"
-                class="font-mono text-xs shrink-0 hover:underline"
-                style="color: var(--color-success);"
+                class="ref-link ref-link-issue"
                 onclick={(e) => e.stopPropagation()}
               >#{ev.issueNumber}</a>
             {:else if ev.pullRequestNumber}
               <a
                 href="/gh/{data.organization}/{data.repoName}/pulls"
-                class="font-mono text-xs shrink-0 hover:underline"
-                style="color: var(--color-merged);"
+                class="ref-link ref-link-pr"
                 onclick={(e) => e.stopPropagation()}
               >#{ev.pullRequestNumber}</a>
             {/if}
-            <span class="shrink-0 text-xs text-dim tabular-nums">{relativeTime(ev.timeCreated)}</span>
+            <span class="event-time">{relativeTime(ev.timeCreated)}</span>
             {#if ev.artifacts.length > 0}
-              <span class="shrink-0 text-xs text-dim">{expandedEvents.has(ev.id) ? '▴' : '▾'}</span>
+              <span class="artifact-toggle">{expandedEvents.has(ev.id) ? '▴' : '▾'}</span>
             {/if}
           {/snippet}
-          {#if event.artifacts.length > 0}
-            <div
-              class="flex items-center gap-3 px-4 py-3 cursor-pointer event-row"
-              role="button"
-              tabindex="0"
-              onclick={() => toggleArtifacts(event.id)}
-              onkeydown={(e) => e.key === 'Enter' && toggleArtifacts(event.id)}
-            >
-              {@render eventRowContent(event)}
-            </div>
-          {:else}
-            <div class="flex items-center gap-3 px-4 py-3 event-row">
-              {@render eventRowContent(event)}
-            </div>
-          {/if}
 
-          <!-- Artifacts panel -->
-          {#if event.artifacts.length > 0 && expandedEvents.has(event.id)}
-            <div
-              class="border-t px-4 py-3"
-              style="background: var(--color-elevated); border-color: var(--color-border);"
-            >
-              <p class="mb-2 text-xs text-dim uppercase tracking-wider">Artifacts</p>
-              <ul class="flex flex-wrap gap-2">
-                {#each event.artifacts as artifact (artifact.name)}
-                  <li>
-                    <a
-                      href="/gh/{data.organization}/{data.repoName}/events/{event.id}/artifacts/{artifact.name}"
-                      class="flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-xs transition-colors artifact-link"
-                      style="border-color: var(--color-border); color: var(--color-text);"
-                    >
-                      <span>{artifact.name}</span>
-                      <span class="text-dim">({formatBytes(artifact.size)})</span>
-                    </a>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
+          <!-- Event row: button when clickable, div otherwise -->
+          {#snippet eventRow(ev: typeof event, isChild: boolean)}
+            {#if ev.artifacts.length > 0}
+              <button
+                type="button"
+                class="event-row event-row-clickable"
+                class:event-row-child={isChild}
+                onclick={() => toggleArtifacts(ev.id)}
+              >
+                {@render eventRowInner(ev, isChild)}
+              </button>
+            {:else}
+              <div class="event-row" class:event-row-child={isChild}>
+                {@render eventRowInner(ev, isChild)}
+              </div>
+            {/if}
 
-          <!-- Child events -->
-          {#if eventChildren.length > 0}
-            <ul
-              class="border-t divide-y"
-              style="border-color: var(--color-border);"
-            >
-              {#each eventChildren as child (child.id)}
-                <li>
-                  {#snippet childRowContent(ch: typeof child)}
-                    <span
-                      class="h-1 w-1 shrink-0 rounded-full"
-                      style="background: {eventDotColor(ch.type)}; box-shadow: 0 0 4px {eventDotColor(ch.type)};"
-                    ></span>
-                    <span class="font-mono text-xs text-muted min-w-0 flex-1 truncate">{ch.type}</span>
-                    <span
-                      class="font-mono text-xs px-1.5 py-0.5 rounded shrink-0"
-                      style={sourceBadgeStyle(ch.source)}
-                    >{ch.source}</span>
-                    {#if ch.issueNumber}
+            <!-- Artifacts panel -->
+            {#if ev.artifacts.length > 0 && expandedEvents.has(ev.id)}
+              <div class="artifacts-panel" class:artifacts-panel-child={isChild}>
+                <p class="artifacts-label">Artifacts</p>
+                <ul class="artifacts-list">
+                  {#each ev.artifacts as artifact (artifact.name)}
+                    <li>
                       <a
-                        href="/gh/{data.organization}/{data.repoName}/issues"
-                        class="font-mono text-xs shrink-0 hover:underline"
-                        style="color: var(--color-success);"
-                        onclick={(e) => e.stopPropagation()}
-                      >#{ch.issueNumber}</a>
-                    {:else if ch.pullRequestNumber}
-                      <a
-                        href="/gh/{data.organization}/{data.repoName}/pulls"
-                        class="font-mono text-xs shrink-0 hover:underline"
-                        style="color: var(--color-merged);"
-                        onclick={(e) => e.stopPropagation()}
-                      >#{ch.pullRequestNumber}</a>
-                    {/if}
-                    <span class="shrink-0 text-xs text-dim tabular-nums">{relativeTime(ch.timeCreated)}</span>
-                    {#if ch.artifacts.length > 0}
-                      <span class="shrink-0 text-xs text-dim">{expandedEvents.has(ch.id) ? '▴' : '▾'}</span>
-                    {/if}
-                  {/snippet}
-                  {#if child.artifacts.length > 0}
-                    <div
-                      class="flex items-center gap-3 py-2 pl-10 pr-4 cursor-pointer event-row"
-                      role="button"
-                      tabindex="0"
-                      onclick={() => toggleArtifacts(child.id)}
-                      onkeydown={(e) => e.key === 'Enter' && toggleArtifacts(child.id)}
-                    >
-                      {@render childRowContent(child)}
-                    </div>
-                  {:else}
-                    <div class="flex items-center gap-3 py-2 pl-10 pr-4 event-row">
-                      {@render childRowContent(child)}
-                    </div>
-                  {/if}
-
-                  {#if child.artifacts.length > 0 && expandedEvents.has(child.id)}
-                    <div
-                      class="border-t py-3 pl-10 pr-4"
-                      style="background: var(--color-elevated); border-color: var(--color-border);"
-                    >
-                      <p class="mb-2 text-xs text-dim uppercase tracking-wider">Artifacts</p>
-                      <ul class="flex flex-wrap gap-2">
-                        {#each child.artifacts as artifact (artifact.name)}
-                          <li>
-                            <a
-                              href="/gh/{data.organization}/{data.repoName}/events/{child.id}/artifacts/{artifact.name}"
-                              class="flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-xs transition-colors artifact-link"
-                              style="border-color: var(--color-border); color: var(--color-text);"
-                            >
-                              <span>{artifact.name}</span>
-                              <span class="text-dim">({formatBytes(artifact.size)})</span>
-                            </a>
-                          </li>
-                        {/each}
-                      </ul>
-                    </div>
-                  {/if}
-                </li>
-              {/each}
-            </ul>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-</section>
-
-<!-- ------------------------------------------------------------------ -->
-<!-- Issues + Pull Requests -->
-<!-- ------------------------------------------------------------------ -->
-<div class="grid gap-6 md:grid-cols-2 mb-8">
-  <!-- Issues -->
-  <section>
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="text-xs font-semibold uppercase tracking-widest text-muted">Issues</h2>
-      <a
-        href="/gh/{data.organization}/{data.repoName}/issues"
-        class="text-xs text-accent hover:underline"
-      >View all →</a>
-    </div>
-
-    {#if data.issues.length === 0}
-      <p class="text-sm text-muted py-4">No issues synced yet.</p>
-    {:else}
-      <ul
-        class="rounded-lg overflow-hidden border divide-y"
-        style="background: var(--color-surface); border-color: var(--color-border);"
-      >
-        {#each data.issues as issue (issue.number)}
-          <li class="flex items-start gap-3 px-4 py-3 hover:bg-hover transition-colors">
-            <span
-              class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
-              style="background: {issue.state === 'open' ? 'var(--color-success)' : 'var(--color-danger)'};"
-            ></span>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-sm text-text leading-snug">{issue.title}</p>
-              <p class="font-mono text-xs text-dim mt-0.5">#{issue.number}</p>
-              {#if issue.labels && issue.labels.length > 0}
-                <div class="mt-1.5 flex flex-wrap gap-1">
-                  {#each issue.labels as label (label)}
-                    <span
-                      class="font-mono text-xs px-1.5 py-0.5 rounded border"
-                      style="background: var(--color-elevated); border-color: var(--color-border); color: var(--color-muted);"
-                    >{label}</span>
+                        href="/gh/{data.organization}/{data.repoName}/events/{ev.id}/artifacts/{artifact.name}"
+                        class="artifact-pill"
+                      >
+                        <span>{artifact.name}</span>
+                        <span class="artifact-size">({formatBytes(artifact.size)})</span>
+                      </a>
+                    </li>
                   {/each}
-                </div>
-              {/if}
+                </ul>
+              </div>
+            {/if}
+          {/snippet}
+
+          {@render eventRow(event, false)}
+
+          <!-- Child events indented -->
+          {#if eventChildren.length > 0}
+            <div class="children-group">
+              {#each eventChildren as child (child.id)}
+                {@render eventRow(child, true)}
+              {/each}
             </div>
-            <GitHubLink href={issue.htmlUrl} />
-          </li>
+          {/if}
         {/each}
-      </ul>
+      </div>
     {/if}
   </section>
 
-  <!-- Pull Requests -->
-  <section>
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="text-xs font-semibold uppercase tracking-widest text-muted">Pull Requests</h2>
-      <a
-        href="/gh/{data.organization}/{data.repoName}/pulls"
-        class="text-xs text-accent hover:underline"
-      >View all →</a>
-    </div>
+  <!-- ============================================================ -->
+  <!-- RIGHT: Issues + PRs + Token -->
+  <!-- ============================================================ -->
+  <aside class="right-column">
 
-    {#if data.pulls.length === 0}
-      <p class="text-sm text-muted py-4">No pull requests synced yet.</p>
-    {:else}
-      <ul
-        class="rounded-lg overflow-hidden border divide-y"
-        style="background: var(--color-surface); border-color: var(--color-border);"
-      >
-        {#each data.pulls as pr (pr.number)}
-          <li class="flex items-start gap-3 px-4 py-3 hover:bg-hover transition-colors">
-            <span
-              class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
-              style="background: {pr.state === 'open'
-                ? 'var(--color-success)'
-                : pr.state === 'merged'
-                  ? 'var(--color-merged)'
-                  : 'var(--color-danger)'};"
-            ></span>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-sm text-text leading-snug">{pr.title}</p>
-              <p class="font-mono text-xs text-dim mt-0.5">
-                #{pr.number}
-                <span class="text-dim mx-1">·</span>
-                <span>{pr.headBranch}</span>
-                <span class="mx-1">→</span>
-                <span>{pr.baseBranch}</span>
-              </p>
-            </div>
-            <GitHubLink href={pr.htmlUrl} />
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
-</div>
+    <!-- Issues -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="section-heading">Issues</h2>
+        <a href="/gh/{data.organization}/{data.repoName}/issues" class="view-all-link">View all →</a>
+      </div>
 
-<!-- ------------------------------------------------------------------ -->
-<!-- Agent Token -->
-<!-- ------------------------------------------------------------------ -->
-<section
-  class="rounded-lg border p-5"
-  style="background: var(--color-surface); border-color: var(--color-border);"
->
-  <div class="flex items-start justify-between gap-4">
-    <div>
-      <h2 class="text-sm font-semibold text-text">Agent Token</h2>
-      <p class="mt-1 text-xs text-muted max-w-sm">
+      {#if data.issues.length === 0}
+        <p class="empty-text">No issues synced yet.</p>
+      {:else}
+        <ul class="item-list">
+          {#each data.issues.slice(0, 5) as issue (issue.number)}
+            <li class="item-row">
+              <span
+                class="item-dot"
+                style="background: {issue.state === 'open' ? 'var(--color-success)' : 'var(--color-dim)'};"
+              ></span>
+              <div class="item-body">
+                <span class="item-number">#{issue.number}</span>
+                <span class="item-title">{issue.title}</span>
+                {#if issue.labels && issue.labels.length > 0}
+                  <div class="label-group">
+                    {#each issue.labels as label (label)}
+                      <span class="label-tag">{label}</span>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+              <GitHubLink href={issue.htmlUrl} />
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
+
+    <!-- Pull Requests -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="section-heading">Pull Requests</h2>
+        <a href="/gh/{data.organization}/{data.repoName}/pulls" class="view-all-link">View all →</a>
+      </div>
+
+      {#if data.pulls.length === 0}
+        <p class="empty-text">No pull requests synced yet.</p>
+      {:else}
+        <ul class="item-list">
+          {#each data.pulls.slice(0, 5) as pr (pr.number)}
+            <li class="item-row">
+              <span
+                class="item-dot"
+                style="background: {pr.state === 'open'
+                  ? 'var(--color-success)'
+                  : pr.state === 'merged'
+                    ? 'var(--color-merged)'
+                    : 'var(--color-dim)'};"
+              ></span>
+              <div class="item-body">
+                <span class="item-number">#{pr.number}</span>
+                <span class="item-title">{pr.title}</span>
+                <p class="pr-branches">
+                  <span>{pr.headBranch}</span>
+                  <span class="branch-arrow">→</span>
+                  <span>{pr.baseBranch}</span>
+                </p>
+              </div>
+              <GitHubLink href={pr.htmlUrl} />
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
+
+    <!-- Agent Token -->
+    <section class="panel token-panel">
+      <h2 class="section-heading" style="margin-bottom: 6px;">Agent Token</h2>
+      <p class="token-desc">
         Generate a token and add it as
-        <code
-          class="font-mono px-1 py-0.5 rounded"
-          style="background: var(--color-elevated); color: var(--color-text);"
-        >AGENTS_TOKEN</code>
+        <code class="inline-code">AGENTS_TOKEN</code>
         in your repo's Actions secrets.
       </p>
-    </div>
-    <button
-      onclick={handleGenerateToken}
-      class="shrink-0 rounded px-3 py-1.5 text-xs font-medium transition-colors generate-btn"
-    >
-      Generate token
-    </button>
-  </div>
+      <button class="generate-btn" onclick={handleGenerateToken}>
+        Generate token
+      </button>
 
-  {#if token}
-    <div
-      class="mt-4 rounded-md border p-3"
-      style="background: var(--color-elevated); border-color: var(--color-border);"
-    >
-      <p class="mb-2 text-xs text-dim">Copy this token — it won't be shown again.</p>
-      <code
-        class="font-mono text-xs break-all"
-        style="color: var(--color-success);"
-      >{token}</code>
-    </div>
-  {/if}
+      {#if token}
+        <div class="token-display">
+          <p class="token-hint">Copy this token — it won't be shown again.</p>
+          <code class="token-value">{token}</code>
+        </div>
+      {/if}
 
-  {#if tokenError}
-    <p class="mt-3 text-xs" style="color: var(--color-danger);">{tokenError}</p>
-  {/if}
-</section>
+      {#if tokenError}
+        <p class="token-error">{tokenError}</p>
+      {/if}
+    </section>
+
+  </aside>
+</div>
 
 <style>
-  .event-row:hover {
+  /* ------------------------------------------------------------------ */
+  /* Page grid */
+  /* ------------------------------------------------------------------ */
+  .page-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Section headings */
+  /* ------------------------------------------------------------------ */
+  .section-heading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
+    margin: 0;
+  }
+
+  .empty-text {
+    font-size: 12px;
+    color: var(--color-dim);
+    margin: 8px 0 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Activity feed */
+  /* ------------------------------------------------------------------ */
+  .activity-section {
+    min-width: 0;
+  }
+
+  .timeline {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .event-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    min-width: 0;
+    border-radius: 3px;
+  }
+
+  .event-row-child {
+    padding-left: 16px;
+  }
+
+  .event-row-clickable {
+    cursor: pointer;
+    /* reset button styles */
+    background: none;
+    border: none;
+    text-align: left;
+    font: inherit;
+    width: 100%;
+  }
+
+  .event-row-clickable:hover {
     background: var(--color-hover);
   }
 
-  .artifact-link:hover {
+  .event-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .event-dot-child {
+    width: 4px;
+    height: 4px;
+    opacity: 0.7;
+  }
+
+  .event-type {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: var(--color-text);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .event-type-child {
+    color: var(--color-muted);
+  }
+
+  .source-badge {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    line-height: 1.6;
+  }
+
+  .ref-link {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .ref-link:hover {
+    text-decoration: underline;
+  }
+
+  .ref-link-issue {
+    color: var(--color-success);
+  }
+
+  .ref-link-pr {
+    color: var(--color-merged);
+  }
+
+  .event-time {
+    font-size: 11px;
+    color: var(--color-dim);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .artifact-toggle {
+    font-size: 11px;
+    color: var(--color-dim);
+    flex-shrink: 0;
+  }
+
+  /* Artifacts panel */
+  .artifacts-panel {
+    padding: 6px 0 6px 13px;
+    background: var(--color-elevated);
+    border-radius: 3px;
+    margin: 1px 0;
+  }
+
+  .artifacts-panel-child {
+    padding-left: 29px;
+  }
+
+  .artifacts-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-dim);
+    margin: 0 0 5px;
+  }
+
+  .artifacts-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .artifact-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    text-decoration: none;
+    background: var(--color-surface);
+    transition: border-color 0.1s;
+  }
+
+  .artifact-pill:hover {
     border-color: var(--color-border-bright);
+  }
+
+  .artifact-size {
+    color: var(--color-dim);
+  }
+
+  /* Children group */
+  .children-group {
+    border-left: 1px solid var(--color-border);
+    margin-left: 2px;
+    padding-left: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Right column panels */
+  /* ------------------------------------------------------------------ */
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 12px 14px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .view-all-link {
+    font-size: 11px;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .view-all-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Issue / PR list */
+  .item-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--color-border);
+    min-width: 0;
+  }
+
+  .item-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .item-row:first-child {
+    padding-top: 0;
+  }
+
+  .item-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .item-number {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-dim);
+    flex-shrink: 0;
+  }
+
+  .item-title {
+    font-size: 12px;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .label-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .label-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    background: var(--color-elevated);
+    color: var(--color-muted);
+  }
+
+  .pr-branches {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+    margin: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .branch-arrow {
+    color: var(--color-dim);
+    flex-shrink: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Agent Token */
+  /* ------------------------------------------------------------------ */
+  .token-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .token-desc {
+    font-size: 12px;
+    color: var(--color-muted);
+    margin: 6px 0 10px;
+    line-height: 1.5;
+  }
+
+  .inline-code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--color-elevated);
     color: var(--color-text);
   }
 
   .generate-btn {
+    align-self: flex-start;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
     background: var(--color-accent);
     color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.1s;
   }
 
   .generate-btn:hover {
     background: color-mix(in srgb, var(--color-accent) 85%, white);
+  }
+
+  .token-display {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+  }
+
+  .token-hint {
+    font-size: 11px;
+    color: var(--color-dim);
+    margin: 0 0 5px;
+  }
+
+  .token-value {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-success);
+    word-break: break-all;
+  }
+
+  .token-error {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--color-danger);
   }
 </style>

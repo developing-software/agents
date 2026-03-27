@@ -19,23 +19,26 @@
 
 <div>
   <!-- Header -->
-  <div class="mb-5 flex items-center justify-between">
-    <h1 class="text-lg font-semibold text-text">Issues</h1>
+  <div class="mb-4 flex items-center justify-between">
+    <span class="text-sm font-medium" style="color: var(--color-text);">Issues</span>
 
-    <!-- Filter pill group -->
-    <div class="flex gap-1">
+    <!-- Filter pill tabs -->
+    <div
+      class="flex gap-px overflow-hidden rounded border p-px"
+      style="background: var(--color-elevated); border-color: var(--color-border);"
+    >
       {#each filterOptions as opt (opt.value)}
         <button
           onclick={() => (filter = opt.value)}
-          class="rounded-full px-3 py-1 text-sm transition-colors"
+          class="rounded px-2.5 py-1 font-mono text-xs transition-colors"
           style={filter === opt.value
             ? 'background: var(--color-accent); color: #fff;'
-            : 'background: transparent; color: var(--color-muted);'}
+            : 'background: transparent; color: var(--color-dim);'}
           onmouseenter={filter !== opt.value
-            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')
+            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')
             : undefined}
           onmouseleave={filter !== opt.value
-            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')
+            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')
             : undefined}
         >
           {opt.label}
@@ -47,64 +50,68 @@
   <!-- Issue list -->
   {#if filtered.length === 0}
     <div
-      class="flex items-center justify-center rounded-lg border py-12 text-sm"
-      style="border-color: var(--color-border); background: var(--color-surface);"
+      class="flex items-center justify-center py-10 text-xs"
+      style="color: var(--color-muted); border: 1px solid var(--color-border); border-radius: 4px;"
     >
-      <span style="color: var(--color-muted);">
-        No {filter === 'all' ? '' : filter} issues found.
-      </span>
+      No {filter === 'all' ? '' : filter} issues found.
     </div>
   {:else}
-    <ul
-      class="overflow-hidden rounded-lg border"
-      style="background: var(--color-surface); border-color: var(--color-border);"
+    <div
+      class="overflow-hidden rounded"
+      style="border: 1px solid var(--color-border); background: var(--color-surface);"
     >
-      {#each filtered as issue (issue.number)}
-        <li
-          class="flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
-          style="border-color: var(--color-border);"
+      {#each filtered as issue, idx (issue.number)}
+        <div
+          class="flex items-center gap-3 px-3"
+          style="height: 28px; border-top: {idx === 0 ? 'none' : '1px solid var(--color-border)'};"
+          onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
+          onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+          role="listitem"
         >
           <!-- State dot -->
           <span
-            class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full"
+            class="h-1.5 w-1.5 shrink-0 rounded-full"
             style={issue.state === 'open'
-              ? 'background: var(--color-success); box-shadow: 0 0 6px var(--color-success);'
+              ? 'background: var(--color-success);'
               : 'background: var(--color-dim);'}
           ></span>
 
           <!-- Number -->
           <span
-            class="shrink-0 font-mono text-xs"
-            style="color: var(--color-muted);"
+            class="shrink-0 font-mono"
+            style="width: 40px; font-size: 11px; color: var(--color-dim);"
           >#{issue.number}</span>
 
-          <!-- Title + labels -->
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-sm" style="color: var(--color-text);">{issue.title}</p>
-            {#if issue.labels && issue.labels.length > 0}
-              <div class="mt-1 flex flex-wrap gap-1">
-                {#each issue.labels as label (label)}
-                  <span
-                    class="rounded border px-1.5 py-0.5 font-mono text-xs"
-                    style="background: var(--color-elevated); border-color: var(--color-border); color: var(--color-muted);"
-                  >{label}</span>
-                {/each}
-              </div>
-            {/if}
-          </div>
-
-          <!-- State badge -->
+          <!-- Title -->
           <span
-            class="shrink-0 rounded px-2 py-0.5 text-xs capitalize"
-            style={issue.state === 'open'
-              ? 'background: var(--color-success-dim); color: var(--color-success);'
-              : 'background: var(--color-elevated); color: var(--color-dim);'}
+            class="min-w-0 flex-1 truncate text-xs"
+            style="color: var(--color-text);"
+          >{issue.title}</span>
+
+          <!-- Labels (max 3) -->
+          {#if issue.labels && issue.labels.length > 0}
+            <div class="flex shrink-0 gap-1">
+              {#each issue.labels.slice(0, 3) as label (label)}
+                <span
+                  class="rounded font-mono"
+                  style="font-size: 10px; padding: 0 5px; line-height: 17px; background: var(--color-elevated); border: 1px solid var(--color-border); color: var(--color-muted);"
+                >{label}</span>
+              {/each}
+            </div>
+          {/if}
+
+          <!-- State text -->
+          <span
+            class="shrink-0 font-mono capitalize"
+            style="font-size: 10px; width: 40px; text-align: right; color: {issue.state === 'open' ? 'var(--color-success)' : 'var(--color-dim)'};"
           >{issue.state}</span>
 
           <!-- GitHub link -->
-          <GitHubLink href={issue.htmlUrl} />
-        </li>
+          <div class="shrink-0">
+            <GitHubLink href={issue.htmlUrl} />
+          </div>
+        </div>
       {/each}
-    </ul>
+    </div>
   {/if}
 </div>

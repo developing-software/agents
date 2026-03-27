@@ -18,16 +18,14 @@
 
   function stateDotStyle(state: string): string {
     const color = stateColor(state);
-    const glow = state === 'open'
-      ? `box-shadow: 0 0 6px ${color};`
-      : '';
+    const glow = state === 'open' ? `box-shadow: 0 0 5px ${color};` : '';
     return `background: ${color}; ${glow}`;
   }
 
-  function stateBadgeStyle(state: string): string {
-    if (state === 'open') return 'background: var(--color-success-dim); color: var(--color-success);';
-    if (state === 'merged') return 'background: var(--color-merged-dim); color: var(--color-merged);';
-    return 'background: var(--color-danger-dim); color: var(--color-danger);';
+  function stateTextStyle(state: string): string {
+    if (state === 'open') return 'color: var(--color-success);';
+    if (state === 'merged') return 'color: var(--color-merged);';
+    return 'color: var(--color-danger);';
   }
 
   const filterOptions = [
@@ -40,23 +38,26 @@
 
 <div>
   <!-- Header -->
-  <div class="mb-5 flex items-center justify-between">
-    <h1 class="text-lg font-semibold text-text">Pull Requests</h1>
+  <div class="mb-4 flex items-center justify-between">
+    <span class="text-sm font-medium" style="color: var(--color-text);">Pull Requests</span>
 
-    <!-- Filter pill group -->
-    <div class="flex gap-1">
+    <!-- Filter pill tabs -->
+    <div
+      class="flex gap-px overflow-hidden rounded border p-px"
+      style="background: var(--color-elevated); border-color: var(--color-border);"
+    >
       {#each filterOptions as opt (opt.value)}
         <button
           onclick={() => (filter = opt.value)}
-          class="rounded-full px-3 py-1 text-sm transition-colors"
+          class="rounded px-2.5 py-1 font-mono text-xs transition-colors"
           style={filter === opt.value
             ? 'background: var(--color-accent); color: #fff;'
-            : 'background: transparent; color: var(--color-muted);'}
+            : 'background: transparent; color: var(--color-dim);'}
           onmouseenter={filter !== opt.value
-            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')
+            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')
             : undefined}
           onmouseleave={filter !== opt.value
-            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')
+            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')
             : undefined}
         >
           {opt.label}
@@ -68,53 +69,60 @@
   <!-- Pull request list -->
   {#if filtered.length === 0}
     <div
-      class="flex items-center justify-center rounded-lg border py-12 text-sm"
-      style="border-color: var(--color-border); background: var(--color-surface);"
+      class="flex items-center justify-center py-10 text-xs"
+      style="color: var(--color-muted); border: 1px solid var(--color-border); border-radius: 4px;"
     >
-      <span style="color: var(--color-muted);">
-        No {filter === 'all' ? '' : filter} pull requests found.
-      </span>
+      No {filter === 'all' ? '' : filter} pull requests found.
     </div>
   {:else}
-    <ul
-      class="overflow-hidden rounded-lg border"
-      style="background: var(--color-surface); border-color: var(--color-border);"
+    <div
+      class="overflow-hidden rounded"
+      style="border: 1px solid var(--color-border); background: var(--color-surface);"
     >
-      {#each filtered as pr (pr.number)}
-        <li
-          class="flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
-          style="border-color: var(--color-border);"
+      {#each filtered as pr, idx (pr.number)}
+        <div
+          class="flex items-center gap-3 px-3"
+          style="height: 28px; border-top: {idx === 0 ? 'none' : '1px solid var(--color-border)'};"
+          onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
+          onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+          role="listitem"
         >
           <!-- State dot -->
           <span
-            class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full"
+            class="h-1.5 w-1.5 shrink-0 rounded-full"
             style={stateDotStyle(pr.state)}
           ></span>
 
           <!-- Number -->
           <span
-            class="shrink-0 font-mono text-xs"
-            style="color: var(--color-muted);"
+            class="shrink-0 font-mono"
+            style="width: 40px; font-size: 11px; color: var(--color-dim);"
           >#{pr.number}</span>
 
-          <!-- Title + branch info -->
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-sm" style="color: var(--color-text);">{pr.title}</p>
-            <p class="mt-0.5 font-mono text-xs" style="color: var(--color-dim);">
-              {pr.headBranch} → {pr.baseBranch}
-            </p>
-          </div>
-
-          <!-- State badge -->
+          <!-- Title -->
           <span
-            class="shrink-0 rounded px-2 py-0.5 text-xs capitalize"
-            style={stateBadgeStyle(pr.state)}
+            class="min-w-0 flex-1 truncate text-xs"
+            style="color: var(--color-text);"
+          >{pr.title}</span>
+
+          <!-- Branch info -->
+          <span
+            class="shrink-0 font-mono"
+            style="font-size: 11px; color: var(--color-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >{pr.headBranch} → {pr.baseBranch}</span>
+
+          <!-- State text -->
+          <span
+            class="shrink-0 font-mono capitalize"
+            style="font-size: 10px; width: 48px; text-align: right; {stateTextStyle(pr.state)}"
           >{pr.state}</span>
 
           <!-- GitHub link -->
-          <GitHubLink href={pr.htmlUrl} />
-        </li>
+          <div class="shrink-0">
+            <GitHubLink href={pr.htmlUrl} />
+          </div>
+        </div>
       {/each}
-    </ul>
+    </div>
   {/if}
 </div>

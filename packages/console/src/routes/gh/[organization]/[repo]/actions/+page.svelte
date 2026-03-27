@@ -104,48 +104,55 @@
     if (hours < 24) return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
   }
+
+  let inputsOpen = $state(false);
 </script>
 
-<div class="flex gap-6">
-  <!-- Sidebar: workflow list -->
-  <div class="w-56 shrink-0">
+<div class="flex gap-0" style="min-height: 0;">
+  <!-- Left sidebar: workflow list (180px fixed) -->
+  <div
+    class="shrink-0 pr-4"
+    style="width: 180px; border-right: 1px solid var(--color-border);"
+  >
     <p
-      class="mb-3 font-mono text-xs font-medium uppercase tracking-wider"
-      style="color: var(--color-muted);"
+      class="mb-2 font-mono uppercase tracking-wider"
+      style="font-size: 11px; color: var(--color-dim);"
     >Workflows</p>
 
     {#if data.workflows.length === 0}
-      <p class="text-sm" style="color: var(--color-muted);">No workflows found.</p>
+      <p class="text-xs" style="color: var(--color-muted);">No workflows found.</p>
     {:else}
-      <ul class="space-y-0.5">
+      <ul>
         {#each data.workflows as wf (wf.id)}
           <li>
             <button
               onclick={() => selectWorkflow(wf)}
-              class="w-full rounded-md px-3 py-2 text-left transition-colors"
-              style={selectedWorkflow?.id === wf.id
-                ? 'background: var(--color-hover); color: var(--color-text); border-left: 2px solid var(--color-accent); padding-left: 10px;'
-                : 'background: transparent; color: var(--color-muted); border-left: 2px solid transparent; padding-left: 10px;'}
+              title={wf.path}
+              class="w-full text-left transition-colors"
+              style="
+                display: block;
+                padding: 6px 10px;
+                font-size: 13px;
+                border-left: 2px solid {selectedWorkflow?.id === wf.id ? 'var(--color-accent)' : 'transparent'};
+                background: {selectedWorkflow?.id === wf.id ? 'var(--color-elevated)' : 'transparent'};
+                color: {selectedWorkflow?.id === wf.id ? 'var(--color-text)' : 'var(--color-muted)'};
+              "
               onmouseenter={selectedWorkflow?.id !== wf.id
                 ? (e) => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'var(--color-hover)';
                     el.style.color = 'var(--color-text)';
+                    el.style.background = 'var(--color-hover)';
                   }
                 : undefined}
               onmouseleave={selectedWorkflow?.id !== wf.id
                 ? (e) => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'transparent';
                     el.style.color = 'var(--color-muted)';
+                    el.style.background = 'transparent';
                   }
                 : undefined}
             >
-              <span class="block truncate text-sm font-medium">{wf.name}</span>
-              <span
-                class="mt-0.5 block truncate font-mono text-xs"
-                style="color: var(--color-muted);"
-              >{wf.path}</span>
+              <span class="block truncate">{wf.name}</span>
             </button>
           </li>
         {/each}
@@ -153,176 +160,220 @@
     {/if}
   </div>
 
-  <!-- Main content -->
-  <div class="min-w-0 flex-1">
+  <!-- Main panel -->
+  <div class="min-w-0 flex-1 pl-5">
     {#if !selectedWorkflow}
       <div
-        class="flex h-48 items-center justify-center rounded-lg border text-sm"
-        style="border-color: var(--color-border); color: var(--color-muted);"
+        class="flex items-center justify-center text-xs"
+        style="height: 120px; border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-dim);"
       >
         Select a workflow to view its run history and dispatch it
       </div>
     {:else}
-      <!-- Dispatch panel -->
+      <!-- Dispatch card -->
       <div
-        class="mb-6 rounded-lg border p-5"
-        style="background: var(--color-surface); border-color: var(--color-border);"
+        class="mb-5 rounded"
+        style="background: var(--color-surface); border: 1px solid var(--color-border); padding: 16px;"
       >
-        <!-- Panel header -->
-        <div class="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <h2 class="font-semibold" style="color: var(--color-text);">{selectedWorkflow.name}</h2>
-            <p class="mt-0.5 font-mono text-xs" style="color: var(--color-muted);">{selectedWorkflow.path}</p>
-          </div>
+        <!-- Top row: name + path + run button -->
+        <div class="mb-4 flex items-center gap-3">
+          <span class="font-medium" style="font-size: 13px; color: var(--color-text);">
+            {selectedWorkflow.name}
+          </span>
+          <span class="font-mono" style="font-size: 11px; color: var(--color-dim);">
+            {selectedWorkflow.path}
+          </span>
+          <div class="flex-1"></div>
           <button
             onclick={run}
             disabled={status === 'running'}
-            class="shrink-0 rounded-lg px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
-            style="background: var(--color-accent);"
+            class="shrink-0 font-mono text-white transition-opacity disabled:opacity-50"
+            style="font-size: 11px; padding: 4px 10px; background: var(--color-accent); border-radius: 3px; border: none; cursor: pointer;"
           >
             {status === 'running' ? 'Dispatching…' : 'Run workflow'}
           </button>
         </div>
 
-        <!-- Branch input -->
-        <div class="mb-4 w-64">
-          <label
-            class="mb-1 block text-xs"
-            style="color: var(--color-muted);"
-            for="ref"
-          >Branch / tag / SHA</label>
+        <!-- Ref row -->
+        <div class="mb-3 flex items-center gap-2">
+          <span class="font-mono text-xs" style="color: var(--color-muted);">Ref:</span>
           <input
-            id="ref"
             bind:value={ref}
-            class="w-full rounded-lg border px-3 py-1.5 font-mono text-sm text-text outline-none transition-colors"
-            style="background: var(--color-elevated); border-color: var(--color-border);"
+            class="font-mono text-xs outline-none transition-colors"
+            style="
+              width: 160px;
+              padding: 3px 8px;
+              background: var(--color-elevated);
+              border: 1px solid var(--color-border);
+              border-radius: 3px;
+              color: var(--color-text);
+            "
             onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
             onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
           />
         </div>
 
-        <!-- Inputs section -->
+        <!-- Inputs collapsible -->
         <div>
-          <div class="mb-2 flex items-center justify-between">
-            <span class="text-xs" style="color: var(--color-muted);">Inputs</span>
-            <button
-              onclick={addInput}
-              class="text-xs transition-colors"
-              style="color: var(--color-accent);"
-              onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.75')}
-              onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
-            >＋ Add input</button>
-          </div>
+          <button
+            onclick={() => (inputsOpen = !inputsOpen)}
+            class="flex items-center gap-1 text-xs transition-colors"
+            style="color: var(--color-muted); background: none; border: none; cursor: pointer; padding: 0;"
+            onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')}
+            onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')}
+          >
+            <span style="font-size: 10px;">{inputsOpen ? '▾' : '▸'}</span>
+            Inputs ({inputPairs.length})
+          </button>
 
-          {#if inputPairs.length === 0}
-            <p class="text-xs" style="color: var(--color-dim);">
-              No inputs — click "Add input" to pass key/value pairs to the workflow.
-            </p>
-          {:else}
-            <div class="space-y-2">
-              {#each inputPairs as pair, i (i)}
-                <div class="flex gap-2">
-                  <input
-                    bind:value={pair.key}
-                    placeholder="key"
-                    class="w-1/3 rounded-lg border px-3 py-1.5 font-mono text-xs text-text outline-none transition-colors"
-                    style="background: var(--color-elevated); border-color: var(--color-border);"
-                    onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
-                    onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
-                  />
-                  <input
-                    bind:value={pair.value}
-                    placeholder="value"
-                    class="flex-1 rounded-lg border px-3 py-1.5 font-mono text-xs text-text outline-none transition-colors"
-                    style="background: var(--color-elevated); border-color: var(--color-border);"
-                    onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
-                    onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
-                  />
-                  <button
-                    onclick={() => removeInput(i)}
-                    class="px-2 text-sm transition-colors"
-                    style="color: var(--color-dim);"
-                    aria-label="Remove input"
-                    onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-danger)')}
-                    onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')}
-                  >✕</button>
-                </div>
-              {/each}
+          {#if inputsOpen}
+            <div class="mt-2 space-y-1.5">
+              {#if inputPairs.length === 0}
+                <p class="text-xs" style="color: var(--color-dim);">No inputs — click Add to pass key/value pairs.</p>
+              {:else}
+                {#each inputPairs as pair, i (i)}
+                  <div class="flex gap-2">
+                    <input
+                      bind:value={pair.key}
+                      placeholder="key"
+                      class="font-mono text-xs outline-none transition-colors"
+                      style="
+                        width: 120px;
+                        padding: 3px 8px;
+                        background: var(--color-elevated);
+                        border: 1px solid var(--color-border);
+                        border-radius: 3px;
+                        color: var(--color-text);
+                      "
+                      onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
+                      onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
+                    />
+                    <input
+                      bind:value={pair.value}
+                      placeholder="value"
+                      class="font-mono text-xs outline-none transition-colors"
+                      style="
+                        flex: 1;
+                        padding: 3px 8px;
+                        background: var(--color-elevated);
+                        border: 1px solid var(--color-border);
+                        border-radius: 3px;
+                        color: var(--color-text);
+                      "
+                      onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
+                      onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
+                    />
+                    <button
+                      onclick={() => removeInput(i)}
+                      class="text-xs transition-colors"
+                      style="color: var(--color-dim); background: none; border: none; cursor: pointer; padding: 0 4px;"
+                      aria-label="Remove input"
+                      onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-danger)')}
+                      onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')}
+                    >✕</button>
+                  </div>
+                {/each}
+              {/if}
+              <button
+                onclick={addInput}
+                class="mt-1 text-xs transition-colors"
+                style="color: var(--color-accent); background: none; border: none; cursor: pointer; padding: 0;"
+                onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.75')}
+                onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+              >+ Add</button>
             </div>
           {/if}
         </div>
 
         <!-- Status messages -->
         {#if status === 'done'}
-          <p class="mt-3 text-sm" style="color: var(--color-success);">
+          <p class="mt-3 text-xs" style="color: var(--color-success);">
             Workflow dispatched — run will appear in history shortly.
           </p>
         {:else if status === 'error'}
-          <p class="mt-3 text-sm" style="color: var(--color-danger);">{errorMsg}</p>
+          <p class="mt-3 text-xs" style="color: var(--color-danger);">{errorMsg}</p>
         {/if}
       </div>
 
       <!-- Run history -->
       <div>
-        <div class="mb-3 flex items-center justify-between">
-          <h3 class="text-sm font-medium" style="color: var(--color-text);">Run history</h3>
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-medium" style="color: var(--color-text);">Run history</span>
           <button
             onclick={loadRuns}
-            class="text-xs transition-colors"
-            style="color: var(--color-muted);"
+            class="font-mono text-xs transition-colors"
+            style="color: var(--color-muted); background: none; border: none; cursor: pointer; padding: 0;"
             onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')}
             onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')}
           >↻ Refresh</button>
         </div>
 
         {#if runsLoading}
-          <p class="text-sm" style="color: var(--color-muted);">Loading…</p>
+          <p class="text-xs" style="color: var(--color-muted);">Loading…</p>
         {:else if runs.length === 0}
-          <p class="text-sm" style="color: var(--color-muted);">No runs found for this workflow.</p>
+          <p class="text-xs" style="color: var(--color-muted);">No runs found for this workflow.</p>
         {:else}
-          <ul
-            class="overflow-hidden rounded-lg border"
-            style="background: var(--color-surface); border-color: var(--color-border);"
+          <div
+            class="overflow-hidden rounded"
+            style="border: 1px solid var(--color-border); background: var(--color-surface);"
           >
-            {#each runs as run (run.id)}
-              <li
-                class="flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
-                style="border-color: var(--color-border);"
+            {#each runs as run, idx (run.id)}
+              <div
+                class="flex items-center gap-3 px-3"
+                style="height: 26px; border-top: {idx === 0 ? 'none' : '1px solid var(--color-border)'};"
+                onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
+                onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+                role="listitem"
               >
                 <!-- Status dot -->
                 <span
-                  class="mt-0.5 h-2 w-2 shrink-0 rounded-full {statusDot(run.status, run.conclusion)}"
+                  class="h-1.5 w-1.5 shrink-0 rounded-full {statusDot(run.status, run.conclusion)}"
                   style={statusDotStyle(run.status, run.conclusion)}
                 ></span>
 
-                <!-- Commit info -->
-                <div class="min-w-0 flex-1">
-                  <p class="truncate text-sm" style="color: var(--color-text);">
-                    {run.commitMessage || '(no commit message)'}
-                  </p>
-                  <p class="mt-0.5 font-mono text-xs" style="color: var(--color-muted);">
-                    {run.headBranch} · {run.actor} · {relativeTime(run.createdAt)}
-                  </p>
-                </div>
+                <!-- Commit message -->
+                <span
+                  class="min-w-0 flex-1 truncate text-xs"
+                  style="color: var(--color-text);"
+                >{run.commitMessage || '(no commit message)'}</span>
 
-                <!-- Status label + run link -->
-                <div class="shrink-0 text-right">
-                  <span class="text-xs" style="color: var(--color-muted);">
-                    {statusLabel(run.status, run.conclusion)}
-                  </span>
-                  <a
-                    href={run.htmlUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="mt-0.5 block font-mono text-xs transition-colors"
-                    style="color: var(--color-dim);"
-                    onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-accent)')}
-                    onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')}
-                  >#{run.id}</a>
-                </div>
-              </li>
+                <!-- Branch -->
+                <span
+                  class="shrink-0 font-mono"
+                  style="font-size: 11px; color: var(--color-dim); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                >{run.headBranch}</span>
+
+                <!-- Actor -->
+                <span
+                  class="shrink-0 font-mono"
+                  style="font-size: 11px; color: var(--color-dim); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                >{run.actor}</span>
+
+                <!-- Time -->
+                <span
+                  class="shrink-0 font-mono text-right"
+                  style="font-size: 11px; color: var(--color-dim); width: 60px;"
+                >{relativeTime(run.createdAt)}</span>
+
+                <!-- Status label -->
+                <span
+                  class="shrink-0 font-mono text-right"
+                  style="font-size: 10px; width: 56px; color: var(--color-muted);"
+                >{statusLabel(run.status, run.conclusion)}</span>
+
+                <!-- Run ID link -->
+                <a
+                  href={run.htmlUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="shrink-0 font-mono transition-colors"
+                  style="font-size: 11px; color: var(--color-dim); text-decoration: none;"
+                  onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-accent)')}
+                  onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')}
+                >#{run.id}</a>
+              </div>
             {/each}
-          </ul>
+          </div>
         {/if}
       </div>
     {/if}

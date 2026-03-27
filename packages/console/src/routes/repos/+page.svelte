@@ -2,109 +2,101 @@
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
-
-  const totalRepos = $derived(data.orgs.reduce((sum, { repos }) => sum + repos.length, 0));
 </script>
 
-<div class="mx-auto max-w-3xl px-6 py-10">
-  <div class="mb-8 flex items-center gap-3">
-    <h1 class="text-xl font-semibold text-text">Repositories</h1>
-    {#if totalRepos > 0}
-      <span
-        class="rounded-full bg-elevated border border-border px-2.5 py-0.5 text-xs font-medium text-muted"
-      >
-        {totalRepos}
-      </span>
-    {/if}
-  </div>
+<div class="px-6 py-8">
+  <h1 class="mb-6 font-medium" style="font-size: 16px; color: var(--color-text);">
+    Repositories
+  </h1>
 
   {#if data.orgs.length === 0}
-    <div
-      class="flex flex-col items-center gap-4 rounded-lg border border-border bg-surface p-12 text-center"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="32"
-        height="32"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="text-dim"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="3" />
-        <line x1="3" y1="12" x2="9" y2="12" />
-        <line x1="15" y1="12" x2="21" y2="12" />
-        <line x1="12" y1="3" x2="12" y2="9" />
-        <line x1="12" y1="15" x2="12" y2="21" />
-      </svg>
-      <div>
-        <p class="text-sm font-medium text-text">No repositories synced yet</p>
-        <p class="mt-1 text-sm text-muted">Connect your GitHub account to get started.</p>
-      </div>
+    <p class="text-xs" style="color: var(--color-muted);">
+      No repositories found.
       <a
         href="https://github.com/apps"
         target="_blank"
         rel="noopener noreferrer"
-        class="mt-1 rounded-md border border-border-bright bg-elevated px-4 py-2 text-xs font-medium text-accent transition-colors hover:bg-hover"
-      >
-        Install GitHub App
-      </a>
-    </div>
+        style="color: var(--color-accent);"
+      >Install the GitHub App</a> to get started.
+    </p>
   {:else}
-    <div class="space-y-8">
+    <div class="flex flex-col gap-8">
       {#each data.orgs as { org, repos } (org)}
         <section>
           <div class="mb-3 flex items-center gap-3">
-            <a
-              href="/gh/{org}"
-              class="font-mono text-sm text-muted transition-colors hover:text-text"
-            >
-              <span class="text-dim">/ </span>{org}
-            </a>
-            <div class="h-px flex-1 bg-border"></div>
+            <span
+              class="shrink-0"
+              style="font-family: var(--font-mono); font-size: 12px; color: var(--color-dim);"
+            >/ {org}</span>
+            <hr
+              style="flex: 1; border: none; border-top: 1px solid var(--color-border); margin: 0;"
+            />
           </div>
-          <ul
-            class="overflow-hidden rounded-lg border border-border"
-            style="background: var(--color-surface);"
-          >
+
+          <div class="repos-grid">
             {#each repos as repo (repo.repo)}
-              <li class="border-b border-border last:border-b-0">
-                <a
-                  href="/gh/{repo.owner}/{repo.repo}"
-                  class="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-hover"
-                >
-                  <span class="text-sm font-medium text-text">{repo.repo}</span>
-                  <div class="flex items-center gap-3">
-                    {#if repo.defaultBranch}
-                      <span class="font-mono text-xs text-muted">{repo.defaultBranch}</span>
-                    {/if}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="text-dim transition-colors group-hover:text-muted"
-                      aria-hidden="true"
-                    >
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </div>
-                </a>
-              </li>
+              <a
+                href="/gh/{repo.owner}/{repo.repo}"
+                class="repo-card"
+              >
+                <span class="repo-name">{repo.repo}</span>
+                {#if repo.defaultBranch}
+                  <span class="repo-branch">⎇ {repo.defaultBranch}</span>
+                {/if}
+              </a>
             {/each}
-          </ul>
+          </div>
         </section>
       {/each}
     </div>
   {/if}
 </div>
+
+<style>
+  .repos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  @media (max-width: 900px) {
+    .repos-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .repos-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .repo-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    text-decoration: none;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .repo-card:hover {
+    background: var(--color-elevated);
+    border-color: var(--color-border-bright);
+  }
+
+  .repo-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .repo-branch {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-dim);
+  }
+</style>
