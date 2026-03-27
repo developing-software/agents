@@ -8,7 +8,8 @@ export type GhRepoTag = `gh:repo:${string}`
 export type GhIssueTag = `gh:issue:${number}`
 export type GhPrTag = `gh:pr:${number}`
 export type GhRunTag = `gh:run:${number}`
-export type GhTag = GhRepoTag | GhIssueTag | GhPrTag | GhRunTag
+export type GhBranchTag = `gh:branch:${string}`
+export type GhTag = GhRepoTag | GhIssueTag | GhPrTag | GhRunTag | GhBranchTag
 // -- metrics
 //    metric:${metric_name}:${metric_value}
 export type MetricTag = `metric:${string}:${string}`
@@ -16,7 +17,7 @@ export type MetricTag = `metric:${string}:${string}`
 // --- union of all valid tags ---
 export type EventTag = EnvTag | ServiceTag | GhTag | MetricTag | (string & {})
 
-export const OriginType = ["api", "webhook", "console", "cli", "cron"] as const;
+export const OriginType = ["api", "webhook", "action", "console", "cli", "cron"] as const;
 export type OriginType = (typeof OriginType)[number];
 
 // --- tag builders ---
@@ -27,4 +28,5 @@ export const Tags = {
   ghPr: (n: number): GhPrTag => `gh:pr:${n}`,
   ghRun: (n: number): GhRunTag => `gh:run:${n}`,
   metric: (name: string, value: string): MetricTag => `metric:${name}:${value}`,
+  ghBranch: (name: string): GhBranchTag => `gh:branch:${name}`,
 } as const;

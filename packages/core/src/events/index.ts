@@ -1,4 +1,4 @@
-import { and, arrayContains, desc, eq, sql } from "drizzle-orm";
+import { and, arrayContains, desc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
@@ -122,6 +122,28 @@ export namespace Event {
         .orderBy(desc(eventTable.timeCreated));
       if (opts.limit) query = query.limit(opts.limit) as typeof query;
       return query.then((rows) => rows.map(serialize));
+    });
+  }
+
+  export async function findParent(opts: {
+    source?: string;
+    sourceId?: string;
+    tags?: string[];
+  }): Promise<string | undefined> {
+    return useTransaction(async (tx) => {
+      const conditions = [];
+      if (opts.source) conditions.push(eq(eventTable.source, opts.source));
+      if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
+      if (opts.tags?.length) conditions.push(arrayContains(eventTable.tags, opts.tags));
+      conditions.push(isNull(eventTable.parentEventId));
+      const row = await tx
+        .select({ id: eventTable.id })
+        .from(eventTable)
+        .where(and(...conditions))
+        .orderBy(eventTable.timeCreated)
+        .limit(1)
+        .then((r) => r[0]);
+      return row?.id;
     });
   }
 
