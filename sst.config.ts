@@ -24,6 +24,7 @@ export default $config({
       },
     },
   },
+
   async run() {
     const outputs = {};
     const { readdirSync } = await import("fs");
