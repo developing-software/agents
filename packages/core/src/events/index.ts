@@ -1,13 +1,16 @@
-import { and, arrayContains, desc, eq } from "drizzle-orm";
+import { and, arrayContains, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
 import { fn } from "../util/fn";
+import { Log } from "../util/log";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { eventTable } from "./event.sql";
 import { OriginType } from "./types";
 import type { R2Bucket } from "@cloudflare/workers-types";
+
+const log = Log.create({ service: "event" });
 
 export namespace Event {
   export const Info = z
@@ -57,6 +60,8 @@ export namespace Event {
 
   export type Info = z.infer<typeof Info>;
 
+  export type TreeNode = Info & { children: TreeNode[] };
+
   export const create = fn(
     z.object({
       type: z.string(),
@@ -70,6 +75,7 @@ export namespace Event {
     async (input) => {
       return createTransaction(async (tx) => {
         const id = createID("event");
+        log.info("create", { id, type: input.type, source: input.source, sourceId: input.sourceId });
         await tx.insert(eventTable).values({
           id,
           type: input.type,
@@ -77,7 +83,7 @@ export namespace Event {
           source: input.source,
           sourceId: input.sourceId,
           parentEventId: input.parentEventId,
-          tags: (input.tags ?? []),
+          tags: input.tags ?? [],
           data: input.data ?? {},
         });
         return id;
@@ -116,6 +122,60 @@ export namespace Event {
         .orderBy(desc(eventTable.timeCreated));
       if (opts.limit) query = query.limit(opts.limit) as typeof query;
       return query.then((rows) => rows.map(serialize));
+    });
+  }
+
+  export async function listTree(opts: {
+    source?: string;
+    sourceId?: string;
+    tags?: string[];
+    type?: string;
+  }): Promise<TreeNode[]> {
+    return useTransaction(async (tx) => {
+      const rows = await tx.execute(sql`
+        WITH RECURSIVE event_tree AS (
+          SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags FROM ${eventTable}
+          WHERE parent_event_id IS NULL
+            ${opts.source ? sql`AND source = ${opts.source}` : sql``}
+            ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
+            ${opts.tags?.length ? sql`AND tags @> ${JSON.stringify(opts.tags)}::text[]` : sql``}
+            ${opts.type ? sql`AND type = ${opts.type}` : sql``}
+          UNION ALL
+          SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags FROM ${eventTable} e
+          JOIN event_tree et ON e.parent_event_id = et.id
+        )
+        SELECT * FROM event_tree
+        ORDER BY time_created ASC
+      `);
+
+      log.info("listTree", { source: opts.source, sourceId: opts.sourceId, type: opts.type, rows: (rows as any[]).length });
+
+      const byId = new Map<string, TreeNode>();
+      for (const row of rows as any[]) {
+        const node: TreeNode = {
+          id: row.id,
+          parentEventId: row.parent_event_id ?? null,
+          source: row.source ?? null,
+          sourceId: row.source_id ?? null,
+          type: row.type,
+          origin: row.origin,
+          tags: row.tags ?? [],
+          data: {},
+          timeCreated: new Date(row.time_created).toISOString(),
+          children: [],
+        };
+        byId.set(node.id, node);
+      }
+
+      const roots: TreeNode[] = [];
+      for (const node of byId.values()) {
+        if (node.parentEventId && byId.has(node.parentEventId)) {
+          byId.get(node.parentEventId)!.children.push(node);
+        } else {
+          roots.push(node);
+        }
+      }
+      return roots;
     });
   }
 
