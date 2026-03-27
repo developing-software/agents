@@ -2,6 +2,7 @@ import { ulid } from "ulid";
 
 export const prefixes = {
   user: "usr",
+  event: "evt",
   apiPersonal: "pat",
   apiClient: "app",
   apiSecret: "sec",

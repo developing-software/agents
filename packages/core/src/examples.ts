@@ -12,6 +12,25 @@ export namespace Examples {
     defaultBranch: "main",
   };
 
+  export const Event = {
+    id: Id("event"),
+    parentEventId: null,
+    source: "github_repo",
+    sourceId: Id("githubRepo"),
+    origin: "webhook" as const,
+    type: "github.issues.opened",
+    tags: ["gh:repo:octocat/hello-world", "gh:issue:42"],
+    data: { action: "opened" },
+    timeCreated: "2024-01-01T00:00:00.000Z",
+  };
+
+  export const EventArtifact = {
+    key: `events/${Id("event")}/artifacts/execution.json`,
+    name: "execution.json",
+    size: 4096,
+    uploaded: "2024-01-01T00:00:00.000Z",
+  };
+
   export const GithubEvent = {
     id: Id("githubEvent"),
     repoId: Id("githubRepo"),
