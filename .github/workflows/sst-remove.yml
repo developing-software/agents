@@ -1,19 +1,11 @@
-name: sst
+name: sst remove
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      # - dev
-      - prod
   pull_request:
-    types: [opened, synchronize, reopened]
-
-concurrency:
-  group: ${{ github.ref }}
+    types: [closed]
 
 jobs:
-  deploy:
+  remove:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -24,12 +16,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/cache@v5
-        with:
-          path: |
-            .sst
-          key: ${{ runner.os }}-sst
-
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
@@ -38,19 +24,10 @@ jobs:
         with:
           node-version: '22'
 
-      # - run: 'curl -fsSL https://ion.sst.dev/install | bash'
-
       - name: deps
         run: bun install --frozen-lockfile
 
-      # - name: typecheck
-      #   run: bun typecheck
-
-      - name: build console
-        run: bun run build
-        working-directory: packages/console
-
-      - name: Deploy
+      - name: Remove
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_DEFAULT_ACCOUNT_ID:
@@ -60,4 +37,4 @@ jobs:
 
         run: |
           bunx sst install
-          bunx sst deploy --stage=${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+          bunx sst remove --stage=pr-${{ github.event.pull_request.number }}
