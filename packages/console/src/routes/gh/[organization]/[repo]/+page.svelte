@@ -2,6 +2,7 @@
   import type { PageProps } from './$types';
   import { generateToken } from './repo.remote';
   import GitHubLink from '$lib/GitHubLink.svelte';
+  import ArtifactViewer from '$lib/ArtifactViewer.svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
   let { data }: PageProps = $props();
@@ -20,12 +21,22 @@
   }
 
   let expandedEvents = new SvelteSet<string>();
+  let expandedArtifacts = new SvelteSet<string>();
 
   function toggleArtifacts(eventId: string) {
     if (expandedEvents.has(eventId)) {
       expandedEvents.delete(eventId);
     } else {
       expandedEvents.add(eventId);
+    }
+  }
+
+  function toggleArtifactViewer(eventId: string, artifactName: string) {
+    const key = `${eventId}/${artifactName}`;
+    if (expandedArtifacts.has(key)) {
+      expandedArtifacts.delete(key);
+    } else {
+      expandedArtifacts.add(key);
     }
   }
 
@@ -69,7 +80,13 @@
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
+  function typePrefix(type: string): string {
+    const dot = type.indexOf('.');
+    return dot === -1 ? type : type.slice(0, dot);
+  }
+
   const topLevelEvents = $derived(data.events.filter((e) => !e.parentEventId));
+
   const childEventsByParent = $derived(
     data.events.reduce(
       (acc, e) => {
@@ -81,6 +98,27 @@
       {} as Record<string, typeof data.events>,
     ),
   );
+
+  // Unique prefixes in order of first appearance
+  const filterPrefixes = $derived.by(() => {
+    const seen = new SvelteSet<string>();
+    const result: string[] = [];
+    for (const e of topLevelEvents) {
+      const p = typePrefix(e.type);
+      if (!seen.has(p)) {
+        seen.add(p);
+        result.push(p);
+      }
+    }
+    return result;
+  });
+
+  let activeFilter = $state('all');
+
+  const filteredTopLevelEvents = $derived.by(() => {
+    if (activeFilter === 'all') return topLevelEvents;
+    return topLevelEvents.filter((e) => typePrefix(e.type) === activeFilter);
+  });
 </script>
 
 <div class="page-grid">
@@ -93,8 +131,28 @@
     {#if data.events.length === 0}
       <p class="empty-text">No events</p>
     {:else}
+      <!-- Filter tabs -->
+      {#if filterPrefixes.length > 1}
+        <div class="filter-tabs">
+          <button
+            type="button"
+            class="filter-tab"
+            class:filter-tab-active={activeFilter === 'all'}
+            onclick={() => { activeFilter = 'all'; }}
+          >all</button>
+          {#each filterPrefixes as prefix (prefix)}
+            <button
+              type="button"
+              class="filter-tab"
+              class:filter-tab-active={activeFilter === prefix}
+              onclick={() => { activeFilter = prefix; }}
+            >{prefix}</button>
+          {/each}
+        </div>
+      {/if}
+
       <div class="timeline">
-        {#each topLevelEvents as event (event.id)}
+        {#each filteredTopLevelEvents as event (event.id)}
           {@const eventChildren = childEventsByParent[event.id] ?? []}
 
           <!-- Shared inner content for event rows -->
@@ -154,14 +212,31 @@
                 <p class="artifacts-label">Artifacts</p>
                 <ul class="artifacts-list">
                   {#each ev.artifacts as artifact (artifact.name)}
-                    <li>
-                      <a
-                        href="/gh/{data.organization}/{data.repoName}/events/{ev.id}/artifacts/{artifact.name}"
-                        class="artifact-pill"
-                      >
-                        <span>{artifact.name}</span>
-                        <span class="artifact-size">({formatBytes(artifact.size)})</span>
-                      </a>
+                    {@const artifactKey = `${ev.id}/${artifact.name}`}
+                    <li class="artifact-item">
+                      <div class="artifact-row">
+                        <button
+                          type="button"
+                          class="artifact-pill"
+                          class:artifact-pill-active={expandedArtifacts.has(artifactKey)}
+                          onclick={() => toggleArtifactViewer(ev.id, artifact.name)}
+                        >
+                          <span>{artifact.name}</span>
+                          <span class="artifact-size">({formatBytes(artifact.size)})</span>
+                        </button>
+                        <a
+                          href="/gh/{data.organization}/{data.repoName}/events/{ev.id}/artifacts/{artifact.name}"
+                          class="artifact-download"
+                          title="Download {artifact.name}"
+                          onclick={(e) => e.stopPropagation()}
+                        >↓</a>
+                      </div>
+                      {#if expandedArtifacts.has(artifactKey)}
+                        <ArtifactViewer
+                          name={artifact.name}
+                          url="/gh/{data.organization}/{data.repoName}/events/{ev.id}/artifacts/{artifact.name}"
+                        />
+                      {/if}
                     </li>
                   {/each}
                 </ul>
@@ -325,8 +400,49 @@
     min-width: 0;
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Filter tabs */
+  /* ------------------------------------------------------------------ */
+  .filter-tabs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 8px;
+    margin-bottom: 6px;
+  }
+
+  .filter-tab {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    background: none;
+    color: var(--color-dim);
+    cursor: pointer;
+    transition: border-color 0.1s, color 0.1s, background 0.1s;
+    line-height: 1.6;
+  }
+
+  .filter-tab:hover {
+    color: var(--color-muted);
+    border-color: var(--color-border-bright, var(--color-dim));
+  }
+
+  .filter-tab-active {
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+
+  .filter-tab-active:hover {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+  }
+
   .timeline {
-    margin-top: 10px;
+    margin-top: 4px;
     display: flex;
     flex-direction: column;
     gap: 1px;
@@ -454,8 +570,18 @@
     margin: 0;
     padding: 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .artifact-item {
+    min-width: 0;
+  }
+
+  .artifact-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .artifact-pill {
@@ -468,17 +594,40 @@
     border-radius: 3px;
     border: 1px solid var(--color-border);
     color: var(--color-text);
-    text-decoration: none;
     background: var(--color-surface);
-    transition: border-color 0.1s;
+    cursor: pointer;
+    transition: border-color 0.1s, background 0.1s;
   }
 
   .artifact-pill:hover {
-    border-color: var(--color-border-bright);
+    border-color: var(--color-border-bright, var(--color-dim));
+  }
+
+  .artifact-pill-active {
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    color: var(--color-text);
   }
 
   .artifact-size {
     color: var(--color-dim);
+  }
+
+  .artifact-download {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-dim);
+    text-decoration: none;
+    padding: 2px 5px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    transition: color 0.1s, border-color 0.1s;
+    flex-shrink: 0;
+  }
+
+  .artifact-download:hover {
+    color: var(--color-muted);
+    border-color: var(--color-border);
   }
 
   /* Children group */
