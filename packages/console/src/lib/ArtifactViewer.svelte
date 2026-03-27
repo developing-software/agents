@@ -37,7 +37,7 @@
   type FileKind = 'execution' | 'metrics' | 'json' | 'text';
 
   const kind = $derived.by((): FileKind => {
-    if (name === 'execution.json' || name === 'claude_code_execution.json') return 'execution';
+    if (name === 'execution.json' || name === 'claude_code_execution.json' || name === "claude_code_execution") return 'execution';
     if (name === 'metrics.txt') return 'metrics';
     if (name.endsWith('.json')) return 'json';
     return 'text';
