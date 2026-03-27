@@ -75,7 +75,12 @@ export namespace Event {
     async (input) => {
       return createTransaction(async (tx) => {
         const id = createID("event");
-        log.info("create", { id, type: input.type, source: input.source, sourceId: input.sourceId });
+        log.info("create", {
+          id,
+          type: input.type,
+          source: input.source,
+          sourceId: input.sourceId,
+        });
         await tx.insert(eventTable).values({
           id,
           type: input.type,
@@ -170,7 +175,12 @@ export namespace Event {
         ORDER BY time_created ASC
       `);
 
-      log.info("listTree", { source: opts.source, sourceId: opts.sourceId, type: opts.type, rows: (rows as any[]).length });
+      log.info("listTree", {
+        source: opts.source,
+        sourceId: opts.sourceId,
+        type: opts.type,
+        rows: (rows as any[]).length,
+      });
 
       const byId = new Map<string, TreeNode>();
       for (const row of rows as any[]) {

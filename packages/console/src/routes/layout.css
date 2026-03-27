@@ -47,15 +47,28 @@ body {
   background: var(--color-bg);
 }
 
-code, kbd, pre, .mono {
+code,
+kbd,
+pre,
+.mono {
   font-family: var(--font-mono);
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: var(--color-border-bright); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-bright);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
 
 /* Focus ring */
 :focus-visible {
@@ -65,7 +78,9 @@ code, kbd, pre, .mono {
 }
 
 /* Input base */
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: var(--font-mono);
   font-size: 12px;
   background: var(--color-elevated);
@@ -76,13 +91,22 @@ input, textarea, select {
   outline: none;
   transition: border-color 0.1s;
 }
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   border-color: var(--color-accent);
 }
 
 /* Timeline */
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
-.dot-pulse { animation: blink 1.4s ease-in-out infinite; }
+.dot-pulse {
+  animation: blink 1.4s ease-in-out infinite;
+}

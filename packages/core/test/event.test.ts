@@ -27,9 +27,26 @@ describe("event", () => {
 
   it("listTree", async () => {
     const sourceId = "grp_tree_test";
-    const rootId = await Event.create({ type: "root", origin: "cli", source: "github_repo", sourceId });
-    const childId = await Event.create({ type: "child", origin: "cli", source: "github_repo", sourceId, parentEventId: rootId });
-    await Event.create({ type: "grandchild", origin: "cli", source: "github_repo", sourceId, parentEventId: childId });
+    const rootId = await Event.create({
+      type: "root",
+      origin: "cli",
+      source: "github_repo",
+      sourceId,
+    });
+    const childId = await Event.create({
+      type: "child",
+      origin: "cli",
+      source: "github_repo",
+      sourceId,
+      parentEventId: rootId,
+    });
+    await Event.create({
+      type: "grandchild",
+      origin: "cli",
+      source: "github_repo",
+      sourceId,
+      parentEventId: childId,
+    });
 
     const tree = await Event.listTree({ source: "github_repo", sourceId });
     const root = tree.find((n) => n.id === rootId);

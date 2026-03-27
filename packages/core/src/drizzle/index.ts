@@ -12,17 +12,17 @@ const log = Log.create({ namespace: "drizzle" });
 // const clientMap = new Map<string, pg.Sql>();
 
 function createDb(url: string): PostgresJsDatabase {
-  const client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20, });
+  const client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20 });
   return drizzle({
     client,
     logger:
       process.env.DRIZZLE_LOG === "true"
         ? {
-          logQuery(query, params) {
-            log.info("query", { query });
-            log.info("params", { params });
-          },
-        }
+            logQuery(query, params) {
+              log.info("query", { query });
+              log.info("params", { params });
+            },
+          }
         : undefined,
   });
 }
@@ -33,7 +33,6 @@ const DatabaseContext = createContext<{ db: PostgresJsDatabase }>();
 export function withDatabase<T>(url: string, fn: () => T): T {
   return DatabaseContext.provide({ db: createDb(url) }, fn);
 }
-
 
 let cachedDb: PostgresJsDatabase | undefined;
 /** All business logic calls this — no manual init needed */

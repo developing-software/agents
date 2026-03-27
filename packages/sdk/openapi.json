@@ -196,18 +196,13 @@
           "created": "2024-06-29T00:00:00.000Z"
         }
       },
-      "GithubEvent": {
+      "Event": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
-            "example": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX"
-          },
-          "repoId": {
-            "type": "string",
-            "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
-            "example": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            "example": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX"
           },
           "parentEventId": {
             "anyOf": [
@@ -218,49 +213,53 @@
                 "type": "null"
               }
             ],
-            "description": "ID of the parent event, if this event is part of a group.",
-            "example": null
-          },
-          "issueNumber": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Linked issue number, if any.",
-            "example": 42
-          },
-          "pullRequestNumber": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Linked pull request number, if any.",
+            "description": "ID of the parent event, if this event is part of a chain.",
             "example": null
           },
           "source": {
-            "type": "string",
-            "enum": ["webhook", "action", "cli", "console"],
-            "description": "Origin of the event.",
-            "example": "action"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Source entity type, e.g. 'github_repo'.",
+            "example": "github_repo"
+          },
+          "sourceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the source entity.",
+            "example": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX"
           },
           "type": {
             "type": "string",
-            "description": "Event type, e.g. `issues.opened` or `implement.completed`.",
-            "example": "implement.completed"
+            "description": "Event type, e.g. 'github.issues.opened'.",
+            "example": "github.issues.opened"
           },
-          "payload": {
+          "origin": {
+            "type": "string",
+            "enum": ["api", "webhook", "action", "console", "cli", "cron"],
+            "description": "What triggered this event.",
+            "example": "webhook"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+            "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+          },
+          "data": {
             "type": "object",
             "propertyNames": {
               "type": "string"
@@ -268,8 +267,7 @@
             "additionalProperties": {},
             "description": "Arbitrary event data.",
             "example": {
-              "harness": "claude-code",
-              "durationMs": 30000
+              "action": "opened"
             }
           },
           "timeCreated": {
@@ -280,38 +278,37 @@
         },
         "required": [
           "id",
-          "repoId",
           "parentEventId",
-          "issueNumber",
-          "pullRequestNumber",
           "source",
+          "sourceId",
           "type",
-          "payload",
+          "origin",
+          "tags",
+          "data",
           "timeCreated"
         ],
-        "description": "A recorded GitHub or agent event.",
+        "description": "A recorded system or agent event.",
         "example": {
-          "id": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX",
-          "repoId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "id": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "parentEventId": null,
-          "issueNumber": 42,
-          "pullRequestNumber": null,
-          "source": "action",
-          "type": "implement.completed",
-          "payload": {
-            "harness": "claude-code",
-            "durationMs": 30000
+          "source": "github_repo",
+          "sourceId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "origin": "webhook",
+          "type": "github.issues.opened",
+          "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+          "data": {
+            "action": "opened"
           },
           "timeCreated": "2024-01-01T00:00:00.000Z"
         }
       },
-      "GithubEventArtifact": {
+      "EventArtifact": {
         "type": "object",
         "properties": {
           "key": {
             "type": "string",
             "description": "R2 storage key for the artifact.",
-            "example": "artifacts/gev_XXXXXXXXXXXXXXXXXXXXXXXXX/execution.json"
+            "example": "events/evt_XXXXXXXXXXXXXXXXXXXXXXXXX/artifacts/execution.json"
           },
           "name": {
             "type": "string",
@@ -332,9 +329,9 @@
           }
         },
         "required": ["key", "name", "size", "uploaded"],
-        "description": "An artifact associated with a GitHub event.",
+        "description": "An artifact stored in R2 associated with an event.",
         "example": {
-          "key": "artifacts/gev_XXXXXXXXXXXXXXXXXXXXXXXXX/execution.json",
+          "key": "events/evt_XXXXXXXXXXXXXXXXXXXXXXXXX/artifacts/execution.json",
           "name": "execution.json",
           "size": 4096,
           "uploaded": "2024-01-01T00:00:00.000Z"
@@ -1331,19 +1328,18 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GithubEvent"
+                  "$ref": "#/components/schemas/Event"
                 },
                 "example": {
-                  "id": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX",
-                  "repoId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "id": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "parentEventId": null,
-                  "issueNumber": 42,
-                  "pullRequestNumber": null,
-                  "source": "action",
-                  "type": "implement.completed",
-                  "payload": {
-                    "harness": "claude-code",
-                    "durationMs": 30000
+                  "source": "github_repo",
+                  "sourceId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "origin": "webhook",
+                  "type": "github.issues.opened",
+                  "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+                  "data": {
+                    "action": "opened"
                   },
                   "timeCreated": "2024-01-01T00:00:00.000Z"
                 }
@@ -1453,6 +1449,8 @@
                     ]
                   },
                   "issueNumber": {
+                    "description": "Linked issue number, if any.",
+                    "example": 42,
                     "anyOf": [
                       {
                         "type": "integer",
@@ -1462,11 +1460,11 @@
                       {
                         "type": "null"
                       }
-                    ],
-                    "description": "Linked issue number, if any.",
-                    "example": 42
+                    ]
                   },
                   "pullRequestNumber": {
+                    "description": "Linked pull request number, if any.",
+                    "example": null,
                     "anyOf": [
                       {
                         "type": "integer",
@@ -1476,22 +1474,20 @@
                       {
                         "type": "null"
                       }
-                    ],
-                    "description": "Linked pull request number, if any.",
-                    "example": null
+                    ]
                   },
-                  "source": {
+                  "origin": {
                     "type": "string",
-                    "enum": ["webhook", "action", "cli", "console"],
+                    "enum": ["api", "webhook", "action", "console", "cli", "cron"],
                     "description": "Origin of the event.",
-                    "example": "action"
+                    "example": "webhook"
                   },
                   "type": {
                     "type": "string",
-                    "description": "Event type, e.g. `issues.opened` or `implement.completed`.",
-                    "example": "implement.completed"
+                    "description": "Event type, e.g. 'github.issues.opened'.",
+                    "example": "github.issues.opened"
                   },
-                  "payload": {
+                  "data": {
                     "type": "object",
                     "propertyNames": {
                       "type": "string"
@@ -1499,21 +1495,19 @@
                     "additionalProperties": {},
                     "description": "Arbitrary event data.",
                     "example": {
-                      "harness": "claude-code",
-                      "durationMs": 30000
+                      "action": "opened"
                     }
                   }
                 },
-                "required": ["repoFullName", "source", "type"],
+                "required": ["repoFullName", "origin", "type"],
                 "description": "Event to record.",
                 "example": {
                   "repoFullName": "octocat/hello-world",
                   "issueNumber": 42,
-                  "source": "action",
-                  "type": "implement.completed",
-                  "payload": {
-                    "harness": "claude-code",
-                    "durationMs": 30000
+                  "origin": "webhook",
+                  "type": "github.issues.opened",
+                  "data": {
+                    "action": "opened"
                   }
                 }
               }
@@ -1527,16 +1521,16 @@
         "operationId": "postGithubEventsByIdArtifacts",
         "tags": ["GitHub"],
         "summary": "Upload artifact",
-        "description": "Upload a file artifact associated with a GitHub event.",
+        "description": "Upload a file artifact associated with an event.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GithubEventArtifact"
+                  "$ref": "#/components/schemas/EventArtifact"
                 },
                 "example": {
-                  "key": "artifacts/gev_XXXXXXXXXXXXXXXXXXXXXXXXX/execution.json",
+                  "key": "events/evt_XXXXXXXXXXXXXXXXXXXXXXXXX/artifacts/execution.json",
                   "name": "execution.json",
                   "size": 4096,
                   "uploaded": "2024-01-01T00:00:00.000Z"
@@ -1628,10 +1622,10 @@
             "name": "id",
             "schema": {
               "type": "string",
-              "example": "gev_XXXXXXXXXXXXXXXXXXXXXXXXX"
+              "example": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX"
             },
             "required": true,
-            "description": "ID of the event to attach the artifact to."
+            "description": "Unique object identifier.\nThe format and length of IDs may change over time."
           }
         ]
       }

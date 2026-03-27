@@ -1,21 +1,21 @@
 // --- tag namespaces ---
-export type EnvTag = `env:${string}`
-export type ServiceTag = `service:${string}`
+export type EnvTag = `env:${string}`;
+export type ServiceTag = `service:${string}`;
 
 // --- gh refs ---
-export type GhRefTag = `gh:${string}`
-export type GhRepoTag = `gh:repo:${string}`
-export type GhIssueTag = `gh:issue:${number}`
-export type GhPrTag = `gh:pr:${number}`
-export type GhRunTag = `gh:run:${number}`
-export type GhBranchTag = `gh:branch:${string}`
-export type GhTag = GhRepoTag | GhIssueTag | GhPrTag | GhRunTag | GhBranchTag
+export type GhRefTag = `gh:${string}`;
+export type GhRepoTag = `gh:repo:${string}`;
+export type GhIssueTag = `gh:issue:${number}`;
+export type GhPrTag = `gh:pr:${number}`;
+export type GhRunTag = `gh:run:${number}`;
+export type GhBranchTag = `gh:branch:${string}`;
+export type GhTag = GhRepoTag | GhIssueTag | GhPrTag | GhRunTag | GhBranchTag;
 // -- metrics
 //    metric:${metric_name}:${metric_value}
-export type MetricTag = `metric:${string}:${string}`
+export type MetricTag = `metric:${string}:${string}`;
 
 // --- union of all valid tags ---
-export type EventTag = EnvTag | ServiceTag | GhTag | MetricTag | (string & {})
+export type EventTag = EnvTag | ServiceTag | GhTag | MetricTag | (string & {});
 
 export const OriginType = ["api", "webhook", "action", "console", "cli", "cron"] as const;
 export type OriginType = (typeof OriginType)[number];

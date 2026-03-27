@@ -110,43 +110,42 @@ export type Token = {
 };
 
 /**
- * A recorded GitHub or agent event.
+ * A recorded system or agent event.
  */
-export type GithubEvent = {
+export type Event = {
   /**
    * Unique object identifier.
    * The format and length of IDs may change over time.
    */
   id: string;
   /**
-   * Unique object identifier.
-   * The format and length of IDs may change over time.
-   */
-  repoId: string;
-  /**
-   * ID of the parent event, if this event is part of a group.
+   * ID of the parent event, if this event is part of a chain.
    */
   parentEventId: string | null;
   /**
-   * Linked issue number, if any.
+   * Source entity type, e.g. 'github_repo'.
    */
-  issueNumber: number | null;
+  source: string | null;
   /**
-   * Linked pull request number, if any.
+   * ID of the source entity.
    */
-  pullRequestNumber: number | null;
+  sourceId: string | null;
   /**
-   * Origin of the event.
-   */
-  source: "webhook" | "action" | "cli" | "console";
-  /**
-   * Event type, e.g. `issues.opened` or `implement.completed`.
+   * Event type, e.g. 'github.issues.opened'.
    */
   type: string;
   /**
+   * What triggered this event.
+   */
+  origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
+  /**
+   * Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.
+   */
+  tags: Array<string>;
+  /**
    * Arbitrary event data.
    */
-  payload: {
+  data: {
     [key: string]: unknown;
   };
   /**
@@ -156,9 +155,9 @@ export type GithubEvent = {
 };
 
 /**
- * An artifact associated with a GitHub event.
+ * An artifact stored in R2 associated with an event.
  */
-export type GithubEventArtifact = {
+export type EventArtifact = {
   /**
    * R2 storage key for the artifact.
    */
@@ -613,15 +612,15 @@ export type PostGithubEventsData = {
     /**
      * Origin of the event.
      */
-    source: "webhook" | "action" | "cli" | "console";
+    origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
     /**
-     * Event type, e.g. `issues.opened` or `implement.completed`.
+     * Event type, e.g. 'github.issues.opened'.
      */
     type: string;
     /**
      * Arbitrary event data.
      */
-    payload?: {
+    data?: {
       [key: string]: unknown;
     };
   };
@@ -659,7 +658,7 @@ export type PostGithubEventsResponses = {
   /**
    * The created event.
    */
-  200: GithubEvent;
+  200: Event;
 };
 
 export type PostGithubEventsResponse = PostGithubEventsResponses[keyof PostGithubEventsResponses];
@@ -668,7 +667,8 @@ export type PostGithubEventsByIdArtifactsData = {
   body?: never;
   path: {
     /**
-     * ID of the event to attach the artifact to.
+     * Unique object identifier.
+     * The format and length of IDs may change over time.
      */
     id: string;
   };
@@ -706,7 +706,7 @@ export type PostGithubEventsByIdArtifactsResponses = {
   /**
    * The uploaded artifact metadata.
    */
-  200: GithubEventArtifact;
+  200: EventArtifact;
 };
 
 export type PostGithubEventsByIdArtifactsResponse =

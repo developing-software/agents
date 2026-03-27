@@ -59,7 +59,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
         const { email } = primary;
         const username = profile.login;
         const avatarUrl = profile.avatar_url;
-        const whitelisted = ["andre-brandao"]
+        const whitelisted = ["andre-brandao"];
         if (!whitelisted.includes(username)) throw new Error("The username is not whitelisted");
 
         const matching = await User.fromEmail(email);
