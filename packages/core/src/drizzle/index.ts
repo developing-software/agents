@@ -12,12 +12,7 @@ const log = Log.create({ namespace: "drizzle" });
 // const clientMap = new Map<string, pg.Sql>();
 
 function createDb(url: string): PostgresJsDatabase {
-  // let client = clientMap.get(url);
-  // if (!client) {
-  //   client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20 });
-  //   clientMap.set(url, client);
-  // }
-  const client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20 });
+  const client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20, });
   return drizzle({
     client,
     logger:
@@ -39,13 +34,18 @@ export function withDatabase<T>(url: string, fn: () => T): T {
   return DatabaseContext.provide({ db: createDb(url) }, fn);
 }
 
+
+let cachedDb: PostgresJsDatabase | undefined;
 /** All business logic calls this — no manual init needed */
 export function useDatabase(): PostgresJsDatabase {
   try {
     return DatabaseContext.use().db;
   } catch {
-    // Fallback for non-worker environments (dev, scripts, tests)
     log.warn("no database context, falling back to env");
+    if (process.env.NODE_ENV === "test") {
+      cachedDb ??= createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
+      return cachedDb;
+    }
     return createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
   }
 }
