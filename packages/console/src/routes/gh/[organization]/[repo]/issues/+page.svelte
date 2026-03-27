@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import GitHubLink from '$lib/GitHubLink.svelte';
+
   let { data }: PageProps = $props();
 
   let filter = $state<'all' | 'open' | 'closed'>('open');
@@ -8,52 +9,99 @@
   const filtered = $derived(
     filter === 'all' ? data.issues : data.issues.filter((i) => i.state === filter)
   );
+
+  const filterOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'open', label: 'Open' },
+    { value: 'closed', label: 'Closed' },
+  ] as const;
 </script>
 
 <div>
-  <div class="mb-4 flex items-center justify-between">
-    <h1 class="text-lg font-semibold">Issues</h1>
-    <div class="flex rounded-lg border border-gray-700 text-sm overflow-hidden">
-      {#each (['all', 'open', 'closed'] as const) as f}
+  <!-- Header -->
+  <div class="mb-5 flex items-center justify-between">
+    <h1 class="text-lg font-semibold text-text">Issues</h1>
+
+    <!-- Filter pill group -->
+    <div class="flex gap-1">
+      {#each filterOptions as opt (opt.value)}
         <button
-          onclick={() => (filter = f)}
-          class="px-3 py-1.5 transition-colors {filter === f
-            ? 'bg-gray-700 text-white'
-            : 'text-gray-400 hover:bg-gray-800'}"
+          onclick={() => (filter = opt.value)}
+          class="rounded-full px-3 py-1 text-sm transition-colors"
+          style={filter === opt.value
+            ? 'background: var(--color-accent); color: #fff;'
+            : 'background: transparent; color: var(--color-muted);'}
+          onmouseenter={filter !== opt.value
+            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')
+            : undefined}
+          onmouseleave={filter !== opt.value
+            ? (e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')
+            : undefined}
         >
-          {f.charAt(0).toUpperCase() + f.slice(1)}
+          {opt.label}
         </button>
       {/each}
     </div>
   </div>
 
+  <!-- Issue list -->
   {#if filtered.length === 0}
-    <p class="text-sm text-gray-500">No {filter === 'all' ? '' : filter} issues found.</p>
+    <div
+      class="flex items-center justify-center rounded-lg border py-12 text-sm"
+      style="border-color: var(--color-border); background: var(--color-surface);"
+    >
+      <span style="color: var(--color-muted);">
+        No {filter === 'all' ? '' : filter} issues found.
+      </span>
+    </div>
   {:else}
-    <ul class="divide-y divide-gray-800 rounded-lg border border-gray-800">
-      {#each filtered as issue}
-        <li class="flex items-start gap-3 px-4 py-3">
+    <ul
+      class="overflow-hidden rounded-lg border"
+      style="background: var(--color-surface); border-color: var(--color-border);"
+    >
+      {#each filtered as issue (issue.number)}
+        <li
+          class="flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
+          style="border-color: var(--color-border);"
+        >
+          <!-- State dot -->
           <span
-            class="mt-1 h-2 w-2 shrink-0 rounded-full {issue.state === 'open'
-              ? 'bg-green-500'
-              : 'bg-purple-500'}"
+            class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full"
+            style={issue.state === 'open'
+              ? 'background: var(--color-success); box-shadow: 0 0 6px var(--color-success);'
+              : 'background: var(--color-dim);'}
           ></span>
+
+          <!-- Number -->
+          <span
+            class="shrink-0 font-mono text-xs"
+            style="color: var(--color-muted);"
+          >#{issue.number}</span>
+
+          <!-- Title + labels -->
           <div class="min-w-0 flex-1">
-            <p class="text-sm text-gray-100">
-              <span class="text-gray-500">#{issue.number}</span>
-              {issue.title}
-            </p>
+            <p class="truncate text-sm" style="color: var(--color-text);">{issue.title}</p>
             {#if issue.labels && issue.labels.length > 0}
               <div class="mt-1 flex flex-wrap gap-1">
-                {#each issue.labels as label}
-                  <span class="rounded px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300"
-                    >{label}</span
-                  >
+                {#each issue.labels as label (label)}
+                  <span
+                    class="rounded border px-1.5 py-0.5 font-mono text-xs"
+                    style="background: var(--color-elevated); border-color: var(--color-border); color: var(--color-muted);"
+                  >{label}</span>
                 {/each}
               </div>
             {/if}
           </div>
-          <span class="text-xs text-gray-500 capitalize">{issue.state}</span>
+
+          <!-- State badge -->
+          <span
+            class="shrink-0 rounded px-2 py-0.5 text-xs capitalize"
+            style={issue.state === 'open'
+              ? 'background: var(--color-success-dim); color: var(--color-success);'
+              : 'background: var(--color-elevated); color: var(--color-dim);'}
+          >{issue.state}</span>
+
+          <!-- GitHub link -->
           <GitHubLink href={issue.htmlUrl} />
         </li>
       {/each}

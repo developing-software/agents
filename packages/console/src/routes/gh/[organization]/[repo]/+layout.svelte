@@ -19,43 +19,88 @@
   }
 </script>
 
-<div class="min-h-screen bg-gray-950 text-gray-100">
-  <header class="border-b border-gray-800 bg-gray-900 px-6 py-4">
-    <div class="flex items-center gap-2 text-sm text-gray-400">
-      <a href="/gh" class="hover:text-white">GitHub</a>
-      <span>/</span>
-      <a href="/gh/{data.organization}" class="hover:text-white">{data.organization}</a>
-      <span>/</span>
-      <span class="font-semibold text-white">{data.repoName}</span>
+<header style="background: var(--color-surface); border-bottom: 1px solid var(--color-border);">
+  <div class="mx-auto max-w-5xl px-6 pt-4 pb-0">
+    <!-- Breadcrumb -->
+    <nav class="font-mono text-xs" aria-label="Breadcrumb">
+      <ol class="flex items-center gap-1.5">
+        <li>
+          <a
+            href="/gh"
+            class="text-muted transition-colors hover:text-text"
+          >repos</a>
+        </li>
+        <li class="text-dim select-none">/</li>
+        <li>
+          <a
+            href="/gh/{data.organization}"
+            class="text-muted transition-colors hover:text-text"
+          >{data.organization}</a>
+        </li>
+        <li class="text-dim select-none">/</li>
+        <li class="text-text">{data.repoName}</li>
+      </ol>
+    </nav>
+
+    <!-- Repo name + branch badge -->
+    <div class="mt-2 flex items-center gap-3">
+      <h1 class="text-lg font-semibold text-text">{data.repoName}</h1>
+      {#if data.repo}
+        <span
+          class="font-mono text-xs px-2 py-0.5 rounded border text-muted"
+          style="background: var(--color-elevated); border-color: var(--color-border);"
+        >{data.repo.defaultBranch ?? 'unknown'}</span>
+      {/if}
     </div>
 
-    {#if data.repo}
-      <p class="mt-1 text-xs text-gray-500">
-        Default branch: <code class="text-gray-400">{data.repo.defaultBranch ?? 'unknown'}</code>
-      </p>
-    {/if}
-
-    <nav class="mt-4 flex gap-1">
-      {#each tabs as tab}
+    <!-- Tab nav -->
+    <nav class="mt-3 flex gap-0" aria-label="Repository sections">
+      {#each tabs as tab (tab.href)}
         <a
           href={tab.href}
-          class="rounded-md px-3 py-1.5 text-sm transition-colors {isActive(tab.href)
-            ? 'bg-gray-700 text-white'
-            : 'text-gray-400 hover:bg-gray-800 hover:text-white'}"
-        >
-          {tab.label}
-        </a>
+          class="relative px-3 py-2 text-sm transition-colors select-none"
+          class:tab-active={isActive(tab.href)}
+          class:tab-inactive={!isActive(tab.href)}
+        >{tab.label}</a>
       {/each}
     </nav>
-  </header>
+  </div>
+</header>
 
-  <main class="mx-auto max-w-5xl px-6 py-8">
-    {#if !data.repo}
-      <div class="rounded-lg border border-yellow-800 bg-yellow-950 p-4 text-yellow-300 text-sm">
-        Repository not found or not yet synced via webhook.
-      </div>
-    {:else}
-      {@render children()}
-    {/if}
-  </main>
-</div>
+<main class="mx-auto max-w-5xl px-6 py-8">
+  {#if !data.repo}
+    <div
+      class="rounded-lg border p-4 text-sm"
+      style="border-color: var(--color-warning); background: color-mix(in srgb, var(--color-warning) 8%, var(--color-surface));"
+    >
+      <span style="color: var(--color-warning);">Repository not found or not yet synced via webhook.</span>
+    </div>
+  {:else}
+    {@render children()}
+  {/if}
+</main>
+
+<style>
+  .tab-active {
+    color: var(--color-text);
+  }
+
+  .tab-active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-accent);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .tab-inactive {
+    color: var(--color-muted);
+  }
+
+  .tab-inactive:hover {
+    color: var(--color-text);
+  }
+</style>
