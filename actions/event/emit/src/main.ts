@@ -4,7 +4,14 @@ import { DevAgentSdk } from "@agents/sdk";
 import { readContextTags } from "@agents/actions-core";
 
 function readTags(raw: string) {
-  return [...new Set(raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      raw
+        .split(/[\n,]/)
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function githubTags(): string[] {
@@ -45,9 +52,10 @@ async function run() {
   const apiUrl = core.getInput("url");
   const eventIdEnv = core.getInput("event_id_env") || "EVENT_ID";
   const inheritContext = core.getInput("inherit_context") !== "false";
-  const parentEventId = core.getInput("parent_event_id")
-    || (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "")
-    || "";
+  const parentEventId =
+    core.getInput("parent_event_id") ||
+    (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "") ||
+    "";
   const origin = core.getInput("origin") as
     | "api"
     | "webhook"

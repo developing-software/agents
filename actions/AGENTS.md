@@ -59,12 +59,12 @@ Uploads a file or directory to the Agents API R2 bucket via `POST /events/:id/ar
 
 ## Env var conventions
 
-| Variable                   | Set by               | Read by                                                  | Purpose                                          |
-| -------------------------- | -------------------- | -------------------------------------------------------- | ------------------------------------------------ |
+| Variable                   | Set by               | Read by                                                     | Purpose                                         |
+| -------------------------- | -------------------- | ----------------------------------------------------------- | ----------------------------------------------- |
 | `AGENTS_CONTEXT_TAGS_FILE` | `workflow/run` start | `event/emit`, `event/tag`, `agent/*`, `workflow/run` finish | Path to the tag context file (one tag per line) |
-| `AGENTS_WORKFLOW_EVENT_ID` | `workflow/run` start | `artifact/upload`, `agent/*`, `workflow/run` finish      | ID of the `agents.implement.started` event       |
-| `CLAUDE_EVENT_ID`          | `agent/claude`       | downstream steps                                         | ID of the `agents.claude.result` event           |
-| `CODEX_EVENT_ID`           | `agent/codex`        | downstream steps                                         | ID of the `agents.codex.result` event            |
+| `AGENTS_WORKFLOW_EVENT_ID` | `workflow/run` start | `artifact/upload`, `agent/*`, `workflow/run` finish         | ID of the `agents.implement.started` event      |
+| `CLAUDE_EVENT_ID`          | `agent/claude`       | downstream steps                                            | ID of the `agents.claude.result` event          |
+| `CODEX_EVENT_ID`           | `agent/codex`        | downstream steps                                            | ID of the `agents.codex.result` event           |
 
 ## Workflow pattern
 

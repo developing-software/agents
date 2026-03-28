@@ -25,4 +25,3 @@ runs:
         type: agents.codex.result
         data: >-
           {"finalMessage":${{ toJSON(inputs.final_message) }}}
-

@@ -32,7 +32,7 @@ inputs:
   inherit_context:
     description: Whether to inherit tags from AGENTS_CONTEXT_TAGS_FILE (default true)
     required: false
-    default: 'true'
+    default: "true"
 
 outputs:
   event_id:

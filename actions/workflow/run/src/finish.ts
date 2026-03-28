@@ -77,7 +77,11 @@ async function run() {
 
   // Collect diff metrics against base branch
   await exec.exec("git", ["fetch", "origin", baseBranch, "--depth=1"]);
-  const diffStat = await execWithOutput("git", ["diff", `origin/${baseBranch}...HEAD`, "--numstat"]);
+  const diffStat = await execWithOutput("git", [
+    "diff",
+    `origin/${baseBranch}...HEAD`,
+    "--numstat",
+  ]);
   let linesAdded = 0;
   let linesRemoved = 0;
   for (const line of diffStat.split("\n").filter(Boolean)) {
