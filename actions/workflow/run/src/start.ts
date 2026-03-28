@@ -25,6 +25,7 @@ async function run() {
 
   const harness = core.getInput("harness");
   const model = core.getInput("model");
+  const baseBranch = core.getInput("base_branch") || process.env.GITHUB_REF_NAME || "";
   const extraTags = readOptionalTags(core.getInput("tags"));
 
   // Write initial context tags
@@ -33,6 +34,7 @@ async function run() {
     `gh:issue:${issue.number}`,
     `gh:branch:${branch}`,
     `gh:run:${ctx.runId}`,
+    ...(baseBranch ? [`env:${baseBranch}`] : []),
     ...(harness ? [`harness:${harness}`] : []),
     ...(model ? [`model:${model}`] : []),
     ...extraTags,

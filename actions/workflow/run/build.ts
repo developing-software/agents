@@ -8,7 +8,7 @@ const results = await Promise.all(
   entrypoints.map((entrypoint) =>
     Bun.build({
       entrypoints: [ROOT + "/" + entrypoint],
-      outdir: "dist",
+      outdir: ROOT + "/dist",
       target: "node",
     }),
   ),

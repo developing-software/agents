@@ -4,7 +4,7 @@ const ROOT = import.meta.dir;
 
 const result = await Bun.build({
   entrypoints: [ROOT + "/src/main.ts"],
-  outdir: "dist",
+  outdir: ROOT + "/dist",
   target: "node",
 });
 
