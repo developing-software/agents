@@ -115,9 +115,7 @@ export namespace Event {
     async (input) => {
       return createTransaction(async (tx) => {
         const id = createID("event");
-        const parentEventId = input.parentEventId ?
-          input.parentEventId :
-          (await findParent(input));
+        const parentEventId = await inferParentEventId(input);
         log.info("create", {
           id,
           type: input.type,
