@@ -19,7 +19,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: developing-software/agents/actions/event/tag@main
+    - uses: developing-software/agents/actions/event/tag@dev
       if: inputs.session_id != ''
       with:
         tag: metric:session_id:${{ inputs.session_id }}
@@ -62,7 +62,7 @@ runs:
           } >> "$GITHUB_ENV"
         fi
 
-    - uses: developing-software/agents/actions/event/emit@main
+    - uses: developing-software/agents/actions/event/emit@dev
       if: always() && inputs.agents_token != ''
       with:
         agents_token: ${{ inputs.agents_token }}
@@ -73,7 +73,7 @@ runs:
         data: >-
           {"finalMessage":${{ toJSON(env.LAST_MSG) }}}
 
-    - uses: developing-software/agents/actions/artifact/upload@main
+    - uses: developing-software/agents/actions/artifact/upload@dev
       if: always() && inputs.execution_file != '' && inputs.agents_token != ''
       with:
         agents_token: ${{ inputs.agents_token }}

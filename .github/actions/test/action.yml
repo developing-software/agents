@@ -30,7 +30,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: developing-software/agents/actions/event/emit@main
+    - uses: developing-software/agents/actions/event/emit@dev
       if: inputs.agents_token != ''
       with:
         agents_token: ${{ inputs.agents_token }}
@@ -63,13 +63,13 @@ runs:
         } >> $GITHUB_OUTPUT
         exit $exit_code
 
-    - uses: developing-software/agents/actions/event/tag@main
+    - uses: developing-software/agents/actions/event/tag@dev
       if: always()
       with:
         key: tests
         value: ${{ steps.run-tests.outputs.outcome }}
 
-    - uses: developing-software/agents/actions/artifact/upload@main
+    - uses: developing-software/agents/actions/artifact/upload@dev
       if: failure() && inputs.agents_token != ''
       with:
         agents_token: ${{ inputs.agents_token }}
@@ -77,7 +77,7 @@ runs:
         path: ${{ runner.temp }}/test-output.txt
         name: test-output.txt
 
-    - uses: developing-software/agents/actions/event/emit@main
+    - uses: developing-software/agents/actions/event/emit@dev
       if: always() && inputs.agents_token != ''
       with:
         agents_token: ${{ inputs.agents_token }}
