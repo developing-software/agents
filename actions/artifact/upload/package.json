@@ -7,9 +7,9 @@
     "build": "bun run build.ts"
   },
   "dependencies": {
-    "@actions/core": "^1.10.1"
+    "@actions/core": "catalog:action"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0"
+    "@types/node": "catalog:action"
   }
 }

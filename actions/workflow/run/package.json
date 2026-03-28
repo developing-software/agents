@@ -7,12 +7,12 @@
     "build": "bun run build.ts"
   },
   "dependencies": {
-    "@actions/core": "^1.10.1",
-    "@actions/exec": "^1.1.1",
+    "@actions/core": "catalog:action",
+    "@actions/exec": "catalog:action",
     "@agents/actions-core": "workspace:*",
     "@agents/sdk": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0"
+    "@types/node": "catalog:action"
   }
 }
