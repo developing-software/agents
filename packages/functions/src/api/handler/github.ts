@@ -4,9 +4,9 @@ import { z } from "zod";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { GitHubWebhook } from "@agents/core/github";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
-import { GithubRepo } from "@agents/core/github/repo/index";
 import { Event } from "@agents/core/events/index";
 import { Tags, OriginType } from "@agents/core/events/types";
+import { Repository } from "@agents/core/repository/index";
 import { Result, validator, ErrorResponses, authRequired } from "../common";
 import { Examples } from "@agents/core/examples";
 
@@ -63,7 +63,7 @@ export namespace GitHubApi {
           .object({
             repoFullName: z.string().meta({
               description: "Full repository name in `owner/repo` format.",
-              example: Examples.GithubRepo.fullName,
+              example: Examples.Repository.fullName,
             }),
             parentEventId: Event.Info.shape.parentEventId.optional().meta({
               description: "Parent event ID to group related events.",
@@ -87,7 +87,7 @@ export namespace GitHubApi {
           .meta({
             description: "Event to record.",
             example: {
-              repoFullName: Examples.GithubRepo.fullName,
+              repoFullName: Examples.Repository.fullName,
               issueNumber: 42,
               origin: Examples.Event.origin,
               type: Examples.Event.type,
@@ -97,7 +97,7 @@ export namespace GitHubApi {
       ),
       async (c) => {
         const body = c.req.valid("json");
-        const repo = await GithubRepo.findByFullName(body.repoFullName);
+        const repo = await Repository.findByFullName(body.repoFullName);
         if (!repo) {
           throw new VisibleError(
             "not_found",
@@ -111,7 +111,7 @@ export namespace GitHubApi {
         if (body.pullRequestNumber) tags.push(Tags.ghPr(body.pullRequestNumber));
 
         const id = await Event.create({
-          source: "github_repo",
+          source: "repository",
           sourceId: repo.id,
           origin: body.origin,
           type: body.type,

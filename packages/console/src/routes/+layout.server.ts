@@ -1,11 +1,11 @@
 import type { LayoutServerLoad } from "./$types";
-import { GithubRepo } from "@agents/core/github/repo/index";
+import { Repository } from "@agents/core/repository/index";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   if (!locals.userID) return { userID: null, sidebarOrgs: [] };
 
   try {
-    const repos = await GithubRepo.list();
+    const repos = await Repository.list();
     const byOrg = new Map<string, typeof repos>();
     for (const repo of repos) {
       const list = byOrg.get(repo.owner) ?? [];

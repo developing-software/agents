@@ -4,19 +4,28 @@ export namespace Examples {
   export const Id = (prefix: keyof typeof prefixes) =>
     `${prefixes[prefix]}_XXXXXXXXXXXXXXXXXXXXXXXXX`;
 
-  export const GithubRepo = {
-    id: Id("githubRepo"),
+  export const Repository = {
+    id: Id("repository"),
     owner: "octocat",
     repo: "hello-world",
     fullName: "octocat/hello-world",
     defaultBranch: "main",
+    source: "github" as const,
+    sourceId: "987654321",
+    installationId: 123456789,
+  };
+
+  export const GithubInstallation = {
+    id: Id("githubInstallation"),
+    installationId: 123456789,
+    owner: "octocat",
   };
 
   export const Event = {
     id: Id("event"),
     parentEventId: null,
-    source: "github_repo",
-    sourceId: Id("githubRepo"),
+    source: "repository",
+    sourceId: Id("repository"),
     origin: "webhook" as const,
     type: "github.issues.opened",
     tags: ["gh:repo:octocat/hello-world", "gh:issue:42"],
@@ -33,7 +42,7 @@ export namespace Examples {
 
   export const GithubEvent = {
     id: Id("githubEvent"),
-    repoId: Id("githubRepo"),
+    repoId: Id("repository"),
     parentEventId: null,
     issueNumber: 42,
     pullRequestNumber: null,

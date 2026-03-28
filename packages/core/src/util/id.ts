@@ -7,6 +7,8 @@ export const prefixes = {
   apiClient: "app",
   apiSecret: "sec",
   link: "lnk",
+  repository: "rep",
+  githubInstallation: "gin",
   githubRepo: "grp",
   githubEvent: "gev",
 } as const;

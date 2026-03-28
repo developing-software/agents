@@ -1,6 +1,6 @@
 import { query } from "$app/server";
 import { z } from "zod";
-import { GithubRepo } from "@agents/core/github/repo/index";
+import { Repository } from "@agents/core/repository/index";
 import { Event } from "@agents/core/events/index";
 
 const input = z.object({
@@ -11,13 +11,13 @@ const input = z.object({
 });
 
 export const listEvents = query(input, async ({ organization, repoName, tags, limit }) => {
-  const repo = await GithubRepo.findByFullName(`${organization}/${repoName}`);
+  const repo = await Repository.findByFullName(`${organization}/${repoName}`);
   if (!repo) return [];
-  return Event.list({ source: "github_repo", sourceId: repo.id, tags, limit });
+  return Event.list({ source: "repository", sourceId: repo.id, tags, limit });
 });
 
 export const listTree = query(input, async ({ organization, repoName, tags, limit }) => {
-  const repo = await GithubRepo.findByFullName(`${organization}/${repoName}`);
+  const repo = await Repository.findByFullName(`${organization}/${repoName}`);
   if (!repo) return [];
-  return Event.listTree({ source: "github_repo", sourceId: repo.id, tags });
+  return Event.listTree({ source: "repository", sourceId: repo.id, tags });
 });

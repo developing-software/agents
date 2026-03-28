@@ -9,7 +9,7 @@ export const eventTable = table(
   {
     ...id,
     ...timestamps,
-    source: text("source"), // "github_repo", "run" — optional polymorphic ref
+    source: text("source"), // "repository", "run" — optional polymorphic ref
     sourceId: ulid("source_id"), // FK-less reference to source entity
     parentEventId: ulid("parent_event_id").references((): AnyPgColumn => eventTable.id, {
       onDelete: "set null",

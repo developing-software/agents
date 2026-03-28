@@ -24,7 +24,7 @@ export namespace Event {
         example: Examples.Event.parentEventId,
       }),
       source: z.string().nullable().meta({
-        description: "Source entity type, e.g. 'github_repo'.",
+        description: "Source entity type, e.g. 'repository'.",
         example: Examples.Event.source,
       }),
       sourceId: z.string().nullable().meta({
