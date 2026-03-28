@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import GitHubLink from '$lib/GitHubLink.svelte';
-
   let { data }: PageProps = $props();
 
   let filter = $state<'all' | 'open' | 'closed' | 'merged'>('open');
@@ -81,48 +80,73 @@
     >
       {#each filtered as pr, idx (pr.number)}
         <div
-          class="flex items-center gap-3 px-3"
-          style="height: 28px; border-top: {idx === 0 ? 'none' : '1px solid var(--color-border)'};"
-          onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
-          onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+          class="pr-row"
+          style="border-top: {idx === 0 ? 'none' : '1px solid var(--color-border)'};"
           role="listitem"
         >
-          <!-- State dot -->
-          <span
-            class="h-1.5 w-1.5 shrink-0 rounded-full"
-            style={stateDotStyle(pr.state)}
-          ></span>
+            <!-- State dot -->
+            <span
+              class="h-1.5 w-1.5 shrink-0 rounded-full"
+              style={stateDotStyle(pr.state)}
+            ></span>
 
-          <!-- Number -->
-          <span
-            class="shrink-0 font-mono"
-            style="width: 40px; font-size: 11px; color: var(--color-dim);"
-          >#{pr.number}</span>
+            <!-- Number -->
+            <span
+              class="shrink-0 font-mono"
+              style="width: 40px; font-size: 11px; color: var(--color-dim);"
+            >#{pr.number}</span>
 
-          <!-- Title -->
-          <span
-            class="min-w-0 flex-1 truncate text-xs"
-            style="color: var(--color-text);"
-          >{pr.title}</span>
+            <!-- Title -->
+            <span
+              class="min-w-0 flex-1 truncate text-xs"
+              style="color: var(--color-text);"
+            >{pr.title}</span>
 
-          <!-- Branch info -->
-          <span
-            class="shrink-0 font-mono"
-            style="font-size: 11px; color: var(--color-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-          >{pr.headBranch} → {pr.baseBranch}</span>
+            <!-- Branch info -->
+            <span
+              class="shrink-0 font-mono"
+              style="font-size: 11px; color: var(--color-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+            >{pr.headBranch} → {pr.baseBranch}</span>
 
-          <!-- State text -->
-          <span
-            class="shrink-0 font-mono capitalize"
-            style="font-size: 10px; width: 48px; text-align: right; {stateTextStyle(pr.state)}"
-          >{pr.state}</span>
+            <!-- State text -->
+            <span
+              class="shrink-0 font-mono capitalize"
+              style="font-size: 10px; width: 48px; text-align: right; {stateTextStyle(pr.state)}"
+            >{pr.state}</span>
 
-          <!-- GitHub link -->
-          <div class="shrink-0">
-            <GitHubLink href={pr.htmlUrl} />
-          </div>
+            <!-- GitHub link -->
+            <div class="shrink-0">
+              <GitHubLink href={pr.htmlUrl} />
+            </div>
+
+            <!-- Activity link -->
+            <a
+              href="/gh/{data.organization}/{data.repoName}/pulls/{pr.number}"
+              class="activity-link"
+              title="View activity"
+            >activity →</a>
         </div>
       {/each}
     </div>
   {/if}
 </div>
+
+<style>
+  .pr-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+    min-height: 36px;
+  }
+
+  .activity-link {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: color 0.1s;
+  }
+  .activity-link:hover { color: var(--color-accent); }
+</style>
