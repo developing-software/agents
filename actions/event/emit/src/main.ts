@@ -83,7 +83,7 @@ async function run() {
     ),
   });
 
-  const { data: event } = await sdk.postEvents({
+  const { data: event, error } = await sdk.postEvents({
     eventIngestInput: {
       repoFullName,
       parentEventId: parentEventId || undefined,
@@ -94,8 +94,10 @@ async function run() {
     },
   });
 
-  if (!event?.id) {
-    throw new Error("Event was created without an id");
+  if (error || !event?.id) {
+    const detail = error ? JSON.stringify(error) : "no id in response";
+    core.warning(`Failed to emit event "${type}": ${detail}`);
+    return;
   }
 
   core.setOutput("event_id", event.id);
