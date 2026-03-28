@@ -43,14 +43,16 @@ runs:
         CACHE_CREATE=$(printf '%s' "$RESULT" | jq -r '.usage.cache_creation_input_tokens // empty')
         TURNS=$(printf '%s' "$RESULT"        | jq -r '.num_turns // empty')
         COST=$(printf '%s' "$RESULT"         | jq -r '.total_cost_usd // empty')
-        LAST_MSG=$(printf '%s' "$RESULT" | jq -r '.result // empty')
+        MODEL=$(printf '%s' "$RESULT"        | jq -r '.model // empty')
+        LAST_MSG=$(printf '%s' "$RESULT"     | jq -r '.result // empty')
 
-        [ -n "$INPUT" ]        && printf 'metric:input_tokens:%s\n'                "$INPUT"        >> "$AGENTS_CONTEXT_TAGS_FILE"
-        [ -n "$OUTPUT" ]       && printf 'metric:output_tokens:%s\n'               "$OUTPUT"       >> "$AGENTS_CONTEXT_TAGS_FILE"
-        [ -n "$CACHE_READ" ]   && printf 'metric:cache_read_input_tokens:%s\n'     "$CACHE_READ"   >> "$AGENTS_CONTEXT_TAGS_FILE"
-        [ -n "$CACHE_CREATE" ] && printf 'metric:cache_creation_input_tokens:%s\n' "$CACHE_CREATE" >> "$AGENTS_CONTEXT_TAGS_FILE"
-        [ -n "$TURNS" ]        && printf 'metric:num_turns:%s\n'                   "$TURNS"        >> "$AGENTS_CONTEXT_TAGS_FILE"
-        [ -n "$COST" ]         && printf 'metric:cost_usd:%s\n'                    "$COST"         >> "$AGENTS_CONTEXT_TAGS_FILE"
+        DIM="${MODEL:+${MODEL}:}"
+        [ -n "$INPUT" ]        && printf "metric:input_tokens:${DIM}%s\n"                "$INPUT"        >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$OUTPUT" ]       && printf "metric:output_tokens:${DIM}%s\n"               "$OUTPUT"       >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$CACHE_READ" ]   && printf "metric:cache_read_input_tokens:${DIM}%s\n"     "$CACHE_READ"   >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$CACHE_CREATE" ] && printf "metric:cache_creation_input_tokens:${DIM}%s\n" "$CACHE_CREATE" >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$TURNS" ]        && printf "metric:num_turns:${DIM}%s\n"                   "$TURNS"        >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$COST" ]         && printf "metric:cost_usd:${DIM}%s\n"                    "$COST"         >> "$AGENTS_CONTEXT_TAGS_FILE"
 
         if [ -n "$LAST_MSG" ]; then
           {
