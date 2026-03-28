@@ -1,0 +1,17 @@
+{
+  "name": "event-emit-action",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "bun run build.ts"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@agents/sdk": "workspace:*",
+    "@agents/actions-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}

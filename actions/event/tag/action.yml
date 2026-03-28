@@ -1,0 +1,31 @@
+name: Tag Event Context
+description: Append a tag to the workflow context (AGENTS_CONTEXT_TAGS_FILE). All subsequent event/emit calls will inherit it.
+
+inputs:
+  tag:
+    description: Full tag string to append (e.g. "metric:cost_usd:0.042", "gh:pr:123"). Takes precedence over key/value.
+    required: false
+  key:
+    description: Metric key — shorthand that formats the tag as "metric:key:value"
+    required: false
+  value:
+    description: Metric value — required when key is provided
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        INPUT_TAG: ${{ inputs.tag }}
+        INPUT_KEY: ${{ inputs.key }}
+        INPUT_VALUE: ${{ inputs.value }}
+      run: |
+        if [ -z "$AGENTS_CONTEXT_TAGS_FILE" ]; then
+          exit 0
+        fi
+        if [ -n "$INPUT_TAG" ]; then
+          printf '%s\n' "$INPUT_TAG" >> "$AGENTS_CONTEXT_TAGS_FILE"
+        elif [ -n "$INPUT_KEY" ]; then
+          printf 'metric:%s:%s\n' "$INPUT_KEY" "$INPUT_VALUE" >> "$AGENTS_CONTEXT_TAGS_FILE"
+        fi

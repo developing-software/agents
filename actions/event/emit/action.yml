@@ -1,0 +1,43 @@
+name: Emit Event
+description: Emit an event to the Agents API, inheriting workflow context tags by default
+
+inputs:
+  agents_token:
+    description: Personal access token for posting events to the Agents API
+    required: true
+  api_url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+  parent_event_id:
+    description: Parent event ID for chaining related events
+    required: false
+  event_id_env:
+    description: Environment variable to export the created event id to, and to read as the default parent event id on later calls
+    required: false
+    default: EVENT_ID
+  origin:
+    description: Event origin
+    required: false
+    default: action
+  type:
+    description: Event type
+    required: true
+  tags:
+    description: Event-local tags (comma or newline separated). These are NOT added to the context and only apply to this event.
+    required: false
+  data:
+    description: JSON object to store as event data
+    required: false
+  inherit_context:
+    description: Whether to inherit tags from AGENTS_CONTEXT_TAGS_FILE (default true)
+    required: false
+    default: 'true'
+
+outputs:
+  event_id:
+    description: Created event ID
+
+runs:
+  using: node20
+  main: dist/main.js

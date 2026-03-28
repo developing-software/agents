@@ -1,0 +1,35 @@
+name: Workflow Run
+description: Setup and teardown hooks for AI agent implementation workflows — creates branch, tracks context tags, and emits lifecycle events
+
+inputs:
+  pr_prefix:
+    description: Branch/PR prefix (e.g. claude, codex)
+    required: true
+  harness:
+    description: Agent harness identifier (e.g. claude-code, codex)
+    required: false
+  model:
+    description: Model identifier (e.g. claude-sonnet-4-6)
+    required: false
+  tags:
+    description: Extra tags to attach to events, comma or newline separated
+    required: false
+  base_branch:
+    description: "Base branch for the PR (default: repo default branch)"
+    required: false
+  metadata:
+    description: Extra key=value lines to include in the job summary
+    required: false
+  agents_token:
+    description: Personal access token for posting events to the Agents API
+    required: false
+  api_url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+
+runs:
+  using: node20
+  main: dist/start.js
+  post: dist/finish.js
+  post-if: always()

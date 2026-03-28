@@ -29,7 +29,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: ./actions/implement-metrics
+      - uses: ./actions/workflow/run
         with:
           pr_prefix: claude
           harness: claude-code
@@ -57,17 +57,14 @@ jobs:
           additional_permissions: |
             actions: read
 
-      - uses: ./actions/collect-claude-metrics
+      - uses: ./actions/agent/claude
         if: always()
         with:
           execution_file: ${{ steps.run-claude.outputs.execution_file }}
           session_id: ${{ steps.run-claude.outputs.session_id }}
-
-      - uses: ./actions/upload-implement-artifacts
-        if: always()
-        with:
           agents_token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./.github/actions/test
         with:
           install: "false"
+          agents_token: ${{ secrets.AGENTS_TOKEN }}

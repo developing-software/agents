@@ -26,7 +26,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: ./actions/implement-metrics
+      - uses: ./actions/workflow/run
         with:
           pr_prefix: codex
           harness: codex
@@ -51,17 +51,13 @@ jobs:
             Refer to AGENTS.md for project structure and guidelines.
             Do NOT commit, push, or open a pull request — only modify the files.
 
-      - uses: ./actions/collect-codex-metrics
+      - uses: ./actions/agent/codex
         if: always()
         with:
           final_message: ${{ steps.run-codex.outputs.final-message }}
           agents_token: ${{ secrets.AGENTS_TOKEN }}
 
-      - uses: ./actions/upload-implement-artifacts
-        if: always()
-        with:
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
-
       - uses: ./.github/actions/test
         with:
           install: "false"
+          agents_token: ${{ secrets.AGENTS_TOKEN }}
