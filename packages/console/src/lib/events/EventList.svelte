@@ -77,6 +77,38 @@
     const t = tags.find((t) => t.startsWith('gh:pr:'));
     return t ? parseInt(t.slice('gh:pr:'.length)) : null;
   }
+
+  function metrics(tags: string[]): { name: string; value: string }[] {
+    return tags
+      .filter((t) => t.startsWith('metric:'))
+      .map((t) => {
+        const rest = t.slice('metric:'.length);
+        const sep = rest.indexOf(':');
+        return sep === -1
+          ? { name: rest, value: '' }
+          : { name: rest.slice(0, sep), value: rest.slice(sep + 1) };
+      });
+  }
+
+  function envTag(tags: string[]): string | null {
+    const t = tags.find((t) => t.startsWith('env:'));
+    return t ? t.slice('env:'.length) : null;
+  }
+
+  function serviceTag(tags: string[]): string | null {
+    const t = tags.find((t) => t.startsWith('service:'));
+    return t ? t.slice('service:'.length) : null;
+  }
+
+  function branchTag(tags: string[]): string | null {
+    const t = tags.find((t) => t.startsWith('gh:branch:'));
+    return t ? t.slice('gh:branch:'.length) : null;
+  }
+
+  function runRef(tags: string[]): number | null {
+    const t = tags.find((t) => t.startsWith('gh:run:'));
+    return t ? parseInt(t.slice('gh:run:'.length)) : null;
+  }
 </script>
 
 {#await eventsPromise}
@@ -126,16 +158,43 @@
         {#snippet row(e: EventItem, child: boolean)}
           {@const issue = issueRef(e.tags)}
           {@const pr = prRef(e.tags)}
-          <div class="row" class:row-child={child}>
-            <span class="dot" style="background:{eventDotColor(e.type)};opacity:{child ? 0.6 : 1};"></span>
-            <span class="etype" class:etype-muted={child}>{e.type}</span>
-            <span class="badge" style={originBadgeStyle(e.origin)}>{e.origin}</span>
-            {#if issue}
-              <a href="/gh/{organization}/{repoName}/issues/{issue}" class="ref ref-issue">#{issue}</a>
-            {:else if pr}
-              <a href="/gh/{organization}/{repoName}/pulls/{pr}" class="ref ref-pr">#{pr}</a>
+          {@const mets = metrics(e.tags)}
+          {@const env = envTag(e.tags)}
+          {@const svc = serviceTag(e.tags)}
+          {@const branch = branchTag(e.tags)}
+          {@const run = runRef(e.tags)}
+          {@const hasMeta = mets.length > 0 || env || svc || branch || run !== null}
+          <div class="event-item" class:event-item-child={child}>
+            <div class="row">
+              <span class="dot" style="background:{eventDotColor(e.type)};opacity:{child ? 0.6 : 1};"></span>
+              <span class="etype" class:etype-muted={child}>{e.type}</span>
+              <span class="badge" style={originBadgeStyle(e.origin)}>{e.origin}</span>
+              {#if issue}
+                <a href="/gh/{organization}/{repoName}/issues/{issue}" class="ref ref-issue">#{issue}</a>
+              {:else if pr}
+                <a href="/gh/{organization}/{repoName}/pulls/{pr}" class="ref ref-pr">#{pr}</a>
+              {/if}
+              <span class="time">{relativeTime(e.timeCreated)}</span>
+            </div>
+            {#if hasMeta}
+              <div class="meta">
+                {#if env}
+                  <span class="meta-tag">{env}</span>
+                {/if}
+                {#if svc}
+                  <span class="meta-tag">{svc}</span>
+                {/if}
+                {#if branch}
+                  <span class="meta-branch">⎇ {branch}</span>
+                {/if}
+                {#if run !== null}
+                  <span class="meta-dim">run #{run}</span>
+                {/if}
+                {#each mets as m (m.name)}
+                  <span class="meta-metric"><span class="meta-metric-name">{m.name}</span>{#if m.value}<span class="meta-metric-sep">:</span><span class="meta-metric-val">{m.value}</span>{/if}</span>
+                {/each}
+              </div>
             {/if}
-            <span class="time">{relativeTime(e.timeCreated)}</span>
           </div>
         {/snippet}
 
@@ -181,8 +240,10 @@
 
   .timeline { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; }
 
+  .event-item { display: flex; flex-direction: column; }
+  .event-item-child { padding-left: 16px; }
+
   .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; min-width: 0; }
-  .row-child { padding-left: 16px; }
 
   .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
@@ -197,6 +258,19 @@
   .ref-pr { color: var(--color-merged); }
 
   .time { font-size: 11px; color: var(--color-dim); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 0 0 4px 13px; min-width: 0; }
+
+  .meta-tag { font-family: "JetBrains Mono", monospace; font-size: 10px; padding: 0 4px; border-radius: 3px; background: var(--color-elevated); color: var(--color-muted); line-height: 1.6; }
+
+  .meta-branch { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
+
+  .meta-dim { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
+
+  .meta-metric { display: inline-flex; align-items: center; font-family: "JetBrains Mono", monospace; font-size: 10px; gap: 1px; }
+  .meta-metric-name { color: var(--color-muted); }
+  .meta-metric-sep { color: var(--color-dim); }
+  .meta-metric-val { color: var(--color-accent); }
 
   .children { border-left: 1px solid var(--color-border); margin-left: 2px; }
 
