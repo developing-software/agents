@@ -54,5 +54,5 @@ runs:
         EXECUTION_FILE: ${{ inputs.execution_file }}
       run: |
         mkdir -p "$RUNNER_TEMP/implement-artifacts"
-        [ -f "${EXECUTION_FILE:-}" ] && cp "$EXECUTION_FILE" "$RUNNER_TEMP/implement-artifacts/execution.json"
+        [ -f "${EXECUTION_FILE:-}" ] && cp "$EXECUTION_FILE" "$RUNNER_TEMP/implement-artifacts/claude_code_execution.json"
         echo "IMPLEMENT_ARTIFACT_DIR=$RUNNER_TEMP/implement-artifacts" >> "$GITHUB_ENV"

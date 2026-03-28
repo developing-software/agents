@@ -1,43 +1,102 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+
   let { data }: PageProps = $props();
 </script>
 
-<div class="mx-auto max-w-4xl px-6 py-10">
-  <h1 class="mb-8 text-xl font-semibold">Repositories</h1>
+<div class="px-6 py-8">
+  <h1 class="mb-6 font-medium" style="font-size: 16px; color: var(--color-text);">
+    Repositories
+  </h1>
 
   {#if data.orgs.length === 0}
-    <div class="rounded-lg border border-gray-800 p-8 text-center text-sm text-gray-500">
-      No repositories synced yet. Install the GitHub App to get started.
-    </div>
+    <p class="text-xs" style="color: var(--color-muted);">
+      No repositories found.
+      <a
+        href="https://github.com/apps"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color: var(--color-accent);"
+      >Install the GitHub App</a> to get started.
+    </p>
   {:else}
-    <div class="space-y-8">
-      {#each data.orgs as { org, repos }}
+    <div class="flex flex-col gap-8">
+      {#each data.orgs as { org, repos } (org)}
         <section>
-          <a
-            href="/gh/{org}"
-            class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-300 hover:text-white"
-          >
-            <span class="text-gray-500">/</span>
-            {org}
-          </a>
-          <ul class="divide-y divide-gray-800 rounded-lg border border-gray-800">
-            {#each repos as repo}
-              <li>
-                <a
-                  href="/gh/{repo.owner}/{repo.repo}"
-                  class="flex items-center justify-between px-4 py-3 hover:bg-gray-900 transition-colors"
-                >
-                  <span class="text-sm text-gray-100">{repo.repo}</span>
-                  {#if repo.defaultBranch}
-                    <span class="text-xs text-gray-500">{repo.defaultBranch}</span>
-                  {/if}
-                </a>
-              </li>
+          <div class="mb-3 flex items-center gap-3">
+            <span
+              class="shrink-0"
+              style="font-family: var(--font-mono); font-size: 12px; color: var(--color-dim);"
+            >/ {org}</span>
+            <hr
+              style="flex: 1; border: none; border-top: 1px solid var(--color-border); margin: 0;"
+            />
+          </div>
+
+          <div class="repos-grid">
+            {#each repos as repo (repo.repo)}
+              <a
+                href="/gh/{repo.owner}/{repo.repo}"
+                class="repo-card"
+              >
+                <span class="repo-name">{repo.repo}</span>
+                {#if repo.defaultBranch}
+                  <span class="repo-branch">⎇ {repo.defaultBranch}</span>
+                {/if}
+              </a>
             {/each}
-          </ul>
+          </div>
         </section>
       {/each}
     </div>
   {/if}
 </div>
+
+<style>
+  .repos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  @media (max-width: 900px) {
+    .repos-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .repos-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .repo-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    text-decoration: none;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .repo-card:hover {
+    background: var(--color-elevated);
+    border-color: var(--color-border-bright);
+  }
+
+  .repo-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .repo-branch {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-dim);
+  }
+</style>

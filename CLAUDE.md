@@ -2,6 +2,8 @@
 
 Monorepo for reusable GitHub/agent actions and a console to track GitHub and agent activity — collecting metrics and traces for analysis.
 
+When proposing solutions, prefer the simplest approach that matches existing codebase patterns. Check for existing patterns (e.g., Project.get style) before suggesting new abstractions. Do NOT propose complex architectures (sidecars, supervisors, executors) unless explicitly asked.
+
 ## Packages
 
 - `packages/core` — shared business logic, DB schema, GitHub integration, actor/context system

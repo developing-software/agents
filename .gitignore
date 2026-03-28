@@ -39,3 +39,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # sst
 .sst
+
+
+# Agents
+.claude
+.agents

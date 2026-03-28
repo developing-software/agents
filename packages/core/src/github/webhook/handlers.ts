@@ -1,8 +1,10 @@
 import type { GitHubWebhook } from "./index";
-import { GithubRepo } from "../repo/index";
-import { GithubEvent } from "../event/index";
+import { GithubInstallation } from "../installation/index";
 import { User } from "../../user/index";
 import { Log } from "../../util/log";
+import { Event } from "../../events/index";
+import { Tags } from "../../events/types";
+import { Repository } from "../../repository/index";
 
 const log = Log.create({ namespace: "github.webhook" });
 
@@ -14,10 +16,17 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
     log.info("installation created", { installationId: payload.installation.id, owner });
     const users = await User.fromUsername(payload.sender.login);
     const userId = users[0]?.id;
+    const connectionId = await GithubInstallation.upsert({
+      userId,
+      installationId: payload.installation.id,
+      owner,
+    });
     for (const r of payload.repositories ?? []) {
-      await GithubRepo.upsert({
+      await Repository.upsert({
         userId,
-        installationId: payload.installation.id,
+        source: "github",
+        sourceId: String(r.id),
+        connectionId,
         owner,
         repo: r.name,
         fullName: r.full_name,
@@ -27,7 +36,9 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
 
   webhook.on("installation.deleted", async ({ payload }) => {
     log.info("installation deleted", { installationId: payload.installation.id });
-    await GithubRepo.remove(payload.installation.id);
+    const installation = await GithubInstallation.remove(payload.installation.id);
+    if (!installation) return;
+    await Repository.removeByConnectionId(installation.id);
   });
 
   webhook.on("installation_repositories.added", async ({ payload }) => {
@@ -39,10 +50,17 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
     });
     const users = await User.fromUsername(payload.sender.login);
     const userId = users[0]?.id;
+    const connectionId = await GithubInstallation.upsert({
+      userId,
+      installationId: payload.installation.id,
+      owner,
+    });
     for (const r of payload.repositories_added) {
-      await GithubRepo.upsert({
+      await Repository.upsert({
         userId,
-        installationId: payload.installation.id,
+        source: "github",
+        sourceId: String(r.id),
+        connectionId,
         owner,
         repo: r.name,
         fullName: r.full_name,
@@ -56,7 +74,8 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
       count: payload.repositories_removed.length,
     });
     for (const r of payload.repositories_removed) {
-      await GithubRepo.removeByFullName(r.full_name);
+      await Repository.removeBySourceId("github", String(r.id));
+      await Repository.removeByFullName(r.full_name);
     }
   });
 
@@ -67,16 +86,25 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
       repo: payload.repository.full_name,
       number: payload.issue.number,
     });
-    const installationId = payload.installation?.id;
-    if (!installationId) return;
-    const repo = await GithubRepo.findByInstallationId(installationId);
+    const repo =
+      (await Repository.findBySourceId("github", String(payload.repository.id))) ??
+      (await Repository.findByFullNameForWebhook(payload.repository.full_name));
     if (!repo) return;
-    await GithubEvent.create({
-      repoId: repo.id,
-      issueNumber: payload.issue.number,
-      source: "webhook",
-      type: `issues.${payload.action}`,
-      payload: {
+
+    const issueTags = [Tags.ghRepo(repo.fullName), Tags.ghIssue(payload.issue.number)];
+    const parentEventId =
+      payload.action !== "opened"
+        ? await Event.findParent({ source: "repository", sourceId: repo.id, tags: issueTags })
+        : undefined;
+
+    await Event.create({
+      source: "repository",
+      sourceId: repo.id,
+      origin: "webhook",
+      type: `github.issues.${payload.action}`,
+      tags: issueTags,
+      parentEventId,
+      data: {
         title: payload.issue.title,
         state: payload.issue.state ?? "",
         labels: (payload.issue.labels ?? []).map((l) =>
@@ -89,40 +117,84 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
 
   // Pull requests
   webhook.on("pull_request", async ({ payload }) => {
-    // @ts-expect-error idk why
-    let installationId = payload.installation?.id;
-    if (!installationId) {
-      const grepo = await GithubRepo.findByFullName(payload.repository.full_name).catch(() => null);
-      installationId = grepo?.installationId;
-      if (!installationId) {
-        log.info("pull_request event with no installationId", {
-          action: payload.action,
-          repo: payload.repository.full_name,
-          number: payload.pull_request.number,
-          installationId,
-        });
-      }
-    }
+    const installationId = "installation" in payload ? payload.installation?.id : undefined;
+    const repo =
+      (await Repository.findBySourceId("github", String(payload.repository.id))) ??
+      (await Repository.findByFullNameForWebhook(payload.repository.full_name));
 
     log.info("pull_request event", {
       action: payload.action,
       repo: payload.repository.full_name,
       number: payload.pull_request.number,
-      installationId: installationId,
+      installationId,
     });
 
-    const repo = await GithubRepo.findByInstallationId(installationId);
     if (!repo) return;
-    await GithubEvent.create({
-      repoId: repo.id,
-      pullRequestNumber: payload.pull_request.number,
-      source: "webhook",
-      type: `pull_request.${payload.action}`,
-      payload: {
+
+    const prTags = [
+      Tags.ghRepo(repo.fullName),
+      Tags.ghPr(payload.pull_request.number),
+      Tags.ghBranch(payload.pull_request.head.ref),
+    ];
+    const parentEventId =
+      payload.action !== "opened"
+        ? await Event.findParent({ source: "repository", sourceId: repo.id, tags: prTags })
+        : undefined;
+
+    await Event.create({
+      source: "repository",
+      sourceId: repo.id,
+      origin: "webhook",
+      type: `github.pull_request.${payload.action}`,
+      tags: prTags,
+      parentEventId,
+      data: {
         title: payload.pull_request.title,
         state: payload.pull_request.merged ? "merged" : payload.pull_request.state,
         headBranch: payload.pull_request.head.ref,
         baseBranch: payload.pull_request.base.ref,
+      },
+    });
+  });
+
+  // Push
+  webhook.on("push", async ({ payload }) => {
+    const repo =
+      (await Repository.findBySourceId("github", String(payload.repository.id))) ??
+      (await Repository.findByFullNameForWebhook(payload.repository.full_name));
+    if (!repo) return;
+
+    const branch = payload.ref.replace("refs/heads/", "");
+    const commitCount = payload.commits?.length ?? 0;
+    const lastCommit = payload.head_commit?.message?.split("\n")[0]?.slice(0, 72) ?? "";
+
+    log.info("push event", { repo: payload.repository.full_name, branch, commitCount });
+
+    const pushTags = [
+      Tags.ghRepo(repo.fullName),
+      Tags.ghBranch(branch),
+      Tags.metric("commit_count", String(commitCount)),
+      Tags.metric("last_commit", lastCommit),
+    ];
+
+    const parentEventId = await Event.findParent({
+      source: "repository",
+      sourceId: repo.id,
+      tags: [Tags.ghRepo(repo.fullName), Tags.ghBranch(branch)],
+    });
+
+    await Event.create({
+      source: "repository",
+      sourceId: repo.id,
+      origin: "webhook",
+      type: "github.push",
+      tags: pushTags,
+      parentEventId,
+      data: {
+        branch,
+        commitCount,
+        lastCommit,
+        pusher: payload.pusher?.name,
       },
     });
   });

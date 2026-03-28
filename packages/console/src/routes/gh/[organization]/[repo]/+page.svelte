@@ -2,6 +2,8 @@
   import type { PageProps } from './$types';
   import { generateToken } from './repo.remote';
   import GitHubLink from '$lib/GitHubLink.svelte';
+  import Events from '$lib/events/Events.svelte';
+
   let { data }: PageProps = $props();
 
   let token = $state<string | null>(null);
@@ -13,328 +15,357 @@
       const result = await generateToken({});
       token = result.token;
     } catch (err) {
-      tokenError = err instanceof Error ? err.message : "Failed to generate token.";
+      tokenError = err instanceof Error ? err.message : 'Failed to generate token.';
     }
   }
-
-  let expandedEvents = $state(new Set<string>());
-
-  function toggleArtifacts(eventId: string) {
-    if (expandedEvents.has(eventId)) {
-      expandedEvents.delete(eventId);
-    } else {
-      expandedEvents.add(eventId);
-    }
-    expandedEvents = new Set(expandedEvents);
-  }
-
-  function eventDotColor(type: string): string {
-    if (type.startsWith('implement.')) return 'bg-blue-500';
-    if (type.startsWith('issues.')) return 'bg-green-500';
-    if (type.startsWith('pull_request.')) return 'bg-purple-500';
-    if (type === 'push') return 'bg-gray-500';
-    return 'bg-yellow-500';
-  }
-
-  function sourceBadgeClass(source: string): string {
-    switch (source) {
-      case 'action': return 'bg-blue-900 text-blue-300';
-      case 'webhook': return 'bg-gray-800 text-gray-300';
-      case 'cli': return 'bg-yellow-900 text-yellow-300';
-      case 'console': return 'bg-purple-900 text-purple-300';
-      default: return 'bg-gray-800 text-gray-400';
-    }
-  }
-
-  function relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const secs = Math.floor(diff / 1000);
-    if (secs < 60) return `${secs}s ago`;
-    const mins = Math.floor(secs / 60);
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  }
-
-  function formatBytes(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  // Group child events under their parents for indentation
-  const topLevelEvents = $derived(data.events.filter((e) => !e.parentEventId));
-  const childEventsByParent = $derived(
-    data.events.reduce(
-      (acc, e) => {
-        if (e.parentEventId) {
-          (acc[e.parentEventId] ??= []).push(e);
-        }
-        return acc;
-      },
-      {} as Record<string, typeof data.events>,
-    ),
-  );
 </script>
 
-<!-- Event Feed -->
-<section class="mb-6">
-  <div class="mb-3 flex items-center justify-between">
-    <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-400">Recent Events</h2>
-  </div>
-  {#if data.events.length === 0}
-    <p class="text-sm text-gray-500">No events recorded yet.</p>
-  {:else}
-    <ul class="divide-y divide-gray-800 rounded-lg border border-gray-800">
-      {#each topLevelEvents as event}
-        {@const children = childEventsByParent[event.id] ?? []}
-        <li>
-          <!-- Parent event row -->
-          <div
-            class="flex items-center gap-3 px-4 py-3 {event.artifacts.length > 0
-              ? 'cursor-pointer hover:bg-gray-800/50'
-              : ''}"
-            role={event.artifacts.length > 0 ? 'button' : undefined}
-            tabindex={event.artifacts.length > 0 ? 0 : undefined}
-            onclick={() => event.artifacts.length > 0 && toggleArtifacts(event.id)}
-            onkeydown={(e) =>
-              e.key === 'Enter' && event.artifacts.length > 0 && toggleArtifacts(event.id)}
-          >
-            <span class="h-2 w-2 shrink-0 rounded-full {eventDotColor(event.type)}"></span>
-            <span class="min-w-0 flex-1 truncate text-sm text-gray-100">{event.type}</span>
-            <span class="rounded px-1.5 py-0.5 text-xs {sourceBadgeClass(event.source)}"
-              >{event.source}</span
-            >
-            {#if event.issueNumber}
-              <a
-                href="/gh/{data.organization}/{data.repoName}/issues"
-                class="text-xs text-green-400 hover:underline"
-                onclick={(e) => e.stopPropagation()}
-              >
-                #{event.issueNumber}
-              </a>
-            {:else if event.pullRequestNumber}
-              <a
-                href="/gh/{data.organization}/{data.repoName}/pulls"
-                class="text-xs text-purple-400 hover:underline"
-                onclick={(e) => e.stopPropagation()}
-              >
-                #{event.pullRequestNumber}
-              </a>
-            {/if}
-            <span class="shrink-0 text-xs text-gray-500">{relativeTime(event.timeCreated)}</span>
-            {#if event.artifacts.length > 0}
-              <span class="shrink-0 text-xs text-gray-500">
-                {expandedEvents.has(event.id) ? '▲' : '▼'}
-              </span>
-            {/if}
-          </div>
+<div class="page-grid">
+  <!-- ============================================================ -->
+  <!-- LEFT: Activity Feed -->
+  <!-- ============================================================ -->
+  <section class="activity-section">
+    <h2 class="section-heading">Activity</h2>
+    <Events organization={data.organization} repoName={data.repoName} />
+  </section>
 
-          <!-- Artifacts sub-row -->
-          {#if event.artifacts.length > 0 && expandedEvents.has(event.id)}
-            <div class="border-t border-gray-800 bg-gray-900/50 px-4 py-2">
-              <p class="mb-1.5 text-xs text-gray-500">Artifacts</p>
-              <ul class="flex flex-wrap gap-2">
-                {#each event.artifacts as artifact}
-                  <li>
-                    <a
-                      href="/gh/{data.organization}/{data.repoName}/events/{event.id}/artifacts/{artifact.name}"
-                      class="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-200 hover:border-gray-600 hover:text-white"
-                    >
-                      <span>{artifact.name}</span>
-                      <span class="text-gray-500">({formatBytes(artifact.size)})</span>
-                    </a>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
+  <!-- ============================================================ -->
+  <!-- RIGHT: Issues + PRs + Token -->
+  <!-- ============================================================ -->
+  <aside class="right-column">
 
-          <!-- Child events (indented) -->
-          {#if children.length > 0}
-            <ul class="border-t border-gray-800">
-              {#each children as child}
-                <li>
-                  <div
-                    class="flex items-center gap-3 py-2 pl-10 pr-4 {child.artifacts.length > 0
-                      ? 'cursor-pointer hover:bg-gray-800/50'
-                      : ''}"
-                    role={child.artifacts.length > 0 ? 'button' : undefined}
-                    tabindex={child.artifacts.length > 0 ? 0 : undefined}
-                    onclick={() => child.artifacts.length > 0 && toggleArtifacts(child.id)}
-                    onkeydown={(e) =>
-                      e.key === 'Enter' &&
-                      child.artifacts.length > 0 &&
-                      toggleArtifacts(child.id)}
-                  >
-                    <span class="h-1.5 w-1.5 shrink-0 rounded-full {eventDotColor(child.type)}"
-                    ></span>
-                    <span class="min-w-0 flex-1 truncate text-xs text-gray-300">{child.type}</span>
-                    <span class="rounded px-1.5 py-0.5 text-xs {sourceBadgeClass(child.source)}"
-                      >{child.source}</span
-                    >
-                    {#if child.issueNumber}
-                      <a
-                        href="/gh/{data.organization}/{data.repoName}/issues"
-                        class="text-xs text-green-400 hover:underline"
-                        onclick={(e) => e.stopPropagation()}
-                      >
-                        #{child.issueNumber}
-                      </a>
-                    {:else if child.pullRequestNumber}
-                      <a
-                        href="/gh/{data.organization}/{data.repoName}/pulls"
-                        class="text-xs text-purple-400 hover:underline"
-                        onclick={(e) => e.stopPropagation()}
-                      >
-                        #{child.pullRequestNumber}
-                      </a>
-                    {/if}
-                    <span class="shrink-0 text-xs text-gray-500"
-                      >{relativeTime(child.timeCreated)}</span
-                    >
-                    {#if child.artifacts.length > 0}
-                      <span class="shrink-0 text-xs text-gray-500">
-                        {expandedEvents.has(child.id) ? '▲' : '▼'}
-                      </span>
-                    {/if}
+    <!-- Issues -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="section-heading">Issues</h2>
+        <a href="/gh/{data.organization}/{data.repoName}/issues" class="view-all-link">View all →</a>
+      </div>
+
+      {#if data.issues.length === 0}
+        <p class="empty-text">No issues synced yet.</p>
+      {:else}
+        <ul class="item-list">
+          {#each data.issues.slice(0, 5) as issue (issue.number)}
+            <li class="item-row">
+              <span
+                class="item-dot"
+                style="background: {issue.state === 'open' ? 'var(--color-success)' : 'var(--color-dim)'};"
+              ></span>
+              <div class="item-body">
+                <span class="item-number">#{issue.number}</span>
+                <span class="item-title">{issue.title}</span>
+                {#if issue.labels && issue.labels.length > 0}
+                  <div class="label-group">
+                    {#each issue.labels as label (label)}
+                      <span class="label-tag">{label}</span>
+                    {/each}
                   </div>
+                {/if}
+              </div>
+              <GitHubLink href={issue.htmlUrl} />
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
 
-                  {#if child.artifacts.length > 0 && expandedEvents.has(child.id)}
-                    <div class="border-t border-gray-800 bg-gray-900/50 py-2 pl-10 pr-4">
-                      <p class="mb-1.5 text-xs text-gray-500">Artifacts</p>
-                      <ul class="flex flex-wrap gap-2">
-                        {#each child.artifacts as artifact}
-                          <li>
-                            <a
-                              href="/gh/{data.organization}/{data.repoName}/events/{child.id}/artifacts/{artifact.name}"
-                              class="flex items-center gap-1.5 rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-200 hover:border-gray-600 hover:text-white"
-                            >
-                              <span>{artifact.name}</span>
-                              <span class="text-gray-500">({formatBytes(artifact.size)})</span>
-                            </a>
-                          </li>
-                        {/each}
-                      </ul>
-                    </div>
-                  {/if}
-                </li>
-              {/each}
-            </ul>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-</section>
+    <!-- Pull Requests -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="section-heading">Pull Requests</h2>
+        <a href="/gh/{data.organization}/{data.repoName}/pulls" class="view-all-link">View all →</a>
+      </div>
 
-<!-- Issues + PRs -->
-<div class="grid gap-6 md:grid-cols-2">
-  <section>
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-400">Recent Issues</h2>
-      <a
-        href="/gh/{data.organization}/{data.repoName}/issues"
-        class="text-xs text-blue-400 hover:underline"
-      >
-        View all
-      </a>
-    </div>
-    {#if data.issues.length === 0}
-      <p class="text-sm text-gray-500">No issues synced yet.</p>
-    {:else}
-      <ul class="divide-y divide-gray-800 rounded-lg border border-gray-800">
-        {#each data.issues as issue}
-          <li class="flex items-start gap-3 px-4 py-3">
-            <span
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full {issue.state === 'open'
-                ? 'bg-green-500'
-                : 'bg-purple-500'}"
-            ></span>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-sm text-gray-100">#{issue.number} {issue.title}</p>
-              {#if issue.labels && issue.labels.length > 0}
-                <div class="mt-1 flex flex-wrap gap-1">
-                  {#each issue.labels as label}
-                    <span class="rounded px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300"
-                      >{label}</span
-                    >
-                  {/each}
-                </div>
-              {/if}
-            </div>
-            <GitHubLink href={issue.htmlUrl} />
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
+      {#if data.pulls.length === 0}
+        <p class="empty-text">No pull requests synced yet.</p>
+      {:else}
+        <ul class="item-list">
+          {#each data.pulls.slice(0, 5) as pr (pr.number)}
+            <li class="item-row">
+              <span
+                class="item-dot"
+                style="background: {pr.state === 'open'
+                  ? 'var(--color-success)'
+                  : pr.state === 'merged'
+                    ? 'var(--color-merged)'
+                    : 'var(--color-dim)'};"
+              ></span>
+              <div class="item-body">
+                <span class="item-number">#{pr.number}</span>
+                <span class="item-title">{pr.title}</span>
+                <p class="pr-branches">
+                  <span>{pr.headBranch}</span>
+                  <span class="branch-arrow">→</span>
+                  <span>{pr.baseBranch}</span>
+                </p>
+              </div>
+              <GitHubLink href={pr.htmlUrl} />
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
 
-  <section>
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-400">
-        Recent Pull Requests
-      </h2>
-      <a
-        href="/gh/{data.organization}/{data.repoName}/pulls"
-        class="text-xs text-blue-400 hover:underline"
-      >
-        View all
-      </a>
-    </div>
-    {#if data.pulls.length === 0}
-      <p class="text-sm text-gray-500">No pull requests synced yet.</p>
-    {:else}
-      <ul class="divide-y divide-gray-800 rounded-lg border border-gray-800">
-        {#each data.pulls as pr}
-          <li class="flex items-start gap-3 px-4 py-3">
-            <span
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full {pr.state === 'open'
-                ? 'bg-green-500'
-                : pr.state === 'merged'
-                  ? 'bg-purple-500'
-                  : 'bg-red-500'}"
-            ></span>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-sm text-gray-100">#{pr.number} {pr.title}</p>
-              <p class="mt-0.5 text-xs text-gray-500">
-                {pr.headBranch} → {pr.baseBranch}
-              </p>
-            </div>
-            <GitHubLink href={pr.htmlUrl} />
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
+    <!-- Agent Token -->
+    <section class="panel token-panel">
+      <h2 class="section-heading" style="margin-bottom: 6px;">Agent Token</h2>
+      <p class="token-desc">
+        Generate a token and add it as
+        <code class="inline-code">AGENTS_TOKEN</code>
+        in your repo's Actions secrets.
+      </p>
+      <button class="generate-btn" onclick={handleGenerateToken}>
+        Generate token
+      </button>
+
+      {#if token}
+        <div class="token-display">
+          <p class="token-hint">Copy this token — it won't be shown again.</p>
+          <code class="token-value">{token}</code>
+        </div>
+      {/if}
+
+      {#if tokenError}
+        <p class="token-error">{tokenError}</p>
+      {/if}
+    </section>
+
+  </aside>
 </div>
 
-<!-- Agent Token -->
-<section class="mt-6 rounded-lg border border-gray-800 p-4">
-  <div class="flex items-center justify-between">
-    <div>
-      <h2 class="text-sm font-semibold text-gray-200">Agent Token</h2>
-      <p class="mt-0.5 text-xs text-gray-500">
-        Generate a token and add it as <code class="text-gray-300">AGENTS_TOKEN</code> in your repo's Actions secrets.
-      </p>
-    </div>
-    <button
-      onclick={handleGenerateToken}
-      class="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500"
-    >
-      Generate token
-    </button>
-  </div>
+<style>
+  /* ------------------------------------------------------------------ */
+  /* Page grid */
+  /* ------------------------------------------------------------------ */
+  .page-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+  }
 
-  {#if token}
-    <div class="mt-3 rounded bg-gray-900 p-3">
-      <p class="mb-1 text-xs text-gray-400">Copy this token — it won't be shown again.</p>
-      <code class="break-all text-xs text-green-400">{token}</code>
-    </div>
-  {/if}
+  /* ------------------------------------------------------------------ */
+  /* Section headings */
+  /* ------------------------------------------------------------------ */
+  .section-heading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
+    margin: 0;
+  }
 
-  {#if tokenError}
-    <p class="mt-3 text-xs text-red-400">{tokenError}</p>
-  {/if}
-</section>
+  .empty-text {
+    font-size: 12px;
+    color: var(--color-dim);
+    margin: 8px 0 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Activity feed */
+  /* ------------------------------------------------------------------ */
+  .activity-section {
+    min-width: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Right column panels */
+  /* ------------------------------------------------------------------ */
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 12px 14px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .view-all-link {
+    font-size: 11px;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .view-all-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Issue / PR list */
+  .item-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--color-border);
+    min-width: 0;
+  }
+
+  .item-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .item-row:first-child {
+    padding-top: 0;
+  }
+
+  .item-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .item-number {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-dim);
+    flex-shrink: 0;
+  }
+
+  .item-title {
+    font-size: 12px;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .label-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .label-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    background: var(--color-elevated);
+    color: var(--color-muted);
+  }
+
+  .pr-branches {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+    margin: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .branch-arrow {
+    color: var(--color-dim);
+    flex-shrink: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Agent Token */
+  /* ------------------------------------------------------------------ */
+  .token-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .token-desc {
+    font-size: 12px;
+    color: var(--color-muted);
+    margin: 6px 0 10px;
+    line-height: 1.5;
+  }
+
+  .inline-code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--color-elevated);
+    color: var(--color-text);
+  }
+
+  .generate-btn {
+    align-self: flex-start;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .generate-btn:hover {
+    background: color-mix(in srgb, var(--color-accent) 85%, white);
+  }
+
+  .token-display {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+  }
+
+  .token-hint {
+    font-size: 11px;
+    color: var(--color-dim);
+    margin: 0 0 5px;
+  }
+
+  .token-value {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-success);
+    word-break: break-all;
+  }
+
+  .token-error {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--color-danger);
+  }
+</style>

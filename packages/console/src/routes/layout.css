@@ -1,1 +1,112 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Zed-like neutral grays */
+  --color-bg: #111113;
+  --color-surface: #1a1a1c;
+  --color-elevated: #222224;
+  --color-hover: #2a2a2c;
+
+  /* Borders */
+  --color-border: #2c2c2e;
+  --color-border-bright: #3c3c3e;
+
+  /* Text */
+  --color-text: #d8d8d8;
+  --color-muted: #8c8c8e;
+  --color-dim: #565658;
+
+  /* Accent (muted blue, Zed-like) */
+  --color-accent: #5c8fcc;
+  --color-accent-dim: #5c8fcc1f;
+
+  /* Semantic (muted, not neon) */
+  --color-success: #4faa70;
+  --color-success-dim: #4faa701f;
+  --color-danger: #c1666b;
+  --color-danger-dim: #c1666b1f;
+  --color-merged: #9068c2;
+  --color-merged-dim: #9068c21f;
+  --color-warning: #c98e42;
+  --color-warning-dim: #c98e421f;
+}
+
+html {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 13px;
+}
+
+body {
+  background: var(--color-bg);
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-bright);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Input base */
+input,
+textarea,
+select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 3px;
+  padding: 5px 8px;
+  outline: none;
+  transition: border-color 0.1s;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-accent);
+}
+
+/* Timeline */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.dot-pulse {
+  animation: blink 1.4s ease-in-out infinite;
+}

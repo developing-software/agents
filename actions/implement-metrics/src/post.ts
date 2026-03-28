@@ -118,9 +118,9 @@ async function run() {
         issueNumber: issue.number,
         pullRequestNumber,
         parentEventId: startEventId || null,
-        source: "action",
+        origin: "action",
         type: "implement.completed",
-        payload: { linesAdded, linesRemoved, durationMs, prUrl, runUrl },
+        data: { linesAdded, linesRemoved, durationMs, prUrl, runUrl },
       });
     } catch (err) {
       core.warning(`Failed to post implement.completed event: ${err}`);

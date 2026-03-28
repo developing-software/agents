@@ -19,43 +19,101 @@
   }
 </script>
 
-<div class="min-h-screen bg-gray-950 text-gray-100">
-  <header class="border-b border-gray-800 bg-gray-900 px-6 py-4">
-    <div class="flex items-center gap-2 text-sm text-gray-400">
-      <a href="/gh" class="hover:text-white">GitHub</a>
-      <span>/</span>
-      <a href="/gh/{data.organization}" class="hover:text-white">{data.organization}</a>
-      <span>/</span>
-      <span class="font-semibold text-white">{data.repoName}</span>
-    </div>
-
-    {#if data.repo}
-      <p class="mt-1 text-xs text-gray-500">
-        Default branch: <code class="text-gray-400">{data.repo.defaultBranch ?? 'unknown'}</code>
-      </p>
-    {/if}
-
-    <nav class="mt-4 flex gap-1">
-      {#each tabs as tab}
+<div class="repo-header">
+  <nav class="tab-nav" aria-label="Repository sections">
+    <div class="tab-list">
+      {#each tabs as tab (tab.href)}
         <a
           href={tab.href}
-          class="rounded-md px-3 py-1.5 text-sm transition-colors {isActive(tab.href)
-            ? 'bg-gray-700 text-white'
-            : 'text-gray-400 hover:bg-gray-800 hover:text-white'}"
-        >
-          {tab.label}
-        </a>
+          class="tab"
+          class:tab-active={isActive(tab.href)}
+        >{tab.label}</a>
       {/each}
-    </nav>
-  </header>
-
-  <main class="mx-auto max-w-5xl px-6 py-8">
-    {#if !data.repo}
-      <div class="rounded-lg border border-yellow-800 bg-yellow-950 p-4 text-yellow-300 text-sm">
-        Repository not found or not yet synced via webhook.
-      </div>
-    {:else}
-      {@render children()}
+    </div>
+    {#if data.repo?.defaultBranch}
+      <span class="branch-label">{data.repo.defaultBranch}</span>
     {/if}
-  </main>
+  </nav>
 </div>
+
+{#if !data.repo}
+  <div class="warning-bar">
+    Repository not found or not yet synced via webhook.
+  </div>
+{:else}
+  <div class="content-area">
+    {@render children()}
+  </div>
+{/if}
+
+<style>
+  .repo-header {
+    height: 38px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+
+  .tab-nav {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 16px;
+  }
+
+  .tab-list {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--color-muted);
+    height: 38px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.1s;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .tab:hover {
+    color: var(--color-text);
+  }
+
+  .tab-active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+  }
+
+  .tab-active:hover {
+    color: var(--color-accent);
+  }
+
+  .branch-label {
+    display: flex;
+    align-items: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-dim);
+  }
+
+  .warning-bar {
+    padding: 6px 24px;
+    font-size: 12px;
+    color: var(--color-warning);
+    background: color-mix(in srgb, var(--color-warning) 8%, var(--color-surface));
+    border-bottom: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  }
+
+  .content-area {
+    padding: 20px 24px;
+  }
+</style>

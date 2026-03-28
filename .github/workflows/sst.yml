@@ -1,10 +1,13 @@
 name: sst
 
 on:
+  workflow_dispatch:
   push:
     branches:
       # - dev
       - prod
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.ref }}
@@ -33,7 +36,7 @@ jobs:
 
       - uses: actions/setup-node@v1
         with:
-          node-version: '22'
+          node-version: "22"
 
       # - run: 'curl -fsSL https://ion.sst.dev/install | bash'
 
@@ -50,11 +53,10 @@ jobs:
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_DEFAULT_ACCOUNT_ID:
-            ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+          CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
           PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
           PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
 
         run: |
           bunx sst install
-          bunx sst deploy --stage=${GITHUB_REF_NAME}
+          bunx sst deploy --stage=${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}

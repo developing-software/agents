@@ -10,7 +10,7 @@ export const GitHubAppPrivateKey = new sst.Secret("GitHubAppPrivateKey");
 
 
 export const environment = {
-  AUTH_URL: $interpolate`https://auth.${domain}`,
+  AUTH_URL: $interpolate`https://auth.agents.developing.company`,
   NO_COLOR: $app.stage === "prod" ? "1" : "",
   RESEND_API_KEY: ResendApiKey.value,
   SENDER_EMAIL_DOMAIN: SenderEmailDomain.value,

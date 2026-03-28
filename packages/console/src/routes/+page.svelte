@@ -1,41 +1,71 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+
   let { data }: PageProps = $props();
 </script>
 
 {#if data.installation}
-  <div class="mx-auto max-w-xl px-6 py-16 text-center">
-    <p class="mb-2 text-xs font-medium uppercase tracking-wide text-green-400">
-      {data.installation.action === 'update' ? 'Installation updated' : 'App installed'}
-    </p>
-    <h1 class="mb-4 text-2xl font-semibold text-white">GitHub App connected</h1>
-    <p class="mb-8 text-sm text-gray-400">
-      The webhook is being processed. Your repository will appear in the console shortly.
-    </p>
-    <div class="flex items-center justify-center gap-3">
-      <a href="/repos" class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors">
-        Go to console →
+  <div class="flex flex-1 items-center justify-center px-6 py-16">
+    <div
+      class="w-full max-w-sm p-8 text-center"
+      style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px;"
+    >
+      <p
+        class="mb-2 text-xs font-medium uppercase tracking-widest"
+        style="color: var(--color-success);"
+      >
+        {data.installation.action === 'update' ? 'Installation updated' : 'App installed'}
+      </p>
+      <h1 class="mb-2 text-base font-semibold" style="color: var(--color-text);">
+        GitHub App connected
+      </h1>
+      <p class="mb-7 text-xs leading-relaxed" style="color: var(--color-muted);">
+        The webhook is being processed. Your repository will appear in the console shortly.
+      </p>
+      <a
+        href="/repos"
+        class="inline-flex items-center rounded px-4 py-1.5 text-xs font-medium transition-colors"
+        style="background: var(--color-accent); color: #fff;"
+        onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.85')}
+        onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+      >
+        Open Console →
       </a>
     </div>
   </div>
 {:else}
   <div class="flex flex-1 flex-col items-center justify-center px-6 py-24">
-    <h1 class="mb-3 text-3xl font-semibold text-white">Agents Console</h1>
-    <p class="mb-8 text-sm text-gray-400">Monitor and manage your AI-driven GitHub workflows.</p>
+    <h1
+      class="mb-3 font-medium"
+      style="font-size: 28px; color: var(--color-text);"
+    >
+      agents
+    </h1>
+    <p class="mb-8 text-xs" style="color: var(--color-muted);">
+      Monitor and manage your AI-driven GitHub workflows.
+    </p>
     {#if data.userID}
-      <p class="mb-4 font-mono text-xs text-gray-500">{data.userID}</p>
       <a
         href="/repos"
-        class="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+        class="inline-flex items-center rounded px-4 py-1.5 text-xs font-medium transition-colors"
+        style="background: var(--color-accent); color: #fff;"
+        onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.85')}
+        onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
       >
-        Go to repositories →
+        Open Console →
       </a>
     {:else}
       <a
         href="/login"
-        class="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+        class="inline-flex items-center gap-2 rounded px-4 py-1.5 text-xs font-medium transition-colors"
+        style="color: var(--color-text); border: 1px solid var(--color-border-bright); background: transparent;"
+        onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
+        onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
       >
-        Sign in with GitHub
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+        </svg>
+        Sign in with GitHub →
       </a>
     {/if}
   </div>

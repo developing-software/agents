@@ -1,10 +1,10 @@
 import type { LayoutServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
-import { GithubRepo } from "@agents/core/github/repo/index";
+import { Repository } from "@agents/core/repository/index";
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
   if (!locals.userID) throw redirect(302, "/");
   const { organization, repo } = params;
-  const repoData = await GithubRepo.findByFullName(`${organization}/${repo}`);
+  const repoData = await Repository.findByFullName(`${organization}/${repo}`);
   return { repo: repoData, organization, repoName: repo };
 };

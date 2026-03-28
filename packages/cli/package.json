@@ -11,6 +11,7 @@
   "type": "module",
   "module": "src/index.ts",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "build": "bun build.ts bun dist/dev-agents",
     "build:macos-arm": "bun build.ts bun-darwin-arm64 dist/dev-agents-macos-arm",
     "build:macos-x64": "bun build.ts bun-darwin-x64 dist/dev-agents-macos-x64",

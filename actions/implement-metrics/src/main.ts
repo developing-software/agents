@@ -39,9 +39,9 @@ async function run() {
       const { data } = await sdk.postGithubEvents({
         repoFullName: ctx.repository,
         issueNumber: issue.number,
-        source: "action",
+        origin: "action",
         type: "implement.started",
-        payload: {
+        data: {
           harness: harness || null,
           model: model || null,
           branch,

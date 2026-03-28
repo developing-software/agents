@@ -1,4 +1,4 @@
-export { };
+export {};
 
 const ROOT = import.meta.dir;
 

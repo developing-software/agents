@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "37e453c6-81bd-4314-ab6f-798daab98e9b",
-  "prevIds": [
-    "fe034dc1-276a-49c4-a9f7-9605706f6104"
-  ],
+  "prevIds": ["fe034dc1-276a-49c4-a9f7-9605706f6104"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -610,14 +608,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "api_client_user_id_user_id_fkey",
@@ -627,14 +621,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "api_personal_token_user_id_user_id_fkey",
@@ -644,14 +634,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "repo_id"
-      ],
+      "columns": ["repo_id"],
       "schemaTo": "public",
       "tableTo": "github_repo",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "github_event_repo_id_github_repo_id_fkey",
@@ -661,14 +647,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "parent_event_id"
-      ],
+      "columns": ["parent_event_id"],
       "schemaTo": "public",
       "tableTo": "github_event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "github_event_parent_event_id_github_event_id_fkey",
@@ -678,14 +660,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "github_repo_user_id_user_id_fkey",
@@ -694,9 +672,7 @@
       "table": "github_repo"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "api_client_pkey",
       "schema": "public",
@@ -704,9 +680,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "api_personal_token_pkey",
       "schema": "public",
@@ -714,9 +688,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "github_event_pkey",
       "schema": "public",
@@ -724,9 +696,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "github_repo_pkey",
       "schema": "public",
@@ -734,9 +704,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_pkey",
       "schema": "public",
@@ -745,9 +713,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "installation_id"
-      ],
+      "columns": ["installation_id"],
       "nullsNotDistinct": false,
       "name": "github_repo_installation_id_key",
       "schema": "public",
@@ -756,9 +722,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "username"
-      ],
+      "columns": ["username"],
       "nullsNotDistinct": false,
       "name": "user_username_key",
       "schema": "public",

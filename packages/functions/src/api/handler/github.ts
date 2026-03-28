@@ -4,8 +4,9 @@ import { z } from "zod";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { GitHubWebhook } from "@agents/core/github";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
-import { GithubRepo } from "@agents/core/github/repo/index";
-import { GithubEvent } from "@agents/core/github/event/index";
+import { Event } from "@agents/core/events/index";
+import { Tags, OriginType } from "@agents/core/events/types";
+import { Repository } from "@agents/core/repository/index";
 import { Result, validator, ErrorResponses, authRequired } from "../common";
 import { Examples } from "@agents/core/examples";
 
@@ -42,8 +43,8 @@ export namespace GitHubApi {
           200: {
             content: {
               "application/json": {
-                schema: Result(GithubEvent.Info),
-                example: Examples.GithubEvent,
+                schema: Result(Event.Info),
+                example: Examples.Event,
               },
             },
             description: "The created event.",
@@ -62,32 +63,41 @@ export namespace GitHubApi {
           .object({
             repoFullName: z.string().meta({
               description: "Full repository name in `owner/repo` format.",
-              example: Examples.GithubRepo.fullName,
+              example: Examples.Repository.fullName,
             }),
-            parentEventId: GithubEvent.Info.shape.parentEventId.optional().meta({
+            parentEventId: Event.Info.shape.parentEventId.optional().meta({
               description: "Parent event ID to group related events.",
               example: null,
             }),
-            issueNumber: GithubEvent.Info.shape.issueNumber.optional(),
-            pullRequestNumber: GithubEvent.Info.shape.pullRequestNumber.optional(),
-            source: GithubEvent.Info.shape.source,
-            type: GithubEvent.Info.shape.type,
-            payload: GithubEvent.Info.shape.payload.optional(),
+            issueNumber: z.number().int().nullable().optional().meta({
+              description: "Linked issue number, if any.",
+              example: 42,
+            }),
+            pullRequestNumber: z.number().int().nullable().optional().meta({
+              description: "Linked pull request number, if any.",
+              example: null,
+            }),
+            origin: z.enum(OriginType).meta({
+              description: "Origin of the event.",
+              example: Examples.Event.origin,
+            }),
+            type: Event.Info.shape.type,
+            data: Event.Info.shape.data.optional(),
           })
           .meta({
             description: "Event to record.",
             example: {
-              repoFullName: Examples.GithubRepo.fullName,
-              issueNumber: Examples.GithubEvent.issueNumber,
-              source: Examples.GithubEvent.source,
-              type: Examples.GithubEvent.type,
-              payload: Examples.GithubEvent.payload,
+              repoFullName: Examples.Repository.fullName,
+              issueNumber: 42,
+              origin: Examples.Event.origin,
+              type: Examples.Event.type,
+              data: Examples.Event.data,
             },
           }),
       ),
       async (c) => {
         const body = c.req.valid("json");
-        const repo = await GithubRepo.findByFullName(body.repoFullName);
+        const repo = await Repository.findByFullName(body.repoFullName);
         if (!repo) {
           throw new VisibleError(
             "not_found",
@@ -95,16 +105,21 @@ export namespace GitHubApi {
             `Repository ${body.repoFullName} not found`,
           );
         }
-        const id = await GithubEvent.create({
-          repoId: repo.id,
-          parentEventId: body.parentEventId ?? undefined,
-          issueNumber: body.issueNumber ?? undefined,
-          pullRequestNumber: body.pullRequestNumber ?? undefined,
-          source: body.source,
+
+        const tags: string[] = [Tags.ghRepo(body.repoFullName)];
+        if (body.issueNumber) tags.push(Tags.ghIssue(body.issueNumber));
+        if (body.pullRequestNumber) tags.push(Tags.ghPr(body.pullRequestNumber));
+
+        const id = await Event.create({
+          source: "repository",
+          sourceId: repo.id,
+          origin: body.origin,
           type: body.type,
-          payload: body.payload,
+          tags,
+          data: body.data,
+          parentEventId: body.parentEventId ?? undefined,
         });
-        const event = await GithubEvent.fromID(id);
+        const event = await Event.fromID(id);
         return c.json(event!, 200);
       },
     )
@@ -114,13 +129,13 @@ export namespace GitHubApi {
       describeRoute({
         tags: ["GitHub"],
         summary: "Upload artifact",
-        description: "Upload a file artifact associated with a GitHub event.",
+        description: "Upload a file artifact associated with an event.",
         responses: {
           200: {
             content: {
               "application/json": {
-                schema: Result(GithubEvent.Artifact.Info),
-                example: Examples.GithubEventArtifact,
+                schema: Result(Event.Artifact.Info),
+                example: Examples.EventArtifact,
               },
             },
             description: "The uploaded artifact metadata.",
@@ -136,12 +151,12 @@ export namespace GitHubApi {
       validator(
         "param",
         z.object({
-          id: GithubEvent.Info.shape.id,
+          id: Event.Info.shape.id,
         }),
       ),
       async (c) => {
         const { id } = c.req.valid("param");
-        const event = await GithubEvent.fromID(id);
+        const event = await Event.fromID(id);
         if (!event) {
           throw new VisibleError(
             "not_found",
@@ -169,7 +184,7 @@ export namespace GitHubApi {
           );
         }
 
-        const artifact = await GithubEvent.Artifact.upload(
+        const artifact = await Event.Artifact.upload(
           c.env.Artifacts,
           id,
           name,

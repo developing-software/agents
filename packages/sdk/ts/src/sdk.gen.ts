@@ -328,9 +328,9 @@ export class DevAgentSdk extends HeyApiClient {
       parentEventId?: string | null;
       issueNumber?: number | null;
       pullRequestNumber?: number | null;
-      source: "webhook" | "action" | "cli" | "console";
+      origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
       type: string;
-      payload?: {
+      data?: {
         [key: string]: unknown;
       };
     },
@@ -345,9 +345,9 @@ export class DevAgentSdk extends HeyApiClient {
             { in: "body", key: "parentEventId" },
             { in: "body", key: "issueNumber" },
             { in: "body", key: "pullRequestNumber" },
-            { in: "body", key: "source" },
+            { in: "body", key: "origin" },
             { in: "body", key: "type" },
-            { in: "body", key: "payload" },
+            { in: "body", key: "data" },
           ],
         },
       ],
@@ -372,7 +372,7 @@ export class DevAgentSdk extends HeyApiClient {
   /**
    * Upload artifact
    *
-   * Upload a file artifact associated with a GitHub event.
+   * Upload a file artifact associated with an event.
    */
   public postGithubEventsByIdArtifacts<ThrowOnError extends boolean = false>(
     parameters: {
