@@ -2,7 +2,14 @@ import { join } from "path";
 import { appendFileSync } from "fs";
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { createApiClient, getContext, readEventPayload } from "./utils";
+import {
+  createApiClient,
+  getContext,
+  metricTags,
+  readEventPayload,
+  readOptionalTags,
+  uniqueTags,
+} from "./utils";
 
 async function run() {
   const startMs = Date.now();
@@ -18,6 +25,7 @@ async function run() {
 
   const harness = core.getInput("harness");
   const model = core.getInput("model");
+  const extraTags = readOptionalTags(core.getInput("tags"));
   if (harness) appendFileSync(metricsFile, `harness=${harness}\n`);
   if (model) appendFileSync(metricsFile, `model=${model}\n`);
 
@@ -36,16 +44,27 @@ async function run() {
   if (agentsToken) {
     try {
       const sdk = createApiClient(agentsToken, apiUrl);
-      const { data } = await sdk.postGithubEvents({
-        repoFullName: ctx.repository,
-        issueNumber: issue.number,
-        origin: "action",
-        type: "implement.started",
-        data: {
-          harness: harness || null,
-          model: model || null,
-          branch,
-          runUrl: ctx.runUrl,
+      const tags = uniqueTags([
+        `gh:repo:${ctx.repository}`,
+        `gh:issue:${issue.number}`,
+        `gh:branch:${branch}`,
+        `gh:run:${ctx.runId}`,
+        ...(harness ? [`harness:${harness}`] : []),
+        ...(model ? [`model:${model}`] : []),
+        ...extraTags,
+      ]);
+      const { data } = await sdk.postEvents({
+        eventIngestInput: {
+          repoFullName: ctx.repository,
+          origin: "action",
+          type: "agents.implement.started",
+          tags,
+          data: {
+            harness: harness || null,
+            model: model || null,
+            branch,
+            runUrl: ctx.runUrl,
+          },
         },
       });
       if (data?.id) {

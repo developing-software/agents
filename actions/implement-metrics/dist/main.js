@@ -19726,14 +19726,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -19754,14 +19747,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "redirectURI" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -19824,23 +19810,11 @@ class DevAgentSdk extends HeyApiClient {
       ...params
     });
   }
-  postGithubEvents(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "repoFullName" },
-          { in: "body", key: "parentEventId" },
-          { in: "body", key: "issueNumber" },
-          { in: "body", key: "pullRequestNumber" },
-          { in: "body", key: "source" },
-          { in: "body", key: "type" },
-          { in: "body", key: "payload" }
-        ]
-      }
-    ]);
+  postEvents(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ key: "eventIngestInput", map: "body" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
-      url: "/github/events",
+      url: "/events",
       ...options,
       ...params,
       headers: {
@@ -19850,11 +19824,11 @@ class DevAgentSdk extends HeyApiClient {
       }
     });
   }
-  postGithubEventsByIdArtifacts(parameters, options) {
+  postEventsByIdArtifacts(parameters, options) {
     const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
-      url: "/github/events/{id}/artifacts",
+      url: "/events/{id}/artifacts",
       ...options,
       ...params
     });
@@ -19882,6 +19856,12 @@ function getContext() {
   const prPrefix = core.getInput("pr_prefix") || core.getState("pr_prefix");
   return { token, repository, owner, repo, runId, runUrl, prPrefix };
 }
+function readOptionalTags(raw) {
+  return raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean);
+}
+function uniqueTags(tags) {
+  return [...new Set(tags.filter(Boolean))];
+}
 function createApiClient(token, baseUrl) {
   return new DevAgentSdk({
     client: createClient(createConfig({
@@ -19904,6 +19884,7 @@ async function run() {
   core2.exportVariable("IMPLEMENT_METRICS", metricsFile);
   const harness = core2.getInput("harness");
   const model = core2.getInput("model");
+  const extraTags = readOptionalTags(core2.getInput("tags"));
   if (harness)
     appendFileSync(metricsFile, `harness=${harness}
 `);
@@ -19924,16 +19905,27 @@ async function run() {
   if (agentsToken) {
     try {
       const sdk = createApiClient(agentsToken, apiUrl);
-      const { data } = await sdk.postGithubEvents({
-        repoFullName: ctx.repository,
-        issueNumber: issue.number,
-        source: "action",
-        type: "implement.started",
-        payload: {
-          harness: harness || null,
-          model: model || null,
-          branch,
-          runUrl: ctx.runUrl
+      const tags = uniqueTags([
+        `gh:repo:${ctx.repository}`,
+        `gh:issue:${issue.number}`,
+        `gh:branch:${branch}`,
+        `gh:run:${ctx.runId}`,
+        ...harness ? [`harness:${harness}`] : [],
+        ...model ? [`model:${model}`] : [],
+        ...extraTags
+      ]);
+      const { data } = await sdk.postEvents({
+        eventIngestInput: {
+          repoFullName: ctx.repository,
+          origin: "action",
+          type: "implement.started",
+          tags,
+          data: {
+            harness: harness || null,
+            model: model || null,
+            branch,
+            runUrl: ctx.runUrl
+          }
         }
       });
       if (data?.id) {

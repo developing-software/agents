@@ -225,8 +225,8 @@
                 "type": "null"
               }
             ],
-            "description": "Source entity type, e.g. 'github_repo'.",
-            "example": "github_repo"
+            "description": "Source entity type, e.g. 'repository'.",
+            "example": "repository"
           },
           "sourceId": {
             "anyOf": [
@@ -238,7 +238,7 @@
               }
             ],
             "description": "ID of the source entity.",
-            "example": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            "example": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX"
           },
           "type": {
             "type": "string",
@@ -291,8 +291,8 @@
         "example": {
           "id": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "parentEventId": null,
-          "source": "github_repo",
-          "sourceId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "source": "repository",
+          "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "origin": "webhook",
           "type": "github.issues.opened",
           "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
@@ -300,6 +300,74 @@
             "action": "opened"
           },
           "timeCreated": "2024-01-01T00:00:00.000Z"
+        }
+      },
+      "EventIngestInput": {
+        "type": "object",
+        "properties": {
+          "repositoryId": {
+            "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
+            "example": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
+            "type": "string"
+          },
+          "repoFullName": {
+            "description": "Full repository name in `owner/repo` format.",
+            "example": "octocat/hello-world",
+            "type": "string"
+          },
+          "parentEventId": {
+            "description": "Parent event ID to group related events.",
+            "example": null,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": ["api", "webhook", "action", "console", "cli", "cron"],
+            "description": "Origin of the event.",
+            "example": "webhook"
+          },
+          "type": {
+            "type": "string",
+            "description": "Event type, e.g. 'github.issues.opened'.",
+            "example": "github.issues.opened"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+            "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+          },
+          "data": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "Arbitrary event data.",
+            "example": {
+              "action": "opened"
+            }
+          }
+        },
+        "required": ["origin", "type"],
+        "description": "Event payload submitted by external producers.",
+        "example": {
+          "repoFullName": "octocat/hello-world",
+          "origin": "webhook",
+          "type": "github.issues.opened",
+          "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+          "data": {
+            "action": "opened"
+          }
         }
       },
       "EventArtifact": {
@@ -1317,12 +1385,12 @@
         ]
       }
     },
-    "/github/events": {
+    "/events": {
       "post": {
-        "operationId": "postGithubEvents",
-        "tags": ["GitHub"],
+        "operationId": "postEvents",
+        "tags": ["Event"],
         "summary": "Create event",
-        "description": "Record a GitHub or agent event linked to a repository and optionally an issue or pull request. Intended for use by `actions/implement` and other external sources.",
+        "description": "Record an event linked to a repository.",
         "responses": {
           "200": {
             "content": {
@@ -1333,8 +1401,8 @@
                 "example": {
                   "id": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "parentEventId": null,
-                  "source": "github_repo",
-                  "sourceId": "grp_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "source": "repository",
+                  "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "origin": "webhook",
                   "type": "github.issues.opened",
                   "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
@@ -1429,97 +1497,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "repoFullName": {
-                    "type": "string",
-                    "description": "Full repository name in `owner/repo` format.",
-                    "example": "octocat/hello-world"
-                  },
-                  "parentEventId": {
-                    "description": "Parent event ID to group related events.",
-                    "example": null,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "issueNumber": {
-                    "description": "Linked issue number, if any.",
-                    "example": 42,
-                    "anyOf": [
-                      {
-                        "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "pullRequestNumber": {
-                    "description": "Linked pull request number, if any.",
-                    "example": null,
-                    "anyOf": [
-                      {
-                        "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "origin": {
-                    "type": "string",
-                    "enum": ["api", "webhook", "action", "console", "cli", "cron"],
-                    "description": "Origin of the event.",
-                    "example": "webhook"
-                  },
-                  "type": {
-                    "type": "string",
-                    "description": "Event type, e.g. 'github.issues.opened'.",
-                    "example": "github.issues.opened"
-                  },
-                  "data": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {},
-                    "description": "Arbitrary event data.",
-                    "example": {
-                      "action": "opened"
-                    }
-                  }
-                },
-                "required": ["repoFullName", "origin", "type"],
-                "description": "Event to record.",
-                "example": {
-                  "repoFullName": "octocat/hello-world",
-                  "issueNumber": 42,
-                  "origin": "webhook",
-                  "type": "github.issues.opened",
-                  "data": {
-                    "action": "opened"
-                  }
-                }
+                "$ref": "#/components/schemas/EventIngestInput"
               }
             }
           }
         }
       }
     },
-    "/github/events/{id}/artifacts": {
+    "/events/{id}/artifacts": {
       "post": {
-        "operationId": "postGithubEventsByIdArtifacts",
-        "tags": ["GitHub"],
+        "operationId": "postEventsByIdArtifacts",
+        "tags": ["Event"],
         "summary": "Upload artifact",
         "description": "Upload a file artifact associated with an event.",
         "responses": {

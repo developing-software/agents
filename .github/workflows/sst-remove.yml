@@ -3,6 +3,9 @@ name: sst remove
 on:
   pull_request:
     types: [closed]
+    branches-ignore:
+      - dev
+      - prod
 
 jobs:
   remove:

@@ -1,6 +1,14 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { createApiClient, execWithOutput, readCustomMetrics, readEventPayload } from "./utils";
+import {
+  createApiClient,
+  execWithOutput,
+  metricTags,
+  readCustomMetrics,
+  readEventPayload,
+  readOptionalTags,
+  uniqueTags,
+} from "./utils";
 
 async function run() {
   const prPrefix = core.getState("pr_prefix");
@@ -25,6 +33,7 @@ async function run() {
 
   const repository = process.env.GITHUB_REPOSITORY ?? "";
   const { issue } = readEventPayload();
+  const extraTags = readOptionalTags(core.getInput("tags"));
 
   // Re-configure git credentials — the agent may have modified git config,
   // and post hooks run in a context where checkout's credential helper
@@ -113,14 +122,40 @@ async function run() {
   if (agentsToken) {
     const sdk = createApiClient(agentsToken, apiUrl);
     try {
-      await sdk.postGithubEvents({
-        repoFullName: repository,
-        issueNumber: issue.number,
-        pullRequestNumber,
-        parentEventId: startEventId || null,
-        origin: "action",
-        type: "implement.completed",
-        data: { linesAdded, linesRemoved, durationMs, prUrl, runUrl },
+      const customMetrics = readCustomMetrics(process.env.IMPLEMENT_METRICS ?? "");
+      const tags = uniqueTags([
+        `gh:repo:${repository}`,
+        `gh:issue:${issue.number}`,
+        `gh:branch:${branch}`,
+        ...(pullRequestNumber ? [`gh:pr:${pullRequestNumber}`] : []),
+        ...metricTags({
+          duration_ms: durationMs,
+          lines_added: linesAdded,
+          lines_removed: linesRemoved,
+          ...customMetrics,
+        }),
+        ...(customMetrics.harness ? [`harness:${customMetrics.harness}`] : []),
+        ...(customMetrics.model ? [`model:${customMetrics.model}`] : []),
+        ...extraTags,
+      ]);
+      await sdk.postEvents({
+        eventIngestInput: {
+          repoFullName: repository,
+          parentEventId: startEventId || null,
+          origin: "action",
+          type: "agents.implement.completed",
+          tags,
+          data: {
+            branch,
+            issueNumber: issue.number,
+            pullRequestNumber: pullRequestNumber ?? null,
+            linesAdded,
+            linesRemoved,
+            durationMs,
+            prUrl,
+            runUrl,
+          },
+        },
       });
     } catch (err) {
       core.warning(`Failed to post implement.completed event: ${err}`);

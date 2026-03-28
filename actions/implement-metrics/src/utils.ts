@@ -58,6 +58,23 @@ export function readCustomMetrics(filePath: string): Record<string, string> {
   );
 }
 
+export function readOptionalTags(raw: string): string[] {
+  return raw
+    .split(/[\n,]/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+export function metricTags(metrics: Record<string, string | number | boolean | null | undefined>) {
+  return Object.entries(metrics)
+    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .map(([key, value]) => `metric:${key}:${String(value)}`);
+}
+
+export function uniqueTags(tags: string[]) {
+  return [...new Set(tags.filter(Boolean))];
+}
+
 export async function execWithOutput(cmd: string, args: string[]): Promise<string> {
   let output = "";
   await exec.exec(cmd, args, {

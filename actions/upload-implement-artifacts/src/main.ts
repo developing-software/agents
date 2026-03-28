@@ -14,7 +14,7 @@ async function uploadFile(name: string, filePath: string, contentType: string): 
   const bytes = readFileSync(filePath);
   form.append("file", new Blob([bytes], { type: contentType }), name);
 
-  const res = await fetch(`${apiUrl}/github/events/${eventId}/artifacts`, {
+  const res = await fetch(`${apiUrl}/events/${eventId}/artifacts`, {
     method: "POST",
     headers: { Authorization: `Bearer ${agentsToken}` },
     body: form,

@@ -11,7 +11,9 @@ export const repositoryTable = table(
     userId: ulid("user_id").references(() => userTable.id),
     source: varchar("source", { length: 32 }).notNull(),
     sourceId: varchar("source_id", { length: 255 }).notNull(),
-    connectionId: ulid("connection_id").references(() => githubInstallationTable.id).notNull(),
+    connectionId: ulid("connection_id")
+      .references(() => githubInstallationTable.id)
+      .notNull(),
     owner: varchar("owner", { length: 255 }).notNull(),
     repo: varchar("repo", { length: 255 }).notNull(),
     fullName: varchar("full_name", { length: 512 }).notNull(),

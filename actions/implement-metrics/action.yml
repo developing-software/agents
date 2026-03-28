@@ -11,6 +11,9 @@ inputs:
   model:
     description: Model identifier written to metrics (e.g. claude-sonnet-4-6)
     required: false
+  tags:
+    description: Extra concrete tags to attach to created events, comma or newline separated
+    required: false
   base_branch:
     description: "Base branch for the PR (default: repo default branch)"
     required: false

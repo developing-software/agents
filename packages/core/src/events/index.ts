@@ -62,6 +62,46 @@ export namespace Event {
 
   export type TreeNode = Info & { children: TreeNode[] };
 
+  export const IngestInput = z
+    .object({
+      repositoryId: z.string().optional().meta({
+        description: Common.IdDescription,
+        example: Examples.Repository.id,
+      }),
+      repoFullName: z.string().optional().meta({
+        description: "Full repository name in `owner/repo` format.",
+        example: Examples.Repository.fullName,
+      }),
+      parentEventId: Info.shape.parentEventId.optional().meta({
+        description: "Parent event ID to group related events.",
+        example: null,
+      }),
+      origin: z.enum(OriginType).meta({
+        description: "Origin of the event.",
+        example: Examples.Event.origin,
+      }),
+      type: Info.shape.type,
+      tags: Info.shape.tags.optional(),
+      data: Info.shape.data.optional(),
+    })
+    .refine((value) => Boolean(value.repositoryId || value.repoFullName), {
+      message: "Either `repositoryId` or `repoFullName` is required",
+      path: ["repositoryId"],
+    })
+    .meta({
+      ref: "EventIngestInput",
+      description: "Event payload submitted by external producers.",
+      example: {
+        repoFullName: Examples.Repository.fullName,
+        origin: Examples.Event.origin,
+        type: Examples.Event.type,
+        tags: Examples.Event.tags,
+        data: Examples.Event.data,
+      },
+    });
+
+  export type IngestInput = z.infer<typeof IngestInput>;
+
   export const create = fn(
     z.object({
       type: z.string(),

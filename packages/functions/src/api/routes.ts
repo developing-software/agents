@@ -8,6 +8,7 @@ import { getRuntimeKey } from "hono/adapter";
 import { AppApi } from "./handler/app";
 import { TokenApi } from "./handler/token";
 import { AuthApi } from "./handler/auth";
+import { EventApi } from "./handler/event";
 import { GitHubApi } from "./handler/github";
 import { auth } from "./middleware";
 
@@ -30,6 +31,7 @@ export const routes = app
   .route("/profile", ProfileApi.route)
   .route("/app", AppApi.route)
   .route("/token", TokenApi.route)
+  .route("/events", EventApi.route)
   .route("/github", GitHubApi.route)
   .onError((error, c) => {
     if (error instanceof VisibleError) {

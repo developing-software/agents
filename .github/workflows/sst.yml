@@ -8,6 +8,9 @@ on:
       - prod
   pull_request:
     types: [opened, synchronize, reopened]
+    branches-ignore:
+      - dev
+      - prod
 
 concurrency:
   group: ${{ github.ref }}
