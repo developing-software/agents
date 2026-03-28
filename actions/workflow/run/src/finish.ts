@@ -11,6 +11,12 @@ import {
   uniqueTags,
 } from "@agents/actions-core";
 
+async function findExistingPrUrl(branch: string): Promise<string> {
+  const output = await execWithOutput("gh", ["pr", "list", "--head", branch, "--json", "url"]);
+  const pullRequests = JSON.parse(output) as Array<{ url?: string }>;
+  return pullRequests[0]?.url?.trim() ?? "";
+}
+
 async function run() {
   const prPrefix = core.getState("pr_prefix");
   const startMsStr = core.getState("start_ms");
@@ -111,20 +117,15 @@ async function run() {
   } catch (err) {
     // Check if a PR already exists for this branch (idempotent re-run)
     try {
-      prUrl = await execWithOutput("gh", [
-        "pr",
-        "view",
-        "--head",
-        branch,
-        "--json",
-        "url",
-        "-q",
-        ".url",
-      ]);
+      prUrl = await findExistingPrUrl(branch);
+    } catch (lookupErr) {
+      core.warning(`PR creation failed and existing PR lookup also failed: ${lookupErr}`);
+    }
+
+    if (prUrl) {
       core.info(`PR already exists: ${prUrl}`);
-    } catch {
-      core.setFailed(`PR creation failed: ${err}`);
-      return;
+    } else {
+      core.warning(`PR creation failed but continuing without PR URL: ${err}`);
     }
   }
 
