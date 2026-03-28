@@ -12,6 +12,7 @@ import type {
   DeleteAppByIdResponses,
   DeleteTokenByIdErrors,
   DeleteTokenByIdResponses,
+  EventIngestInput,
   GetAppByIdErrors,
   GetAppByIdResponses,
   GetAppErrors,
@@ -24,10 +25,10 @@ import type {
   GetTokenResponses,
   PostAppErrors,
   PostAppResponses,
-  PostGithubEventsByIdArtifactsErrors,
-  PostGithubEventsByIdArtifactsResponses,
-  PostGithubEventsErrors,
-  PostGithubEventsResponses,
+  PostEventsByIdArtifactsErrors,
+  PostEventsByIdArtifactsResponses,
+  PostEventsErrors,
+  PostEventsResponses,
   PostTokenErrors,
   PostTokenResponses,
   PutProfileErrors,
@@ -320,45 +321,25 @@ export class DevAgentSdk extends HeyApiClient {
   /**
    * Create event
    *
-   * Record a GitHub or agent event linked to a repository and optionally an issue or pull request. Intended for use by `actions/implement` and other external sources.
+   * Record an event linked to a repository.
    */
-  public postGithubEvents<ThrowOnError extends boolean = false>(
+  public postEvents<ThrowOnError extends boolean = false>(
     parameters: {
-      repoFullName: string;
-      parentEventId?: string | null;
-      issueNumber?: number | null;
-      pullRequestNumber?: number | null;
-      origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
-      type: string;
-      data?: {
-        [key: string]: unknown;
-      };
+      eventIngestInput: EventIngestInput;
     },
     options?: Options<never, ThrowOnError>,
   ) {
     const params = buildClientParams(
       [parameters],
-      [
-        {
-          args: [
-            { in: "body", key: "repoFullName" },
-            { in: "body", key: "parentEventId" },
-            { in: "body", key: "issueNumber" },
-            { in: "body", key: "pullRequestNumber" },
-            { in: "body", key: "origin" },
-            { in: "body", key: "type" },
-            { in: "body", key: "data" },
-          ],
-        },
-      ],
+      [{ args: [{ key: "eventIngestInput", map: "body" }] }],
     );
     return (options?.client ?? this.client).post<
-      PostGithubEventsResponses,
-      PostGithubEventsErrors,
+      PostEventsResponses,
+      PostEventsErrors,
       ThrowOnError
     >({
       security: [{ scheme: "bearer", type: "http" }],
-      url: "/github/events",
+      url: "/events",
       ...options,
       ...params,
       headers: {
@@ -374,7 +355,7 @@ export class DevAgentSdk extends HeyApiClient {
    *
    * Upload a file artifact associated with an event.
    */
-  public postGithubEventsByIdArtifacts<ThrowOnError extends boolean = false>(
+  public postEventsByIdArtifacts<ThrowOnError extends boolean = false>(
     parameters: {
       id: string;
     },
@@ -382,12 +363,12 @@ export class DevAgentSdk extends HeyApiClient {
   ) {
     const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
     return (options?.client ?? this.client).post<
-      PostGithubEventsByIdArtifactsResponses,
-      PostGithubEventsByIdArtifactsErrors,
+      PostEventsByIdArtifactsResponses,
+      PostEventsByIdArtifactsErrors,
       ThrowOnError
     >({
       security: [{ scheme: "bearer", type: "http" }],
-      url: "/github/events/{id}/artifacts",
+      url: "/events/{id}/artifacts",
       ...options,
       ...params,
     });

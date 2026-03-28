@@ -43,15 +43,21 @@
     {
       devShells = eachSystem (system: {
         default = pkgsFor.${system}.mkShell {
-          packages = with pkgsFor.${system}; [
-            bun
-            nodejs
+          packages =
+            let
+              pkgs = pkgsFor.${system};
+            in
+            with pkgs;
+            [
+              bun
+              nodejs
 
-            pkgs.llm-agents.claude-code
-            pkgs.llm-agents.codex
-            # pkgs.llm-agents.gemini-cli
+              postgresql
+              pkgs.llm-agents.claude-code
+              pkgs.llm-agents.codex
+              # pkgs.llm-agents.gemini-cli
 
-          ];
+            ];
 
           shellHook = ''
             bun install --frozen-lockfile

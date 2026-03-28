@@ -8,6 +8,9 @@ on:
       - prod
   pull_request:
     types: [opened, synchronize, reopened]
+    branches-ignore:
+      - dev
+      - prod
 
 concurrency:
   group: ${{ github.ref }}
@@ -38,19 +41,24 @@ jobs:
         with:
           node-version: "22"
 
-      # - run: 'curl -fsSL https://ion.sst.dev/install | bash'
-
       - name: deps
         run: bun install --frozen-lockfile
 
-      # - name: typecheck
-      #   run: bun typecheck
+      - uses: developing-software/agents/actions/event/emit@dev
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          event_id_env: AGENTS_WORKFLOW_EVENT_ID
+          type: sst.deploy.started
+          tags: env:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+          data: >-
+            {"stage":"${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}"}
 
       - name: build console
         run: bun run build
         working-directory: packages/console
 
       - name: Deploy
+        id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
@@ -60,3 +68,12 @@ jobs:
         run: |
           bunx sst install
           bunx sst deploy --stage=${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+
+      - uses: developing-software/agents/actions/event/emit@dev
+        if: always()
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          type: sst.deploy.completed
+          tags: env:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+          data: >-
+            {"stage":"${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}","outcome":"${{ steps.deploy.outcome }}"}

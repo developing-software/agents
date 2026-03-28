@@ -3,6 +3,9 @@ name: sst remove
 on:
   pull_request:
     types: [closed]
+    branches-ignore:
+      - dev
+      - prod
 
 jobs:
   remove:
@@ -27,7 +30,17 @@ jobs:
       - name: deps
         run: bun install --frozen-lockfile
 
+      - uses: developing-software/agents/actions/event/emit@dev
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          event_id_env: AGENTS_WORKFLOW_EVENT_ID
+          type: sst.remove.started
+          tags: env:pr-${{ github.event.pull_request.number }}
+          data: >-
+            {"stage":"pr-${{ github.event.pull_request.number }}"}
+
       - name: Remove
+        id: remove
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
@@ -37,3 +50,12 @@ jobs:
         run: |
           bunx sst install
           bunx sst remove --stage=pr-${{ github.event.pull_request.number }}
+
+      - uses: developing-software/agents/actions/event/emit@dev
+        if: always()
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          type: sst.remove.completed
+          tags: env:pr-${{ github.event.pull_request.number }}
+          data: >-
+            {"stage":"pr-${{ github.event.pull_request.number }}","outcome":"${{ steps.remove.outcome }}"}

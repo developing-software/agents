@@ -1,0 +1,68 @@
+name: Build Actions
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "actions/event/emit/src/**"
+      - "actions/workflow/run/src/**"
+      - "actions/artifact/upload/src/**"
+      - "actions/core/src/**"
+      - "actions/**/build.ts"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - uses: developing-software/agents/actions/event/emit@dev
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          event_id_env: AGENTS_WORKFLOW_EVENT_ID
+          type: build.actions.started
+          tags: env:dev
+
+      - name: Typecheck actions
+        run: |
+          bunx tsc --noEmit --project actions/event/emit/tsconfig.json
+          bunx tsc --noEmit --project actions/workflow/run/tsconfig.json
+          bunx tsc --noEmit --project actions/artifact/upload/tsconfig.json
+
+      - name: Build actions
+        run: |
+          bun run actions/event/emit/build.ts
+          bun run actions/workflow/run/build.ts
+          bun run actions/artifact/upload/build.ts
+
+      - name: Commit dist files
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add actions/event/emit/dist/
+          git add actions/workflow/run/dist/
+          git add actions/artifact/upload/dist/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "build: update action dist files [skip ci]"
+            git push
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: developing-software/agents/actions/event/emit@dev
+        if: always()
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          type: build.actions.completed
+          tags: env:dev
+          data: >-
+            {"changed":${{ steps.commit.outputs.changed == 'true' }}}

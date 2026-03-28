@@ -123,7 +123,7 @@ export type Event = {
    */
   parentEventId: string | null;
   /**
-   * Source entity type, e.g. 'github_repo'.
+   * Source entity type, e.g. 'repository'.
    */
   source: string | null;
   /**
@@ -152,6 +152,43 @@ export type Event = {
    * ISO timestamp when the event was recorded.
    */
   timeCreated: string;
+};
+
+/**
+ * Event payload submitted by external producers.
+ */
+export type EventIngestInput = {
+  /**
+   * Unique object identifier.
+   * The format and length of IDs may change over time.
+   */
+  repositoryId?: string;
+  /**
+   * Full repository name in `owner/repo` format.
+   */
+  repoFullName?: string;
+  /**
+   * Parent event ID to group related events.
+   */
+  parentEventId?: string | null;
+  /**
+   * Origin of the event.
+   */
+  origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
+  /**
+   * Event type, e.g. 'github.issues.opened'.
+   */
+  type: string;
+  /**
+   * Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.
+   */
+  tags?: Array<string>;
+  /**
+   * Arbitrary event data.
+   */
+  data?: {
+    [key: string]: unknown;
+  };
 };
 
 /**
@@ -588,48 +625,14 @@ export type GetTokenByIdResponses = {
 
 export type GetTokenByIdResponse = GetTokenByIdResponses[keyof GetTokenByIdResponses];
 
-export type PostGithubEventsData = {
-  /**
-   * Event to record.
-   */
-  body: {
-    /**
-     * Full repository name in `owner/repo` format.
-     */
-    repoFullName: string;
-    /**
-     * Parent event ID to group related events.
-     */
-    parentEventId?: string | null;
-    /**
-     * Linked issue number, if any.
-     */
-    issueNumber?: number | null;
-    /**
-     * Linked pull request number, if any.
-     */
-    pullRequestNumber?: number | null;
-    /**
-     * Origin of the event.
-     */
-    origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
-    /**
-     * Event type, e.g. 'github.issues.opened'.
-     */
-    type: string;
-    /**
-     * Arbitrary event data.
-     */
-    data?: {
-      [key: string]: unknown;
-    };
-  };
+export type PostEventsData = {
+  body: EventIngestInput;
   path?: never;
   query?: never;
-  url: "/github/events";
+  url: "/events";
 };
 
-export type PostGithubEventsErrors = {
+export type PostEventsErrors = {
   /**
    * Bad Request
    */
@@ -652,18 +655,18 @@ export type PostGithubEventsErrors = {
   500: ErrorResponse;
 };
 
-export type PostGithubEventsError = PostGithubEventsErrors[keyof PostGithubEventsErrors];
+export type PostEventsError = PostEventsErrors[keyof PostEventsErrors];
 
-export type PostGithubEventsResponses = {
+export type PostEventsResponses = {
   /**
    * The created event.
    */
   200: Event;
 };
 
-export type PostGithubEventsResponse = PostGithubEventsResponses[keyof PostGithubEventsResponses];
+export type PostEventsResponse = PostEventsResponses[keyof PostEventsResponses];
 
-export type PostGithubEventsByIdArtifactsData = {
+export type PostEventsByIdArtifactsData = {
   body?: never;
   path: {
     /**
@@ -673,10 +676,10 @@ export type PostGithubEventsByIdArtifactsData = {
     id: string;
   };
   query?: never;
-  url: "/github/events/{id}/artifacts";
+  url: "/events/{id}/artifacts";
 };
 
-export type PostGithubEventsByIdArtifactsErrors = {
+export type PostEventsByIdArtifactsErrors = {
   /**
    * Bad Request
    */
@@ -699,15 +702,15 @@ export type PostGithubEventsByIdArtifactsErrors = {
   500: ErrorResponse;
 };
 
-export type PostGithubEventsByIdArtifactsError =
-  PostGithubEventsByIdArtifactsErrors[keyof PostGithubEventsByIdArtifactsErrors];
+export type PostEventsByIdArtifactsError =
+  PostEventsByIdArtifactsErrors[keyof PostEventsByIdArtifactsErrors];
 
-export type PostGithubEventsByIdArtifactsResponses = {
+export type PostEventsByIdArtifactsResponses = {
   /**
    * The uploaded artifact metadata.
    */
   200: EventArtifact;
 };
 
-export type PostGithubEventsByIdArtifactsResponse =
-  PostGithubEventsByIdArtifactsResponses[keyof PostGithubEventsByIdArtifactsResponses];
+export type PostEventsByIdArtifactsResponse =
+  PostEventsByIdArtifactsResponses[keyof PostEventsByIdArtifactsResponses];

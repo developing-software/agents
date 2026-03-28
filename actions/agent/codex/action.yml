@@ -1,0 +1,27 @@
+name: Collect Codex Agent Data
+description: Capture result from openai/codex-action, write metric tags to workflow context, and emit agents.codex.result event
+
+inputs:
+  final_message:
+    description: Final message output from openai/codex-action
+    required: false
+  token:
+    description: Personal access token for posting events to the Agents API
+    required: false
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+
+runs:
+  using: composite
+  steps:
+    - uses: developing-software/agents/actions/event/emit@dev
+      if: always() && inputs.final_message != '' && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        event_id_env: CODEX_EVENT_ID
+        type: agents.codex.result
+        data: >-
+          {"finalMessage":${{ toJSON(inputs.final_message) }}}

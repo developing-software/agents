@@ -1,0 +1,81 @@
+name: Collect Claude Agent Data
+description: Capture token usage from claude-code-action and write metric tags to workflow context
+
+inputs:
+  execution_file:
+    description: Path to the execution JSON file from claude-code-action
+    required: false
+  session_id:
+    description: Session ID from claude-code-action
+    required: false
+  token:
+    description: Personal access token for uploading artifacts to the Agents API
+    required: false
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+
+runs:
+  using: composite
+  steps:
+    - uses: developing-software/agents/actions/event/tag@dev
+      if: inputs.session_id != ''
+      with:
+        tag: metric:session_id:${{ inputs.session_id }}
+
+    - name: Capture token usage
+      if: always()
+      shell: bash
+      env:
+        EXECUTION_FILE: ${{ inputs.execution_file }}
+      run: |
+        if [ -z "$AGENTS_CONTEXT_TAGS_FILE" ] || [ ! -f "${EXECUTION_FILE:-}" ]; then
+          exit 0
+        fi
+
+        RESULT=$(jq -c '.[] | select(.type == "result")' "$EXECUTION_FILE" 2>/dev/null | tail -1)
+        [ -z "$RESULT" ] && exit 0
+
+        INPUT=$(printf '%s' "$RESULT"        | jq -r '.usage.input_tokens // empty')
+        OUTPUT=$(printf '%s' "$RESULT"       | jq -r '.usage.output_tokens // empty')
+        CACHE_READ=$(printf '%s' "$RESULT"   | jq -r '.usage.cache_read_input_tokens // empty')
+        CACHE_CREATE=$(printf '%s' "$RESULT" | jq -r '.usage.cache_creation_input_tokens // empty')
+        TURNS=$(printf '%s' "$RESULT"        | jq -r '.num_turns // empty')
+        COST=$(printf '%s' "$RESULT"         | jq -r '.total_cost_usd // empty')
+        MODEL=$(printf '%s' "$RESULT"        | jq -r '.model // empty')
+        LAST_MSG=$(printf '%s' "$RESULT"     | jq -r '.result // empty')
+
+        DIM="${MODEL:+${MODEL}:}"
+        [ -n "$INPUT" ]        && printf "metric:input_tokens:${DIM}%s\n"                "$INPUT"        >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$OUTPUT" ]       && printf "metric:output_tokens:${DIM}%s\n"               "$OUTPUT"       >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$CACHE_READ" ]   && printf "metric:cache_read_input_tokens:${DIM}%s\n"     "$CACHE_READ"   >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$CACHE_CREATE" ] && printf "metric:cache_creation_input_tokens:${DIM}%s\n" "$CACHE_CREATE" >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$TURNS" ]        && printf "metric:num_turns:${DIM}%s\n"                   "$TURNS"        >> "$AGENTS_CONTEXT_TAGS_FILE"
+        [ -n "$COST" ]         && printf "metric:cost_usd:${DIM}%s\n"                    "$COST"         >> "$AGENTS_CONTEXT_TAGS_FILE"
+
+        if [ -n "$LAST_MSG" ]; then
+          {
+            printf 'LAST_MSG<<_AGENTS_EOF\n'
+            printf '%s\n' "$LAST_MSG"
+            printf '_AGENTS_EOF\n'
+          } >> "$GITHUB_ENV"
+        fi
+
+    - uses: developing-software/agents/actions/event/emit@dev
+      if: always() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        event_id_env: CLAUDE_EVENT_ID
+        type: agents.claude.result
+        data: >-
+          {"finalMessage":${{ toJSON(env.LAST_MSG) }}}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always() && inputs.execution_file != '' && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        path: ${{ inputs.execution_file }}
+        name: claude_code_execution.json

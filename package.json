@@ -25,6 +25,7 @@
       "packages/*",
       "packages/sdk/ts",
       "actions/*",
+      "actions/*/*",
       "scripts"
     ]
   },

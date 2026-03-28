@@ -1,5 +1,5 @@
 name: Run Tests
-description: Setup Bun, install dependencies, and run tests for core packages
+description: Setup Bun, install dependencies, run tests, and emit lifecycle events
 
 inputs:
   bun-version:
@@ -9,8 +9,15 @@ inputs:
     description: Set to 'false' to skip bun setup and install (when caller already ran them)
     default: "true"
   packages:
-    description: Space-separated list of package directories to test
-    required: true
+    description: "Space-separated list of package directories to test (default: all)"
+    required: false
+  token:
+    description: Personal access token for emitting events and uploading artifacts to the Agents API
+    required: false
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
 
 outputs:
   test-output:
@@ -23,6 +30,14 @@ outputs:
 runs:
   using: composite
   steps:
+    - id: tests-started
+      uses: developing-software/agents/actions/event/emit@dev
+      if: inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        type: tests.started
+
     - name: Setup Bun
       if: ${{ inputs.install != 'false' }}
       uses: oven-sh/setup-bun@v2
@@ -48,8 +63,26 @@ runs:
         } >> $GITHUB_OUTPUT
         exit $exit_code
 
-    - uses: developing-software/agents/actions/write-metric@main
+    - uses: developing-software/agents/actions/event/tag@dev
       if: always()
       with:
         key: tests
         value: ${{ steps.run-tests.outputs.outcome }}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: failure() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        path: ${{ runner.temp }}/test-output.txt
+        name: test-output.txt
+
+    - uses: developing-software/agents/actions/event/emit@dev
+      if: always() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        parent_event_id: ${{ steps.tests-started.outputs.event_id }}
+        type: tests.completed
+        data: >-
+          {"outcome":${{ toJSON(steps.run-tests.outputs.outcome) }}}

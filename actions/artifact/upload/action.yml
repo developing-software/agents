@@ -1,0 +1,21 @@
+name: Upload Artifact
+description: Upload a file or directory to the Agents API R2 storage under the workflow event
+
+inputs:
+  token:
+    description: Personal access token for posting events to the Agents API
+    required: true
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+  path:
+    description: Path to a file or directory to upload. If a directory, all files inside are uploaded individually.
+    required: true
+  name:
+    description: Name override for single-file uploads (ignored when path is a directory)
+    required: false
+
+runs:
+  using: node20
+  main: dist/main.js

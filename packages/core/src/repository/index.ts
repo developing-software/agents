@@ -188,11 +188,35 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(githubInstallationTable, eq(repositoryTable.connectionId, githubInstallationTable.id))
+        .innerJoin(
+          githubInstallationTable,
+          eq(repositoryTable.connectionId, githubInstallationTable.id),
+        )
         .where(
           and(
             eq(repositoryTable.source, source),
             eq(repositoryTable.sourceId, sourceId),
+            isNull(repositoryTable.timeDeleted),
+          ),
+        )
+        .then((rows) => (rows[0] ? serialize(rows[0]) : null)),
+    );
+  }
+
+  export async function findByID(id: string): Promise<Info | null> {
+    const userID = Actor.userID();
+    return useTransaction(async (tx) =>
+      tx
+        .select(infoSelection)
+        .from(repositoryTable)
+        .innerJoin(
+          githubInstallationTable,
+          eq(repositoryTable.connectionId, githubInstallationTable.id),
+        )
+        .where(
+          and(
+            eq(repositoryTable.id, id),
+            eq(repositoryTable.userId, userID),
             isNull(repositoryTable.timeDeleted),
           ),
         )
@@ -206,7 +230,10 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(githubInstallationTable, eq(repositoryTable.connectionId, githubInstallationTable.id))
+        .innerJoin(
+          githubInstallationTable,
+          eq(repositoryTable.connectionId, githubInstallationTable.id),
+        )
         .where(
           and(
             eq(repositoryTable.fullName, fullName),
@@ -223,7 +250,10 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(githubInstallationTable, eq(repositoryTable.connectionId, githubInstallationTable.id))
+        .innerJoin(
+          githubInstallationTable,
+          eq(repositoryTable.connectionId, githubInstallationTable.id),
+        )
         .where(and(eq(repositoryTable.fullName, fullName), isNull(repositoryTable.timeDeleted)))
         .then((rows) => (rows[0] ? serialize(rows[0]) : null)),
     );
@@ -235,7 +265,10 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(githubInstallationTable, eq(repositoryTable.connectionId, githubInstallationTable.id))
+        .innerJoin(
+          githubInstallationTable,
+          eq(repositoryTable.connectionId, githubInstallationTable.id),
+        )
         .where(and(eq(repositoryTable.userId, userID), isNull(repositoryTable.timeDeleted)))
         .then((rows) => rows.map(serialize)),
     );
@@ -247,7 +280,10 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(githubInstallationTable, eq(repositoryTable.connectionId, githubInstallationTable.id))
+        .innerJoin(
+          githubInstallationTable,
+          eq(repositoryTable.connectionId, githubInstallationTable.id),
+        )
         .where(
           and(
             eq(repositoryTable.owner, owner),
