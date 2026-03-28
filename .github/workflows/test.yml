@@ -18,6 +18,8 @@ jobs:
       - name: Run tests
         id: run-tests
         uses: ./.github/actions/test
+        with:
+          agents_token: ${{ secrets.AGENTS_TOKEN }}
 
       - name: Write summary
         if: always()

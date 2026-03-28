@@ -26,7 +26,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: ./actions/workflow/run
+      - uses: developing-software/agents/actions/workflow/run@main
         with:
           pr_prefix: codex
           harness: codex
@@ -51,7 +51,7 @@ jobs:
             Refer to AGENTS.md for project structure and guidelines.
             Do NOT commit, push, or open a pull request — only modify the files.
 
-      - uses: ./actions/agent/codex
+      - uses: developing-software/agents/actions/agent/codex@main
         if: always()
         with:
           final_message: ${{ steps.run-codex.outputs.final-message }}

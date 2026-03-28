@@ -1,5 +1,5 @@
 name: Run Tests
-description: Setup Bun, install dependencies, and run tests for core packages
+description: Setup Bun, install dependencies, run tests, and emit lifecycle events
 
 inputs:
   bun-version:
@@ -9,10 +9,10 @@ inputs:
     description: Set to 'false' to skip bun setup and install (when caller already ran them)
     default: "true"
   packages:
-    description: Space-separated list of package directories to test
-    required: true
+    description: "Space-separated list of package directories to test (default: all)"
+    required: false
   agents_token:
-    description: Personal access token for uploading test logs to the Agents API on failure
+    description: Personal access token for emitting events and uploading artifacts to the Agents API
     required: false
   api_url:
     description: Agents API base URL
@@ -30,6 +30,14 @@ outputs:
 runs:
   using: composite
   steps:
+    - uses: developing-software/agents/actions/event/emit@main
+      if: inputs.agents_token != ''
+      with:
+        agents_token: ${{ inputs.agents_token }}
+        api_url: ${{ inputs.api_url }}
+        event_id_env: AGENTS_WORKFLOW_EVENT_ID
+        type: tests.started
+
     - name: Setup Bun
       if: ${{ inputs.install != 'false' }}
       uses: oven-sh/setup-bun@v2
@@ -68,3 +76,12 @@ runs:
         api_url: ${{ inputs.api_url }}
         path: ${{ runner.temp }}/test-output.txt
         name: test-output.txt
+
+    - uses: developing-software/agents/actions/event/emit@main
+      if: always() && inputs.agents_token != ''
+      with:
+        agents_token: ${{ inputs.agents_token }}
+        api_url: ${{ inputs.api_url }}
+        type: tests.completed
+        data: >-
+          {"outcome":${{ toJSON(steps.run-tests.outputs.outcome) }}}

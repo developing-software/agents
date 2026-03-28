@@ -7,6 +7,26 @@ function readTags(raw: string) {
   return [...new Set(raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean))];
 }
 
+function githubTags(): string[] {
+  const tags: string[] = [];
+  const repo = process.env.GITHUB_REPOSITORY;
+  const runId = process.env.GITHUB_RUN_ID;
+  const ref = process.env.GITHUB_REF; // refs/heads/main or refs/pull/123/merge
+  const refName = process.env.GITHUB_REF_NAME; // main or 123/merge
+
+  if (repo) tags.push(`gh:repo:${repo}`);
+  if (runId) tags.push(`gh:run:${runId}`);
+
+  const prMatch = ref?.match(/^refs\/pull\/(\d+)\//);
+  if (prMatch) {
+    tags.push(`gh:pr:${prMatch[1]}`);
+  } else if (refName && ref?.startsWith("refs/heads/")) {
+    tags.push(`gh:branch:${refName}`);
+  }
+
+  return tags;
+}
+
 function readData(raw: string): Record<string, unknown> | undefined {
   if (!raw.trim()) return undefined;
   const parsed = JSON.parse(raw);
@@ -32,7 +52,7 @@ async function run() {
   const inheritContext = core.getInput("inherit_context") !== "false";
   const explicitTags = readTags(core.getInput("tags"));
   const contextTags = inheritContext ? readContextTags() : [];
-  const tags = [...new Set([...contextTags, ...explicitTags])];
+  const tags = [...new Set([...githubTags(), ...contextTags, ...explicitTags])];
   const data = readData(core.getInput("data"));
   const repoFullName = process.env.GITHUB_REPOSITORY;
 

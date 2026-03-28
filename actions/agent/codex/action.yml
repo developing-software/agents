@@ -16,7 +16,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: ./actions/event/emit
+    - uses: developing-software/agents/actions/event/emit@main
       if: always() && inputs.final_message != '' && inputs.agents_token != ''
       with:
         agents_token: ${{ inputs.agents_token }}
