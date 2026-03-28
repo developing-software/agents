@@ -1,6 +1,11 @@
 import { describe, it, expect } from "bun:test";
 import { Event } from "../src/events";
 import { Tags } from "../src/events/types";
+import { createID } from "../src/util/id";
+
+function testSourceId() {
+  return createID("repository");
+}
 
 describe("event", () => {
   it("create and fromID", async () => {
@@ -11,7 +16,7 @@ describe("event", () => {
   });
 
   it("list by source", async () => {
-    const sourceId = "grp_test";
+    const sourceId = testSourceId();
     await Event.create({ type: "test.a", origin: "cli", source: "github_repo", sourceId });
     await Event.create({ type: "test.b", origin: "cli", source: "github_repo", sourceId });
     const events = await Event.list({ source: "github_repo", sourceId });
@@ -26,7 +31,7 @@ describe("event", () => {
   });
 
   it("listTree", async () => {
-    const sourceId = "grp_tree_test";
+    const sourceId = testSourceId();
     const rootId = await Event.create({
       type: "root",
       origin: "cli",
@@ -54,5 +59,90 @@ describe("event", () => {
     expect(root!.children).toHaveLength(1);
     expect(root!.children[0]?.id).toBe(childId);
     expect(root!.children[0]?.children).toHaveLength(1);
+  });
+
+  it("infers parent from issue tags when parentEventId is null", async () => {
+    const sourceId = testSourceId();
+    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(42)];
+    const rootId = await Event.create({
+      type: "github.issues.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+
+    const childId = await Event.create({
+      type: "agents.implement.started",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      parentEventId: undefined,
+      tags: [...tags, Tags.ghBranch("agents/issue-42")],
+    });
+
+    const child = await Event.fromID(childId);
+    expect(child?.parentEventId).toBe(rootId);
+  });
+
+  it("prefers PR parent inference over issue parent inference", async () => {
+    const sourceId = testSourceId();
+    const repoTag = Tags.ghRepo("octocat/hello-world");
+    await Event.create({
+      type: "github.issues.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags: [repoTag, Tags.ghIssue(42)],
+    });
+    const prRootId = await Event.create({
+      type: "github.pull_request.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags: [repoTag, Tags.ghPr(99), Tags.ghBranch("feature/pr-99")],
+    });
+
+    const childId = await Event.create({
+      type: "agents.implement.completed",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      parentEventId: undefined,
+      tags: [repoTag, Tags.ghIssue(42), Tags.ghPr(99), Tags.ghBranch("feature/pr-99")],
+    });
+
+    const child = await Event.fromID(childId);
+    expect(child?.parentEventId).toBe(prRootId);
+  });
+
+  it("keeps an explicit parentEventId instead of inferring one", async () => {
+    const sourceId = testSourceId();
+    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(42)];
+    await Event.create({
+      type: "github.issues.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+    const explicitParentId = await Event.create({
+      type: "manual.root",
+      origin: "cli",
+      source: "repository",
+      sourceId,
+    });
+
+    const childId = await Event.create({
+      type: "agents.implement.started",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      parentEventId: explicitParentId,
+      tags,
+    });
+
+    const child = await Event.fromID(childId);
+    expect(child?.parentEventId).toBe(explicitParentId);
   });
 });
