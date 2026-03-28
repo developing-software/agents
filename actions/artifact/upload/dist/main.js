@@ -18798,8 +18798,8 @@ var require_core = __commonJS((exports) => {
 var core = __toESM(require_core(), 1);
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { basename, join } from "path";
-var agentsToken = core.getInput("agents_token", { required: true });
-var apiUrl = core.getInput("api_url");
+var agentsToken = core.getInput("token", { required: true });
+var apiUrl = core.getInput("url");
 var eventId = process.env.AGENTS_WORKFLOW_EVENT_ID;
 async function uploadFile(filePath, name) {
   const contentType = filePath.endsWith(".json") ? "application/json" : "text/plain";

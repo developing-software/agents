@@ -24,9 +24,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - uses: developing-software/agents/actions/event/emit@dev
-        if: secrets.AGENTS_TOKEN != ''
         with:
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
           event_id_env: AGENTS_WORKFLOW_EVENT_ID
           type: build.actions.started
           tags: env:dev
@@ -60,9 +59,9 @@ jobs:
           fi
 
       - uses: developing-software/agents/actions/event/emit@dev
-        if: always() && secrets.AGENTS_TOKEN != ''
+        if: always()
         with:
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
           type: build.actions.completed
           tags: env:dev
           data: >-

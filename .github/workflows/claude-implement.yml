@@ -34,7 +34,7 @@ jobs:
           pr_prefix: claude
           harness: claude-code
           model: ${{ env.CLAUDE_MODEL }}
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,9 +62,9 @@ jobs:
         with:
           execution_file: ${{ steps.run-claude.outputs.execution_file }}
           session_id: ${{ steps.run-claude.outputs.session_id }}
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./.github/actions/test
         with:
           install: "false"
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}

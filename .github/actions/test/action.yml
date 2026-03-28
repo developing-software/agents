@@ -11,10 +11,10 @@ inputs:
   packages:
     description: "Space-separated list of package directories to test (default: all)"
     required: false
-  agents_token:
+  token:
     description: Personal access token for emitting events and uploading artifacts to the Agents API
     required: false
-  api_url:
+  url:
     description: Agents API base URL
     required: false
     default: https://api.agents.developing.company/api
@@ -32,10 +32,10 @@ runs:
   steps:
     - id: tests-started
       uses: developing-software/agents/actions/event/emit@dev
-      if: inputs.agents_token != ''
+      if: inputs.token != ''
       with:
-        agents_token: ${{ inputs.agents_token }}
-        api_url: ${{ inputs.api_url }}
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
         type: tests.started
 
     - name: Setup Bun
@@ -70,18 +70,18 @@ runs:
         value: ${{ steps.run-tests.outputs.outcome }}
 
     - uses: developing-software/agents/actions/artifact/upload@dev
-      if: failure() && inputs.agents_token != ''
+      if: failure() && inputs.token != ''
       with:
-        agents_token: ${{ inputs.agents_token }}
-        api_url: ${{ inputs.api_url }}
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
         path: ${{ runner.temp }}/test-output.txt
         name: test-output.txt
 
     - uses: developing-software/agents/actions/event/emit@dev
-      if: always() && inputs.agents_token != ''
+      if: always() && inputs.token != ''
       with:
-        agents_token: ${{ inputs.agents_token }}
-        api_url: ${{ inputs.api_url }}
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
         parent_event_id: ${{ steps.tests-started.outputs.event_id }}
         type: tests.completed
         data: >-

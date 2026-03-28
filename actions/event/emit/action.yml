@@ -2,10 +2,10 @@ name: Emit Event
 description: Emit an event to the Agents API, inheriting workflow context tags by default
 
 inputs:
-  agents_token:
+  token:
     description: Personal access token for posting events to the Agents API
-    required: true
-  api_url:
+    required: false
+  url:
     description: Agents API base URL
     required: false
     default: https://api.agents.developing.company/api

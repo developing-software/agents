@@ -2,8 +2,8 @@ import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { basename, join } from "path";
 import * as core from "@actions/core";
 
-const agentsToken = core.getInput("agents_token", { required: true });
-const apiUrl = core.getInput("api_url");
+const agentsToken = core.getInput("token", { required: true });
+const apiUrl = core.getInput("url");
 const eventId = process.env.AGENTS_WORKFLOW_EVENT_ID;
 
 async function uploadFile(filePath: string, name: string): Promise<void> {

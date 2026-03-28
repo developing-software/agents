@@ -37,8 +37,12 @@ function readData(raw: string): Record<string, unknown> | undefined {
 }
 
 async function run() {
-  const agentsToken = core.getInput("agents_token", { required: true });
-  const apiUrl = core.getInput("api_url");
+  const agentsToken = core.getInput("token");
+  if (!agentsToken) {
+    core.warning("token not set, skipping event emit");
+    return;
+  }
+  const apiUrl = core.getInput("url");
   const eventIdEnv = core.getInput("event_id_env") || "EVENT_ID";
   const inheritContext = core.getInput("inherit_context") !== "false";
   const parentEventId = core.getInput("parent_event_id")

@@ -19884,8 +19884,12 @@ function readData(raw) {
   return parsed;
 }
 async function run() {
-  const agentsToken = core2.getInput("agents_token", { required: true });
-  const apiUrl = core2.getInput("api_url");
+  const agentsToken = core2.getInput("token");
+  if (!agentsToken) {
+    core2.warning("token not set, skipping event emit");
+    return;
+  }
+  const apiUrl = core2.getInput("url");
   const eventIdEnv = core2.getInput("event_id_env") || "EVENT_ID";
   const inheritContext = core2.getInput("inherit_context") !== "false";
   const parentEventId = core2.getInput("parent_event_id") || (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "") || "";

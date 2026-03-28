@@ -5,10 +5,10 @@ inputs:
   final_message:
     description: Final message output from openai/codex-action
     required: false
-  agents_token:
+  token:
     description: Personal access token for posting events to the Agents API
     required: false
-  api_url:
+  url:
     description: Agents API base URL
     required: false
     default: https://api.agents.developing.company/api
@@ -17,10 +17,10 @@ runs:
   using: composite
   steps:
     - uses: developing-software/agents/actions/event/emit@dev
-      if: always() && inputs.final_message != '' && inputs.agents_token != ''
+      if: always() && inputs.final_message != '' && inputs.token != ''
       with:
-        agents_token: ${{ inputs.agents_token }}
-        api_url: ${{ inputs.api_url }}
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
         event_id_env: CODEX_EVENT_ID
         type: agents.codex.result
         data: >-

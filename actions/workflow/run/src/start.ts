@@ -49,8 +49,8 @@ async function run() {
   core.saveState("base_branch", core.getInput("base_branch"));
 
   // Emit agents.implement.started
-  const agentsToken = core.getInput("agents_token");
-  const apiUrl = core.getInput("api_url");
+  const agentsToken = core.getInput("token");
+  const apiUrl = core.getInput("url");
   if (agentsToken) {
     try {
       const sdk = createApiClient(agentsToken, apiUrl);

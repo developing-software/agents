@@ -30,7 +30,7 @@ jobs:
         with:
           pr_prefix: codex
           harness: codex
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -55,9 +55,9 @@ jobs:
         if: always()
         with:
           final_message: ${{ steps.run-codex.outputs.final-message }}
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./.github/actions/test
         with:
           install: "false"
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}

@@ -8,10 +8,10 @@ inputs:
   session_id:
     description: Session ID from claude-code-action
     required: false
-  agents_token:
+  token:
     description: Personal access token for uploading artifacts to the Agents API
     required: false
-  api_url:
+  url:
     description: Agents API base URL
     required: false
     default: https://api.agents.developing.company/api
@@ -63,19 +63,19 @@ runs:
         fi
 
     - uses: developing-software/agents/actions/event/emit@dev
-      if: always() && inputs.agents_token != ''
+      if: always() && inputs.token != ''
       with:
-        agents_token: ${{ inputs.agents_token }}
-        api_url: ${{ inputs.api_url }}
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
         event_id_env: CLAUDE_EVENT_ID
         type: agents.claude.result
         data: >-
           {"finalMessage":${{ toJSON(env.LAST_MSG) }}}
 
     - uses: developing-software/agents/actions/artifact/upload@dev
-      if: always() && inputs.execution_file != '' && inputs.agents_token != ''
+      if: always() && inputs.execution_file != '' && inputs.token != ''
       with:
-        agents_token: ${{ inputs.agents_token }}
-        api_url: ${{ inputs.api_url }}
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
         path: ${{ inputs.execution_file }}
         name: claude_code_execution.json

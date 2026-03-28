@@ -137,8 +137,8 @@ async function run() {
   }
 
   // Emit agents.implement.completed with full inherited context
-  const agentsToken = core.getInput("agents_token");
-  const apiUrl = core.getInput("api_url");
+  const agentsToken = core.getInput("token");
+  const apiUrl = core.getInput("url");
   if (agentsToken) {
     const sdk = createApiClient(agentsToken, apiUrl);
     try {

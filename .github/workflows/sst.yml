@@ -45,9 +45,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - uses: developing-software/agents/actions/event/emit@dev
-        if: secrets.AGENTS_TOKEN != ''
         with:
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
           event_id_env: AGENTS_WORKFLOW_EVENT_ID
           type: sst.deploy.started
           tags: env:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
@@ -71,9 +70,9 @@ jobs:
           bunx sst deploy --stage=${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
 
       - uses: developing-software/agents/actions/event/emit@dev
-        if: always() && secrets.AGENTS_TOKEN != ''
+        if: always()
         with:
-          agents_token: ${{ secrets.AGENTS_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
           type: sst.deploy.completed
           tags: env:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
           data: >-

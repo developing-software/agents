@@ -19918,8 +19918,8 @@ async function run() {
   core2.saveState("branch", branch);
   core2.saveState("run_url", ctx.runUrl);
   core2.saveState("base_branch", core2.getInput("base_branch"));
-  const agentsToken = core2.getInput("agents_token");
-  const apiUrl = core2.getInput("api_url");
+  const agentsToken = core2.getInput("token");
+  const apiUrl = core2.getInput("url");
   if (agentsToken) {
     try {
       const sdk = createApiClient(agentsToken, apiUrl);

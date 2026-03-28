@@ -20,10 +20,10 @@ inputs:
   metadata:
     description: Extra key=value lines to include in the job summary
     required: false
-  agents_token:
+  token:
     description: Personal access token for posting events to the Agents API
     required: false
-  api_url:
+  url:
     description: Agents API base URL
     required: false
     default: https://api.agents.developing.company/api
