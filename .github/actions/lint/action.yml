@@ -1,0 +1,85 @@
+name: Run Lint
+description: Setup Bun, install dependencies, run lint, and emit lifecycle events
+
+inputs:
+  bun-version:
+    description: Bun version to use
+    default: latest
+  install:
+    description: Set to 'false' to skip bun setup and install (when caller already ran them)
+    default: "true"
+  token:
+    description: Personal access token for emitting events and uploading artifacts to the Agents API
+    required: false
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+
+outputs:
+  lint-output:
+    description: Lint output
+    value: ${{ steps.run-lint.outputs.lint-output }}
+  outcome:
+    description: Lint outcome (success or failure)
+    value: ${{ steps.run-lint.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - id: lint-started
+      uses: developing-software/agents/actions/event/emit@dev
+      if: inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        type: lint.started
+
+    - name: Setup Bun
+      if: ${{ inputs.install != 'false' }}
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
+
+    - name: Install dependencies
+      if: ${{ inputs.install != 'false' }}
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Run lint
+      id: run-lint
+      shell: bash
+      run: |
+        bun run lint 2>&1 | tee "$RUNNER_TEMP/lint-output.txt"
+        exit_code=${PIPESTATUS[0]}
+        {
+          echo "lint-output<<EOF"
+          cat "$RUNNER_TEMP/lint-output.txt"
+          echo "EOF"
+          echo "outcome=$([ $exit_code -eq 0 ] && echo success || echo failure)"
+        } >> $GITHUB_OUTPUT
+        exit $exit_code
+
+    - uses: developing-software/agents/actions/event/tag@dev
+      if: always()
+      with:
+        key: lint
+        value: ${{ steps.run-lint.outputs.outcome }}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: failure() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        path: ${{ runner.temp }}/lint-output.txt
+        name: lint-output.txt
+
+    - uses: developing-software/agents/actions/event/emit@dev
+      if: always() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        parent_event_id: ${{ steps.lint-started.outputs.event_id }}
+        type: lint.completed
+        data: >-
+          {"outcome":${{ toJSON(steps.run-lint.outputs.outcome) }}}

@@ -3,6 +3,9 @@ import { z } from "zod";
 import { Repository } from "@agents/core/repository/index";
 import { Event } from "@agents/core/events/index";
 
+// import { Log } from "@agents/core/util/log";
+// const log = Log.create({ namespace: "events.remote" });
+
 const input = z.object({
   organization: z.string(),
   repoName: z.string(),
@@ -16,7 +19,7 @@ export const listEvents = query(input, async ({ organization, repoName, tags, li
   return Event.list({ source: "repository", sourceId: repo.id, tags, limit });
 });
 
-export const listTree = query(input, async ({ organization, repoName, tags, limit }) => {
+export const listTree = query(input, async ({ organization, repoName, tags }) => {
   const repo = await Repository.findByFullName(`${organization}/${repoName}`);
   if (!repo) return [];
   return Event.listTree({ source: "repository", sourceId: repo.id, tags });

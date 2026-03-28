@@ -27,7 +27,7 @@
   let retryCount = $state(0);
 
   const eventsPromise = $derived.by(() => {
-    retryCount;
+    console.log("listEvents retry: ",retryCount);
     return listEvents({ organization, repoName, tags: filterTags }) as Promise<EventItem[]>;
   });
 

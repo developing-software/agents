@@ -173,7 +173,7 @@ async function run() {
   }
 
   // Write job summary
-  const ctx = getContext();
+  const _ctx = getContext();
   const contextTags = readContextTags();
   const metricRows = contextTags
     .filter((t) => t.startsWith("metric:"))

@@ -26,7 +26,7 @@
   let retryCount = $state(0);
 
   const treePromise = $derived.by(() => {
-    retryCount;
+    console.log("listTree retry: ",retryCount);
     return listTree({ organization, repoName, tags: filterTags }) as Promise<TreeNode[]>;
   });
 
