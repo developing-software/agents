@@ -29,7 +29,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: developing-software/agents/actions/workflow/run@main
+      - uses: ./actions/workflow/run
         with:
           pr_prefix: claude
           harness: claude-code
@@ -57,7 +57,7 @@ jobs:
           additional_permissions: |
             actions: read
 
-      - uses: developing-software/agents/actions/agent/claude@main
+      - uses: ./actions/agent/claude
         if: always()
         with:
           execution_file: ${{ steps.run-claude.outputs.execution_file }}
