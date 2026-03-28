@@ -132,7 +132,6 @@ async function run() {
           duration_ms: durationMs,
           lines_added: linesAdded,
           lines_removed: linesRemoved,
-          ...customMetrics,
         }),
         ...(customMetrics.harness ? [`harness:${customMetrics.harness}`] : []),
         ...(customMetrics.model ? [`model:${customMetrics.model}`] : []),
@@ -154,6 +153,7 @@ async function run() {
             durationMs,
             prUrl,
             runUrl,
+            metrics: customMetrics,
           },
         },
       });

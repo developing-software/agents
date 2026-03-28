@@ -55,6 +55,7 @@ jobs:
         if: always()
         with:
           final_message: ${{ steps.run-codex.outputs.final-message }}
+          agents_token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./actions/upload-implement-artifacts
         if: always()
