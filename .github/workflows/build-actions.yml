@@ -27,9 +27,15 @@ jobs:
         if: secrets.AGENTS_TOKEN != ''
         with:
           agents_token: ${{ secrets.AGENTS_TOKEN }}
-          event_id_env: BUILD_ACTIONS_EVENT_ID
+          event_id_env: AGENTS_WORKFLOW_EVENT_ID
           type: build.actions.started
           tags: env:dev
+
+      - name: Typecheck actions
+        run: |
+          bunx tsc --noEmit --project actions/event/emit/tsconfig.json
+          bunx tsc --noEmit --project actions/workflow/run/tsconfig.json
+          bunx tsc --noEmit --project actions/artifact/upload/tsconfig.json
 
       - name: Build actions
         run: |
@@ -57,7 +63,6 @@ jobs:
         if: always() && secrets.AGENTS_TOKEN != ''
         with:
           agents_token: ${{ secrets.AGENTS_TOKEN }}
-          parent_event_id: ${{ env.BUILD_ACTIONS_EVENT_ID }}
           type: build.actions.completed
           tags: env:dev
           data: >-

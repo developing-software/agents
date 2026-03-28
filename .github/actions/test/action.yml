@@ -30,12 +30,12 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: developing-software/agents/actions/event/emit@dev
+    - id: tests-started
+      uses: developing-software/agents/actions/event/emit@dev
       if: inputs.agents_token != ''
       with:
         agents_token: ${{ inputs.agents_token }}
         api_url: ${{ inputs.api_url }}
-        event_id_env: AGENTS_WORKFLOW_EVENT_ID
         type: tests.started
 
     - name: Setup Bun
@@ -82,6 +82,7 @@ runs:
       with:
         agents_token: ${{ inputs.agents_token }}
         api_url: ${{ inputs.api_url }}
+        parent_event_id: ${{ steps.tests-started.outputs.event_id }}
         type: tests.completed
         data: >-
           {"outcome":${{ toJSON(steps.run-tests.outputs.outcome) }}}

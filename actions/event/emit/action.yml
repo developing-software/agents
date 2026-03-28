@@ -10,10 +10,10 @@ inputs:
     required: false
     default: https://api.agents.developing.company/api
   parent_event_id:
-    description: Parent event ID for chaining related events
+    description: Parent event ID for chaining related events. When inherit_context is true and this is not provided, defaults to AGENTS_WORKFLOW_EVENT_ID if set.
     required: false
   event_id_env:
-    description: Environment variable to export the created event id to, and to read as the default parent event id on later calls
+    description: Environment variable to export the created event id to
     required: false
     default: EVENT_ID
   origin:

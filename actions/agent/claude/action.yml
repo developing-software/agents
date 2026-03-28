@@ -67,7 +67,6 @@ runs:
       with:
         agents_token: ${{ inputs.agents_token }}
         api_url: ${{ inputs.api_url }}
-        parent_event_id: ${{ env.AGENTS_WORKFLOW_EVENT_ID }}
         event_id_env: CLAUDE_EVENT_ID
         type: agents.claude.result
         data: >-

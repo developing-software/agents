@@ -36,16 +36,11 @@ async function run() {
   const { issue } = readEventPayload();
   const extraTags = readOptionalTags(core.getInput("tags"));
 
-  // Re-configure git credentials
-  await exec.exec(
-    "git",
-    ["config", "--local", "--unset-all", "http.https://github.com/.extraheader"],
-    { ignoreReturnCode: true },
-  );
+  // Re-configure git credentials (local scope to avoid polluting global git config)
   const encodedAuth = Buffer.from(`x-access-token:${token}`).toString("base64");
   await exec.exec("git", [
     "config",
-    "--global",
+    "--local",
     "http.https://github.com/.extraheader",
     `AUTHORIZATION: basic ${encodedAuth}`,
   ]);
@@ -62,18 +57,7 @@ async function run() {
   await exec.exec("git", ["commit", "-m", `feat: implement issue #${issue.number}`]);
   await exec.exec("git", ["push", "origin", branch]);
 
-  // Collect diff metrics
-  const diffStat = await execWithOutput("git", ["diff", "HEAD~1", "HEAD", "--numstat"]);
-  let linesAdded = 0;
-  let linesRemoved = 0;
-  for (const line of diffStat.split("\n").filter(Boolean)) {
-    const [added, removed] = line.split("\t");
-    linesAdded += parseInt(added!) || 0;
-    linesRemoved += parseInt(removed!) || 0;
-  }
-  const durationMs = Date.now() - startMs;
-
-  // Resolve base branch
+  // Resolve base branch (needed before diff)
   let baseBranch = core.getState("base_branch");
   if (!baseBranch) {
     try {
@@ -90,6 +74,18 @@ async function run() {
       baseBranch = "main";
     }
   }
+
+  // Collect diff metrics against base branch
+  await exec.exec("git", ["fetch", "origin", baseBranch, "--depth=1"]);
+  const diffStat = await execWithOutput("git", ["diff", `origin/${baseBranch}...HEAD`, "--numstat"]);
+  let linesAdded = 0;
+  let linesRemoved = 0;
+  for (const line of diffStat.split("\n").filter(Boolean)) {
+    const [added, removed] = line.split("\t");
+    linesAdded += parseInt(added!) || 0;
+    linesRemoved += parseInt(removed!) || 0;
+  }
+  const durationMs = Date.now() - startMs;
 
   // Create PR
   const prTitle = prPrefix.charAt(0).toUpperCase() + prPrefix.slice(1);
@@ -109,7 +105,23 @@ async function run() {
       branch,
     ]);
   } catch (err) {
-    core.warning(`PR creation failed: ${err}. May already exist.`);
+    // Check if a PR already exists for this branch (idempotent re-run)
+    try {
+      prUrl = await execWithOutput("gh", [
+        "pr",
+        "view",
+        "--head",
+        branch,
+        "--json",
+        "url",
+        "-q",
+        ".url",
+      ]);
+      core.info(`PR already exists: ${prUrl}`);
+    } catch {
+      core.setFailed(`PR creation failed: ${err}`);
+      return;
+    }
   }
 
   const prNumberMatch = prUrl.match(/\/pull\/(\d+)/);

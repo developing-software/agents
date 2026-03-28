@@ -34,7 +34,7 @@ jobs:
         if: secrets.AGENTS_TOKEN != ''
         with:
           agents_token: ${{ secrets.AGENTS_TOKEN }}
-          event_id_env: SST_REMOVE_EVENT_ID
+          event_id_env: AGENTS_WORKFLOW_EVENT_ID
           type: sst.remove.started
           tags: env:pr-${{ github.event.pull_request.number }}
           data: >-
@@ -56,7 +56,6 @@ jobs:
         if: always() && secrets.AGENTS_TOKEN != ''
         with:
           agents_token: ${{ secrets.AGENTS_TOKEN }}
-          parent_event_id: ${{ env.SST_REMOVE_EVENT_ID }}
           type: sst.remove.completed
           tags: env:pr-${{ github.event.pull_request.number }}
           data: >-

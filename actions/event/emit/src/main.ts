@@ -40,7 +40,10 @@ async function run() {
   const agentsToken = core.getInput("agents_token", { required: true });
   const apiUrl = core.getInput("api_url");
   const eventIdEnv = core.getInput("event_id_env") || "EVENT_ID";
-  const parentEventId = core.getInput("parent_event_id") || process.env[eventIdEnv] || "";
+  const inheritContext = core.getInput("inherit_context") !== "false";
+  const parentEventId = core.getInput("parent_event_id")
+    || (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "")
+    || "";
   const origin = core.getInput("origin") as
     | "api"
     | "webhook"
@@ -49,7 +52,6 @@ async function run() {
     | "cli"
     | "cron";
   const type = core.getInput("type", { required: true });
-  const inheritContext = core.getInput("inherit_context") !== "false";
   const explicitTags = readTags(core.getInput("tags"));
   const contextTags = inheritContext ? readContextTags() : [];
   const tags = [...new Set([...githubTags(), ...contextTags, ...explicitTags])];

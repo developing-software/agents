@@ -19887,10 +19887,10 @@ async function run() {
   const agentsToken = core2.getInput("agents_token", { required: true });
   const apiUrl = core2.getInput("api_url");
   const eventIdEnv = core2.getInput("event_id_env") || "EVENT_ID";
-  const parentEventId = core2.getInput("parent_event_id") || process.env[eventIdEnv] || "";
+  const inheritContext = core2.getInput("inherit_context") !== "false";
+  const parentEventId = core2.getInput("parent_event_id") || (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "") || "";
   const origin = core2.getInput("origin");
   const type = core2.getInput("type", { required: true });
-  const inheritContext = core2.getInput("inherit_context") !== "false";
   const explicitTags = readTags(core2.getInput("tags"));
   const contextTags = inheritContext ? readContextTags() : [];
   const tags = [...new Set([...githubTags(), ...contextTags, ...explicitTags])];

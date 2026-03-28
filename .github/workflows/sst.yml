@@ -48,7 +48,7 @@ jobs:
         if: secrets.AGENTS_TOKEN != ''
         with:
           agents_token: ${{ secrets.AGENTS_TOKEN }}
-          event_id_env: SST_DEPLOY_EVENT_ID
+          event_id_env: AGENTS_WORKFLOW_EVENT_ID
           type: sst.deploy.started
           tags: env:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
           data: >-
@@ -74,7 +74,6 @@ jobs:
         if: always() && secrets.AGENTS_TOKEN != ''
         with:
           agents_token: ${{ secrets.AGENTS_TOKEN }}
-          parent_event_id: ${{ env.SST_DEPLOY_EVENT_ID }}
           type: sst.deploy.completed
           tags: env:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
           data: >-
