@@ -19725,14 +19725,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -19753,14 +19746,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "redirectURI" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -19957,7 +19943,11 @@ async function run() {
     }
   }
   await exec3.exec("git", ["fetch", "origin", baseBranch, "--depth=1"]);
-  const diffStat = await execWithOutput("git", ["diff", `origin/${baseBranch}...HEAD`, "--numstat"]);
+  const diffStat = await execWithOutput("git", [
+    "diff",
+    `origin/${baseBranch}...HEAD`,
+    "--numstat"
+  ]);
   let linesAdded = 0;
   let linesRemoved = 0;
   for (const line of diffStat.split(`

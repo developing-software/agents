@@ -19718,14 +19718,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -19746,14 +19739,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "redirectURI" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -19854,7 +19840,9 @@ function readContextTags() {
 
 // actions/event/emit/src/main.ts
 function readTags(raw) {
-  return [...new Set(raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean))];
+  return [
+    ...new Set(raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean))
+  ];
 }
 function githubTags() {
   const tags = [];
