@@ -1,5 +1,7 @@
 # agents
 
+By Claude
+
 To install dependencies:
 
 ```bash
