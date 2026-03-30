@@ -12,7 +12,6 @@ import { EventApi } from "./handler/event";
 import { GitHubApi } from "./handler/github";
 import { auth } from "./middleware";
 
-import { Homepage } from "../ui/homepage";
 
 const log = Log.create({ namespace: "api" });
 
@@ -61,7 +60,7 @@ export const routes = app
     );
   });
 
-app.get("/", Homepage).get("/healthz", async (c) => {
+app.get("/healthz", async (c) => {
   const runtime = getRuntimeKey();
   const { healthcheck } = await import("@agents/core/drizzle/index");
   const dbCheck = await healthcheck();
