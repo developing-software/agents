@@ -82,7 +82,7 @@ describe("push webhook handler", () => {
     expect(event.data.pusher).toBe("octocat");
   });
 
-  it("sets correct tags including repo, branch, and metrics", async () => {
+  it("sets correct tags including repo and branch, and stores commit metadata in data", async () => {
     const webhook = createTestWebhook();
     const repoId = await createTestRepo("80000002", "octocat/push-test-2");
 
@@ -101,8 +101,7 @@ describe("push webhook handler", () => {
     const event = events[0]!;
     expect(event.tags).toContain(Tags.ghRepo("octocat/push-test-2"));
     expect(event.tags).toContain(Tags.ghBranch("feature/my-feature"));
-    expect(event.tags).toContain(Tags.metric("commit_count", "1"));
-    expect(event.tags).toContain(Tags.metric("last_commit", "feat: add new thing"));
+    expect(event.data).toMatchObject({ commitCount: 1, lastCommit: "feat: add new thing" });
   });
 
   it("strips refs/heads/ prefix from branch name", async () => {

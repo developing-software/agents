@@ -1,5 +1,22 @@
 <script lang="ts">
   import { listEvents } from './events.remote';
+  import EventDetail from './EventDetail.svelte';
+  import {
+    eventDotColor,
+    originBadgeStyle,
+    relativeTime,
+    typePrefix,
+    issueRef,
+    prRef,
+    envTag,
+    serviceTag,
+    branchTag,
+    runRef,
+    otherTags,
+    tagCategoryStyle,
+    extractMetrics,
+    formatMetricValue,
+  } from './event-helpers';
 
   type EventItem = {
     id: string;
@@ -7,6 +24,7 @@
     origin: string;
     tags: string[];
     parentEventId: string | null;
+    data: Record<string, unknown>;
     timeCreated: string;
   };
 
@@ -27,88 +45,14 @@
   let retryCount = $state(0);
 
   const eventsPromise = $derived.by(() => {
-    console.log("listEvents retry: ",retryCount);
+    void retryCount;
     return listEvents({ organization, repoName, tags: filterTags }) as Promise<EventItem[]>;
   });
 
   function retry() { retryCount += 1; }
 
   let activeFilter = $state('all');
-
-  function eventDotColor(type: string): string {
-    if (type.startsWith('implement.')) return 'var(--color-accent)';
-    if (type.startsWith('github.issues.')) return 'var(--color-success)';
-    if (type.startsWith('github.pull_request.')) return 'var(--color-merged)';
-    if (type === 'github.push') return 'var(--color-dim)';
-    return 'var(--color-warning)';
-  }
-
-  function originBadgeStyle(origin: string): string {
-    switch (origin) {
-      case 'action': return 'background: color-mix(in srgb, var(--color-accent) 15%, transparent); color: var(--color-accent);';
-      case 'cli': return 'background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning);';
-      case 'console': return 'background: color-mix(in srgb, var(--color-merged) 12%, transparent); color: var(--color-merged);';
-      default: return 'background: var(--color-elevated); color: var(--color-muted);';
-    }
-  }
-
-  function relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const secs = Math.floor(diff / 1000);
-    if (secs < 60) return `${secs}s ago`;
-    const mins = Math.floor(secs / 60);
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  }
-
-  function typePrefix(type: string): string {
-    const dot = type.indexOf('.');
-    return dot === -1 ? type : type.slice(0, dot);
-  }
-
-  function issueRef(tags: string[]): number | null {
-    const t = tags.find((t) => t.startsWith('gh:issue:'));
-    return t ? parseInt(t.slice('gh:issue:'.length)) : null;
-  }
-
-  function prRef(tags: string[]): number | null {
-    const t = tags.find((t) => t.startsWith('gh:pr:'));
-    return t ? parseInt(t.slice('gh:pr:'.length)) : null;
-  }
-
-  function metrics(tags: string[]): { name: string; value: string }[] {
-    return tags
-      .filter((t) => t.startsWith('metric:'))
-      .map((t) => {
-        const rest = t.slice('metric:'.length);
-        const sep = rest.indexOf(':');
-        return sep === -1
-          ? { name: rest, value: '' }
-          : { name: rest.slice(0, sep), value: rest.slice(sep + 1) };
-      });
-  }
-
-  function envTag(tags: string[]): string | null {
-    const t = tags.find((t) => t.startsWith('env:'));
-    return t ? t.slice('env:'.length) : null;
-  }
-
-  function serviceTag(tags: string[]): string | null {
-    const t = tags.find((t) => t.startsWith('service:'));
-    return t ? t.slice('service:'.length) : null;
-  }
-
-  function branchTag(tags: string[]): string | null {
-    const t = tags.find((t) => t.startsWith('gh:branch:'));
-    return t ? t.slice('gh:branch:'.length) : null;
-  }
-
-  function runRef(tags: string[]): number | null {
-    const t = tags.find((t) => t.startsWith('gh:run:'));
-    return t ? parseInt(t.slice('gh:run:'.length)) : null;
-  }
+  let selectedEventId = $state<string | null>(null);
 </script>
 
 {#await eventsPromise}
@@ -158,24 +102,33 @@
         {#snippet row(e: EventItem, child: boolean)}
           {@const issue = issueRef(e.tags)}
           {@const pr = prRef(e.tags)}
-          {@const mets = metrics(e.tags)}
           {@const env = envTag(e.tags)}
           {@const svc = serviceTag(e.tags)}
           {@const branch = branchTag(e.tags)}
           {@const run = runRef(e.tags)}
-          {@const hasMeta = mets.length > 0 || env || svc || branch || run !== null}
-          <div class="event-item" class:event-item-child={child}>
-            <div class="row">
+          {@const other = otherTags(e.tags)}
+          {@const mets = extractMetrics(e.data)}
+          {@const hasMeta = mets || env || svc || branch || run !== null || other.length > 0}
+          <div
+            class="event-item"
+            class:event-item-child={child}
+            class:event-item-selected={selectedEventId === e.id}
+          >
+            <button
+              type="button"
+              class="row-btn"
+              onclick={() => { selectedEventId = selectedEventId === e.id ? null : e.id; }}
+            >
               <span class="dot" style="background:{eventDotColor(e.type)};opacity:{child ? 0.6 : 1};"></span>
               <span class="etype" class:etype-muted={child}>{e.type}</span>
               <span class="badge" style={originBadgeStyle(e.origin)}>{e.origin}</span>
               {#if issue}
-                <a href="/gh/{organization}/{repoName}/issues/{issue}" class="ref ref-issue">#{issue}</a>
+                <a href="/gh/{organization}/{repoName}/issues/{issue}" class="ref ref-issue" onclick={(ev) => ev.stopPropagation()}>#{issue}</a>
               {:else if pr}
-                <a href="/gh/{organization}/{repoName}/pulls/{pr}" class="ref ref-pr">#{pr}</a>
+                <a href="/gh/{organization}/{repoName}/pulls/{pr}" class="ref ref-pr" onclick={(ev) => ev.stopPropagation()}>#{pr}</a>
               {/if}
               <span class="time">{relativeTime(e.timeCreated)}</span>
-            </div>
+            </button>
             {#if hasMeta}
               <div class="meta">
                 {#if env}
@@ -190,12 +143,32 @@
                 {#if run !== null}
                   <span class="meta-dim">run #{run}</span>
                 {/if}
-                {#each mets as m (m.name)}
-                  <span class="meta-metric"><span class="meta-metric-name">{m.name}</span>{#if m.value}<span class="meta-metric-sep">:</span><span class="meta-metric-val">{m.value}</span>{/if}</span>
+                {#if mets}
+                  {#if mets.model}
+                    <span class="meta-metric"><span class="meta-metric-name">model</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{mets.model}</span></span>
+                  {/if}
+                  {#if mets.cost_usd !== null}
+                    <span class="meta-metric"><span class="meta-metric-name">cost</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('cost_usd', mets.cost_usd)}</span></span>
+                  {/if}
+                  {#if mets.num_turns !== null}
+                    <span class="meta-metric"><span class="meta-metric-name">turns</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{mets.num_turns}</span></span>
+                  {/if}
+                  {#if mets.input_tokens !== null}
+                    <span class="meta-metric"><span class="meta-metric-name">in</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('input_tokens', mets.input_tokens)}</span></span>
+                  {/if}
+                  {#if mets.output_tokens !== null}
+                    <span class="meta-metric"><span class="meta-metric-name">out</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('output_tokens', mets.output_tokens)}</span></span>
+                  {/if}
+                {/if}
+                {#each other as tag (tag)}
+                  <span class="tag-pill" style={tagCategoryStyle(tag)}>{tag}</span>
                 {/each}
               </div>
             {/if}
           </div>
+          {#if selectedEventId === e.id}
+            <EventDetail event={e} {organization} {repoName} onclose={() => { selectedEventId = null; }} />
+          {/if}
         {/snippet}
 
         {@render row(ev, false)}
@@ -242,8 +215,21 @@
 
   .event-item { display: flex; flex-direction: column; }
   .event-item-child { padding-left: 16px; }
+  .event-item-selected { background: color-mix(in srgb, var(--color-accent) 4%, transparent); border-radius: 3px; }
 
-  .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; min-width: 0; }
+  .row-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    min-width: 0;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+  .row-btn:hover { background: color-mix(in srgb, var(--color-text) 3%, transparent); border-radius: 2px; }
 
   .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
@@ -271,6 +257,15 @@
   .meta-metric-name { color: var(--color-muted); }
   .meta-metric-sep { color: var(--color-dim); }
   .meta-metric-val { color: var(--color-accent); }
+
+  .tag-pill {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 0 4px;
+    border-radius: 3px;
+    border: 1px solid;
+    line-height: 1.6;
+  }
 
   .children { border-left: 1px solid var(--color-border); margin-left: 2px; }
 

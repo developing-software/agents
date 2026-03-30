@@ -1,5 +1,5 @@
 name: Collect Codex Agent Data
-description: Capture result from openai/codex-action, write metric tags to workflow context, and emit agents.codex.result event
+description: Capture result from openai/codex-action and emit result event with metrics in data
 
 inputs:
   final_message:
@@ -24,4 +24,4 @@ runs:
         event_id_env: CODEX_EVENT_ID
         type: agents.codex.result
         data: >-
-          {"finalMessage":${{ toJSON(inputs.final_message) }}}
+          {"finalMessage":${{ toJSON(inputs.final_message) }},"sessionId":null,"metrics":{"input_tokens":null,"output_tokens":null,"cache_read_input_tokens":null,"cache_creation_input_tokens":null,"num_turns":null,"cost_usd":null,"model":null}}
