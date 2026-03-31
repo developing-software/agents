@@ -39,6 +39,8 @@ runs:
     - name: Update issue comment
       if: always() && env.AGENTS_COMMENT_ID
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         # Scan results dir for all check outcomes (skip agent/)
         table="| Check | Status |\n|-------|--------|\n"
