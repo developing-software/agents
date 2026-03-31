@@ -1,0 +1,37 @@
+name: Write Check Result
+description: Write a check result to the agents results folder
+
+inputs:
+  category:
+    description: "Result category (e.g. tests, lint)"
+    required: true
+  name:
+    description: "Check name (e.g. unit, oxlint, typecheck)"
+    required: true
+  outcome:
+    description: "Check outcome: success or failure"
+    required: true
+  output:
+    description: "Optional path to output file to copy into the results folder"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Write result
+      if: always()
+      shell: bash
+      env:
+        CATEGORY: ${{ inputs.category }}
+        CHECK_NAME: ${{ inputs.name }}
+        OUTCOME: ${{ inputs.outcome }}
+        OUTPUT_PATH: ${{ inputs.output }}
+      run: |
+        if [ -z "${AGENTS_RESULTS_DIR:-}" ]; then
+          exit 0
+        fi
+        mkdir -p "$AGENTS_RESULTS_DIR/$CATEGORY/$CHECK_NAME"
+        printf '{"outcome":"%s"}\n' "$OUTCOME" > "$AGENTS_RESULTS_DIR/$CATEGORY/$CHECK_NAME/result.json"
+        if [ -n "$OUTPUT_PATH" ] && [ -f "$OUTPUT_PATH" ]; then
+          cp "$OUTPUT_PATH" "$AGENTS_RESULTS_DIR/$CATEGORY/$CHECK_NAME/output.txt"
+        fi

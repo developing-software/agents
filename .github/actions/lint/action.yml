@@ -63,20 +63,13 @@ runs:
         } >> $GITHUB_OUTPUT
         exit $exit_code
 
-    - name: Write lint result to results folder
+    - uses: developing-software/agents/actions/agent/result@dev
       if: always()
-      shell: bash
-      env:
-        OUTCOME: ${{ steps.run-lint.outputs.outcome }}
-        CHECK_NAME: ${{ inputs.name }}
-      run: |
-        if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
-          mkdir -p "$AGENTS_RESULTS_DIR/lint/$CHECK_NAME"
-          printf '{"outcome":"%s"}\n' "$OUTCOME" > "$AGENTS_RESULTS_DIR/lint/$CHECK_NAME/result.json"
-          if [ -f "$RUNNER_TEMP/lint-output.txt" ]; then
-            cp "$RUNNER_TEMP/lint-output.txt" "$AGENTS_RESULTS_DIR/lint/$CHECK_NAME/output.txt"
-          fi
-        fi
+      with:
+        category: lint
+        name: ${{ inputs.name }}
+        outcome: ${{ steps.run-lint.outputs.outcome }}
+        output: ${{ runner.temp }}/lint-output.txt
 
     - uses: developing-software/agents/actions/artifact/upload@dev
       if: failure() && inputs.token != ''

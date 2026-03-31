@@ -14,9 +14,9 @@ Reusable GitHub Actions for AI-driven implementation workflows. The core idea: a
 ```
 actions/
   core/             — shared TypeScript utilities for Node20 actions
-  agents/
-    workflow/       — harness: branch setup + PR creation + results aggregation + lifecycle events
   agent/
+    workflow/       — harness: branch setup + PR creation + results aggregation + lifecycle events
+    result/         — helper: write check result.json + copy output to results folder
     claude/         — collect Claude Code metrics, write agent/result.json, emit agent.result
     codex/          — collect Codex result, write agent/result.json, emit agent.result
   event/
@@ -90,12 +90,12 @@ $AGENTS_RESULTS_DIR/
 ```
 actions/checkout
 oven-sh/setup-bun + bun install
-./actions/agents/workflow          <- sets up branch, results dir, emits agent.started
+./actions/agent/workflow          <- sets up branch, results dir, emits agent.started
 <agent step>                       <- claude-code-action, codex-action, etc.
 ./actions/agent/<name>             <- writes agent/result.json, emits agent.result
 ./.github/actions/test             <- runs tests, writes tests/{name}/result.json
 ./.github/actions/lint             <- runs lint, writes lint/{name}/result.json
-[post] ./actions/agents/workflow   <- commits, pushes, creates PR, aggregates results, emits agent.completed
+[post] ./actions/agent/workflow   <- commits, pushes, creates PR, aggregates results, emits agent.completed
 ```
 
 ## Event types
