@@ -19916,13 +19916,14 @@ async function run() {
   appendFileSync(contextTagsFile, contextTags.join(`
 `) + `
 `);
-  const agent = harness ? harness.replace(/-code$/, "") : null;
+  const agent = harness || null;
   core2.saveState("pr_prefix", ctx.prPrefix);
   core2.saveState("start_ms", startMs.toString());
   core2.saveState("branch", branch);
   core2.saveState("run_url", ctx.runUrl);
   core2.saveState("base_branch", core2.getInput("base_branch"));
   core2.saveState("harness", harness);
+  core2.saveState("model", model);
   const agentsToken = core2.getInput("token");
   const apiUrl = core2.getInput("url");
   if (agentsToken) {

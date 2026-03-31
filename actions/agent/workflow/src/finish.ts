@@ -64,6 +64,7 @@ async function run() {
   const runUrl = core.getState("run_url");
   const startEventId = core.getState("start_event_id");
   const harness = core.getState("harness");
+  const model = core.getState("model");
 
   if (!branch) {
     core.warning("No branch state found — main step likely failed, skipping finish.");
@@ -193,10 +194,16 @@ async function run() {
 
   // Derive agent name: results folder > harness state > prPrefix fallback
   if (!agentName && harness) {
-    agentName = harness.replace(/-code$/, "");
+    agentName = harness;
   }
   if (!agentName) {
     agentName = prPrefix;
+  }
+
+  // Derive model: from agent result metrics > saved state
+  let modelName: string | null = model || null;
+  if (!modelName && metrics && typeof (metrics as Record<string, unknown>).model === "string") {
+    modelName = (metrics as Record<string, unknown>).model as string;
   }
 
   // Emit agent.completed with aggregated data
@@ -215,6 +222,7 @@ async function run() {
           tags,
           data: {
             agent: agentName,
+            model: modelName,
             branch,
             issueNumber: issue.number,
             pullRequestNumber: pullRequestNumber ?? null,
@@ -242,6 +250,7 @@ async function run() {
         { data: "Value", header: true },
       ],
       ["Agent", agentName],
+      ...(modelName ? [["Model", modelName]] : []),
       ["Branch", `\`${branch}\``],
       ["Lines added", linesAdded.toString()],
       ["Lines removed", linesRemoved.toString()],

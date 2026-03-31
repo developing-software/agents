@@ -46,8 +46,8 @@ async function run() {
   ]);
   appendFileSync(contextTagsFile, contextTags.join("\n") + "\n");
 
-  // Derive agent name from harness: strip "-code" suffix
-  const agent = harness ? harness.replace(/-code$/, "") : null;
+  // Agent name is the harness identifier (e.g. claude-code, codex, opencode)
+  const agent = harness || null;
 
   // Persist state for finish phase
   core.saveState("pr_prefix", ctx.prPrefix);
@@ -56,6 +56,7 @@ async function run() {
   core.saveState("run_url", ctx.runUrl);
   core.saveState("base_branch", core.getInput("base_branch"));
   core.saveState("harness", harness);
+  core.saveState("model", model);
 
   // Emit agent.started
   const agentsToken = core.getInput("token");

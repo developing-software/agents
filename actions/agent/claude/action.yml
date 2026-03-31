@@ -103,7 +103,7 @@ runs:
         if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
           mkdir -p "$AGENTS_RESULTS_DIR/agent"
           jq -nc \
-            --arg agent "claude" \
+            --arg agent "claude-code" \
             --argjson sessionId "${SESSION_ID_JSON:-null}" \
             --arg finalMessage "${LAST_MSG:-}" \
             --argjson metrics "${METRICS_JSON:-null}" \
