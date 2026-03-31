@@ -1,5 +1,7 @@
 # agents
 
+_README updated by OpenCode._
+
 To install dependencies:
 
 ```bash
