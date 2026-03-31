@@ -11,6 +11,9 @@ inputs:
   packages:
     description: "Space-separated list of package directories to test (default: all)"
     required: false
+  name:
+    description: Check name for the results folder (e.g. "unit", "integration")
+    default: unit
   token:
     description: Personal access token for emitting events and uploading artifacts to the Agents API
     required: false
@@ -63,11 +66,13 @@ runs:
         } >> $GITHUB_OUTPUT
         exit $exit_code
 
-    - uses: developing-software/agents/actions/event/tag@dev
+    - uses: developing-software/agents/actions/agent/result@dev
       if: always()
       with:
-        key: tests
-        value: ${{ steps.run-tests.outputs.outcome }}
+        category: tests
+        name: ${{ inputs.name }}
+        outcome: ${{ steps.run-tests.outputs.outcome }}
+        output: ${{ runner.temp }}/test-output.txt
 
     - uses: developing-software/agents/actions/artifact/upload@dev
       if: failure() && inputs.token != ''

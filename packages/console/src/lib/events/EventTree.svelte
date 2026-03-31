@@ -1,5 +1,17 @@
 <script lang="ts">
-  import { listTree } from './events.remote';
+  import { listTree, getEventDetail } from './events.remote';
+  import EventDetail from './EventDetail.svelte';
+  import {
+    eventDotColor,
+    originBadgeStyle,
+    relativeTime,
+    envTag,
+    serviceTag,
+    branchTag,
+    runRef,
+    otherTags,
+    tagCategoryStyle,
+  } from './event-helpers';
 
   type TreeNode = {
     id: string;
@@ -26,38 +38,33 @@
   let retryCount = $state(0);
 
   const treePromise = $derived.by(() => {
-    retryCount;
+    void retryCount;
     return listTree({ organization, repoName, tags: filterTags }) as Promise<TreeNode[]>;
   });
 
   function retry() { retryCount += 1; }
 
-  function eventDotColor(type: string): string {
-    if (type.startsWith('implement.')) return 'var(--color-accent)';
-    if (type.startsWith('github.issues.')) return 'var(--color-success)';
-    if (type.startsWith('github.pull_request.')) return 'var(--color-merged)';
-    if (type === 'github.push') return 'var(--color-dim)';
-    return 'var(--color-warning)';
-  }
+  let selectedEventId = $state<string | null>(null);
+  let selectedEventData = $state<Record<string, unknown> | null>(null);
+  let loadingDetail = $state(false);
 
-  function originBadgeStyle(origin: string): string {
-    switch (origin) {
-      case 'action': return 'background: color-mix(in srgb, var(--color-accent) 15%, transparent); color: var(--color-accent);';
-      case 'cli': return 'background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning);';
-      case 'console': return 'background: color-mix(in srgb, var(--color-merged) 12%, transparent); color: var(--color-merged);';
-      default: return 'background: var(--color-elevated); color: var(--color-muted);';
+  async function selectEvent(node: TreeNode) {
+    if (selectedEventId === node.id) {
+      selectedEventId = null;
+      selectedEventData = null;
+      return;
     }
-  }
-
-  function relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const secs = Math.floor(diff / 1000);
-    if (secs < 60) return `${secs}s ago`;
-    const mins = Math.floor(secs / 60);
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
+    selectedEventId = node.id;
+    selectedEventData = null;
+    loadingDetail = true;
+    try {
+      const detail = await getEventDetail({ eventId: node.id });
+      if (selectedEventId === node.id && detail) {
+        selectedEventData = detail.data;
+      }
+    } finally {
+      loadingDetail = false;
+    }
   }
 </script>
 
@@ -77,16 +84,66 @@
     <p class="empty">{emptyText}</p>
   {:else}
     {#snippet renderNode(node: TreeNode, depth: number)}
+      {@const env = envTag(node.tags)}
+      {@const svc = serviceTag(node.tags)}
+      {@const branch = branchTag(node.tags)}
+      {@const run = runRef(node.tags)}
+      {@const other = otherTags(node.tags)}
+      {@const hasMeta = env || svc || branch || run !== null || other.length > 0}
       <div class="node" style="padding-left: {depth * 16}px;">
-        <div class="row">
+        <button
+          type="button"
+          class="row-btn"
+          class:row-btn-selected={selectedEventId === node.id}
+          onclick={() => selectEvent(node)}
+        >
           {#if depth > 0}
-            <span class="connector">└</span>
+            <span class="connector">&#x2514;</span>
           {/if}
           <span class="dot" style="background:{eventDotColor(node.type)};"></span>
           <span class="etype" class:etype-muted={depth > 0}>{node.type}</span>
           <span class="badge" style={originBadgeStyle(node.origin)}>{node.origin}</span>
           <span class="time">{relativeTime(node.timeCreated)}</span>
-        </div>
+        </button>
+        {#if hasMeta}
+          <div class="meta" style="padding-left: {depth > 0 ? 29 : 13}px;">
+            {#if env}
+              <span class="meta-tag">{env}</span>
+            {/if}
+            {#if svc}
+              <span class="meta-tag">{svc}</span>
+            {/if}
+            {#if branch}
+              <span class="meta-branch">&#x238B; {branch}</span>
+            {/if}
+            {#if run !== null}
+              <span class="meta-dim">run #{run}</span>
+            {/if}
+            {#each other as tag (tag)}
+              <span class="tag-pill" style={tagCategoryStyle(tag)}>{tag}</span>
+            {/each}
+          </div>
+        {/if}
+        {#if selectedEventId === node.id}
+          {#if loadingDetail}
+            <div class="detail-loading" style="margin-left: {depth > 0 ? 29 : 13}px;">loading...</div>
+          {:else}
+            <EventDetail
+              event={{
+                id: node.id,
+                type: node.type,
+                origin: node.origin,
+                tags: node.tags,
+                parentEventId: node.parentEventId,
+                data: selectedEventData ?? {},
+                timeCreated: node.timeCreated,
+              }}
+              {organization}
+              {repoName}
+              onclose={() => { selectedEventId = null; selectedEventData = null; }}
+            />
+          {/if}
+        {/if}
         {#if node.children.length > 0}
           <div class="branch">
             {#each node.children as child (child.id)}
@@ -117,7 +174,20 @@
 
   .node { display: flex; flex-direction: column; }
 
-  .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; min-width: 0; }
+  .row-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    min-width: 0;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+  .row-btn:hover { background: color-mix(in srgb, var(--color-text) 3%, transparent); border-radius: 2px; }
+  .row-btn-selected { background: color-mix(in srgb, var(--color-accent) 4%, transparent); border-radius: 2px; }
 
   .connector { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--color-border); flex-shrink: 0; margin-right: -4px; }
 
@@ -129,6 +199,25 @@
   .badge { font-family: "JetBrains Mono", monospace; font-size: 10px; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; line-height: 1.6; }
 
   .time { font-size: 11px; color: var(--color-dim); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding-bottom: 4px; min-width: 0; }
+
+  .meta-tag { font-family: "JetBrains Mono", monospace; font-size: 10px; padding: 0 4px; border-radius: 3px; background: var(--color-elevated); color: var(--color-muted); line-height: 1.6; }
+
+  .meta-branch { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
+
+  .meta-dim { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
+
+  .tag-pill {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 0 4px;
+    border-radius: 3px;
+    border: 1px solid;
+    line-height: 1.6;
+  }
+
+  .detail-loading { font-size: 11px; color: var(--color-dim); font-style: italic; padding: 4px 0; }
 
   .branch { border-left: 1px solid var(--color-border); margin-left: 6px; }
 

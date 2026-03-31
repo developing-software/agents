@@ -1,0 +1,90 @@
+name: Run Typecheck
+description: Setup Bun, install dependencies, run typecheck, and emit lifecycle events
+
+inputs:
+  bun-version:
+    description: Bun version to use
+    default: latest
+  install:
+    description: Set to 'false' to skip bun setup and install (when caller already ran them)
+    default: "true"
+  name:
+    description: Check name for the results folder
+    default: tsc
+  token:
+    description: Personal access token for emitting events and uploading artifacts to the Agents API
+    required: false
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+
+outputs:
+  typecheck-output:
+    description: Typecheck output
+    value: ${{ steps.run-typecheck.outputs.typecheck-output }}
+  outcome:
+    description: Typecheck outcome (success or failure)
+    value: ${{ steps.run-typecheck.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - id: typecheck-started
+      uses: developing-software/agents/actions/event/emit@dev
+      if: inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        type: typecheck.started
+
+    - name: Setup Bun
+      if: ${{ inputs.install != 'false' }}
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
+
+    - name: Install dependencies
+      if: ${{ inputs.install != 'false' }}
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Run typecheck
+      id: run-typecheck
+      shell: bash
+      run: |
+        bun run typecheck 2>&1 | tee "$RUNNER_TEMP/typecheck-output.txt"
+        exit_code=${PIPESTATUS[0]}
+        {
+          echo "typecheck-output<<EOF"
+          cat "$RUNNER_TEMP/typecheck-output.txt"
+          echo "EOF"
+          echo "outcome=$([ $exit_code -eq 0 ] && echo success || echo failure)"
+        } >> $GITHUB_OUTPUT
+        exit $exit_code
+
+    - uses: developing-software/agents/actions/agent/result@dev
+      if: always()
+      with:
+        category: typecheck
+        name: ${{ inputs.name }}
+        outcome: ${{ steps.run-typecheck.outputs.outcome }}
+        output: ${{ runner.temp }}/typecheck-output.txt
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: failure() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        path: ${{ runner.temp }}/typecheck-output.txt
+        name: typecheck-output.txt
+
+    - uses: developing-software/agents/actions/event/emit@dev
+      if: always() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        parent_event_id: ${{ steps.typecheck-started.outputs.event_id }}
+        type: typecheck.completed
+        data: >-
+          {"outcome":${{ toJSON(steps.run-typecheck.outputs.outcome) }}}

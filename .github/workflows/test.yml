@@ -6,6 +6,11 @@ on:
     branches: [dev, prod]
   pull_request:
 
+concurrency:
+  # Use the PR head commit so push and PR events for the same commit share a group.
+  group: ${{ format('tests-{0}', github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha) }}
+  cancel-in-progress: false
+
 jobs:
   test:
     name: Test

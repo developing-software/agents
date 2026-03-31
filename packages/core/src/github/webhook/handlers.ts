@@ -173,8 +173,6 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
     const pushTags = [
       Tags.ghRepo(repo.fullName),
       Tags.ghBranch(branch),
-      Tags.metric("commit_count", String(commitCount)),
-      Tags.metric("last_commit", lastCommit),
     ];
 
     const parentEventId = await Event.findParent({

@@ -115,11 +115,13 @@ export namespace Event {
     async (input) => {
       return createTransaction(async (tx) => {
         const id = createID("event");
+        const parentEventId = await inferParentEventId(input);
         log.info("create", {
           id,
           type: input.type,
-          source: input.source,
+          source: input.origin,
           sourceId: input.sourceId,
+          parentEventId,
         });
         await tx.insert(eventTable).values({
           id,
@@ -127,7 +129,7 @@ export namespace Event {
           origin: input.origin,
           source: input.source,
           sourceId: input.sourceId,
-          parentEventId: input.parentEventId,
+          parentEventId,
           tags: input.tags ?? [],
           data: input.data ?? {},
         });
@@ -191,6 +193,45 @@ export namespace Event {
       return row?.id;
     });
   }
+
+  export async function inferParentEventId(opts: {
+    source?: string;
+    sourceId?: string;
+    type?: string;
+    tags?: string[];
+    parentEventId?: string;
+  }): Promise<string | undefined> {
+    if (opts.parentEventId !== undefined && opts.parentEventId !== null) {
+      return opts.parentEventId;
+    }
+
+    const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
+    if (prTag) {
+      const parentEventId = await findParent({ tags: [prTag] }).catch(() => undefined);
+      if (parentEventId) {
+        return parentEventId;
+      }
+    }
+
+    const issueTag = opts.tags?.find((tag) => tag.startsWith("gh:issue:"));
+    if (issueTag) {
+      const parentEventId = await findParent({ tags: [issueTag] }).catch(() => undefined);
+      if (parentEventId) {
+        return parentEventId;
+      }
+    }
+
+    const runTag = opts.tags?.find((tag) => tag.startsWith("gh:run:"));
+    if (runTag) {
+      const parentEventId = await findParent({ tags: [runTag] }).catch(() => undefined);
+      if (parentEventId) {
+        return parentEventId;
+      }
+    }
+
+    return opts.parentEventId;
+  }
+
 
   export async function listTree(opts: {
     source?: string;

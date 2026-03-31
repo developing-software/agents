@@ -17,47 +17,47 @@
         "typescript": "catalog:",
       },
     },
+    "actions/agent/workflow": {
+      "name": "workflow-run-action",
+      "dependencies": {
+        "@actions/core": "catalog:action",
+        "@actions/exec": "catalog:action",
+        "@agents/actions-core": "workspace:*",
+        "@agents/sdk": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:action",
+      },
+    },
     "actions/artifact/upload": {
       "name": "artifact-upload-action",
       "dependencies": {
-        "@actions/core": "^1.10.1",
+        "@actions/core": "catalog:action",
       },
       "devDependencies": {
-        "@types/node": "^22.0.0",
+        "@types/node": "catalog:action",
       },
     },
     "actions/core": {
       "name": "@agents/actions-core",
       "dependencies": {
-        "@actions/core": "^1.10.1",
-        "@actions/exec": "^1.1.1",
+        "@actions/core": "catalog:action",
+        "@actions/exec": "catalog:action",
         "@agents/sdk": "workspace:*",
       },
       "devDependencies": {
-        "@types/node": "^22.0.0",
+        "@types/node": "catalog:action",
       },
     },
     "actions/event/emit": {
       "name": "event-emit-action",
       "dependencies": {
-        "@actions/core": "^1.10.1",
+        "@actions/core": "catalog:action",
         "@agents/actions-core": "workspace:*",
         "@agents/sdk": "workspace:*",
       },
       "devDependencies": {
-        "@types/node": "^22.0.0",
-      },
-    },
-    "actions/workflow/run": {
-      "name": "workflow-run-action",
-      "dependencies": {
-        "@actions/core": "^1.10.1",
-        "@actions/exec": "^1.1.1",
-        "@agents/actions-core": "workspace:*",
-        "@agents/sdk": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/node": "^22.0.0",
+        "@types/node": "catalog:action",
       },
     },
     "packages/cli": {
@@ -190,6 +190,11 @@
     "zod": "^4.3.5",
   },
   "catalogs": {
+    "action": {
+      "@actions/core": "^1.10.1",
+      "@actions/exec": "^1.1.1",
+      "@types/node": "^22.0.0",
+    },
     "build": {
     },
     "frontend": {
@@ -1075,7 +1080,7 @@
 
     "workers": ["workers@workspace:packages/workers"],
 
-    "workflow-run-action": ["workflow-run-action@workspace:actions/workflow/run"],
+    "workflow-run-action": ["workflow-run-action@workspace:actions/agent/workflow"],
 
     "worktop": ["worktop@0.8.0-next.18", "", { "dependencies": { "mrmime": "^2.0.0", "regexparam": "^3.0.0" } }, "sha512-+TvsA6VAVoMC3XDKR5MoC/qlLqDixEfOBysDEKnPIPou/NvoPWCAuXHXMsswwlvmEuvX56lQjvELLyLuzTKvRw=="],
 

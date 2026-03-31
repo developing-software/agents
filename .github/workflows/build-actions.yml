@@ -5,7 +5,7 @@ on:
     branches: [dev]
     paths:
       - "actions/event/emit/src/**"
-      - "actions/workflow/run/src/**"
+      - "actions/agent/workflow/src/**"
       - "actions/artifact/upload/src/**"
       - "actions/core/src/**"
       - "actions/**/build.ts"
@@ -33,13 +33,13 @@ jobs:
       - name: Typecheck actions
         run: |
           bunx tsc --noEmit --project actions/event/emit/tsconfig.json
-          bunx tsc --noEmit --project actions/workflow/run/tsconfig.json
+          bunx tsc --noEmit --project actions/agent/workflow/tsconfig.json
           bunx tsc --noEmit --project actions/artifact/upload/tsconfig.json
 
       - name: Build actions
         run: |
           bun run actions/event/emit/build.ts
-          bun run actions/workflow/run/build.ts
+          bun run actions/agent/workflow/build.ts
           bun run actions/artifact/upload/build.ts
 
       - name: Commit dist files
@@ -48,7 +48,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add actions/event/emit/dist/
-          git add actions/workflow/run/dist/
+          git add actions/agent/workflow/dist/
           git add actions/artifact/upload/dist/
           if git diff --cached --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT

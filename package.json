@@ -13,6 +13,11 @@
       "typescript": "^6"
     },
     "catalogs": {
+      "action": {
+        "@actions/core": "^1.10.1",
+        "@actions/exec": "^1.1.1",
+        "@types/node": "^22.0.0"
+      },
       "build": {},
       "frontend": {
         "@tailwindcss/vite": "^4.1.18",
@@ -34,7 +39,8 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix"
+    "lint:fix": "oxlint --fix",
+    "typecheck": "bun --filter '*' typecheck"
   },
   "dependencies": {
     "sst": "catalog:"
