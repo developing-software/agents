@@ -4,6 +4,7 @@ import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import {
   createApiClient,
+  execWithOutput,
   getContext,
   readEventPayload,
   readOptionalTags,
@@ -95,6 +96,34 @@ async function run() {
   // Create and push branch
   await exec.exec("git", ["checkout", "-b", branch]);
   await exec.exec("git", ["push", "origin", branch, "--force-with-lease"]);
+
+  // Post progress comment on the issue
+  try {
+    const body = [
+      `> **Agent workflow started**`,
+      `>`,
+      `> **Run:** [View workflow run](${ctx.runUrl})`,
+      `> **Branch:** \`${branch}\``,
+      ...(harness ? [`> **Agent:** ${harness}`] : []),
+      `>`,
+      `> _In progress..._`,
+    ].join("\n");
+    const commentUrl = await execWithOutput("gh", [
+      "issue",
+      "comment",
+      issue.number.toString(),
+      "--repo",
+      ctx.repository,
+      "--body",
+      body,
+    ]);
+    const commentIdMatch = commentUrl.match(/#issuecomment-(\d+)/);
+    if (commentIdMatch) {
+      core.saveState("comment_id", commentIdMatch[1]!);
+    }
+  } catch (err) {
+    core.warning(`Failed to post issue comment: ${err}`);
+  }
 }
 
 run().catch(core.setFailed);

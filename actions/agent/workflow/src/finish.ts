@@ -66,6 +66,8 @@ async function run() {
   const harness = core.getState("harness");
   const model = core.getState("model");
 
+  const commentId = core.getState("comment_id");
+
   if (!branch) {
     core.warning("No branch state found — main step likely failed, skipping finish.");
     return;
@@ -98,6 +100,27 @@ async function run() {
     ignoreReturnCode: true,
   });
   if (diffCode === 0) {
+    if (commentId) {
+      try {
+        const body = [
+          `> **Agent workflow failed**`,
+          `>`,
+          `> **Run:** [View workflow run](${runUrl})`,
+          `>`,
+          `> No changes were made by the agent.`,
+        ].join("\n");
+        await execWithOutput("gh", [
+          "api",
+          `repos/${repository}/issues/comments/${commentId}`,
+          "-X",
+          "PATCH",
+          "-f",
+          `body=${body}`,
+        ]);
+      } catch (err) {
+        core.warning(`Failed to update issue comment: ${err}`);
+      }
+    }
     core.setFailed("No changes to commit — agent made no modifications.");
     return;
   }
@@ -262,6 +285,38 @@ async function run() {
         : []),
     ])
     .write();
+
+  // Update the progress comment on the issue
+  if (commentId) {
+    try {
+      const durationSec = Math.round(durationMs / 1000);
+      const checksLine =
+        checks.length > 0
+          ? checks.map((c) => `> - **${c.category}/${c.name}:** ${c.outcome}`).join("\n") + "\n"
+          : "";
+      const body = [
+        `> **Agent workflow completed**`,
+        `>`,
+        `> **Run:** [View workflow run](${runUrl})`,
+        `> **Branch:** \`${branch}\``,
+        `> **Agent:** ${agentName}`,
+        ...(prUrl ? [`> **PR:** ${prUrl}`] : []),
+        `> **Duration:** ${durationSec}s`,
+        `> **Lines:** +${linesAdded} / -${linesRemoved}`,
+        ...(checksLine ? [`>`, checksLine.trimEnd()] : []),
+      ].join("\n");
+      await execWithOutput("gh", [
+        "api",
+        `repos/${repository}/issues/comments/${commentId}`,
+        "-X",
+        "PATCH",
+        "-f",
+        `body=${body}`,
+      ]);
+    } catch (err) {
+      core.warning(`Failed to update issue comment: ${err}`);
+    }
+  }
 }
 
 run().catch(core.setFailed);
