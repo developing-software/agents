@@ -20,10 +20,17 @@
   const AGENT_COLORS: Record<string, string> = {
     claude: 'var(--color-accent)',
     codex: 'var(--color-success)',
+    opencode: '#e879f9',
   };
 
+  const FALLBACK_COLORS = ['var(--color-warning)', '#f97316', '#06b6d4', '#a78bfa', '#fb923c'];
+
   function agentColor(agent: string): string {
-    return AGENT_COLORS[agent] ?? 'var(--color-warning)';
+    if (AGENT_COLORS[agent]) return AGENT_COLORS[agent];
+    // Stable fallback based on agent name hash
+    let hash = 0;
+    for (let i = 0; i < agent.length; i++) hash = (hash * 31 + agent.charCodeAt(i)) | 0;
+    return FALLBACK_COLORS[Math.abs(hash) % FALLBACK_COLORS.length];
   }
 
   function capitalize(s: string): string {

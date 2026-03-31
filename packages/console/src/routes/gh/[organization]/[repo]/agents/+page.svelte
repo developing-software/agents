@@ -8,12 +8,99 @@
     prRef,
     branchTag,
     runRef,
+    formatBytes,
   } from '$lib/events/event-helpers';
+  import EventOverview from '$lib/events/EventOverview.svelte';
+  import EventAgentsOverview from '$lib/events/EventAgentsOverview.svelte';
+  import ArtifactViewer from '$lib/ArtifactViewer.svelte';
+  import { SvelteMap } from 'svelte/reactivity';
 
   let { data }: PageProps = $props();
 
   let retryCount = $state(0);
   let expandedId = $state<string | null>(null);
+
+  // ── Artifacts ────────────────────────────────────────────────────────
+
+  type Artifact = { name: string; size: number };
+
+  type ArtifactsFetch =
+    | { status: 'loading' }
+    | { status: 'error'; message: string }
+    | { status: 'ok'; items: Artifact[] };
+
+  let artifactsMap = new SvelteMap<string, ArtifactsFetch>();
+  let expandedArtifact = $state<string | null>(null);
+
+  function fetchArtifactsForEvent(eventId: string): void {
+    if (artifactsMap.has(eventId)) return;
+    artifactsMap.set(eventId, { status: 'loading' });
+    fetch(`/gh/${data.organization}/${data.repoName}/events/${eventId}/artifacts`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((items) => {
+        artifactsMap.set(eventId, { status: 'ok', items: items as Artifact[] });
+      })
+      .catch((err: unknown) => {
+        artifactsMap.set(eventId, {
+          status: 'error',
+          message: err instanceof Error ? err.message : String(err),
+        });
+      });
+  }
+
+  /** Merge artifacts from multiple event IDs into a single flat list. */
+  function mergedArtifacts(eventIds: string[]): Artifact[] {
+    const seen = new Set<string>();
+    const result: Artifact[] = [];
+    for (const id of eventIds) {
+      const entry = artifactsMap.get(id);
+      if (entry?.status === 'ok') {
+        for (const a of entry.items) {
+          if (!seen.has(a.name)) {
+            seen.add(a.name);
+            result.push(a);
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  function artifactsLoading(eventIds: string[]): boolean {
+    return eventIds.some((id) => artifactsMap.get(id)?.status === 'loading');
+  }
+
+  $effect(() => {
+    const id = expandedId;
+    expandedArtifact = null;
+    if (!id) return;
+
+    // We need the runs to look up parentEventId — wait for promise
+    runsPromise.then((runs) => {
+      const run = runs.find((r) => r.id === id);
+      if (!run) return;
+      fetchArtifactsForEvent(run.id);
+      if (run.parentEventId) fetchArtifactsForEvent(run.parentEventId);
+    });
+  });
+
+  function toggleArtifact(name: string) {
+    expandedArtifact = expandedArtifact === name ? null : name;
+  }
+
+  function artifactUrl(eventIds: string[], name: string): string {
+    // Find which event ID actually has this artifact
+    for (const id of eventIds) {
+      const entry = artifactsMap.get(id);
+      if (entry?.status === 'ok' && entry.items.some((a) => a.name === name)) {
+        return `/gh/${data.organization}/${data.repoName}/events/${id}/artifacts/${name}`;
+      }
+    }
+    return `/gh/${data.organization}/${data.repoName}/events/${eventIds[0]}/artifacts/${name}`;
+  }
 
   const runsPromise = $derived.by(() => {
     void retryCount;
@@ -63,6 +150,9 @@
   }
 </script>
 
+<EventOverview organization={data.organization} repoName={data.repoName} />
+<EventAgentsOverview organization={data.organization} repoName={data.repoName} />
+
 <h2 class="section-heading">Agent Runs</h2>
 
 {#await runsPromise}
@@ -92,6 +182,8 @@
         {@const branch = branchTag(run.tags)}
         {@const ghRun = runRef(run.tags)}
         {@const isExpanded = expandedId === run.id}
+        {@const eventIds = [run.id, ...(run.parentEventId ? [run.parentEventId] : [])]}
+        {@const runArtifacts = mergedArtifacts(eventIds)}
 
         <div class="run-row-wrap" class:run-row-expanded={isExpanded}>
           <button
@@ -218,6 +310,33 @@
                   <div class="tag-list">
                     {#each run.tags as tag (tag)}
                       <span class="tag-pill">{tag}</span>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+
+              {#if artifactsLoading(eventIds)}
+                <div class="detail-section">
+                  <span class="detail-label">Artifacts</span>
+                  <span class="artifacts-loading">loading...</span>
+                </div>
+              {:else if runArtifacts.length > 0}
+                <div class="detail-section">
+                  <span class="detail-label">Artifacts</span>
+                  <div class="artifact-list">
+                    {#each runArtifacts as artifact (artifact.name)}
+                      <button
+                        type="button"
+                        class="artifact-row"
+                        class:artifact-row-active={expandedArtifact === artifact.name}
+                        onclick={() => toggleArtifact(artifact.name)}
+                      >
+                        <span class="artifact-name">{artifact.name}</span>
+                        <span class="artifact-size">{formatBytes(artifact.size)}</span>
+                      </button>
+                      {#if expandedArtifact === artifact.name}
+                        <ArtifactViewer name={artifact.name} url={artifactUrl(eventIds, artifact.name)} />
+                      {/if}
                     {/each}
                   </div>
                 </div>
@@ -635,5 +754,59 @@
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Artifacts                                                           */
+  /* ------------------------------------------------------------------ */
+  .artifacts-loading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+  }
+
+  .artifact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .artifact-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 6px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+  }
+
+  .artifact-row:hover {
+    border-color: var(--color-dim);
+  }
+
+  .artifact-row-active {
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  }
+
+  .artifact-name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-text);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .artifact-size {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+    flex-shrink: 0;
   }
 </style>
