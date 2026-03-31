@@ -14,9 +14,10 @@
   ]);
 
   function isActive(href: string) {
-    return href.includes('/tree')
-      ? page.url.pathname.startsWith(href)
-      : page.url.pathname === href;
+    if (href.includes('/tree') || href.includes('/agents')) {
+      return page.url.pathname.startsWith(href);
+    }
+    return page.url.pathname === href;
   }
 </script>
 
