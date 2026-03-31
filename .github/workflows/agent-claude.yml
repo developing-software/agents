@@ -14,7 +14,7 @@ jobs:
     if: github.event.label.name == 'claude'
     runs-on: ubuntu-latest
     env:
-      CLAUDE_MODEL: claude-sonnet-4-6
+      MODEL: claude-sonnet-4-6
     permissions:
       contents: write
       pull-requests: write
@@ -33,7 +33,7 @@ jobs:
         with:
           pr_prefix: claude
           harness: claude-code
-          model: ${{ env.CLAUDE_MODEL }}
+          model: ${{ env.MODEL }}
           token: ${{ secrets.AGENTS_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +43,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: --model ${{ env.CLAUDE_MODEL }} --output-format stream-json --verbose --dangerously-skip-permissions
+          claude_args: --model ${{ env.MODEL }} --output-format stream-json --verbose --dangerously-skip-permissions
           prompt: |
             Implement the following GitHub issue:
 
@@ -62,7 +62,7 @@ jobs:
         with:
           execution_file: ${{ steps.run-claude.outputs.execution_file }}
           session_id: ${{ steps.run-claude.outputs.session_id }}
-          model: ${{ env.CLAUDE_MODEL }}
+          model: ${{ env.MODEL }}
           token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./.github/actions/lint
