@@ -64,6 +64,16 @@ jobs:
           session_id: ${{ steps.run-claude.outputs.session_id }}
           token: ${{ secrets.AGENTS_TOKEN }}
 
+      - uses: ./.github/actions/lint
+        with:
+          install: "false"
+          token: ${{ secrets.AGENTS_TOKEN }}
+
+      - uses: ./.github/actions/typecheck
+        with:
+          install: "false"
+          token: ${{ secrets.AGENTS_TOKEN }}
+
       - uses: ./.github/actions/test
         with:
           install: "false"

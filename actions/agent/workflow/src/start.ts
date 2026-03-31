@@ -31,6 +31,11 @@ async function run() {
 
   const harness = core.getInput("harness");
   const model = core.getInput("model");
+
+  // Export metadata for downstream comment updates
+  core.exportVariable("AGENTS_RUN_URL", ctx.runUrl);
+  core.exportVariable("AGENTS_BRANCH", branch);
+  if (harness) core.exportVariable("AGENTS_HARNESS", harness);
   const baseBranch = core.getInput("base_branch") || process.env.GITHUB_REF_NAME || "";
   const extraTags = readOptionalTags(core.getInput("tags"));
 
@@ -120,6 +125,7 @@ async function run() {
     const commentIdMatch = commentUrl.match(/#issuecomment-(\d+)/);
     if (commentIdMatch) {
       core.saveState("comment_id", commentIdMatch[1]!);
+      core.exportVariable("AGENTS_COMMENT_ID", commentIdMatch[1]!);
     }
   } catch (err) {
     core.warning(`Failed to post issue comment: ${err}`);

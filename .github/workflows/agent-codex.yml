@@ -1,46 +1,44 @@
-name: OpenCode - Implement Issue
-run-name: "opencode/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+name: Codex - Implement Issue
+run-name: "codex/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
 
 on:
   issues:
     types: [labeled]
 
 concurrency:
-  group: opencode-issue-${{ github.event.issue.number }}
+  group: codex-issue-${{ github.event.issue.number }}
   cancel-in-progress: false
 
 jobs:
   implement:
-    if: github.event.label.name == 'opencode'
+    if: github.event.label.name == 'codex'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       issues: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
+      # Pre-install before Codex runs — its sandbox disables network access
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
       - uses: ./actions/agent/workflow
         with:
-          pr_prefix: opencode
-          harness: opencode
+          pr_prefix: codex
+          harness: codex
           token: ${{ secrets.AGENTS_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run OpenCode
-        id: run-opencode
-        uses: anomalyco/opencode/github@latest
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Run Codex
+        id: run-codex
+        uses: openai/codex-action@v1
         with:
-          model: openai/gpt-5.4-pro
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt: |
             Implement the following GitHub issue in this repository:
 
@@ -52,6 +50,22 @@ jobs:
             Follow the existing code style, naming conventions, and patterns in the codebase.
             Refer to AGENTS.md for project structure and guidelines.
             Do NOT commit, push, or open a pull request — only modify the files.
+
+      - uses: ./actions/agent/codex
+        if: always()
+        with:
+          final_message: ${{ steps.run-codex.outputs.final-message }}
+          token: ${{ secrets.AGENTS_TOKEN }}
+
+      - uses: ./.github/actions/lint
+        with:
+          install: "false"
+          token: ${{ secrets.AGENTS_TOKEN }}
+
+      - uses: ./.github/actions/typecheck
+        with:
+          install: "false"
+          token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./.github/actions/test
         with:

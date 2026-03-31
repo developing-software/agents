@@ -66,7 +66,7 @@ async function run() {
   const harness = core.getState("harness");
   const model = core.getState("model");
 
-  const commentId = core.getState("comment_id");
+  const commentId = core.getState("comment_id") || process.env.AGENTS_COMMENT_ID;
 
   if (!branch) {
     core.warning("No branch state found — main step likely failed, skipping finish.");
