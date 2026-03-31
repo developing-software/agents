@@ -21,30 +21,49 @@ runs:
         SESSION_ID=$(opencode session list 2>&1 | awk 'NR==3 {print $1}')
 
         if [ -n "$SESSION_ID" ]; then
-          # Export session JSON (skip the first "Exporting session:" line on stderr)
-          EXPORT=$(opencode export "$SESSION_ID" 2>/dev/null | tail -n +2)
+          # Export session JSON
+          EXPORT=$(opencode export "$SESSION_ID" 2>/dev/null)
 
           # Write export to temp file for artifact upload
-          echo "$EXPORT" > "${RUNNER_TEMP:-/tmp}/opencode-session.json"
+          printf '%s\n' "$EXPORT" > "${RUNNER_TEMP:-/tmp}/opencode-session.json"
 
-          METRICS_JSON=$(echo "$EXPORT" | jq '
-            .messages
-            | map(select(.info.role == "assistant"))
-            | if length == 0 then null
-              else {
-                input_tokens: (map(.info.tokens.input) | add),
-                output_tokens: (map(.info.tokens.output) | add),
-                reasoning_tokens: (map(.info.tokens.reasoning) | add),
-                cache_read_input_tokens: (map(.info.tokens.cache.read) | add),
-                cache_creation_input_tokens: (map(.info.tokens.cache.write) | add),
-                num_turns: length,
-                cost_usd: (map(.info.cost) | add),
-                model: (last | .info.modelID)
-              } end')
+          # Extract fields individually from assistant messages (robust pattern)
+          ASSISTANTS=$(printf '%s' "$EXPORT" | jq -c '[.messages[]? | select(.info.role == "assistant")]' 2>/dev/null)
 
-          LAST_MSG=$(echo "$EXPORT" | jq -r '
-            .messages | map(select(.info.role == "assistant")) | last //empty |
-            .parts | map(select(.type == "text")) | last // empty | .text // empty')
+          if [ -n "$ASSISTANTS" ] && [ "$ASSISTANTS" != "[]" ] && [ "$ASSISTANTS" != "null" ]; then
+            INPUT=$(printf '%s' "$ASSISTANTS"      | jq '[.[].info.tokens.input // 0] | add')
+            OUTPUT=$(printf '%s' "$ASSISTANTS"     | jq '[.[].info.tokens.output // 0] | add')
+            REASONING=$(printf '%s' "$ASSISTANTS"  | jq '[.[].info.tokens.reasoning // 0] | add')
+            CACHE_READ=$(printf '%s' "$ASSISTANTS" | jq '[.[].info.tokens.cache.read // 0] | add')
+            CACHE_CREATE=$(printf '%s' "$ASSISTANTS" | jq '[.[].info.tokens.cache.write // 0] | add')
+            TURNS=$(printf '%s' "$ASSISTANTS"      | jq 'length')
+            COST=$(printf '%s' "$ASSISTANTS"       | jq '[.[].info.cost // 0] | add')
+            MODEL=$(printf '%s' "$ASSISTANTS"      | jq -r 'last | .info.modelID // empty')
+          fi
+
+          METRICS_JSON=$(jq -nc \
+            --argjson input     "${INPUT:-null}" \
+            --argjson output    "${OUTPUT:-null}" \
+            --argjson reasoning "${REASONING:-null}" \
+            --argjson cread     "${CACHE_READ:-null}" \
+            --argjson ccreate   "${CACHE_CREATE:-null}" \
+            --argjson turns     "${TURNS:-null}" \
+            --argjson cost      "${COST:-null}" \
+            --arg     model     "${MODEL:-}" \
+            '{
+              input_tokens: $input,
+              output_tokens: $output,
+              reasoning_tokens: $reasoning,
+              cache_read_input_tokens: $cread,
+              cache_creation_input_tokens: $ccreate,
+              num_turns: $turns,
+              cost_usd: $cost,
+              model: (if $model == "" then null else $model end)
+            }')
+
+          LAST_MSG=$(printf '%s' "$EXPORT" | jq -r '
+            [.messages[]? | select(.info.role == "assistant")] | last // empty |
+            .parts | map(select(.type == "text")) | last // empty | .text // empty' 2>/dev/null)
         else
           METRICS_JSON="null"
           LAST_MSG=""
