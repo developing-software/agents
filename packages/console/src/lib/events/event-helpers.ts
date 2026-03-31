@@ -11,11 +11,12 @@ export type EventMetrics = {
 };
 
 export function eventDotColor(type: string): string {
-  if (type.startsWith('implement.')) return 'var(--color-accent)';
+  if (type.startsWith('agent.')) return 'var(--color-accent)';
+  if (type.startsWith('tests.')) return 'var(--color-success)';
+  if (type.startsWith('lint.')) return 'var(--color-merged)';
   if (type.startsWith('github.issues.')) return 'var(--color-success)';
   if (type.startsWith('github.pull_request.')) return 'var(--color-merged)';
   if (type === 'github.push') return 'var(--color-dim)';
-  if (type.startsWith('agents.')) return 'var(--color-warning)';
   return 'var(--color-warning)';
 }
 

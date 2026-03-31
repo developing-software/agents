@@ -4,6 +4,7 @@
   import GitHubLink from '$lib/GitHubLink.svelte';
   import Events from '$lib/events/Events.svelte';
   import EventOverview from '$lib/events/EventOverview.svelte';
+  import EventAgentsOverview from '$lib/events/EventAgentsOverview.svelte';
 
   let { data }: PageProps = $props();
 
@@ -27,6 +28,7 @@
   <!-- ============================================================ -->
   <section class="activity-section">
     <EventOverview organization={data.organization} repoName={data.repoName} />
+    <EventAgentsOverview organization={data.organization} repoName={data.repoName} />
     <h2 class="section-heading">Activity</h2>
     <Events organization={data.organization} repoName={data.repoName} />
   </section>

@@ -1,4 +1,5 @@
-import { appendFileSync } from "fs";
+import { appendFileSync, existsSync, readdirSync, readFileSync } from "fs";
+import { join } from "path";
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import {
@@ -17,6 +18,44 @@ async function findExistingPrUrl(branch: string): Promise<string> {
   return pullRequests[0]?.url?.trim() ?? "";
 }
 
+function readResultsFolder(resultsDir: string) {
+  let agent: string | null = null;
+  let metrics: Record<string, unknown> | null = null;
+
+  // Read agent result
+  const agentResultPath = join(resultsDir, "agent", "result.json");
+  if (existsSync(agentResultPath)) {
+    try {
+      const agentResult = JSON.parse(readFileSync(agentResultPath, "utf-8"));
+      agent = agentResult.agent ?? null;
+      metrics = agentResult.metrics ?? null;
+    } catch (err) {
+      core.warning(`Failed to read agent/result.json: ${err}`);
+    }
+  }
+
+  // Walk results dir: */*/result.json (skip agent/)
+  const checks: Array<{ category: string; name: string; outcome: string }> = [];
+  const categories = readdirSync(resultsDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && d.name !== "agent");
+  for (const catDir of categories) {
+    const catPath = join(resultsDir, catDir.name);
+    const names = readdirSync(catPath, { withFileTypes: true }).filter((d) => d.isDirectory());
+    for (const nameDir of names) {
+      const resultPath = join(catPath, nameDir.name, "result.json");
+      if (!existsSync(resultPath)) continue;
+      try {
+        const result = JSON.parse(readFileSync(resultPath, "utf-8"));
+        checks.push({ category: catDir.name, name: nameDir.name, outcome: result.outcome ?? "unknown" });
+      } catch (err) {
+        core.warning(`Failed to read ${catDir.name}/${nameDir.name}/result.json: ${err}`);
+      }
+    }
+  }
+
+  return { agent, metrics, checks };
+}
+
 async function run() {
   const prPrefix = core.getState("pr_prefix");
   const startMsStr = core.getState("start_ms");
@@ -24,6 +63,7 @@ async function run() {
   const branch = core.getState("branch");
   const runUrl = core.getState("run_url");
   const startEventId = core.getState("start_event_id");
+  const harness = core.getState("harness");
 
   if (!branch) {
     core.warning("No branch state found — main step likely failed, skipping finish.");
@@ -132,16 +172,34 @@ async function run() {
   const prNumberMatch = prUrl.match(/\/pull\/(\d+)/);
   const pullRequestNumber = prNumberMatch ? parseInt(prNumberMatch[1]!) : undefined;
 
-  // Append PR tag and diff metrics to context
+  // Append PR tag to context (keep for event inheritance)
   const contextTagsFile = process.env.AGENTS_CONTEXT_TAGS_FILE;
-  if (contextTagsFile) {
-    if (pullRequestNumber) appendFileSync(contextTagsFile, `gh:pr:${pullRequestNumber}\n`);
-    appendFileSync(contextTagsFile, `metric:duration_ms:${durationMs}\n`);
-    appendFileSync(contextTagsFile, `metric:lines_added:${linesAdded}\n`);
-    appendFileSync(contextTagsFile, `metric:lines_removed:${linesRemoved}\n`);
+  if (contextTagsFile && pullRequestNumber) {
+    appendFileSync(contextTagsFile, `gh:pr:${pullRequestNumber}\n`);
   }
 
-  // Emit agents.implement.completed with full inherited context
+  // Aggregate results from results folder
+  const resultsDir = process.env.AGENTS_RESULTS_DIR;
+  let agentName: string | null = null;
+  let metrics: Record<string, unknown> | null = null;
+  let checks: Array<{ category: string; name: string; outcome: string }> = [];
+
+  if (resultsDir && existsSync(resultsDir)) {
+    const results = readResultsFolder(resultsDir);
+    agentName = results.agent;
+    metrics = results.metrics;
+    checks = results.checks;
+  }
+
+  // Derive agent name: results folder > harness state > prPrefix fallback
+  if (!agentName && harness) {
+    agentName = harness.replace(/-code$/, "");
+  }
+  if (!agentName) {
+    agentName = prPrefix;
+  }
+
+  // Emit agent.completed with aggregated data
   const agentsToken = core.getInput("token");
   const apiUrl = core.getInput("url");
   if (agentsToken) {
@@ -153,9 +211,10 @@ async function run() {
           repoFullName: repository,
           parentEventId: startEventId || null,
           origin: "action",
-          type: "agents.implement.completed",
+          type: "agent.completed",
           tags,
           data: {
+            agent: agentName,
             branch,
             issueNumber: issue.number,
             pullRequestNumber: pullRequestNumber ?? null,
@@ -164,24 +223,17 @@ async function run() {
             durationMs,
             prUrl,
             runUrl,
+            metrics,
+            checks,
           },
         },
       });
     } catch (err) {
-      core.warning(`Failed to post agents.implement.completed event: ${err}`);
+      core.warning(`Failed to post agent.completed event: ${err}`);
     }
   }
 
   // Write job summary
-  const _ctx = getContext();
-  const contextTags = readContextTags();
-  const metricRows = contextTags
-    .filter((t) => t.startsWith("metric:"))
-    .map((t) => {
-      const parts = t.split(":");
-      return [parts[1] ?? "", parts.slice(2).join(":")] as [string, string];
-    });
-
   await core.summary
     .addHeading(`${prTitle} Implementation`)
     .addTable([
@@ -189,14 +241,16 @@ async function run() {
         { data: "Metric", header: true },
         { data: "Value", header: true },
       ],
-      ["Prefix", `\`${prPrefix}\``],
+      ["Agent", agentName],
       ["Branch", `\`${branch}\``],
       ["Lines added", linesAdded.toString()],
       ["Lines removed", linesRemoved.toString()],
       ["Duration", `${durationMs}ms`],
       ["PR", prUrl],
       ["Run", runUrl],
-      ...metricRows,
+      ...(checks.length > 0
+        ? checks.map((c) => [`${c.category}/${c.name}`, c.outcome])
+        : []),
     ])
     .write();
 }

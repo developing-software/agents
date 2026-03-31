@@ -73,7 +73,7 @@ describe("event", () => {
     });
 
     const childId = await Event.create({
-      type: "agents.implement.started",
+      type: "agent.started",
       origin: "action",
       source: "repository",
       sourceId,
@@ -104,7 +104,7 @@ describe("event", () => {
     });
 
     const childId = await Event.create({
-      type: "agents.implement.completed",
+      type: "agent.completed",
       origin: "action",
       source: "repository",
       sourceId,
@@ -134,7 +134,7 @@ describe("event", () => {
     });
 
     const childId = await Event.create({
-      type: "agents.implement.started",
+      type: "agent.started",
       origin: "action",
       source: "repository",
       sourceId,

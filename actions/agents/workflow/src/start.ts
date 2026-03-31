@@ -1,5 +1,5 @@
 import { join } from "path";
-import { appendFileSync } from "fs";
+import { appendFileSync, mkdirSync } from "fs";
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import {
@@ -23,6 +23,11 @@ async function run() {
   const contextTagsFile = join(runnerTemp, ".agents-context-tags");
   core.exportVariable("AGENTS_CONTEXT_TAGS_FILE", contextTagsFile);
 
+  // Create results directory for inter-step data exchange
+  const resultsDir = join(runnerTemp, ".agents-results");
+  mkdirSync(join(resultsDir, "agent"), { recursive: true });
+  core.exportVariable("AGENTS_RESULTS_DIR", resultsDir);
+
   const harness = core.getInput("harness");
   const model = core.getInput("model");
   const baseBranch = core.getInput("base_branch") || process.env.GITHUB_REF_NAME || "";
@@ -41,14 +46,18 @@ async function run() {
   ]);
   appendFileSync(contextTagsFile, contextTags.join("\n") + "\n");
 
+  // Derive agent name from harness: strip "-code" suffix
+  const agent = harness ? harness.replace(/-code$/, "") : null;
+
   // Persist state for finish phase
   core.saveState("pr_prefix", ctx.prPrefix);
   core.saveState("start_ms", startMs.toString());
   core.saveState("branch", branch);
   core.saveState("run_url", ctx.runUrl);
   core.saveState("base_branch", core.getInput("base_branch"));
+  core.saveState("harness", harness);
 
-  // Emit agents.implement.started
+  // Emit agent.started
   const agentsToken = core.getInput("token");
   const apiUrl = core.getInput("url");
   if (agentsToken) {
@@ -58,9 +67,10 @@ async function run() {
         eventIngestInput: {
           repoFullName: ctx.repository,
           origin: "action",
-          type: "agents.implement.started",
+          type: "agent.started",
           tags: contextTags,
           data: {
+            agent,
             harness: harness || null,
             model: model || null,
             branch,
@@ -73,7 +83,7 @@ async function run() {
         core.exportVariable("AGENTS_WORKFLOW_EVENT_ID", data.id);
       }
     } catch (err) {
-      core.warning(`Failed to post agents.implement.started event: ${err}`);
+      core.warning(`Failed to post agent.started event: ${err}`);
     }
   }
 

@@ -16,12 +16,27 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Write agent result to results folder
+      if: always()
+      shell: bash
+      env:
+        FINAL_MESSAGE: ${{ inputs.final_message }}
+      run: |
+        if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
+          mkdir -p "$AGENTS_RESULTS_DIR/agent"
+          jq -nc \
+            --arg agent "codex" \
+            --arg finalMessage "${FINAL_MESSAGE:-}" \
+            '{agent: $agent, sessionId: null, finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: null}' \
+            > "$AGENTS_RESULTS_DIR/agent/result.json"
+        fi
+
     - uses: developing-software/agents/actions/event/emit@dev
       if: always() && inputs.final_message != '' && inputs.token != ''
       with:
         token: ${{ inputs.token }}
         url: ${{ inputs.url }}
         event_id_env: CODEX_EVENT_ID
-        type: agents.codex.result
+        type: agent.result
         data: >-
-          {"finalMessage":${{ toJSON(inputs.final_message) }},"sessionId":null,"metrics":{"input_tokens":null,"output_tokens":null,"cache_read_input_tokens":null,"cache_creation_input_tokens":null,"num_turns":null,"cost_usd":null,"model":null}}
+          {"agent":"codex","finalMessage":${{ toJSON(inputs.final_message) }},"sessionId":null,"metrics":{"input_tokens":null,"output_tokens":null,"cache_read_input_tokens":null,"cache_creation_input_tokens":null,"num_turns":null,"cost_usd":null,"model":null}}

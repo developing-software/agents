@@ -1,39 +1,39 @@
 # actions/
 
-Reusable GitHub Actions for AI-driven implementation workflows. The core idea: a generic `workflow/run` harness wraps any AI agent — the harness handles workflow scaffolding (branch, commit, PR, context tags, API events), while the agent does the code work.
+Reusable GitHub Actions for AI-driven implementation workflows. The core idea: a generic `agents/workflow` harness wraps any AI agent — the harness handles workflow scaffolding (branch, commit, PR, results aggregation, API events), while the agent does the code work.
 
 ## Design principles
 
-- **Agent-agnostic** — `workflow/run` has zero knowledge of Claude, Codex, or any specific agent. Agents run as plain workflow steps between `workflow/run`'s main and post phases.
+- **Agent-agnostic** — `agents/workflow` has zero knowledge of Claude, Codex, or any specific agent. Agents run as plain workflow steps between start and post phases.
 - **Composable** — each action has one responsibility. Tag collection, event emission, and artifact upload are separate actions composed in the workflow.
+- **Results folder** — steps communicate structured results via `$AGENTS_RESULTS_DIR`. Each step writes `result.json` files; the finish phase aggregates them into a single `agent.completed` event.
 - **Context tags** — actions communicate shared observable data via `AGENTS_CONTEXT_TAGS_FILE`. Each line is a tag (`namespace:key:value`). All `event/emit` calls inherit these tags automatically.
-- **Emit vs tag** — use `event/emit` for distinct observable state changes; use `event/tag` to accumulate measurements and references onto the workflow context.
 
 ## Structure
 
 ```
 actions/
-  core/           — shared TypeScript utilities for Node20 actions
-  workflow/
-    run/          — harness: branch setup + PR creation + lifecycle events
+  core/             — shared TypeScript utilities for Node20 actions
+  agents/
+    workflow/       — harness: branch setup + PR creation + results aggregation + lifecycle events
   agent/
-    claude/       — collect Claude Code metrics into context tags + emit agents.claude.result
-    codex/        — collect Codex result + emit agents.codex.result
+    claude/         — collect Claude Code metrics, write agent/result.json, emit agent.result
+    codex/          — collect Codex result, write agent/result.json, emit agent.result
   event/
-    emit/         — post an event to the Agents API (inherits context tags by default)
-    tag/          — append a tag to the workflow context
+    emit/           — post an event to the Agents API (inherits context tags by default)
+    tag/            — append a tag to the workflow context
   artifact/
-    upload/       — upload a file or directory to the Agents API under the workflow event
+    upload/         — upload a file or directory to the Agents API under the workflow event
 ```
 
 ## Actions
 
-### `workflow/run`
+### `agents/workflow`
 
 The core harness. Runs as a `node20` action with `main` and `post` entrypoints.
 
-- **main** (`src/start.ts`): creates the implementation branch, initialises `AGENTS_CONTEXT_TAGS_FILE` with repo/issue/run/branch/harness/model tags, exports `AGENTS_WORKFLOW_EVENT_ID`, posts `agents.implement.started` event
-- **post** (`src/finish.ts`): commits and pushes agent changes, creates the PR, appends `gh:pr:N` and diff metric tags to context, posts `agents.implement.completed` with the full inherited context
+- **main** (`src/start.ts`): creates the implementation branch, initialises `AGENTS_CONTEXT_TAGS_FILE`, creates `AGENTS_RESULTS_DIR`, derives agent name from harness, exports `AGENTS_WORKFLOW_EVENT_ID`, posts `agent.started` event
+- **post** (`src/finish.ts`): commits and pushes agent changes, creates the PR, reads `AGENTS_RESULTS_DIR` to aggregate agent metrics and check outcomes, posts `agent.completed` with full aggregated data
 
 The post step always runs (`post-if: always()`), even if the agent step fails.
 
@@ -47,11 +47,11 @@ Posts an event to the Agents API. By default reads `$AGENTS_CONTEXT_TAGS_FILE` a
 
 ### `agent/claude`
 
-Runs **after** `anthropics/claude-code-action`. Parses token usage and cost from the execution JSON, writes each field as `metric:*` tags to context, then emits `agents.claude.result` with `{"finalMessage": "..."}` in the event data (exports `CLAUDE_EVENT_ID`). Uploads `claude_code_execution.json` to the Agents API.
+Runs **after** `anthropics/claude-code-action`. Parses token usage and cost from the execution JSON, writes `$AGENTS_RESULTS_DIR/agent/result.json` with metrics, then emits `agent.result` with `{"agent":"claude", ...}` in the event data (exports `CLAUDE_EVENT_ID`). Uploads `claude_code_execution.json` to the Agents API.
 
 ### `agent/codex`
 
-Runs **after** `openai/codex-action`. Emits `agents.codex.result` with `{"finalMessage": "..."}` in the event data (exports `CODEX_EVENT_ID`).
+Runs **after** `openai/codex-action`. Writes `$AGENTS_RESULTS_DIR/agent/result.json`, emits `agent.result` with `{"agent":"codex", ...}` in the event data (exports `CODEX_EVENT_ID`).
 
 ### `artifact/upload`
 
@@ -59,70 +59,55 @@ Uploads a file or directory to the Agents API R2 bucket via `POST /events/:id/ar
 
 ## Env var conventions
 
-| Variable                   | Set by               | Read by                                                     | Purpose                                         |
-| -------------------------- | -------------------- | ----------------------------------------------------------- | ----------------------------------------------- |
-| `AGENTS_CONTEXT_TAGS_FILE` | `workflow/run` start | `event/emit`, `event/tag`, `agent/*`, `workflow/run` finish | Path to the tag context file (one tag per line) |
-| `AGENTS_WORKFLOW_EVENT_ID` | `workflow/run` start | `artifact/upload`, `agent/*`, `workflow/run` finish         | ID of the `agents.implement.started` event      |
-| `CLAUDE_EVENT_ID`          | `agent/claude`       | downstream steps                                            | ID of the `agents.claude.result` event          |
-| `CODEX_EVENT_ID`           | `agent/codex`        | downstream steps                                            | ID of the `agents.codex.result` event           |
+| Variable                   | Set by                  | Read by                                                        | Purpose                                         |
+| -------------------------- | ----------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
+| `AGENTS_CONTEXT_TAGS_FILE` | `agents/workflow` start | `event/emit`, `event/tag`, `agent/*`, `agents/workflow` finish | Path to the tag context file (one tag per line) |
+| `AGENTS_WORKFLOW_EVENT_ID` | `agents/workflow` start | `artifact/upload`, `agent/*`, `agents/workflow` finish         | ID of the `agent.started` event                 |
+| `AGENTS_RESULTS_DIR`       | `agents/workflow` start | `agent/*`, test/lint actions, `agents/workflow` finish          | Path to results folder for inter-step data      |
+| `CLAUDE_EVENT_ID`          | `agent/claude`          | downstream steps                                               | ID of the `agent.result` event                  |
+| `CODEX_EVENT_ID`           | `agent/codex`           | downstream steps                                               | ID of the `agent.result` event                  |
+
+## Results folder convention
+
+```
+$AGENTS_RESULTS_DIR/
+  agent/
+    result.json          # { agent, sessionId, finalMessage, metrics }
+  tests/
+    unit/
+      result.json        # { outcome: "success"|"failure" }
+      output.txt
+  lint/
+    oxlint/
+      result.json
+      output.txt
+```
+
+`result.json` always has at least `{ outcome: "success"|"failure" }`. The finish phase globs `*/*/result.json` (skipping `agent/`) to build a `checks[]` array and reads `agent/result.json` for metrics.
 
 ## Workflow pattern
 
 ```
 actions/checkout
 oven-sh/setup-bun + bun install
-./actions/workflow/run           ← sets up branch, exports context env vars, emits agents.implement.started
-<agent step>                     ← claude-code-action, codex-action, etc. — modifies files only
-./actions/agent/<name>           ← writes metric: tags, emits agents.<name>.result, uploads execution artifact
-./.github/actions/test           ← runs tests; writes metric:tests tag; uploads test-output.txt on failure
-[post] ./actions/workflow/run    ← commits, pushes, creates PR, appends gh:pr + diff metrics, emits agents.implement.completed
+./actions/agents/workflow          <- sets up branch, results dir, emits agent.started
+<agent step>                       <- claude-code-action, codex-action, etc.
+./actions/agent/<name>             <- writes agent/result.json, emits agent.result
+./.github/actions/test             <- runs tests, writes tests/{name}/result.json
+./.github/actions/lint             <- runs lint, writes lint/{name}/result.json
+[post] ./actions/agents/workflow   <- commits, pushes, creates PR, aggregates results, emits agent.completed
 ```
 
-## Tag context flow
+## Event types
 
 ```
-workflow/run (start)
-  → AGENTS_CONTEXT_TAGS_FILE:
-      gh:repo:owner/repo
-      gh:issue:42
-      gh:branch:claude/issue-42-...
-      gh:run:${runId}
-      harness:claude-code
-      model:claude-sonnet-4-6
-  → emits: agents.implement.started
-
-agent/claude
-  → appends to AGENTS_CONTEXT_TAGS_FILE:
-      metric:session_id:abc123
-      metric:input_tokens:5000
-      metric:output_tokens:1200
-      metric:cache_read_input_tokens:800
-      metric:num_turns:3
-      metric:cost_usd:0.042
-  → emits: agents.claude.result { finalMessage: "..." }  (child of AGENTS_WORKFLOW_EVENT_ID)
-  → uploads: claude_code_execution.json
-
-.github/actions/test
-  → appends: metric:tests:success
-  → on failure: uploads test-output.txt
-
-workflow/run (finish)
-  → appends: gh:pr:999, metric:duration_ms:45000, metric:lines_added:150, metric:lines_removed:30
-  → emits: agents.implement.completed (inherits all of the above)
+agent.started
+  -> agent.result       (child of AGENTS_WORKFLOW_EVENT_ID)
+agent.completed         (parentEventId -> agent.started)
 ```
-
-## Event hierarchy
-
-```
-agents.implement.started
-└── agents.claude.result        (or agents.codex.result)
-agents.implement.completed
-```
-
-`started` and `completed` are siblings at the root (completed has `parentEventId` pointing to `started`). Agent result events are children of the workflow event.
 
 ## Adding a new agent
 
-1. Create `actions/agent/<name>/action.yml` — append relevant `metric:*` tags via `./actions/event/tag`, emit `agents.<name>.result` via `./actions/event/emit` with `finalMessage` in `data`, upload any execution artifact via `./actions/artifact/upload`
+1. Create `actions/agent/<name>/action.yml` — write `$AGENTS_RESULTS_DIR/agent/result.json`, emit `agent.result` via `./actions/event/emit` with `agent` and `finalMessage` in `data`, upload any execution artifact via `./actions/artifact/upload`
 2. Create `.github/workflows/<name>-implement.yml` following the workflow pattern above
-3. No changes needed to `workflow/run` itself
+3. No changes needed to `agents/workflow` itself

@@ -96,15 +96,30 @@ runs:
           } >> "$GITHUB_ENV"
         fi
 
+    - name: Write agent result to results folder
+      if: always()
+      shell: bash
+      run: |
+        if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
+          mkdir -p "$AGENTS_RESULTS_DIR/agent"
+          jq -nc \
+            --arg agent "claude" \
+            --argjson sessionId "${SESSION_ID_JSON:-null}" \
+            --arg finalMessage "${LAST_MSG:-}" \
+            --argjson metrics "${METRICS_JSON:-null}" \
+            '{agent: $agent, sessionId: $sessionId, finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
+            > "$AGENTS_RESULTS_DIR/agent/result.json"
+        fi
+
     - uses: developing-software/agents/actions/event/emit@dev
       if: always() && inputs.token != ''
       with:
         token: ${{ inputs.token }}
         url: ${{ inputs.url }}
         event_id_env: CLAUDE_EVENT_ID
-        type: agents.claude.result
+        type: agent.result
         data: >-
-          {"finalMessage":${{ toJSON(env.LAST_MSG) }},"sessionId":${{ env.SESSION_ID_JSON || 'null' }},"metrics":${{ env.METRICS_JSON || 'null' }}}
+          {"agent":"claude","finalMessage":${{ toJSON(env.LAST_MSG) }},"sessionId":${{ env.SESSION_ID_JSON || 'null' }},"metrics":${{ env.METRICS_JSON || 'null' }}}
 
     - uses: developing-software/agents/actions/artifact/upload@dev
       if: always() && inputs.execution_file != '' && inputs.token != ''
