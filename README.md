@@ -1,5 +1,7 @@
 # agents
 
+By OpenCode.
+
 To install dependencies:
 
 ```bash
