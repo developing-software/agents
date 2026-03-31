@@ -100,7 +100,7 @@ async function run() {
 
   // Create and push branch
   await exec.exec("git", ["checkout", "-b", branch]);
-  await exec.exec("git", ["push", "origin", branch, "--force-with-lease"]);
+  await exec.exec("git", ["push", "origin", branch, "--force"]);
 
   // Save initial commit SHA so finish phase can detect agent-made commits
   const initialSha = (await execWithOutput("git", ["rev-parse", "HEAD"])).trim();

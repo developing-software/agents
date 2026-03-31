@@ -19969,7 +19969,7 @@ async function run() {
   await exec3.exec("git", ["config", "user.name", "github-actions[bot]"]);
   await exec3.exec("git", ["config", "user.email", "github-actions[bot]@users.noreply.github.com"]);
   await exec3.exec("git", ["checkout", "-b", branch]);
-  await exec3.exec("git", ["push", "origin", branch, "--force-with-lease"]);
+  await exec3.exec("git", ["push", "origin", branch, "--force"]);
   const initialSha = (await execWithOutput("git", ["rev-parse", "HEAD"])).trim();
   core2.saveState("initial_sha", initialSha);
   try {
