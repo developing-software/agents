@@ -3,6 +3,7 @@
 export type EventMetrics = {
   input_tokens: number | null;
   output_tokens: number | null;
+  reasoning_tokens: number | null;
   cache_read_input_tokens: number | null;
   cache_creation_input_tokens: number | null;
   num_turns: number | null;
@@ -104,6 +105,7 @@ export function extractMetrics(data: Record<string, unknown>): EventMetrics | nu
   return {
     input_tokens: typeof obj.input_tokens === 'number' ? obj.input_tokens : null,
     output_tokens: typeof obj.output_tokens === 'number' ? obj.output_tokens : null,
+    reasoning_tokens: typeof obj.reasoning_tokens === 'number' ? obj.reasoning_tokens : null,
     cache_read_input_tokens: typeof obj.cache_read_input_tokens === 'number' ? obj.cache_read_input_tokens : null,
     cache_creation_input_tokens: typeof obj.cache_creation_input_tokens === 'number' ? obj.cache_creation_input_tokens : null,
     num_turns: typeof obj.num_turns === 'number' ? obj.num_turns : null,

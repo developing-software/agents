@@ -97,7 +97,7 @@ export const getAgentComparison = query(
 
     const events = await Event.list({ type: "agent.result", source: "repository", sourceId: repo.id, limit: 500 });
 
-    const METRIC_KEYS = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
+    const METRIC_KEYS = ['input_tokens', 'output_tokens', 'reasoning_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
     const agents = new Map<string, {
       agent: string;
       count: number;
@@ -169,6 +169,7 @@ export const listAgentRuns = query(
         cost_usd: typeof m?.cost_usd === 'number' ? m.cost_usd : null,
         input_tokens: typeof m?.input_tokens === 'number' ? m.input_tokens : null,
         output_tokens: typeof m?.output_tokens === 'number' ? m.output_tokens : null,
+        reasoning_tokens: typeof m?.reasoning_tokens === 'number' ? m.reasoning_tokens : null,
         cache_read_input_tokens: typeof m?.cache_read_input_tokens === 'number' ? m.cache_read_input_tokens : null,
         num_turns: typeof m?.num_turns === 'number' ? m.num_turns : null,
         durationMs: typeof pd?.durationMs === 'number' ? pd.durationMs : null,
@@ -202,7 +203,7 @@ export const getEventSummary = query(
     let totalDurationMs = 0;
     let durationCount = 0;
 
-    const METRIC_KEYS = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
+    const METRIC_KEYS = ['input_tokens', 'output_tokens', 'reasoning_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
 
     for (const e of events) {
       const d = e.data as Record<string, unknown> | undefined;

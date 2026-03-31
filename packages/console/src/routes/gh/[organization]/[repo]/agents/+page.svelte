@@ -207,13 +207,17 @@
               <span class="duration">{formatDuration(run.durationMs)}</span>
             {/if}
 
-            {#if run.input_tokens !== null || run.output_tokens !== null}
+            {#if run.input_tokens !== null || run.output_tokens !== null || run.reasoning_tokens !== null}
               <span class="tokens">
                 {#if run.input_tokens !== null}{formatTokensCompact(run.input_tokens)} in{/if}
-                {#if run.input_tokens !== null && run.output_tokens !== null}
+                {#if run.input_tokens !== null && (run.output_tokens !== null || run.reasoning_tokens !== null)}
                   <span class="token-sep">/</span>
                 {/if}
                 {#if run.output_tokens !== null}{formatTokensCompact(run.output_tokens)} out{/if}
+                {#if run.reasoning_tokens !== null}
+                  <span class="token-sep">/</span>
+                  {formatTokensCompact(run.reasoning_tokens)} reasoning
+                {/if}
               </span>
             {/if}
 
@@ -279,6 +283,12 @@
                     <div class="token-row">
                       <span class="token-key">Output</span>
                       <span class="token-val">{run.output_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                  {#if run.reasoning_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Reasoning</span>
+                      <span class="token-val">{run.reasoning_tokens.toLocaleString()}</span>
                     </div>
                   {/if}
                   {#if run.cache_read_input_tokens !== null}

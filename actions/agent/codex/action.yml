@@ -1,9 +1,12 @@
 name: Collect Codex Agent Data
-description: Capture result from openai/codex-action and emit result event with metrics in data
+description: Capture token usage from codex exec --json output and emit result event with metrics in data
 
 inputs:
+  execution_file:
+    description: Path to the JSONL file from codex exec --json
+    required: false
   final_message:
-    description: Final message output from openai/codex-action
+    description: Final message output from codex
     required: false
   token:
     description: Personal access token for posting events to the Agents API
@@ -16,27 +19,73 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Write agent result to results folder
+    - name: Capture token usage
       if: always()
       shell: bash
       env:
+        EXECUTION_FILE: ${{ inputs.execution_file }}
         FINAL_MESSAGE: ${{ inputs.final_message }}
+      run: |
+        if [ -f "${EXECUTION_FILE:-}" ]; then
+          METRICS_JSON=$(jq -sc '
+            [.[] | select(.type == "turn.completed") | .usage] |
+            if length == 0 then null
+            else {
+              input_tokens: (map(.input_tokens // 0) | add),
+              output_tokens: (map(.output_tokens // 0) | add),
+              reasoning_tokens: null,
+              cache_read_input_tokens: (map(.cached_input_tokens // 0) | add),
+              cache_creation_input_tokens: null,
+              num_turns: length,
+              cost_usd: null,
+              model: null
+            } end' "$EXECUTION_FILE")
+        else
+          METRICS_JSON="null"
+        fi
+
+        {
+          printf 'METRICS_JSON<<_AGENTS_EOF\n'
+          printf '%s\n' "$METRICS_JSON"
+          printf '_AGENTS_EOF\n'
+        } >> "$GITHUB_ENV"
+
+        if [ -n "$FINAL_MESSAGE" ]; then
+          {
+            printf 'LAST_MSG<<_AGENTS_EOF\n'
+            printf '%s\n' "$FINAL_MESSAGE"
+            printf '_AGENTS_EOF\n'
+          } >> "$GITHUB_ENV"
+        fi
+
+    - name: Write agent result to results folder
+      if: always()
+      shell: bash
       run: |
         if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
           mkdir -p "$AGENTS_RESULTS_DIR/agent"
           jq -nc \
             --arg agent "codex" \
-            --arg finalMessage "${FINAL_MESSAGE:-}" \
-            '{agent: $agent, sessionId: null, finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: null}' \
+            --arg finalMessage "${LAST_MSG:-}" \
+            --argjson metrics "${METRICS_JSON:-null}" \
+            '{agent: $agent, sessionId: null, finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
             > "$AGENTS_RESULTS_DIR/agent/result.json"
         fi
 
     - uses: developing-software/agents/actions/event/emit@dev
-      if: always() && inputs.final_message != '' && inputs.token != ''
+      if: always() && inputs.token != ''
       with:
         token: ${{ inputs.token }}
         url: ${{ inputs.url }}
         event_id_env: CODEX_EVENT_ID
         type: agent.result
         data: >-
-          {"agent":"codex","finalMessage":${{ toJSON(inputs.final_message) }},"sessionId":null,"metrics":{"input_tokens":null,"output_tokens":null,"cache_read_input_tokens":null,"cache_creation_input_tokens":null,"num_turns":null,"cost_usd":null,"model":null}}
+          {"agent":"codex","finalMessage":${{ toJSON(env.LAST_MSG) }},"sessionId":null,"metrics":${{ env.METRICS_JSON || 'null' }}}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always() && inputs.execution_file != '' && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        path: ${{ inputs.execution_file }}
+        name: codex_execution.jsonl

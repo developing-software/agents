@@ -1,0 +1,102 @@
+name: Collect OpenCode Agent Data
+description: Capture token usage from opencode session export and emit result event with metrics in data
+
+inputs:
+  token:
+    description: Personal access token for posting events to the Agents API
+    required: false
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+
+runs:
+  using: composite
+  steps:
+    - name: Capture token usage
+      if: always()
+      shell: bash
+      run: |
+        # Get the most recent session ID (third line of output, first column)
+        SESSION_ID=$(opencode session list 2>&1 | awk 'NR==3 {print $1}')
+
+        if [ -n "$SESSION_ID" ]; then
+          # Export session JSON (skip the first "Exporting session:" line on stderr)
+          EXPORT=$(opencode export "$SESSION_ID" 2>/dev/null | tail -n +2)
+
+          # Write export to temp file for artifact upload
+          echo "$EXPORT" > "${RUNNER_TEMP:-/tmp}/opencode-session.json"
+
+          METRICS_JSON=$(echo "$EXPORT" | jq '
+            .messages
+            | map(select(.info.role == "assistant"))
+            | if length == 0 then null
+              else {
+                input_tokens: (map(.info.tokens.input) | add),
+                output_tokens: (map(.info.tokens.output) | add),
+                reasoning_tokens: (map(.info.tokens.reasoning) | add),
+                cache_read_input_tokens: (map(.info.tokens.cache.read) | add),
+                cache_creation_input_tokens: (map(.info.tokens.cache.write) | add),
+                num_turns: length,
+                cost_usd: (map(.info.cost) | add),
+                model: (last | .info.modelID)
+              } end')
+
+          LAST_MSG=$(echo "$EXPORT" | jq -r '
+            .messages | map(select(.info.role == "assistant")) | last //empty |
+            .parts | map(select(.type == "text")) | last // empty | .text // empty')
+        else
+          METRICS_JSON="null"
+          LAST_MSG=""
+        fi
+
+        {
+          printf 'METRICS_JSON<<_AGENTS_EOF\n'
+          printf '%s\n' "$METRICS_JSON"
+          printf '_AGENTS_EOF\n'
+        } >> "$GITHUB_ENV"
+
+        if [ -n "$LAST_MSG" ]; then
+          {
+            printf 'LAST_MSG<<_AGENTS_EOF\n'
+            printf '%s\n' "$LAST_MSG"
+            printf '_AGENTS_EOF\n'
+          } >> "$GITHUB_ENV"
+        fi
+
+        if [ -n "$SESSION_ID" ]; then
+          echo "SESSION_ID=$SESSION_ID" >> "$GITHUB_ENV"
+        fi
+
+    - name: Write agent result to results folder
+      if: always()
+      shell: bash
+      run: |
+        if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
+          mkdir -p "$AGENTS_RESULTS_DIR/agent"
+          jq -nc \
+            --arg agent "opencode" \
+            --arg sessionId "${SESSION_ID:-}" \
+            --arg finalMessage "${LAST_MSG:-}" \
+            --argjson metrics "${METRICS_JSON:-null}" \
+            '{agent: $agent, sessionId: (if $sessionId == "" then null else $sessionId end), finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
+            > "$AGENTS_RESULTS_DIR/agent/result.json"
+        fi
+
+    - uses: developing-software/agents/actions/event/emit@dev
+      if: always() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        event_id_env: OPENCODE_EVENT_ID
+        type: agent.result
+        data: >-
+          {"agent":"opencode","finalMessage":${{ toJSON(env.LAST_MSG) }},"sessionId":${{ toJSON(env.SESSION_ID) }},"metrics":${{ env.METRICS_JSON || 'null' }}}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        path: ${{ runner.temp }}/opencode-session.json
+        name: opencode_session.json

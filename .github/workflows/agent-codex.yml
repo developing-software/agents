@@ -34,26 +34,44 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install Codex
+        run: npm install -g @openai/codex
+
       - name: Run Codex
         id: run-codex
-        uses: openai/codex-action@v1
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          prompt: |
-            Implement the following GitHub issue in this repository:
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          PROMPT=$(cat <<'PROMPT_EOF'
+          Implement the following GitHub issue in this repository:
 
-            Title: ${{ github.event.issue.title }}
+          Title: ${{ github.event.issue.title }}
 
-            ${{ github.event.issue.body }}
+          ${{ github.event.issue.body }}
 
-            Make the necessary code changes to implement this feature or fix.
-            Follow the existing code style, naming conventions, and patterns in the codebase.
-            Refer to AGENTS.md for project structure and guidelines.
-            Do NOT commit, push, or open a pull request — only modify the files.
+          Make the necessary code changes to implement this feature or fix.
+          Follow the existing code style, naming conventions, and patterns in the codebase.
+          Refer to AGENTS.md for project structure and guidelines.
+          Do NOT commit, push, or open a pull request — only modify the files.
+          PROMPT_EOF
+          )
+
+          echo "$PROMPT" | codex exec --json \
+            --dangerously-bypass-approvals-and-sandbox \
+            | tee "$RUNNER_TEMP/codex-output.jsonl"
+
+          LAST_MSG=$(jq -rs '[.[] | select(.type == "item.completed" and .item.type == "agent_message")] | last | .item.text // empty' "$RUNNER_TEMP/codex-output.jsonl")
+          {
+            printf 'final-message<<_AGENTS_EOF\n'
+            printf '%s\n' "$LAST_MSG"
+            printf '_AGENTS_EOF\n'
+          } >> "$GITHUB_OUTPUT"
 
       - uses: ./actions/agent/codex
         if: always()
         with:
+          execution_file: ${{ runner.temp }}/codex-output.jsonl
           final_message: ${{ steps.run-codex.outputs.final-message }}
           token: ${{ secrets.AGENTS_TOKEN }}
 

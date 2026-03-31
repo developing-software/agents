@@ -53,6 +53,11 @@ jobs:
             Refer to AGENTS.md for project structure and guidelines.
             Do NOT commit, push, or open a pull request — only modify the files.
 
+      - uses: ./actions/agent/opencode
+        if: always()
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+
       - uses: ./.github/actions/lint
         with:
           install: "false"
