@@ -1,20 +1,48 @@
-name: Claude - Implement Issue
-run-name: "claude/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+name: Claude - Implement
+run-name: "claude/run-${{ github.run_id }}"
 
 on:
-  issues:
-    types: [labeled]
-
-concurrency:
-  group: claude-issue-${{ github.event.issue.number }}
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Comma-separated tags for event linking (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
+    secrets:
+      AGENTS_TOKEN:
+        required: true
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Comma-separated tags (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
 
 jobs:
   implement:
-    if: github.event.label.name == 'claude'
     runs-on: ubuntu-latest
     env:
-      MODEL: claude-sonnet-4-6
+      MODEL: ${{ inputs.model || 'claude-sonnet-4-6' }}
     permissions:
       contents: write
       pull-requests: write
@@ -34,6 +62,7 @@ jobs:
           pr_prefix: claude
           harness: claude-code
           model: ${{ env.MODEL }}
+          tags: ${{ inputs.tags }}
           token: ${{ secrets.AGENTS_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,15 +74,7 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: --model ${{ env.MODEL }} --output-format stream-json --verbose --dangerously-skip-permissions
           prompt: |
-            Implement the following GitHub issue:
-
-            Title: ${{ github.event.issue.title }}
-
-            ${{ github.event.issue.body }}
-
-            Make the necessary code changes to implement this feature or fix.
-            Follow the existing code style, naming conventions, and patterns in the codebase.
-            Do NOT commit, push, or open a pull request — only modify the files.
+            ${{ inputs.prompt }}
           additional_permissions: |
             actions: read
 

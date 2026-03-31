@@ -20,16 +20,25 @@ export interface IssuePayload {
   body: string;
 }
 
-export function readEventPayload(): { issue: IssuePayload } {
+export function readEventPayload(): {
+  issue?: IssuePayload;
+  inputs?: Record<string, string>;
+} {
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!eventPath) throw new Error("GITHUB_EVENT_PATH not set");
-  const payload = JSON.parse(readFileSync(eventPath, "utf8"));
-  if (typeof payload.issue?.number !== "number") {
-    throw new Error(
-      "Event payload missing issue data — this action requires an issue event context",
-    );
+  return JSON.parse(readFileSync(eventPath, "utf8"));
+}
+
+/**
+ * Extract issue number from tags like "gh:issue:42".
+ * Returns undefined if no issue tag found.
+ */
+export function extractIssueFromTags(tags: string[]): number | undefined {
+  for (const tag of tags) {
+    const match = tag.match(/^gh:issue:(\d+)$/);
+    if (match) return parseInt(match[1]!, 10);
   }
-  return payload;
+  return undefined;
 }
 
 export function getContext(): GitHubContext {

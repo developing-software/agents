@@ -5,8 +5,8 @@ import * as exec from "@actions/exec";
 import {
   createApiClient,
   execWithOutput,
+  extractIssueFromTags,
   getContext,
-  readEventPayload,
   readOptionalTags,
   uniqueTags,
 } from "@agents/actions-core";
@@ -14,9 +14,6 @@ import {
 async function run() {
   const startMs = Date.now();
   const ctx = getContext();
-  const { issue } = readEventPayload();
-
-  const branch = `${ctx.prPrefix}/issue-${issue.number}-${ctx.runId}`;
 
   const runnerTemp = process.env.RUNNER_TEMP;
   if (!runnerTemp) throw new Error("RUNNER_TEMP not set");
@@ -31,18 +28,26 @@ async function run() {
 
   const harness = core.getInput("harness");
   const model = core.getInput("model");
+  const extraTags = readOptionalTags(core.getInput("tags"));
+
+  // Extract issue number from tags (e.g. gh:issue:42)
+  const issueNumber = extractIssueFromTags(extraTags);
+
+  // Branch name: use issue number if available, otherwise run ID
+  const branch = issueNumber
+    ? `${ctx.prPrefix}/issue-${issueNumber}-${ctx.runId}`
+    : `${ctx.prPrefix}/run-${ctx.runId}`;
 
   // Export metadata for downstream comment updates
   core.exportVariable("AGENTS_RUN_URL", ctx.runUrl);
   core.exportVariable("AGENTS_BRANCH", branch);
   if (harness) core.exportVariable("AGENTS_HARNESS", harness);
   const baseBranch = core.getInput("base_branch") || process.env.GITHUB_REF_NAME || "";
-  const extraTags = readOptionalTags(core.getInput("tags"));
 
   // Write initial context tags
   const contextTags = uniqueTags([
     `gh:repo:${ctx.repository}`,
-    `gh:issue:${issue.number}`,
+    ...(issueNumber ? [`gh:issue:${issueNumber}`] : []),
     `gh:branch:${branch}`,
     `gh:run:${ctx.runId}`,
     ...(baseBranch ? [`env:${baseBranch}`] : []),
@@ -63,6 +68,7 @@ async function run() {
   core.saveState("base_branch", core.getInput("base_branch"));
   core.saveState("harness", harness);
   core.saveState("model", model);
+  if (issueNumber) core.saveState("issue_number", issueNumber.toString());
 
   // Emit agent.started
   const agentsToken = core.getInput("token");
@@ -106,34 +112,36 @@ async function run() {
   const initialSha = (await execWithOutput("git", ["rev-parse", "HEAD"])).trim();
   core.saveState("initial_sha", initialSha);
 
-  // Post progress comment on the issue
-  try {
-    const body = [
-      `> **Agent workflow started**`,
-      `>`,
-      `> **Run:** [View workflow run](${ctx.runUrl})`,
-      `> **Branch:** \`${branch}\``,
-      ...(harness ? [`> **Agent:** ${harness}`] : []),
-      ...(model ? [`> **Model:** ${model}`] : []),
-      `>`,
-      `> _In progress..._`,
-    ].join("\n");
-    const commentUrl = await execWithOutput("gh", [
-      "issue",
-      "comment",
-      issue.number.toString(),
-      "--repo",
-      ctx.repository,
-      "--body",
-      body,
-    ]);
-    const commentIdMatch = commentUrl.match(/#issuecomment-(\d+)/);
-    if (commentIdMatch) {
-      core.saveState("comment_id", commentIdMatch[1]!);
-      core.exportVariable("AGENTS_COMMENT_ID", commentIdMatch[1]!);
+  // Post progress comment on the issue (only if linked to an issue)
+  if (issueNumber) {
+    try {
+      const body = [
+        `> **Agent workflow started**`,
+        `>`,
+        `> **Run:** [View workflow run](${ctx.runUrl})`,
+        `> **Branch:** \`${branch}\``,
+        ...(harness ? [`> **Agent:** ${harness}`] : []),
+        ...(model ? [`> **Model:** ${model}`] : []),
+        `>`,
+        `> _In progress..._`,
+      ].join("\n");
+      const commentUrl = await execWithOutput("gh", [
+        "issue",
+        "comment",
+        issueNumber.toString(),
+        "--repo",
+        ctx.repository,
+        "--body",
+        body,
+      ]);
+      const commentIdMatch = commentUrl.match(/#issuecomment-(\d+)/);
+      if (commentIdMatch) {
+        core.saveState("comment_id", commentIdMatch[1]!);
+        core.exportVariable("AGENTS_COMMENT_ID", commentIdMatch[1]!);
+      }
+    } catch (err) {
+      core.warning(`Failed to post issue comment: ${err}`);
     }
-  } catch (err) {
-    core.warning(`Failed to post issue comment: ${err}`);
   }
 }
 

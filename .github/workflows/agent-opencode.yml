@@ -1,17 +1,45 @@
-name: OpenCode - Implement Issue
-run-name: "opencode/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+name: OpenCode - Implement
+run-name: "opencode/run-${{ github.run_id }}"
 
 on:
-  issues:
-    types: [labeled]
-
-concurrency:
-  group: opencode-issue-${{ github.event.issue.number }}
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Comma-separated tags for event linking (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
+    secrets:
+      AGENTS_TOKEN:
+        required: true
+      OPENAI_API_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Comma-separated tags (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
 
 jobs:
   implement:
-    if: github.event.label.name == 'opencode'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -30,6 +58,7 @@ jobs:
         with:
           pr_prefix: opencode
           harness: opencode
+          tags: ${{ inputs.tags }}
           token: ${{ secrets.AGENTS_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,18 +69,9 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
-          model: openai/gpt-5.4-pro
+          model: ${{ inputs.model || 'openai/gpt-5.4-pro' }}
           prompt: |
-            Implement the following GitHub issue in this repository:
-
-            Title: ${{ github.event.issue.title }}
-
-            ${{ github.event.issue.body }}
-
-            Make the necessary code changes to implement this feature or fix.
-            Follow the existing code style, naming conventions, and patterns in the codebase.
-            Refer to AGENTS.md for project structure and guidelines.
-            Do NOT commit, push, or open a pull request — only modify the files.
+            ${{ inputs.prompt }}
 
       - uses: ./actions/agent/opencode
         if: always()
