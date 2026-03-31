@@ -93,12 +93,19 @@ async function run() {
     `AUTHORIZATION: basic ${encodedAuth}`,
   ]);
 
-  // Commit and push
+  // Check if agent made its own commits (e.g. OpenCode commits directly)
+  const initialSha = core.getState("initial_sha");
+  const currentSha = (await execWithOutput("git", ["rev-parse", "HEAD"])).trim();
+  const agentCommitted = initialSha && currentSha !== initialSha;
+
+  // Stage any remaining uncommitted changes
   await exec.exec("git", ["add", "-A"]);
   const diffCode = await exec.exec("git", ["diff", "--staged", "--quiet"], {
     ignoreReturnCode: true,
   });
-  if (diffCode === 0) {
+
+  if (diffCode === 0 && !agentCommitted) {
+    // No uncommitted changes AND no agent commits — truly no changes
     if (commentId) {
       try {
         const body = [
@@ -123,7 +130,14 @@ async function run() {
     core.setFailed("No changes to commit — agent made no modifications.");
     return;
   }
-  await exec.exec("git", ["commit", "-m", `feat: implement issue #${issue.number}`]);
+
+  // Commit remaining unstaged changes (if any)
+  if (diffCode !== 0) {
+    await exec.exec("git", ["commit", "-m", `feat: implement issue #${issue.number}`]);
+  } else {
+    core.info("Agent already committed all changes — no additional commit needed.");
+  }
+
   await exec.exec("git", ["push", "origin", branch]);
 
   // Resolve base branch (needed before diff)

@@ -139,6 +139,48 @@ export const getAgentComparison = query(
   },
 );
 
+export const listAgentRuns = query(
+  z.object({ organization: z.string(), repoName: z.string(), limit: z.number().default(50) }),
+  async ({ organization, repoName, limit }) => {
+    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
+    if (!repo) return [];
+
+    const results = await Event.list({ type: "agent.result", source: "repository", sourceId: repo.id, limit });
+    const completed = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, limit });
+
+    // Index completed events by parentEventId for pairing
+    const completedByParent = new Map<string, typeof completed[number]>();
+    for (const c of completed) {
+      if (c.parentEventId) completedByParent.set(c.parentEventId, c);
+    }
+
+    return results.map((e) => {
+      const d = e.data as Record<string, unknown> | undefined;
+      const m = d?.metrics as Record<string, unknown> | undefined;
+      const paired = e.parentEventId ? completedByParent.get(e.parentEventId) : undefined;
+      const pd = paired?.data as Record<string, unknown> | undefined;
+      const checks = pd?.checks as Array<{ category: string; name: string; outcome: string }> | undefined;
+
+      return {
+        id: e.id,
+        parentEventId: e.parentEventId,
+        agent: typeof d?.agent === 'string' ? d.agent : 'unknown',
+        model: typeof m?.model === 'string' ? m.model : null,
+        cost_usd: typeof m?.cost_usd === 'number' ? m.cost_usd : null,
+        input_tokens: typeof m?.input_tokens === 'number' ? m.input_tokens : null,
+        output_tokens: typeof m?.output_tokens === 'number' ? m.output_tokens : null,
+        cache_read_input_tokens: typeof m?.cache_read_input_tokens === 'number' ? m.cache_read_input_tokens : null,
+        num_turns: typeof m?.num_turns === 'number' ? m.num_turns : null,
+        durationMs: typeof pd?.durationMs === 'number' ? pd.durationMs : null,
+        checks: checks ?? [],
+        origin: e.origin,
+        tags: e.tags,
+        timeCreated: e.timeCreated,
+      };
+    });
+  },
+);
+
 export const getEventSummary = query(
   z.object({ organization: z.string(), repoName: z.string() }),
   async ({ organization, repoName }) => {

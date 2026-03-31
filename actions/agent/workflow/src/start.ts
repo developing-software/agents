@@ -102,6 +102,10 @@ async function run() {
   await exec.exec("git", ["checkout", "-b", branch]);
   await exec.exec("git", ["push", "origin", branch, "--force-with-lease"]);
 
+  // Save initial commit SHA so finish phase can detect agent-made commits
+  const initialSha = (await execWithOutput("git", ["rev-parse", "HEAD"])).trim();
+  core.saveState("initial_sha", initialSha);
+
   // Post progress comment on the issue
   try {
     const body = [
