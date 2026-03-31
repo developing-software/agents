@@ -162,7 +162,7 @@ async function run() {
   await exec.exec("git", ["fetch", "origin", baseBranch, "--depth=1"]);
   const diffStat = await execWithOutput("git", [
     "diff",
-    `origin/${baseBranch}...HEAD`,
+    `origin/${baseBranch}..HEAD`,
     "--numstat",
   ]);
   let linesAdded = 0;
