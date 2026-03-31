@@ -19979,6 +19979,7 @@ async function run() {
       `> **Run:** [View workflow run](${ctx.runUrl})`,
       `> **Branch:** \`${branch}\``,
       ...harness ? [`> **Agent:** ${harness}`] : [],
+      ...model ? [`> **Model:** ${model}`] : [],
       `>`,
       `> _In progress..._`
     ].join(`
