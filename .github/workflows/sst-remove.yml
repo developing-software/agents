@@ -1,4 +1,5 @@
-name: sst remove
+name: Teardown SST
+run-name: "Teardown SST #${{ github.event.pull_request.number }}"
 
 on:
   pull_request:
@@ -6,6 +7,9 @@ on:
     branches-ignore:
       - dev
       - prod
+
+concurrency:
+  group: ${{ github.ref }}
 
 jobs:
   remove:
