@@ -87,6 +87,10 @@ runs:
           echo "SESSION_ID=$SESSION_ID" >> "$GITHUB_ENV"
         fi
 
+        if [ -n "${MODEL:-}" ]; then
+          echo "AGENT_MODEL=$MODEL" >> "$GITHUB_ENV"
+        fi
+
     - name: Write agent result to results folder
       if: always()
       shell: bash
@@ -110,7 +114,7 @@ runs:
         event_id_env: OPENCODE_EVENT_ID
         type: agent.result
         data: >-
-          {"agent":"opencode","finalMessage":${{ toJSON(env.LAST_MSG) }},"sessionId":${{ toJSON(env.SESSION_ID) }},"metrics":${{ env.METRICS_JSON || 'null' }}}
+          {"agent":"opencode","model":${{ toJSON(env.AGENT_MODEL) }},"finalMessage":${{ toJSON(env.LAST_MSG) }},"sessionId":${{ toJSON(env.SESSION_ID) }},"metrics":${{ env.METRICS_JSON || 'null' }}}
 
     - uses: developing-software/agents/actions/artifact/upload@dev
       if: always() && inputs.token != ''

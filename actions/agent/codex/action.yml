@@ -69,6 +69,10 @@ runs:
           printf '_AGENTS_EOF\n'
         } >> "$GITHUB_ENV"
 
+        if [ -n "${MODEL:-}" ]; then
+          echo "AGENT_MODEL=$MODEL" >> "$GITHUB_ENV"
+        fi
+
     - name: Write agent result to results folder
       if: always()
       shell: bash
@@ -94,7 +98,7 @@ runs:
         event_id_env: CODEX_EVENT_ID
         type: agent.result
         data: >-
-          {"agent":"codex","finalMessage":${{ toJSON(inputs.final_message) }},"sessionId":null,"metrics":${{ env.METRICS_JSON || 'null' }}}
+          {"agent":"codex","model":${{ toJSON(env.AGENT_MODEL) }},"finalMessage":${{ toJSON(inputs.final_message) }},"sessionId":null,"metrics":${{ env.METRICS_JSON || 'null' }}}
 
     - uses: developing-software/agents/actions/artifact/upload@dev
       if: always() && inputs.token != ''
