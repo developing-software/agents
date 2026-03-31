@@ -313,6 +313,7 @@ async function run() {
         `> **Run:** [View workflow run](${runUrl})`,
         `> **Branch:** \`${branch}\``,
         `> **Agent:** ${agentName}`,
+        ...(modelName ? [`> **Model:** ${modelName}`] : []),
         ...(prUrl ? [`> **PR:** ${prUrl}`] : []),
         `> **Duration:** ${durationSec}s`,
         `> **Lines:** +${linesAdded} / -${linesRemoved}`,

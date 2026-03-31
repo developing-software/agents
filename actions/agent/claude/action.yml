@@ -8,6 +8,9 @@ inputs:
   session_id:
     description: Session ID from claude-code-action
     required: false
+  model:
+    description: Model used for the Claude agent run
+    required: false
   token:
     description: Personal access token for uploading artifacts to the Agents API
     required: false
@@ -97,8 +100,10 @@ runs:
           } >> "$GITHUB_ENV"
         fi
 
-        if [ -n "$MODEL" ]; then
-          echo "AGENT_MODEL=$MODEL" >> "$GITHUB_ENV"
+        AGENT_MODEL="${{ inputs.model }}"
+        [ -z "$AGENT_MODEL" ] && AGENT_MODEL="$MODEL"
+        if [ -n "$AGENT_MODEL" ]; then
+          echo "AGENT_MODEL=$AGENT_MODEL" >> "$GITHUB_ENV"
         fi
 
     - name: Write agent result to results folder

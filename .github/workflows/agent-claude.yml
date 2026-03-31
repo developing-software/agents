@@ -62,6 +62,7 @@ jobs:
         with:
           execution_file: ${{ steps.run-claude.outputs.execution_file }}
           session_id: ${{ steps.run-claude.outputs.session_id }}
+          model: ${{ env.CLAUDE_MODEL }}
           token: ${{ secrets.AGENTS_TOKEN }}
 
       - uses: ./.github/actions/lint
