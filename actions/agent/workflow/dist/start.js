@@ -19911,6 +19911,10 @@ async function run() {
   core2.exportVariable("AGENTS_RESULTS_DIR", resultsDir);
   const harness = core2.getInput("harness");
   const model = core2.getInput("model");
+  core2.exportVariable("AGENTS_RUN_URL", ctx.runUrl);
+  core2.exportVariable("AGENTS_BRANCH", branch);
+  if (harness)
+    core2.exportVariable("AGENTS_HARNESS", harness);
   const baseBranch = core2.getInput("base_branch") || process.env.GITHUB_REF_NAME || "";
   const extraTags = readOptionalTags(core2.getInput("tags"));
   const contextTags = uniqueTags([
@@ -19989,6 +19993,7 @@ async function run() {
     const commentIdMatch = commentUrl.match(/#issuecomment-(\d+)/);
     if (commentIdMatch) {
       core2.saveState("comment_id", commentIdMatch[1]);
+      core2.exportVariable("AGENTS_COMMENT_ID", commentIdMatch[1]);
     }
   } catch (err) {
     core2.warning(`Failed to post issue comment: ${err}`);
