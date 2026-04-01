@@ -6,6 +6,7 @@ import { dev } from "$app/environment";
 import { Actor } from "@agents/core/actor";
 import { sequence } from "@sveltejs/kit/hooks";
 import { withDatabase } from "@agents/core/drizzle/index";
+import { withCacheContext, CacheApiAdapter } from "@agents/core/cache/index";
 
 const log = Log.create({ namespace: "console.hooks.server" });
 
@@ -38,7 +39,16 @@ const handleDb: Handle = async ({ event, resolve }) => {
   if (!url) return resolve(event);
   return await withDatabase(url, async () => await resolve(event));
 };
-export const handle = sequence(handleDb, handleAuth);
+const handleCache: Handle = async ({ event, resolve }) => {
+  if (!event.platform?.caches) return resolve(event);
+  const cache = await event.platform.caches.open("agents:v1");
+  const adapter = new CacheApiAdapter(cache);
+  return withCacheContext(adapter, { prefix: "console" }, () =>
+    resolve(event),
+  );
+};
+
+export const handle = sequence(handleDb, handleCache, handleAuth);
 
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
   if (status === 404) {
