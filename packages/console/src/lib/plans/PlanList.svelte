@@ -5,6 +5,7 @@
     relativeTime,
     PLAN_STATUSES,
   } from './plan-helpers';
+  import TagList from '$lib/tag/TagList.svelte';
 
   type PlanItem = {
     id: string;
@@ -26,14 +27,27 @@
     repoName,
     plans,
     emptyText = 'No plans',
+    ondispatch,
   }: {
     organization: string;
     repoName: string;
     plans: PlanItem[];
     emptyText?: string;
+    ondispatch?: (plan: PlanItem, agent: string) => Promise<void>;
   } = $props();
 
   let activeFilter = $state<'all' | string>('all');
+  let dispatchingId = $state<string | null>(null);
+  let dispatched = $state<Set<string>>(new Set());
+
+  async function handleDispatch(plan: PlanItem, agent: string) {
+    try {
+      await ondispatch!(plan, agent);
+      dispatched = new Set([...dispatched, plan.id]);
+    } finally {
+      dispatchingId = null;
+    }
+  }
 
   let filtered = $derived(
     activeFilter === 'all'
@@ -71,15 +85,28 @@
 
         <span class="author-badge" style={authorBadgeStyle(plan.authorType)}>{plan.authorType}</span>
 
-        {#each plan.tags.slice(0, 3) as tag (tag)}
-          <span class="tag-pill">{tag}</span>
-        {/each}
+        <TagList tags={plan.tags} limit={3} />
 
         <span class="status-text" style="color: {statusDotColor(plan.status)}">{plan.status}</span>
 
         <span class="time">{relativeTime(plan.timeCreated)}</span>
 
         <a href="/gh/{organization}/{repoName}/plans/{plan.id}" class="detail-link">&rarr;</a>
+
+        {#if plan.status === 'approved' && ondispatch}
+          {#if dispatched.has(plan.id)}
+            <span class="dispatched-badge">dispatched</span>
+          {:else if dispatchingId === plan.id}
+            <div class="agent-picker">
+              {#each ['claude', 'opencode', 'codex'] as agent (agent)}
+                <button type="button" class="agent-btn" onclick={() => handleDispatch(plan, agent)}>{agent}</button>
+              {/each}
+              <button type="button" class="agent-btn agent-cancel" onclick={() => { dispatchingId = null; }}>&times;</button>
+            </div>
+          {:else}
+            <button type="button" class="dispatch-btn" onclick={() => { dispatchingId = plan.id; }}>dispatch</button>
+          {/if}
+        {/if}
       </div>
     {/each}
   </div>
@@ -160,17 +187,6 @@
     flex-shrink: 0;
   }
 
-  .tag-pill {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 0 5px;
-    line-height: 17px;
-    background: var(--color-elevated);
-    border: 1px solid var(--color-border);
-    color: var(--color-muted);
-    border-radius: 3px;
-  }
-
   .status-text {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
@@ -197,5 +213,63 @@
   }
   .detail-link:hover {
     color: var(--color-accent);
+  }
+
+  .dispatch-btn {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.1s;
+  }
+  .dispatch-btn:hover {
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  .agent-picker {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .agent-btn {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    background: var(--color-elevated);
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+  }
+  .agent-btn:hover {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+  }
+
+  .agent-cancel {
+    color: var(--color-dim);
+  }
+  .agent-cancel:hover {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+
+  .dispatched-badge {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: var(--color-success);
+    border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+    flex-shrink: 0;
   }
 </style>

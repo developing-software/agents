@@ -5,10 +5,12 @@
     relativeTime,
     PLAN_STATUSES,
   } from './plan-helpers';
+  import TagList from '$lib/tag/TagList.svelte';
 
   type PlanItem = {
     id: string;
     title: string;
+    body: string;
     status: string;
     authorType: string;
     tags: string[];
@@ -19,11 +21,16 @@
     organization,
     repoName,
     plans,
+    ondispatch,
   }: {
     organization: string;
     repoName: string;
     plans: PlanItem[];
+    ondispatch?: (plan: PlanItem, agent: string) => Promise<void>;
   } = $props();
+
+  let dispatchingId = $state<string | null>(null);
+  let dispatched = $state<Set<string>>(new Set());
 
   let grouped = $derived(
     PLAN_STATUSES.reduce(
@@ -34,6 +41,15 @@
       {} as Record<string, PlanItem[]>,
     ),
   );
+
+  async function handleDispatch(plan: PlanItem, agent: string) {
+    try {
+      await ondispatch!(plan, agent);
+      dispatched = new Set([...dispatched, plan.id]);
+    } finally {
+      dispatchingId = null;
+    }
+  }
 </script>
 
 <div class="kanban">
@@ -54,11 +70,25 @@
             <div class="card-title">{plan.title}</div>
             <div class="card-meta">
               <span class="card-badge" style={authorBadgeStyle(plan.authorType)}>{plan.authorType}</span>
-              {#each plan.tags.slice(0, 2) as tag (tag)}
-                <span class="card-tag">{tag}</span>
-              {/each}
+              <TagList tags={plan.tags} limit={2} />
               <span class="card-time">{relativeTime(plan.timeCreated)}</span>
             </div>
+            {#if plan.status === 'approved' && ondispatch}
+              <div class="card-actions">
+                {#if dispatched.has(plan.id)}
+                  <span class="dispatched-badge">dispatched</span>
+                {:else if dispatchingId === plan.id}
+                  <div class="agent-picker">
+                    {#each ['claude', 'opencode', 'codex'] as agent (agent)}
+                      <button type="button" class="agent-btn" onclick={(e) => { e.preventDefault(); handleDispatch(plan, agent); }}>{agent}</button>
+                    {/each}
+                    <button type="button" class="agent-btn agent-cancel" onclick={(e) => { e.preventDefault(); dispatchingId = null; }}>×</button>
+                  </div>
+                {:else}
+                  <button type="button" class="dispatch-btn" onclick={(e) => { e.preventDefault(); dispatchingId = plan.id; }}>dispatch</button>
+                {/if}
+              </div>
+            {/if}
           </a>
         {/each}
       </div>
@@ -164,21 +194,77 @@
     line-height: 1.6;
   }
 
-  .card-tag {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 0 4px;
-    border-radius: 3px;
-    background: var(--color-elevated);
-    border: 1px solid var(--color-border);
-    color: var(--color-dim);
-    line-height: 1.6;
-  }
-
   .card-time {
     font-size: 10px;
     color: var(--color-dim);
     margin-left: auto;
     font-variant-numeric: tabular-nums;
+  }
+
+  .card-actions {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .dispatch-btn {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.1s;
+  }
+  .dispatch-btn:hover {
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  .agent-picker {
+    display: flex;
+    gap: 2px;
+  }
+
+  .agent-btn {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    background: var(--color-elevated);
+    color: var(--color-muted);
+    cursor: pointer;
+    flex: 1;
+    transition: background 0.1s, color 0.1s;
+  }
+  .agent-btn:hover {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+  }
+
+  .agent-cancel {
+    color: var(--color-dim);
+    flex: 0;
+    padding: 1px 4px;
+  }
+  .agent-cancel:hover {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+
+  .dispatched-badge {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: var(--color-success);
+    border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+    display: block;
+    text-align: center;
   }
 </style>

@@ -13,10 +13,10 @@
     branchTag,
     runRef,
     otherTags,
-    tagCategoryStyle,
     extractMetrics,
     formatMetricValue,
   } from './event-helpers';
+  import TagPill from '$lib/tag/TagPill.svelte';
 
   type EventItem = {
     id: string;
@@ -161,7 +161,7 @@
                   {/if}
                 {/if}
                 {#each other as tag (tag)}
-                  <span class="tag-pill" style={tagCategoryStyle(tag)}>{tag}</span>
+                  <TagPill {tag} />
                 {/each}
               </div>
             {/if}
@@ -258,14 +258,6 @@
   .meta-metric-sep { color: var(--color-dim); }
   .meta-metric-val { color: var(--color-accent); }
 
-  .tag-pill {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 0 4px;
-    border-radius: 3px;
-    border: 1px solid;
-    line-height: 1.6;
-  }
 
   .children { border-left: 1px solid var(--color-border); margin-left: 2px; }
 

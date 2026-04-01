@@ -46,51 +46,17 @@ export function typePrefix(type: string): string {
   return dot === -1 ? type : type.slice(0, dot);
 }
 
-export function issueRef(tags: string[]): number | null {
-  const t = tags.find((t) => t.startsWith('gh:issue:'));
-  return t ? parseInt(t.slice('gh:issue:'.length)) : null;
-}
-
-export function prRef(tags: string[]): number | null {
-  const t = tags.find((t) => t.startsWith('gh:pr:'));
-  return t ? parseInt(t.slice('gh:pr:'.length)) : null;
-}
-
-export function envTag(tags: string[]): string | null {
-  const t = tags.find((t) => t.startsWith('env:'));
-  return t ? t.slice('env:'.length) : null;
-}
-
-export function serviceTag(tags: string[]): string | null {
-  const t = tags.find((t) => t.startsWith('service:'));
-  return t ? t.slice('service:'.length) : null;
-}
-
-export function branchTag(tags: string[]): string | null {
-  const t = tags.find((t) => t.startsWith('gh:branch:'));
-  return t ? t.slice('gh:branch:'.length) : null;
-}
-
-export function runRef(tags: string[]): number | null {
-  const t = tags.find((t) => t.startsWith('gh:run:'));
-  return t ? parseInt(t.slice('gh:run:'.length)) : null;
-}
-
-const KNOWN_PREFIXES = ['env:', 'service:', 'gh:'];
-
-export function otherTags(tags: string[]): string[] {
-  return tags.filter((t) => !KNOWN_PREFIXES.some((p) => t.startsWith(p)));
-}
-
-export function tagCategoryStyle(tag: string): string {
-  if (tag.startsWith('env:'))
-    return 'background: color-mix(in srgb, var(--color-success) 10%, transparent); color: var(--color-success); border-color: color-mix(in srgb, var(--color-success) 25%, transparent);';
-  if (tag.startsWith('service:'))
-    return 'background: color-mix(in srgb, var(--color-accent) 10%, transparent); color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 25%, transparent);';
-  if (tag.startsWith('gh:'))
-    return 'background: var(--color-elevated); color: var(--color-muted); border-color: var(--color-border);';
-  return 'background: var(--color-elevated); color: var(--color-dim); border-color: var(--color-border);';
-}
+// Tag utilities — re-exported from shared $lib/tag module
+export {
+  tagCategoryStyle,
+  otherTags,
+  envTag,
+  serviceTag,
+  branchTag,
+  runRef,
+  issueRef,
+  prRef,
+} from '$lib/tag/tag-helpers';
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

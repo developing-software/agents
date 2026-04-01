@@ -1,6 +1,7 @@
 <script lang="ts">
   import { statusBadgeStyle, authorBadgeStyle, relativeTime } from './plan-helpers';
   import Markdown from '$lib/Markdown.svelte';
+  import TagList from '$lib/tag/TagList.svelte';
 
   let {
     plan,
@@ -34,10 +35,8 @@
 </div>
 
 {#if plan.tags.length > 0}
-  <div class="tags">
-    {#each plan.tags as tag (tag)}
-      <span class="tag">{tag}</span>
-    {/each}
+  <div class="plan-tags">
+    <TagList tags={plan.tags} />
   </div>
 {/if}
 
@@ -74,22 +73,8 @@
     color: var(--color-dim);
   }
 
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+  .plan-tags {
     margin-bottom: 16px;
-  }
-
-  .tag {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    border: 1px solid var(--color-border);
-    background: var(--color-elevated);
-    color: var(--color-dim);
-    line-height: 1.6;
   }
 
   .body {

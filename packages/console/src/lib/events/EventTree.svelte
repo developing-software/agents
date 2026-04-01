@@ -10,8 +10,8 @@
     branchTag,
     runRef,
     otherTags,
-    tagCategoryStyle,
   } from './event-helpers';
+  import TagPill from '$lib/tag/TagPill.svelte';
 
   type TreeNode = {
     id: string;
@@ -120,7 +120,7 @@
               <span class="meta-dim">run #{run}</span>
             {/if}
             {#each other as tag (tag)}
-              <span class="tag-pill" style={tagCategoryStyle(tag)}>{tag}</span>
+              <TagPill {tag} />
             {/each}
           </div>
         {/if}
@@ -207,15 +207,6 @@
   .meta-branch { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
 
   .meta-dim { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
-
-  .tag-pill {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 0 4px;
-    border-radius: 3px;
-    border: 1px solid;
-    line-height: 1.6;
-  }
 
   .detail-loading { font-size: 11px; color: var(--color-dim); font-style: italic; padding: 4px 0; }
 

@@ -2,10 +2,21 @@
   import type { PageProps } from './$types';
   import PlanList from '$lib/plans/PlanList.svelte';
   import PlanKanban from '$lib/plans/PlanKanban.svelte';
+  import { dispatchAgent } from '../repo.remote';
 
   let { data }: PageProps = $props();
 
   let view = $state<'list' | 'kanban'>('list');
+
+  async function handleDispatch(plan: { id: string; body: string; tags: string[] }, agent: string) {
+    await dispatchAgent({
+      organization: data.organization,
+      repo: data.repoName,
+      agent: agent as any,
+      prompt: plan.body,
+      tags: [`plan:${plan.id}`, ...plan.tags],
+    });
+  }
 </script>
 
 <div>
@@ -23,9 +34,9 @@
   </div>
 
   {#if view === 'list'}
-    <PlanList organization={data.organization} repoName={data.repoName} plans={data.plans} />
+    <PlanList organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={handleDispatch} />
   {:else}
-    <PlanKanban organization={data.organization} repoName={data.repoName} plans={data.plans} />
+    <PlanKanban organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={handleDispatch} />
   {/if}
 </div>
 

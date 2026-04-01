@@ -1,6 +1,7 @@
 <script lang="ts">
   import ArtifactViewer from '$lib/ArtifactViewer.svelte';
-  import { tagCategoryStyle, originBadgeStyle, eventDotColor, formatBytes } from './event-helpers';
+  import { originBadgeStyle, eventDotColor, formatBytes } from './event-helpers';
+  import TagList from '$lib/tag/TagList.svelte';
 
   let {
     event,
@@ -112,11 +113,7 @@
   {#if event.tags.length > 0}
     <div class="section">
       <span class="section-heading">TAGS</span>
-      <div class="tags">
-        {#each event.tags as tag (tag)}
-          <span class="tag-pill" style={tagCategoryStyle(tag)}>{tag}</span>
-        {/each}
-      </div>
+      <TagList tags={event.tags} />
     </div>
   {/if}
 
@@ -264,21 +261,6 @@
   }
 
   /* ── Tags ── */
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .tag-pill {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    border: 1px solid;
-    line-height: 1.6;
-  }
-
   /* ── Data ── */
   .data-pre {
     margin: 0;
