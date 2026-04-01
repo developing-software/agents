@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { listAgentRuns } from '$lib/events/events.remote';
+  import EmptyState from '$lib/EmptyState.svelte';
   import {
     relativeTime,
     originBadgeStyle,
@@ -172,7 +173,7 @@
   </div>
 {:then runs}
   {#if runs.length === 0}
-    <p class="empty">No agent runs recorded yet.</p>
+    <EmptyState icon="agents" title="No agent runs recorded" description="Runs will appear here when agents are triggered via GitHub Actions or CLI." />
   {:else}
     <div class="runs-table">
       {#each runs as run (run.id)}
@@ -376,6 +377,15 @@
     letter-spacing: 0.07em;
     color: var(--color-dim);
     margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   /* ------------------------------------------------------------------ */

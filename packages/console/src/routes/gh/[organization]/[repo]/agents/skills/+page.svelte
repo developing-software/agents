@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import EmptyState from '$lib/EmptyState.svelte';
 
   let { data }: PageProps = $props();
 
@@ -11,7 +12,7 @@
 <h2 class="section-heading">Skills</h2>
 
 {#if allEmpty}
-  <p class="empty">No skills found.</p>
+  <EmptyState icon="skills" title="No skills found" description="Add skills in .agents/skills/ or .claude/skills/ to extend agent capabilities." />
 {:else}
   {#if data.agentsSkills.length > 0}
     <div class="group">
@@ -70,6 +71,15 @@
     letter-spacing: 0.07em;
     color: var(--color-dim);
     margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   /* ------------------------------------------------------------------ */

@@ -33,6 +33,12 @@
     if (totalAll === 0) return '—';
     return `${((totalPassed / totalAll) * 100).toFixed(0)}%`;
   }
+
+  function getPassPercent(checks: { passed: number; failed: number }[]): number {
+    const totalPassed = checks.reduce((acc, c) => acc + c.passed, 0);
+    const totalAll = checks.reduce((acc, c) => acc + c.passed + c.failed, 0);
+    return totalAll > 0 ? (totalPassed / totalAll) * 100 : 0;
+  }
 </script>
 
 {#await summaryPromise}
@@ -65,6 +71,16 @@
         <div class="stat-card">
           <span class="stat-label">Pass Rate</span>
           <span class="stat-value">{getPassRate(summary.checks)}</span>
+          <div class="mini-bar-track">
+            <div
+              class="mini-bar-pass"
+              style="width:{getPassPercent(summary.checks)}%;"
+            ></div>
+            <div
+              class="mini-bar-fail"
+              style="width:{100 - getPassPercent(summary.checks)}%;"
+            ></div>
+          </div>
         </div>
       </div>
 
@@ -99,6 +115,8 @@
         </div>
       {/if}
     </div>
+  {:else}
+    <div class="empty-state">No runs recorded yet</div>
   {/if}
 {:catch}
   <div></div>
@@ -110,6 +128,8 @@
   .stat-row { display: flex; flex-wrap: wrap; gap: 6px; }
 
   .stat-card {
+    flex: 1;
+    min-width: 0;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 4px;
@@ -132,6 +152,26 @@
     font-size: 16px;
     color: var(--color-text);
     font-variant-numeric: tabular-nums;
+  }
+
+  .mini-bar-track {
+    display: flex;
+    height: 3px;
+    border-radius: 1.5px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .mini-bar-pass {
+    height: 3px;
+    background: var(--color-success, #22c55e);
+    transition: width 0.2s ease;
+  }
+
+  .mini-bar-fail {
+    height: 3px;
+    background: var(--color-danger, #ef4444);
+    transition: width 0.2s ease;
   }
 
   .checks-breakdown { display: flex; flex-direction: column; gap: 2px; }
@@ -194,6 +234,14 @@
   }
 
   .agent-count { opacity: 0.7; }
+
+  .empty-state {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: var(--color-dim);
+    padding: 20px 0;
+    text-align: center;
+  }
 
   .skeleton-label {
     width: 48px;

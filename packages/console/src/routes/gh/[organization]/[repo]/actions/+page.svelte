@@ -4,6 +4,7 @@
   import { page } from '$app/state';
   import { untrack } from 'svelte';
   import { dispatchAction, listWorkflowRuns } from '../repo.remote';
+  import EmptyState from '$lib/EmptyState.svelte';
 
   let { data }: PageProps = $props();
 
@@ -120,7 +121,7 @@
     >Workflows</p>
 
     {#if data.workflows.length === 0}
-      <p class="text-xs" style="color: var(--color-muted);">No workflows found.</p>
+      <EmptyState icon="workflows" title="No workflows" description="Add GitHub Actions workflow files to your repository." />
     {:else}
       <ul>
         {#each data.workflows as wf (wf.id)}
@@ -163,12 +164,7 @@
   <!-- Main panel -->
   <div class="min-w-0 flex-1 pl-5">
     {#if !selectedWorkflow}
-      <div
-        class="flex items-center justify-center text-xs"
-        style="height: 120px; border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-dim);"
-      >
-        Select a workflow to view its run history and dispatch it
-      </div>
+      <EmptyState icon="actions" title="Select a workflow" description="Choose a workflow from the sidebar to view its history and dispatch runs." />
     {:else}
       <!-- Dispatch card -->
       <div
@@ -311,7 +307,7 @@
         {#if runsLoading}
           <p class="text-xs" style="color: var(--color-muted);">Loading…</p>
         {:else if runs.length === 0}
-          <p class="text-xs" style="color: var(--color-muted);">No runs found for this workflow.</p>
+          <EmptyState icon="actions" title="No runs found" description="Dispatch the workflow to see run history." />
         {:else}
           <div
             class="overflow-hidden rounded"

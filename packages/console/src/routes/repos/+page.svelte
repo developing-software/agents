@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import EmptyState from '$lib/EmptyState.svelte';
 
   let { data }: PageProps = $props();
 </script>
@@ -10,15 +11,13 @@
   </h1>
 
   {#if data.orgs.length === 0}
-    <p class="text-xs" style="color: var(--color-muted);">
-      No repositories found.
-      <a
-        href="https://github.com/apps"
-        target="_blank"
-        rel="noopener noreferrer"
-        style="color: var(--color-accent);"
-      >Install the GitHub App</a> to get started.
-    </p>
+    <EmptyState
+      icon="repos"
+      title="No repositories found"
+      description="Install the GitHub App to connect your repos."
+      href="https://github.com/apps"
+      hrefLabel="Install GitHub App"
+    />
   {:else}
     <div class="flex flex-col gap-8">
       {#each data.orgs as { org, repos } (org)}
@@ -78,14 +77,33 @@
     padding: 10px 12px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
+    border-left: 2px solid transparent;
     border-radius: 3px;
     text-decoration: none;
+    position: relative;
     transition: background 0.1s, border-color 0.1s;
   }
 
   .repo-card:hover {
     background: var(--color-elevated);
     border-color: var(--color-border-bright);
+    border-left-color: var(--color-accent);
+  }
+
+  .repo-card::after {
+    content: '›';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--color-dim);
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .repo-card:hover::after {
+    opacity: 1;
   }
 
   .repo-name {

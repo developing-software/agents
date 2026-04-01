@@ -6,6 +6,7 @@
     PLAN_STATUSES,
   } from './plan-helpers';
   import TagList from '$lib/tag/TagList.svelte';
+  import EmptyState from '$lib/EmptyState.svelte';
 
   type PlanItem = {
     id: string;
@@ -74,7 +75,13 @@
 </div>
 
 {#if filtered.length === 0}
-  <div class="empty">{emptyText}</div>
+  <EmptyState
+    icon="plans"
+    title={emptyText}
+    description="Create a plan to coordinate agent work."
+    href="/gh/{organization}/{repoName}/plans/create"
+    hrefLabel="Create a plan"
+  />
 {:else}
   <div class="list-container">
     {#each filtered as plan, i (plan.id)}
@@ -155,6 +162,11 @@
     padding: 6px 12px;
     min-height: 36px;
     align-items: center;
+    transition: background 0.08s;
+  }
+
+  .plan-row:hover {
+    background: var(--color-hover);
   }
 
   .plan-row-border {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { SvelteSet } from 'svelte/reactivity';
   import GitHubLink from '$lib/GitHubLink.svelte';
+  import EmptyState from '$lib/EmptyState.svelte';
   import { issueStateColor, issueStateDotStyle } from './github-helpers';
 
   interface Props {
@@ -38,6 +39,12 @@
   const filtered = $derived(
     activeFilter === 'all' ? issues : issues.filter((i) => i.state === activeFilter)
   );
+
+  const counts = $derived({
+    all: issues.length,
+    open: issues.filter((i) => i.state === 'open').length,
+    closed: issues.filter((i) => i.state === 'closed').length,
+  });
 
   function toggleSelection(issueNumber: number) {
     if (selected.has(issueNumber)) {
@@ -80,6 +87,7 @@
             : undefined}
         >
           {opt.label}
+          <span class="count-badge" class:count-badge-active={activeFilter === opt.value}>{counts[opt.value]}</span>
         </button>
       {/each}
     </div>
@@ -87,11 +95,7 @@
 
   <!-- Issue list -->
   {#if filtered.length === 0}
-    <div
-      style="display: flex; align-items: center; justify-content: center; padding: 40px 0; font-size: 12px; color: var(--color-muted); border: 1px solid var(--color-border); border-radius: 4px;"
-    >
-      {emptyText}
-    </div>
+    <EmptyState icon="issues" title={emptyText} />
   {:else}
     <div
       class="overflow-hidden rounded"
@@ -227,6 +231,10 @@
     gap: 12px;
     padding: 6px 12px;
     min-height: 36px;
+    transition: background 0.08s;
+  }
+  .issue-row:hover {
+    background: var(--color-hover);
   }
 
   .issue-row-selectable {
@@ -249,4 +257,21 @@
     transition: color 0.1s;
   }
   .activity-link:hover { color: var(--color-accent); }
+
+  .count-badge {
+    font-size: 9px;
+    min-width: 16px;
+    padding: 0 4px;
+    border-radius: 6px;
+    text-align: center;
+    line-height: 15px;
+    display: inline-block;
+    margin-left: 4px;
+    background: var(--color-border);
+    color: var(--color-dim);
+  }
+  .count-badge-active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
 </style>

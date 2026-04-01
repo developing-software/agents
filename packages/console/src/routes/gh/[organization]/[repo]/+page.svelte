@@ -46,7 +46,7 @@
       </div>
 
       {#if data.issues.length === 0}
-        <p class="empty-text">No issues synced yet.</p>
+        <p class="empty-text">No issues synced yet. They will appear after syncing from GitHub.</p>
       {:else}
         <ul class="item-list">
           {#each data.issues.slice(0, 5) as issue (issue.number)}
@@ -81,7 +81,7 @@
       </div>
 
       {#if data.pulls.length === 0}
-        <p class="empty-text">No pull requests synced yet.</p>
+        <p class="empty-text">No pull requests synced yet. They will appear after syncing from GitHub.</p>
       {:else}
         <ul class="item-list">
           {#each data.pulls.slice(0, 5) as pr (pr.number)}
@@ -159,6 +159,15 @@
     letter-spacing: 0.07em;
     color: var(--color-dim);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   .empty-text {

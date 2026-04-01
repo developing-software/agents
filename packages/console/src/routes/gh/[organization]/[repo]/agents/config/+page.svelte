@@ -21,6 +21,9 @@
         <span class="status status-dim">Not found</span>
       {/if}
     </div>
+    {#if !agentsFolder?.exists}
+      <p class="hint">Create a .agents/ folder to define agent configurations and skills.</p>
+    {/if}
     {#if agentsFolder?.exists && agentsFolder.entries.length > 0}
       <ul class="file-list">
         {#each agentsFolder.entries as entry (entry)}
@@ -40,6 +43,9 @@
         <span class="status status-dim">Not found</span>
       {/if}
     </div>
+    {#if claudeFiles.length === 0}
+      <p class="hint">Add a .claude/ folder with settings and CLAUDE.md for Claude-based agents.</p>
+    {/if}
     {#if claudeFiles.length > 0}
       <ul class="file-list">
         {#each claudeFiles as file (file)}
@@ -59,6 +65,9 @@
         <span class="status status-dim">Not found</span>
       {/if}
     </div>
+    {#if agentFiles.length === 0}
+      <p class="hint">Add AGENTS.md files to provide instructions for your agents.</p>
+    {/if}
     {#if agentFiles.length > 0}
       <ul class="file-list">
         {#each agentFiles as file (file.path)}
@@ -86,6 +95,15 @@
     letter-spacing: 0.07em;
     color: var(--color-dim);
     margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   /* ------------------------------------------------------------------ */
@@ -103,10 +121,18 @@
   .card {
     flex: 1;
     min-width: 0;
+    min-height: 80px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 5px;
     padding: 12px 14px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--color-dim);
+    margin: 6px 0 0;
+    line-height: 1.4;
   }
 
   .card-header {

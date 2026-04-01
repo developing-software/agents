@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import EmptyState from '$lib/EmptyState.svelte';
 
   let { data }: PageProps = $props();
 
@@ -13,7 +14,7 @@
 <h2 class="page-heading">Prompts</h2>
 
 {#if data.prompts.length === 0}
-  <p class="empty">No prompts found in .agents/prompts/</p>
+  <EmptyState icon="prompts" title="No prompts found" description="Add prompt files in .agents/prompts/ to configure agent behavior." />
 {:else}
   <div class="prompt-list">
     {#each data.prompts as prompt (prompt.name)}
@@ -45,6 +46,15 @@
     letter-spacing: 0.07em;
     color: var(--color-dim);
     margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .page-heading::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   .empty {
@@ -112,11 +122,13 @@
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: var(--color-muted);
-    padding: 0 12px 12px;
+    padding: 12px 14px;
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
     border-top: 1px solid var(--color-border);
     line-height: 1.5;
+    background: var(--color-bg);
+    border-radius: 0 0 4px 4px;
   }
 </style>

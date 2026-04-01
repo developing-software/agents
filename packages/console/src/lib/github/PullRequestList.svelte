@@ -1,5 +1,6 @@
 <script lang="ts">
   import GitHubLink from '$lib/GitHubLink.svelte';
+  import EmptyState from '$lib/EmptyState.svelte';
   import { prStateColor, prStateDotStyle } from './github-helpers';
 
   interface Props {
@@ -23,6 +24,13 @@
   const filtered = $derived(
     activeFilter === 'all' ? pulls : pulls.filter((p) => p.state === activeFilter)
   );
+
+  const counts = $derived({
+    all: pulls.length,
+    open: pulls.filter((p) => p.state === 'open').length,
+    merged: pulls.filter((p) => p.state === 'merged').length,
+    closed: pulls.filter((p) => p.state === 'closed').length,
+  });
 
   const filterOptions = [
     { value: 'all', label: 'All' },
@@ -54,6 +62,7 @@
             : undefined}
         >
           {opt.label}
+          <span class="count-badge" class:count-badge-active={activeFilter === opt.value}>{counts[opt.value]}</span>
         </button>
       {/each}
     </div>
@@ -61,12 +70,7 @@
 
   <!-- Pull request list -->
   {#if filtered.length === 0}
-    <div
-      class="flex items-center justify-center py-10 text-xs"
-      style="color: var(--color-muted); border: 1px solid var(--color-border); border-radius: 4px;"
-    >
-      {emptyText}
-    </div>
+    <EmptyState icon="pulls" title={emptyText} />
   {:else}
     <div
       class="overflow-hidden rounded"
@@ -132,6 +136,27 @@
     gap: 12px;
     padding: 6px 12px;
     min-height: 36px;
+    transition: background 0.08s;
+  }
+  .pr-row:hover {
+    background: var(--color-hover);
+  }
+
+  .count-badge {
+    font-size: 9px;
+    min-width: 16px;
+    padding: 0 4px;
+    border-radius: 6px;
+    text-align: center;
+    line-height: 15px;
+    display: inline-block;
+    margin-left: 4px;
+    background: var(--color-border);
+    color: var(--color-dim);
+  }
+  .count-badge-active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
   }
 
   .activity-link {
