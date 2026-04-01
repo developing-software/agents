@@ -11,11 +11,12 @@
     { label: 'Pull Requests', href: `/gh/${data.organization}/${data.repoName}/pulls` },
     { label: 'Agents', href: `/gh/${data.organization}/${data.repoName}/agents` },
     { label: 'Plans', href: `/gh/${data.organization}/${data.repoName}/plans` },
+    { label: 'Planner', href: `/gh/${data.organization}/${data.repoName}/planner` },
     { label: 'Actions', href: `/gh/${data.organization}/${data.repoName}/actions` },
   ]);
 
   function isActive(href: string) {
-    if (href.includes('/tree') || href.includes('/agents') || href.includes('/plans')) {
+    if (href.includes('/tree') || href.includes('/agents') || href.includes('/plans') || href.includes('/planner')) {
       return page.url.pathname.startsWith(href);
     }
     return page.url.pathname === href;
