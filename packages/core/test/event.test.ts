@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import { Event } from "../src/events";
-import { Tags } from "../src/events/types";
+import { Tags } from "../src/tag";
 import { createID } from "../src/util/id";
 
 function testSourceId() {

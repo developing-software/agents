@@ -3,7 +3,7 @@ import { GithubInstallation } from "../installation/index";
 import { User } from "../../user/index";
 import { Log } from "../../util/log";
 import { Event } from "../../events/index";
-import { Tags } from "../../events/types";
+import { Tags } from "../../tag";
 import { Repository } from "../../repository/index";
 
 const log = Log.create({ namespace: "github.webhook" });
