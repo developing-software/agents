@@ -171,6 +171,7 @@ export const listAgentRuns = query(
         output_tokens: typeof m?.output_tokens === 'number' ? m.output_tokens : null,
         reasoning_tokens: typeof m?.reasoning_tokens === 'number' ? m.reasoning_tokens : null,
         cache_read_input_tokens: typeof m?.cache_read_input_tokens === 'number' ? m.cache_read_input_tokens : null,
+        cache_creation_input_tokens: typeof m?.cache_creation_input_tokens === 'number' ? m.cache_creation_input_tokens : null,
         num_turns: typeof m?.num_turns === 'number' ? m.num_turns : null,
         durationMs: typeof pd?.durationMs === 'number' ? pd.durationMs : null,
         linesAdded: typeof pd?.linesAdded === 'number' ? pd.linesAdded : null,
