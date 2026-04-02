@@ -7,7 +7,7 @@ describe("ModelsDev", () => {
     const providers = Object.keys(data);
     expect(providers.length).toBeGreaterThan(0);
 
-    const first = data[providers[0]];
+    const first = data[providers[0]!]!;
     expect(first.id).toBeString();
     expect(first.name).toBeString();
   });

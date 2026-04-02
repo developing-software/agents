@@ -10,6 +10,7 @@
   <div class="header">
     <a href="/gh/{data.organization}/{data.repoName}/plans" class="back">← Plans</a>
     <span class="title">{data.plan.title}</span>
+    <a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}/planner" class="edit-link">AI Planner</a>
     <a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}/edit" class="edit-link">Edit</a>
   </div>
 

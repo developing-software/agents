@@ -7,6 +7,10 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
+    "AntropicApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "Database": {
       "database": string
       "host": string
