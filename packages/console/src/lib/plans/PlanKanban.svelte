@@ -22,15 +22,14 @@
     repoName,
     plans,
     ondispatch,
+    dispatched = $bindable(new Set<string>()),
   }: {
     organization: string;
     repoName: string;
     plans: PlanItem[];
-    ondispatch?: (plan: PlanItem, agent: string) => Promise<void>;
+    ondispatch?: (plan: PlanItem) => void;
+    dispatched?: Set<string>;
   } = $props();
-
-  let dispatchingId = $state<string | null>(null);
-  let dispatched = $state<Set<string>>(new Set());
 
   let grouped = $derived(
     PLAN_STATUSES.reduce(
@@ -41,15 +40,6 @@
       {} as Record<string, PlanItem[]>,
     ),
   );
-
-  async function handleDispatch(plan: PlanItem, agent: string) {
-    try {
-      await ondispatch!(plan, agent);
-      dispatched = new Set([...dispatched, plan.id]);
-    } finally {
-      dispatchingId = null;
-    }
-  }
 </script>
 
 <div class="kanban">
@@ -77,15 +67,8 @@
               <div class="card-actions">
                 {#if dispatched.has(plan.id)}
                   <span class="dispatched-badge">dispatched</span>
-                {:else if dispatchingId === plan.id}
-                  <div class="agent-picker">
-                    {#each ['claude', 'opencode', 'codex'] as agent (agent)}
-                      <button type="button" class="agent-btn" onclick={(e) => { e.preventDefault(); handleDispatch(plan, agent); }}>{agent}</button>
-                    {/each}
-                    <button type="button" class="agent-btn agent-cancel" onclick={(e) => { e.preventDefault(); dispatchingId = null; }}>×</button>
-                  </div>
                 {:else}
-                  <button type="button" class="dispatch-btn" onclick={(e) => { e.preventDefault(); dispatchingId = plan.id; }}>dispatch</button>
+                  <button type="button" class="dispatch-btn" onclick={(e) => { e.preventDefault(); ondispatch!(plan); }}>dispatch</button>
                 {/if}
               </div>
             {/if}
@@ -221,39 +204,6 @@
   }
   .dispatch-btn:hover {
     background: color-mix(in srgb, var(--color-accent) 20%, transparent);
-  }
-
-  .agent-picker {
-    display: flex;
-    gap: 2px;
-  }
-
-  .agent-btn {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    border: 1px solid var(--color-border);
-    background: var(--color-elevated);
-    color: var(--color-muted);
-    cursor: pointer;
-    flex: 1;
-    transition: background 0.1s, color 0.1s;
-  }
-  .agent-btn:hover {
-    background: var(--color-accent);
-    color: #fff;
-    border-color: var(--color-accent);
-  }
-
-  .agent-cancel {
-    color: var(--color-dim);
-    flex: 0;
-    padding: 1px 4px;
-  }
-  .agent-cancel:hover {
-    background: var(--color-danger);
-    border-color: var(--color-danger);
   }
 
   .dispatched-badge {

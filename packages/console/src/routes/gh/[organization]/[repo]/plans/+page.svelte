@@ -2,20 +2,25 @@
   import type { PageProps } from './$types';
   import PlanList from '$lib/plans/PlanList.svelte';
   import PlanKanban from '$lib/plans/PlanKanban.svelte';
-  import { dispatchAgent } from '../repo.remote';
+  import DispatchDrawer from '$lib/dispatch/DispatchDrawer.svelte';
 
   let { data }: PageProps = $props();
 
   let view = $state<'list' | 'kanban'>('list');
 
-  async function handleDispatch(plan: { id: string; body: string; tags: string[] }, agent: string) {
-    await dispatchAgent({
-      organization: data.organization,
-      repo: data.repoName,
-      agent: agent as any,
-      prompt: plan.body,
-      tags: [`plan:${plan.id}`, ...plan.tags],
-    });
+  type PlanItem = NonNullable<typeof data.plans>[number];
+
+  let drawerOpen = $state(false);
+  let selectedPlan = $state<PlanItem | null>(null);
+  let dispatched = $state(new Set<string>());
+
+  function openDrawer(plan: PlanItem) {
+    selectedPlan = plan;
+    drawerOpen = true;
+  }
+
+  function handleDispatched(planId: string) {
+    dispatched = new Set([...dispatched, planId]);
   }
 </script>
 
@@ -34,11 +39,21 @@
   </div>
 
   {#if view === 'list'}
-    <PlanList organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={handleDispatch} />
+    <PlanList organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={openDrawer} bind:dispatched />
   {:else}
-    <PlanKanban organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={handleDispatch} />
+    <PlanKanban organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={openDrawer} bind:dispatched />
   {/if}
 </div>
+
+{#if selectedPlan}
+  <DispatchDrawer
+    plan={selectedPlan}
+    organization={data.organization}
+    repoName={data.repoName}
+    bind:open={drawerOpen}
+    ondispatched={handleDispatched}
+  />
+{/if}
 
 <style>
   .header {

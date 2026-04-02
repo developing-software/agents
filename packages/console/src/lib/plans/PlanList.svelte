@@ -29,26 +29,17 @@
     plans,
     emptyText = 'No plans',
     ondispatch,
+    dispatched = $bindable(new Set<string>()),
   }: {
     organization: string;
     repoName: string;
     plans: PlanItem[];
     emptyText?: string;
-    ondispatch?: (plan: PlanItem, agent: string) => Promise<void>;
+    ondispatch?: (plan: PlanItem) => void;
+    dispatched?: Set<string>;
   } = $props();
 
   let activeFilter = $state<'all' | string>('all');
-  let dispatchingId = $state<string | null>(null);
-  let dispatched = $state<Set<string>>(new Set());
-
-  async function handleDispatch(plan: PlanItem, agent: string) {
-    try {
-      await ondispatch!(plan, agent);
-      dispatched = new Set([...dispatched, plan.id]);
-    } finally {
-      dispatchingId = null;
-    }
-  }
 
   let filtered = $derived(
     activeFilter === 'all'
@@ -103,15 +94,8 @@
         {#if plan.status === 'approved' && ondispatch}
           {#if dispatched.has(plan.id)}
             <span class="dispatched-badge">dispatched</span>
-          {:else if dispatchingId === plan.id}
-            <div class="agent-picker">
-              {#each ['claude', 'opencode', 'codex'] as agent (agent)}
-                <button type="button" class="agent-btn" onclick={() => handleDispatch(plan, agent)}>{agent}</button>
-              {/each}
-              <button type="button" class="agent-btn agent-cancel" onclick={() => { dispatchingId = null; }}>&times;</button>
-            </div>
           {:else}
-            <button type="button" class="dispatch-btn" onclick={() => { dispatchingId = plan.id; }}>dispatch</button>
+            <button type="button" class="dispatch-btn" onclick={() => ondispatch!(plan)}>dispatch</button>
           {/if}
         {/if}
       </div>
@@ -241,37 +225,6 @@
   }
   .dispatch-btn:hover {
     background: color-mix(in srgb, var(--color-accent) 20%, transparent);
-  }
-
-  .agent-picker {
-    display: flex;
-    gap: 2px;
-    flex-shrink: 0;
-  }
-
-  .agent-btn {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    border: 1px solid var(--color-border);
-    background: var(--color-elevated);
-    color: var(--color-muted);
-    cursor: pointer;
-    transition: background 0.1s, color 0.1s;
-  }
-  .agent-btn:hover {
-    background: var(--color-accent);
-    color: #fff;
-    border-color: var(--color-accent);
-  }
-
-  .agent-cancel {
-    color: var(--color-dim);
-  }
-  .agent-cancel:hover {
-    background: var(--color-danger);
-    border-color: var(--color-danger);
   }
 
   .dispatched-badge {

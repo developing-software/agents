@@ -2,16 +2,34 @@
   import type { PageProps } from './$types';
   import PlanDetail from '$lib/plans/PlanDetail.svelte';
   import Events from '$lib/events/Events.svelte';
+  import DispatchDrawer from '$lib/dispatch/DispatchDrawer.svelte';
 
   let { data }: PageProps = $props();
+
+  let drawerOpen = $state(false);
+  let dispatched = $state(false);
+
+  function handleDispatched(_planId: string) {
+    dispatched = true;
+    drawerOpen = false;
+  }
 </script>
 
 {#if data.plan}
   <div class="header">
     <a href="/gh/{data.organization}/{data.repoName}/plans" class="back">← Plans</a>
     <span class="title">{data.plan.title}</span>
+    <div class="header-actions">
+      {#if data.plan.status === 'approved'}
+        {#if dispatched}
+          <span class="dispatched-badge">dispatched</span>
+        {:else}
+          <button type="button" class="dispatch-btn" onclick={() => { drawerOpen = true; }}>Dispatch</button>
+        {/if}
+      {/if}
+      <a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}/edit" class="edit-link">Edit</a>
+    </div>
     <a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}/planner" class="edit-link">AI Planner</a>
-    <a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}/edit" class="edit-link">Edit</a>
   </div>
 
   <PlanDetail plan={data.plan} />
@@ -25,6 +43,14 @@
       emptyText="No events linked to this plan"
     />
   </div>
+
+  <DispatchDrawer
+    plan={data.plan}
+    organization={data.organization}
+    repoName={data.repoName}
+    bind:open={drawerOpen}
+    ondispatched={handleDispatched}
+  />
 {:else}
   <div class="not-found">
     <a href="/gh/{data.organization}/{data.repoName}/plans" class="back">← Plans</a>
@@ -60,6 +86,38 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .dispatch-btn {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .dispatch-btn:hover {
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  .dispatched-badge {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: var(--color-success);
+    border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
   }
 
   .edit-link {
