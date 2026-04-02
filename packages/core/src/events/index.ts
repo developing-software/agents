@@ -1,4 +1,4 @@
-import { and, arrayContains, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, arrayContains, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
@@ -155,6 +155,8 @@ export namespace Event {
     tags?: string[];
     type?: string;
     limit?: number;
+    from?: string;
+    to?: string;
   }): Promise<Info[]> {
     return useTransaction(async (tx) => {
       const conditions = [];
@@ -162,6 +164,8 @@ export namespace Event {
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
       if (opts.tags?.length) conditions.push(arrayContains(eventTable.tags, opts.tags));
       if (opts.type) conditions.push(eq(eventTable.type, opts.type));
+      if (opts.from) conditions.push(gte(eventTable.timeCreated, new Date(opts.from)));
+      if (opts.to) conditions.push(lte(eventTable.timeCreated, new Date(opts.to)));
       let query = tx
         .select()
         .from(eventTable)
@@ -238,6 +242,8 @@ export namespace Event {
     sourceId?: string;
     tags?: string[];
     type?: string;
+    from?: string;
+    to?: string;
   }): Promise<TreeNode[]> {
     return useTransaction(async (tx) => {
       const rows = await tx.execute(sql`
@@ -248,6 +254,8 @@ export namespace Event {
             ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
             ${opts.tags?.length ? sql`AND tags @> ${JSON.stringify(opts.tags)}::text[]` : sql``}
             ${opts.type ? sql`AND type = ${opts.type}` : sql``}
+            ${opts.from ? sql`AND time_created >= ${opts.from}::timestamptz` : sql``}
+            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}
           UNION ALL
           SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags FROM ${eventTable} e
           JOIN event_tree et ON e.parent_event_id = et.id

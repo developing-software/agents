@@ -173,6 +173,10 @@ export const listAgentRuns = query(
         cache_read_input_tokens: typeof m?.cache_read_input_tokens === 'number' ? m.cache_read_input_tokens : null,
         num_turns: typeof m?.num_turns === 'number' ? m.num_turns : null,
         durationMs: typeof pd?.durationMs === 'number' ? pd.durationMs : null,
+        linesAdded: typeof pd?.linesAdded === 'number' ? pd.linesAdded : null,
+        linesRemoved: typeof pd?.linesRemoved === 'number' ? pd.linesRemoved : null,
+        prUrl: typeof pd?.prUrl === 'string' ? pd.prUrl : null,
+        runUrl: typeof pd?.runUrl === 'string' ? pd.runUrl : null,
         checks: checks ?? [],
         origin: e.origin,
         tags: e.tags,
@@ -194,6 +198,9 @@ export const getEventSummary = query(
       avgDurationMs: 0,
     };
 
+    // agent.completed is used here (rather than agent.result) because it carries
+    // durationMs, checks, linesAdded, and linesRemoved which are not present in
+    // agent.result. The metrics field is a copy from the result file — intentional.
     const events = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, limit: 200 });
 
     const agentCounts: Record<string, number> = {};
@@ -202,6 +209,8 @@ export const getEventSummary = query(
     const checkStats = new Map<string, { category: string; name: string; passed: number; failed: number }>();
     let totalDurationMs = 0;
     let durationCount = 0;
+    let totalLinesAdded = 0;
+    let totalLinesRemoved = 0;
 
     const METRIC_KEYS = ['input_tokens', 'output_tokens', 'reasoning_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
 
@@ -218,6 +227,10 @@ export const getEventSummary = query(
         totalDurationMs += d.durationMs;
         durationCount++;
       }
+
+      // Lines changed
+      if (typeof d.linesAdded === 'number') totalLinesAdded += d.linesAdded;
+      if (typeof d.linesRemoved === 'number') totalLinesRemoved += d.linesRemoved;
 
       // Metrics
       const m = d.metrics;
@@ -261,6 +274,8 @@ export const getEventSummary = query(
       })),
       checks: [...checkStats.values()],
       avgDurationMs: durationCount > 0 ? Math.round(totalDurationMs / durationCount) : 0,
+      totalLinesAdded,
+      totalLinesRemoved,
     };
   },
 );

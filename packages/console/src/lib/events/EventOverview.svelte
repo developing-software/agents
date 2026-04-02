@@ -27,6 +27,21 @@
     return cost ? `$${cost.sum.toFixed(2)}` : '$0.00';
   }
 
+  function getTotalTokens(metrics: { name: string; sum: number; count: number }[]): string | null {
+    const input = metrics.find((m) => m.name === 'input_tokens');
+    const output = metrics.find((m) => m.name === 'output_tokens');
+    if (!input && !output) return null;
+    const total = (input?.sum ?? 0) + (output?.sum ?? 0);
+    if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}M`;
+    if (total >= 1_000) return `${(total / 1_000).toFixed(1)}k`;
+    return String(total);
+  }
+
+  function formatLinesChanged(added: number, removed: number): string | null {
+    if (added === 0 && removed === 0) return null;
+    return `+${added} / -${removed}`;
+  }
+
   function getPassRate(checks: { category: string; name: string; passed: number; failed: number }[]): string {
     const totalPassed = checks.reduce((acc, c) => acc + c.passed, 0);
     const totalAll = checks.reduce((acc, c) => acc + c.passed + c.failed, 0);
@@ -44,7 +59,7 @@
 {#await summaryPromise}
   <div class="overview">
     <div class="stat-row">
-      {#each [1, 2, 3, 4] as i (i)}
+      {#each [1, 2, 3, 4, 5, 6] as i (i)}
         <div class="stat-card">
           <div class="skeleton-label"></div>
           <div class="skeleton-value"></div>
@@ -68,6 +83,18 @@
           <span class="stat-label">Total Cost</span>
           <span class="stat-value">{getCost(summary.metrics)}</span>
         </div>
+        {#if getTotalTokens(summary.metrics) !== null}
+          <div class="stat-card">
+            <span class="stat-label">Total Tokens</span>
+            <span class="stat-value">{getTotalTokens(summary.metrics)}</span>
+          </div>
+        {/if}
+        {#if formatLinesChanged(summary.totalLinesAdded, summary.totalLinesRemoved) !== null}
+          <div class="stat-card">
+            <span class="stat-label">Lines Changed</span>
+            <span class="stat-value lines-changed">{formatLinesChanged(summary.totalLinesAdded, summary.totalLinesRemoved)}</span>
+          </div>
+        {/if}
         <div class="stat-card">
           <span class="stat-label">Pass Rate</span>
           <span class="stat-value">{getPassRate(summary.checks)}</span>
@@ -234,6 +261,10 @@
   }
 
   .agent-count { opacity: 0.7; }
+
+  .lines-changed {
+    font-size: 12px;
+  }
 
   .empty-state {
     font-family: "JetBrains Mono", monospace;
