@@ -29,6 +29,7 @@
       {/if}
       <a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}/edit" class="edit-link">Edit</a>
     </div>
+    <a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}/planner" class="edit-link">AI Planner</a>
   </div>
 
   <PlanDetail plan={data.plan} />
