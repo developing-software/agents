@@ -43,14 +43,20 @@ runs:
         type: audit.started
         tags: "type:audit-${{ inputs.audit_name }}"
 
-    - name: Prepare report file
+    - name: Fetch previous audit context
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
-        mkdir -p .agents/reports
-        cat > .agents/reports/audit-${{ inputs.audit_name }}.md << 'EOF'
-        ## ${{ inputs.report_title }}
-
-        EOF
+        mkdir -p .agents/context .agents/reports
+        PREV=$(gh issue list --label "audit-${{ inputs.audit_name }}" --state all --limit 1 --json number -q '.[0].number' 2>/dev/null || echo "")
+        if [ -n "$PREV" ]; then
+          gh issue view "$PREV" --json body -q '.body' > .agents/context/previous-audit-${{ inputs.audit_name }}.md
+          echo "Previous audit context loaded from issue #$PREV"
+        else
+          echo "No previous audit found"
+          echo "No previous audit available." > .agents/context/previous-audit-${{ inputs.audit_name }}.md
+        fi
 
     - name: Run Claude Code
       id: claude
