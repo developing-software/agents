@@ -1,0 +1,157 @@
+name: Metrics Audit
+run-name: "metrics-audit/${{ github.run_id }}"
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # Daily at 08:00 UTC
+    # - cron: "0 8 * * 1" # Alternative: Monday only at 08:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - uses: ./actions/event/emit
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          type: audit.started
+          origin: cron
+          tags: "type:metrics-audit"
+          inherit_context: "false"
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are running a metrics audit of this repository. Your job is to analyze the tag system, metric collection, and console dashboards for consistency and completeness.
+
+            Write your findings to .agents/reports/metrics-audit.md (create the directory if needed). Do NOT create GitHub issues or PRs. Do NOT modify any source files. Only create the report file.
+
+            ## Audit Protocol
+
+            Follow these steps in order:
+
+            ### Step 1-5: Tag Consistency
+
+            1. Read `packages/core/src/tag/index.ts` -- record all tag type prefixes in the Tag union and all keys in the Tags builder object.
+            2. Read `actions/agent/workflow/src/start.ts` -- record every tag constructed in the contextTags array.
+            3. Read `packages/core/src/github/webhook/handlers.ts` -- record all tags applied to webhook events (issues, PRs, pushes).
+            4. Read `packages/console/src/lib/tag/tag-helpers.ts` -- record which prefixes have custom styling in tagCategoryStyle(), which are in KNOWN_PREFIXES, and which extractors exist.
+            5. Cross-reference: identify tags produced but not in the type union, prefixes with no styling, extractors missing for known prefixes.
+
+            ### Step 6-9: Metric Completeness
+
+            6. Read `packages/console/src/lib/events/event-helpers.ts` -- record all fields in the EventMetrics type and the extractMetrics function.
+            7. Read each agent action's metric capture: `actions/agent/claude/`, `actions/agent/codex/`, `actions/agent/opencode/` -- record which metric fields each harness emits in its agent.result event.
+            8. Read `packages/console/src/lib/events/events.remote.ts` -- record the METRIC_KEYS arrays in getEventSummary and getAgentComparison, and which event types each query filters on.
+            9. Cross-reference: identify metrics emitted but not aggregated, metrics in the type but never emitted, harness inconsistencies.
+
+            ### Step 10-12: Console Display Gaps
+
+            10. List all +page.svelte files under `packages/console/src/routes/gh/[organization]/[repo]/` -- for each page, note what data is displayed.
+            11. Read `packages/console/src/lib/events/EventOverview.svelte` -- note which stat cards exist and which metrics they show.
+            12. Read `actions/agent/workflow/src/finish.ts` -- record all fields in the agent.completed event data payload. Compare against what the console actually displays. Note fields that are collected but never shown.
+
+            ### Step 13-15: Opportunities
+
+            13. Read `packages/core/src/events/types.ts` -- record all OriginType values and check which ones have no events in the system.
+            14. Review `packages/core/src/events/index.ts` Event.list signature -- check whether time-range filtering is supported.
+            15. Scan all examined files for TODO, FIXME, or HACK comments.
+
+            ## Known Gaps Seed List
+
+            Verify whether these known issues still exist:
+            - `model:` tag is used in start.ts but may not be in the Tag type union or tagCategoryStyle()
+            - `type:` and `harness:` prefixes may lack custom styling in tagCategoryStyle()
+            - No interactive tag picker in the console (Events only accepts filterTags as a prop)
+            - No time-range filtering on any query
+            - EventOverview shows Runs, Avg Duration, Total Cost, Pass Rate -- but not total tokens
+            - linesAdded/linesRemoved from agent.completed may not be displayed anywhere
+            - origin "cron" exists in OriginType but may have no events using it
+            - Plan 05 (metrics dashboard page) may not be implemented
+            - No cost-over-time trending view
+
+            ## Report Format
+
+            Write the file .agents/reports/metrics-audit.md with this exact structure:
+
+            ```markdown
+            ## Metrics Audit Report -- YYYY-MM-DD
+
+            ### Summary
+            (2-3 sentences: total findings count, severity breakdown)
+
+            ### Tag System
+            #### Inconsistencies Found
+            (Each: what is wrong, where in the code, suggested fix)
+            #### OK
+            (What checked out fine)
+
+            ### Metric Completeness
+            #### Gaps Found
+            (Each: metric gap description, which harnesses are affected)
+            #### OK
+
+            ### Console Display
+            #### Missing from UI
+            (Data available but not shown, with file paths)
+            #### Improvement Opportunities
+            (Better display of existing data, new pages/filters/dashboards that could be added)
+
+            ### New Metric Opportunities
+            (Ordered by impact: new metrics that could be derived from existing events)
+
+            ### Recommended Actions
+            (Prioritized list of concrete next steps, each as a potential issue to file)
+            ```
+
+      - name: Close previous audit issues
+        if: success()
+        run: |
+          gh issue list --label metrics-audit --state open --json number -q '.[].number' | while read -r num; do
+            gh issue close "$num" --comment "Superseded by new audit run: ${{ github.run_id }}"
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Ensure labels exist
+        if: success()
+        run: |
+          gh label create metrics-audit --color "0e8a16" --description "Automated metrics audit" 2>/dev/null || true
+          gh label create audit --color "d4c5f9" --description "Audit report" 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Create audit issue
+        if: success()
+        run: |
+          TITLE="Metrics Audit: $(date -u +%Y-%m-%d)"
+          gh issue create \
+            --title "$TITLE" \
+            --body-file .agents/reports/metrics-audit.md \
+            --label "metrics-audit,audit"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: ./actions/event/emit
+        if: always()
+        with:
+          token: ${{ secrets.AGENTS_TOKEN }}
+          type: audit.completed
+          origin: cron
+          tags: "type:metrics-audit"
+          data: '{"outcome":"${{ steps.claude.outcome }}"}'
+          inherit_context: "false"
