@@ -63,7 +63,7 @@ jobs:
             - `Info` schema with consistent shared fields (`id`, `timeCreated`, `timeUpdated`)
             - Derived input schemas (`.pick()`, `.shape`, `.partial()`, `.extend()`) for create/update operations
             - SQL table definition in a sibling `*.sql.ts` file using Drizzle
-            - Consistent use of `useActor()` for authorization context
+            - Consistent use of the `Actor` namespace for authorization context
             - Consistent use of `VisibleError` for client-safe errors
 
             **Questions to answer:**
