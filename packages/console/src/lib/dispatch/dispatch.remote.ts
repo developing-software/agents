@@ -2,14 +2,12 @@ import { command, query } from "$app/server";
 import { z } from "zod";
 import { AgentWorkflow } from "@agents/core/agent";
 import { Plan } from "@agents/core/plan/index";
-import { toPrompt } from "@agents/core/plan/prompt";
-import { Repository } from "@agents/core/repository/index";
 import { error } from "@sveltejs/kit";
 
 export const previewPrompt = query(
   z.object({ planId: z.string() }),
   async ({ planId }) => {
-    return toPrompt(planId);
+    return Plan.toPrompt(planId);
   },
 );
 
@@ -31,7 +29,7 @@ export const dispatchPlan = command(
     const plan = await Plan.fromID(planId);
     if (!plan) error(404, `Plan ${planId} not found`);
 
-    const prompt = await toPrompt(planId);
+    const prompt = await Plan.toPrompt(planId);
     const baseTags = [`plan:${planId}`, ...plan.tags, ...(extraTags ?? [])];
 
     const results: { harness: string; status: string }[] = [];

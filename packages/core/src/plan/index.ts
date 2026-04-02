@@ -6,6 +6,8 @@ import { fn } from "../util/fn";
 import { Log } from "../util/log";
 import { Common } from "../common";
 import { Examples } from "../examples";
+import { GithubIssue } from "../github/repo/issue";
+import { Repository } from "../repository/index";
 import { planTable, PlanStatus, AuthorType } from "./plan.sql";
 
 const log = Log.create({ service: "plan" });
@@ -162,6 +164,40 @@ export namespace Plan {
       log.info("update", { id, fields: Object.keys(values) });
       await tx.update(planTable).set(values).where(eq(planTable.id, id));
     });
+  }
+
+  export async function toPrompt(planId: string): Promise<string> {
+    const plan = await fromID(planId);
+    if (!plan) throw new Error(`Plan ${planId} not found`);
+
+    const issueNumbers = plan.tags
+      .filter((t) => t.startsWith("gh:issue:"))
+      .map((t) => parseInt(t.split(":")[2], 10))
+      .filter((n) => !isNaN(n));
+
+    const sections: string[] = [`# Plan: ${plan.title}`, plan.body];
+
+    if (issueNumbers.length > 0 && plan.sourceId) {
+      const repo = await Repository.findByID(plan.sourceId);
+      if (repo) {
+        const issues = await Promise.all(
+          issueNumbers.map((n) => GithubIssue.get(repo, n).catch(() => null)),
+        );
+
+        const validIssues = issues.filter(
+          (i): i is GithubIssue.Info => i !== null,
+        );
+        if (validIssues.length > 0) {
+          sections.push("## Linked Issues");
+          for (const issue of validIssues) {
+            sections.push(`### Issue #${issue.number}: ${issue.title}`);
+            if (issue.body) sections.push(issue.body);
+          }
+        }
+      }
+    }
+
+    return sections.join("\n\n");
   }
 
   function serialize(row: typeof planTable.$inferSelect): Info {
