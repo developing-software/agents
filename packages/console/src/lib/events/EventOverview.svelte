@@ -37,6 +37,15 @@
     return String(total);
   }
 
+  function getCacheHitRatio(metrics: { name: string; sum: number; count: number }[]): string | null {
+    const input = metrics.find((m) => m.name === 'input_tokens');
+    const cacheRead = metrics.find((m) => m.name === 'cache_read_input_tokens');
+    if (!cacheRead || cacheRead.sum === 0) return null;
+    const total = (input?.sum ?? 0) + cacheRead.sum;
+    if (total === 0) return null;
+    return `${((cacheRead.sum / total) * 100).toFixed(0)}%`;
+  }
+
   function formatLinesChanged(added: number, removed: number): string | null {
     if (added === 0 && removed === 0) return null;
     return `+${added} / -${removed}`;
@@ -87,6 +96,12 @@
           <div class="stat-card">
             <span class="stat-label">Total Tokens</span>
             <span class="stat-value">{getTotalTokens(summary.metrics)}</span>
+          </div>
+        {/if}
+        {#if getCacheHitRatio(summary.metrics) !== null}
+          <div class="stat-card">
+            <span class="stat-label">Cache Hit</span>
+            <span class="stat-value">{getCacheHitRatio(summary.metrics)}</span>
           </div>
         {/if}
         {#if formatLinesChanged(summary.totalLinesAdded, summary.totalLinesRemoved) !== null}

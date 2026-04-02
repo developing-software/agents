@@ -95,6 +95,10 @@ export const getAgentComparison = query(
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) return [];
 
+    // agent.result is used here (rather than agent.completed) because it is the
+    // canonical source of metrics — the harness writes them directly to the result
+    // event. agent.completed copies metrics from the result file in finish.ts, so
+    // querying agent.result avoids any transformation risk and gives us the raw data.
     const events = await Event.list({ type: "agent.result", source: "repository", sourceId: repo.id, limit: 500 });
 
     const METRIC_KEYS = ['input_tokens', 'output_tokens', 'reasoning_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
@@ -165,6 +169,7 @@ export const listAgentRuns = query(
         id: e.id,
         parentEventId: e.parentEventId,
         agent: typeof d?.agent === 'string' ? d.agent : 'unknown',
+        finalMessage: typeof d?.finalMessage === 'string' ? d.finalMessage : null,
         model: typeof m?.model === 'string' ? m.model : null,
         cost_usd: typeof m?.cost_usd === 'number' ? m.cost_usd : null,
         input_tokens: typeof m?.input_tokens === 'number' ? m.input_tokens : null,

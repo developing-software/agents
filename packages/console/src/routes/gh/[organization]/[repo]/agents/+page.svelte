@@ -298,6 +298,15 @@
                       <span class="token-val">{run.cache_read_input_tokens.toLocaleString()}</span>
                     </div>
                   {/if}
+                  {#if run.cache_read_input_tokens !== null && run.cache_read_input_tokens > 0}
+                    {@const cacheTotal = (run.input_tokens ?? 0) + run.cache_read_input_tokens}
+                    {#if cacheTotal > 0}
+                      <div class="token-row">
+                        <span class="token-key">Cache hit</span>
+                        <span class="token-val">{((run.cache_read_input_tokens / cacheTotal) * 100).toFixed(0)}%</span>
+                      </div>
+                    {/if}
+                  {/if}
                 </div>
               </div>
 
@@ -323,6 +332,13 @@
                       <a href={run.runUrl} class="context-link" target="_blank" rel="noopener">GH Run</a>
                     {/if}
                   </div>
+                </div>
+              {/if}
+
+              {#if run.finalMessage !== null}
+                <div class="detail-section">
+                  <span class="detail-label">Summary</span>
+                  <p class="final-message">{run.finalMessage}</p>
                 </div>
               {/if}
 
@@ -749,6 +765,15 @@
     background: var(--color-elevated);
     color: var(--color-muted);
     line-height: 1.6;
+  }
+
+  .final-message {
+    margin: 0;
+    font-size: 11px;
+    color: var(--color-muted);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 
   /* ------------------------------------------------------------------ */
