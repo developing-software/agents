@@ -16,9 +16,10 @@ export type PlanTag = `plan:${string}`;
 export type ScopeTag = `scope:${string}`;
 export type TypeTag = `type:${string}`;
 export type HarnessTag = `harness:${string}`;
+export type ModelTag = `model:${string}`;
 
 // --- union of all valid tags ---
-export type Tag = EnvTag | ServiceTag | GhTag | PlanTag | ScopeTag | TypeTag | HarnessTag | (string & {});
+export type Tag = EnvTag | ServiceTag | GhTag | PlanTag | ScopeTag | TypeTag | HarnessTag | ModelTag | (string & {});
 
 // --- tag builders ---
 export const Tags = {
@@ -32,4 +33,5 @@ export const Tags = {
   scope: (label: string): ScopeTag => `scope:${label}`,
   type: (label: string): TypeTag => `type:${label}`,
   harness: (name: string): HarnessTag => `harness:${name}`,
+  model: (m: string): ModelTag => `model:${m}`,
 } as const;

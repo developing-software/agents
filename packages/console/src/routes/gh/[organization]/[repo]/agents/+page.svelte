@@ -301,7 +301,7 @@
                 </div>
               </div>
 
-              {#if branch || ghRun !== null}
+              {#if branch || ghRun !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
                 <div class="detail-section">
                   <span class="detail-label">Context</span>
                   <div class="context-items">
@@ -310,6 +310,17 @@
                     {/if}
                     {#if ghRun !== null}
                       <span class="context-dim">run #{ghRun}</span>
+                    {/if}
+                    {#if run.linesAdded !== null || run.linesRemoved !== null}
+                      <span class="context-lines">
+                        {#if run.linesAdded !== null}<span class="lines-added">+{run.linesAdded}</span>{/if}{#if run.linesAdded !== null && run.linesRemoved !== null} / {/if}{#if run.linesRemoved !== null}<span class="lines-removed">-{run.linesRemoved}</span>{/if}
+                      </span>
+                    {/if}
+                    {#if run.prUrl !== null}
+                      <a href={run.prUrl} class="context-link" target="_blank" rel="noopener">PR</a>
+                    {/if}
+                    {#if run.runUrl !== null}
+                      <a href={run.runUrl} class="context-link" target="_blank" rel="noopener">GH Run</a>
                     {/if}
                   </div>
                 </div>
@@ -693,6 +704,31 @@
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     color: var(--color-dim);
+  }
+
+  .context-lines {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lines-added {
+    color: var(--color-success);
+  }
+
+  .lines-removed {
+    color: var(--color-danger);
+  }
+
+  .context-link {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .context-link:hover {
+    text-decoration: underline;
   }
 
   /* ------------------------------------------------------------------ */
