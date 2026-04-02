@@ -15,7 +15,7 @@ const log = Log.create({ service: "plan" });
 export namespace Plan {
   export const ToPromptOptions = z
     .object({
-      includeIssueDetails: z.boolean().default(true),
+      includeIssueDetails: z.boolean().optional(),
     })
     .default({});
 
@@ -181,12 +181,15 @@ export namespace Plan {
     const options = ToPromptOptions.parse(opts);
     const issueNumbers = plan.tags
       .filter((t) => t.startsWith("gh:issue:"))
-      .map((t) => parseInt(t.split(":")[2], 10))
+      .map((t) => {
+        const issueNumberText = t.split(":")[2];
+        return issueNumberText ? parseInt(issueNumberText, 10) : NaN;
+      })
       .filter((n) => !isNaN(n));
 
     const sections: string[] = [`# Plan: ${plan.title}`, plan.body];
 
-    if (options.includeIssueDetails && issueNumbers.length > 0 && plan.sourceId) {
+    if ((options.includeIssueDetails ?? true) && issueNumbers.length > 0 && plan.sourceId) {
       const repo = await Repository.findByID(plan.sourceId);
       if (repo) {
         const issues = await Promise.all(
