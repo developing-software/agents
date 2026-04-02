@@ -13,6 +13,14 @@ import { planTable, PlanStatus, AuthorType } from "./plan.sql";
 const log = Log.create({ service: "plan" });
 
 export namespace Plan {
+  export const ToPromptOptions = z
+    .object({
+      includeIssueDetails: z.boolean().default(true),
+    })
+    .default({});
+
+  export type ToPromptOptions = z.input<typeof ToPromptOptions>;
+
   export const Info = z
     .object({
       id: z.string().meta({
@@ -166,10 +174,11 @@ export namespace Plan {
     });
   }
 
-  export async function toPrompt(planId: string): Promise<string> {
-    const plan = await fromID(planId);
-    if (!plan) throw new Error(`Plan ${planId} not found`);
-
+  export async function composePrompt(
+    plan: Info,
+    opts: ToPromptOptions = {},
+  ): Promise<string> {
+    const options = ToPromptOptions.parse(opts);
     const issueNumbers = plan.tags
       .filter((t) => t.startsWith("gh:issue:"))
       .map((t) => parseInt(t.split(":")[2], 10))
@@ -177,7 +186,7 @@ export namespace Plan {
 
     const sections: string[] = [`# Plan: ${plan.title}`, plan.body];
 
-    if (issueNumbers.length > 0 && plan.sourceId) {
+    if (options.includeIssueDetails && issueNumbers.length > 0 && plan.sourceId) {
       const repo = await Repository.findByID(plan.sourceId);
       if (repo) {
         const issues = await Promise.all(
@@ -198,6 +207,13 @@ export namespace Plan {
     }
 
     return sections.join("\n\n");
+  }
+
+  export async function toPrompt(
+    plan: Info,
+    opts: ToPromptOptions = {},
+  ): Promise<string> {
+    return composePrompt(plan, opts);
   }
 
   function serialize(row: typeof planTable.$inferSelect): Info {

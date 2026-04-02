@@ -7,7 +7,9 @@ import { error } from "@sveltejs/kit";
 export const previewPrompt = query(
   z.object({ planId: z.string() }),
   async ({ planId }) => {
-    return Plan.toPrompt(planId);
+    const plan = await Plan.fromID(planId);
+    if (!plan) error(404, `Plan ${planId} not found`);
+    return Plan.toPrompt(plan);
   },
 );
 
@@ -29,7 +31,7 @@ export const dispatchPlan = command(
     const plan = await Plan.fromID(planId);
     if (!plan) error(404, `Plan ${planId} not found`);
 
-    const prompt = await Plan.toPrompt(planId);
+    const prompt = await Plan.toPrompt(plan);
     const baseTags = [`plan:${planId}`, ...plan.tags, ...(extraTags ?? [])];
 
     const results: { harness: string; status: string }[] = [];
