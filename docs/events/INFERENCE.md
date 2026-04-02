@@ -72,7 +72,7 @@ Some metrics require joining data from multiple events in a chain:
 |------|------|-----|
 | Full run summary | agent.result + agent.completed | Both share `parentEventId` pointing to `agent.started` |
 | Issue lifecycle | github.issues.opened → agent.completed → github.pull_request.closed | Tag chain via `gh:issue:N` |
-| Plan execution | plan events → agent.completed → implementation.reviewed | Tag chain via `plan:ID` |
+| Plan execution | plan events → agent.completed → github.pull_request.reviewed | Tag chain via `plan:ID` |
 
 ## Currently Computed (in Console)
 

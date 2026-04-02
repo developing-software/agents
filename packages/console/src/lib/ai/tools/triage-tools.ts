@@ -21,7 +21,7 @@ export function triageTools(ctx: TriageContext) {
       }),
       execute: async ({ issueNumber, type, scope, actionable, reasoning }) => {
         await Event.create({
-          type: "issue.triaged",
+          type: "github.issue.triaged",
           tags: [
             `gh:repo:${ctx.owner}/${ctx.repo}`,
             `gh:issue:${issueNumber}`,

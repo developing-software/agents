@@ -265,11 +265,11 @@ Agent should read linked issues for additional context.
 
 **LLM Judge — Single Implementation Review:**
 - "Review" button per agent run — evaluates one PR against plan acceptance criteria
-- Emits `implementation.reviewed` event with per-criterion pass/fail, shown inline
+- Emits `github.pull_request.reviewed` event with per-criterion pass/fail, shown inline
 
 **LLM Judge — Compare All Implementations:**
 - "Judge All" button (2+ implementations) — compares PRs, ranks, recommends winner
-- Emits `plan.judged` event with scores, reasoning, verdict rendered as markdown
+- Emits `plan.evaluated` event with scores, reasoning, verdict rendered as markdown
 
 **Merge Winner:**
 - "Merge" button on winning row — merges PR, closes losing PRs, updates plan status
@@ -301,7 +301,7 @@ Agent should read linked issues for additional context.
 
 **Triage Confirmation:**
 - Console: triage queue with confirm/override controls
-- Auto-triage creates `issue.triaged` event, human confirms via console
+- Auto-triage creates `github.issue.triaged` event, human confirms via console
 - Confirmation emits `issue.triage.confirmed` event
 - Unconfirmed triages still visible but flagged in plan linking UI
 

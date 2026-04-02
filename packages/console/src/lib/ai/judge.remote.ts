@@ -109,8 +109,8 @@ export const listPlanRuns = query(
     }
 
     // Fetch existing reviews and judgment
-    const reviewEvents = await Event.list({ type: "implementation.reviewed", source: "repository", sourceId: repo.id, tags, limit: 20 });
-    const judgmentEvents = await Event.list({ type: "plan.judged", source: "repository", sourceId: repo.id, tags, limit: 1 });
+    const reviewEvents = await Event.list({ type: "github.pull_request.reviewed", source: "repository", sourceId: repo.id, tags, limit: 20 });
+    const judgmentEvents = await Event.list({ type: "plan.evaluated", source: "repository", sourceId: repo.id, tags, limit: 1 });
 
     const reviews: Record<number, PlanJudge.ReviewResult> = {};
     for (const re of reviewEvents) {
@@ -167,7 +167,7 @@ export const reviewPR = command(
     const review = result.output;
 
     await Event.create({
-      type: "implementation.reviewed",
+      type: "github.pull_request.reviewed",
       origin: "console",
       source: "repository",
       sourceId: repo.id,
@@ -226,7 +226,7 @@ export const judgePlan = command(
     const judgment = result.output;
 
     await Event.create({
-      type: "plan.judged",
+      type: "plan.evaluated",
       origin: "console",
       source: "repository",
       sourceId: repo.id,

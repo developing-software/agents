@@ -51,9 +51,9 @@ Events are the backbone of observability in this system. Every meaningful action
 
 | Type | Origin | Description |
 |------|--------|-------------|
-| `issue.triaged` | console | AI classification of an issue (type, scope, actionable) |
-| `implementation.reviewed` | console | AI review of a PR against a plan |
-| `plan.judged` | console | AI comparison of multiple implementations |
+| `github.issue.triaged` | console | AI classification of an issue (type, scope, actionable) |
+| `github.pull_request.reviewed` | console | AI review of a PR against a plan |
+| `plan.evaluated` | console | AI comparison of multiple implementations |
 
 ### Infrastructure
 
@@ -221,7 +221,7 @@ data: {
 }
 ```
 
-### issue.triaged
+### github.issue.triaged
 
 ```ts
 data: {
