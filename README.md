@@ -60,7 +60,7 @@ Issues are triaged, validated, and grouped into plans. Plans can be authored by 
   +----------------------+
         |
         | platform groups
-        | issues into plan
+        | issues into pla"}n
         v
   +----------------------+      +----------------------+
   |  LLM PLAN AGENT      |      |   HUMAN AUTHOR       |
@@ -207,8 +207,9 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
   |  - Issue / PR views         |    |  - POST /events/:id/       |
   |  - Agent config + skills    |    |       artifacts             |
   |  - Plan management          |    |  - GitHub webhooks          |
-  |  - Workflow triggers         |    |  - Auth (OAuth + tokens)   |
-  |  - Metrics + event viewer   |    |                             |
+  |  - Dispatch drawer          |    |  - Auth (OAuth + tokens)   |
+  |  - AI Planner chat          |    |                             |
+  |  - Event viewer             |    |                             |
   +-------------+---------------+    +-------------+---------------+
                 |                                    |
                 +-----------------+------------------+
@@ -219,6 +220,8 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
                    |                             |
                    |  - Actor system             |
                    |  - Event store (Postgres)   |
+                   |  - Plan system (CRUD,       |
+                   |       prompt, lifecycle)    |
                    |  - GitHub API client        |
                    |  - Agent discovery          |
                    |  - Workflow dispatch         |
@@ -232,13 +235,13 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
   |                             |    |                             |
   |  actions/agent/workflow      |    |  - events (tags, parent    |
   |    - start (branch, emit)  |    |       chaining, data)       |
-  |    - finish (PR, metrics)   |    |  - repositories             |
-  |  actions/agent/claude       |    |  - users + flags            |
-  |  actions/agent/codex        |    |  - installations            |
-  |  actions/agent/opencode     |    |                             |
-  |  actions/event/emit         |    +-----------------------------+
-  |  actions/artifact/upload    |
-  +-----------------------------+
+  |    - finish (PR, metrics)   |    |  - plans (tags, status,    |
+  |  actions/agent/claude       |    |       lifecycle)            |
+  |  actions/agent/codex        |    |  - repositories             |
+  |  actions/agent/opencode     |    |  - users + flags            |
+  |  actions/event/emit         |    |  - installations            |
+  |  actions/artifact/upload    |    |                             |
+  +-----------------------------+    +-----------------------------+
 ```
 
 ## Monorepo Structure
@@ -249,19 +252,25 @@ agents/
     core/           Shared business logic, DB schema, GitHub integration
     functions/      Hono API server (OpenAPI-documented endpoints)
     console/        SvelteKit dashboard (Cloudflare Workers)
+    workers/        Cloudflare Workers build/deployment
     cli/            CLI tool
     sdk/ts/         TypeScript SDK (auto-generated from OpenAPI spec)
   actions/
+    core/           Shared action utilities
     agent/
       workflow/     Orchestration (start/finish hooks, branch, PR)
-      claude/       Claude Code agent harness + metric collection
+      claude/       Claude Code agent harness
       codex/        Codex agent harness
       opencode/     OpenCode agent harness
       result/       Result aggregation
     event/
       emit/         Post events to the Agents API
+      tag/          Tag management for events
     artifact/
       upload/       Upload artifacts to R2 storage
+  .agents/
+    plans/          Implementation plans for this repo
+    skills/         Agent skill definitions
 ```
 
 ## Tech Stack

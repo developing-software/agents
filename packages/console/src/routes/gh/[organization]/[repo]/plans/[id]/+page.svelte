@@ -3,7 +3,7 @@
   import PlanDetail from '$lib/plans/PlanDetail.svelte';
   import Events from '$lib/events/Events.svelte';
   import DispatchDrawer from '$lib/dispatch/DispatchDrawer.svelte';
-  import PlannerDrawer from '$lib/planner/PlannerDrawer.svelte';
+  import PlannerDrawer from '$lib/ai/components/PlannerDrawer.svelte';
   import { updatePlan } from '$lib/plans/plans.remote';
   import { PLAN_STATUSES, statusDotColor } from '$lib/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';

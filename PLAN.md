@@ -1,44 +1,50 @@
 # Plan — Dev Agents
 
-## Current State (What Exists)
+## Current State
 
-### Construction Pipeline (Mostly Complete)
+### Construction Pipeline (Complete)
 - GitHub Actions workflow: issue label triggers agent dispatch
 - Agent harnesses: Claude, Codex, OpenCode with metric collection
 - Branch creation, PR generation, diff stats
 - Event system with parent chaining (`agent.started` -> `agent.result` -> `agent.completed`)
 - Artifact upload to R2
 
-### Platform / Observability (Mostly Complete)
+### Platform / Observability (Complete)
 - Console: repo browser, issue/PR views, workflow triggers, agent config
 - API: event ingestion, artifact storage, GitHub webhooks
 - Core: actor system, event store, agent discovery, workflow dispatch
 - Agent skills and prompts management (`.agents/` folder spec)
 
-### What's Missing
+### Plan System (Complete)
+- Plan entity: CRUD, status lifecycle, tags-based linking, author tracking
+- Plan console: list, detail, form, Kanban, create/edit pages
+- Structured prompt generation: `Plan.composePrompt()` / `Plan.toPrompt()` with linked issue context
+- Dispatch system: multi-agent dispatch via `DispatchDrawer`, prompt preview, status transition to "implementing"
+- AI Planner chat: conversational interface with tools for triage, plan creation, issue browsing
+
+### What's Still Missing
 
 ```
 +----------------------------------------------------------------------+
 |                         CURRENT vs TARGET                            |
 +----------------------------------------------------------------------+
 
-  CURRENT FLOW (what exists):
+  CURRENT FLOW (what works now):
 
-    Issue (labeled) --> Agent Dispatch --> PR --> Human Review --> Merge
-                        ^                        ^
-                        |                        |
-                     no validation            no tooling
-                     no plan                  no comparison
-                     raw issue as prompt      manual only
+    Issues --> Triage (AI chat) --> Plan/PRD --> Approve --> Dispatch --> PR --> Human Review --> Merge
+                 ^                    ^           ^           ^
+                 |                    |           |           |
+              AI planner           LLM draft   human       multi-agent
+              tools               + human      gate        dispatch
+                                  edit
 
-  TARGET FLOW (what we're building):
+  STILL MISSING:
 
-    Issues --> Triage --> Plan/PRD --> Approve --> Dispatch --> Review --> Merge
-                 ^           ^           ^          ^            ^
-                 |           |           |          |            |
-              validate    LLM draft   human     multi-agent   LLM judge
-              classify    + human     gate      compete       + human
-              dedup       edit                                decision
+    - Completion detection (plan auto-completes when all agents finish)
+    - LLM judge (compare competing implementations)
+    - Comparison UI (side-by-side view)
+    - Metrics dashboard (cycle time, cost, win/loss)
+    - Plan API endpoints in Hono (for CLI, SDK, GitHub Actions)
 ```
 
 ---
@@ -197,113 +203,76 @@ Agent should read linked issues for additional context.
 
 ## Gap 1: Issue Triage System
 
-**Status:** Not started
-**Priority:** High — prerequisite for Plan/PRD system
+**Status:** Partially done — triage via AI planner chat, no automated webhook triage
+**Priority:** Medium
 
-### What's Needed
-- Issue classification (bug, feature, task, question)
-- Scope estimation (trivial, small, medium, large)
-- Validation (is this actionable? duplicate? enough context?)
-- Assignment to existing or new Plan
+### What's Implemented
+- Triage tools in AI planner chat (`$lib/ai/tools/triage-tools.ts`)
+- LLM-assisted classification via conversational interface
+- TriageResult component for displaying results in chat
 
-### Implementation Approach
-
-**Triage as Events:**
-- Triage results stored as events with type `issue.triaged`
-- Tags: `gh:repo:owner/name`, `gh:issue:N`, `type:bug`, `scope:small`
-- Data: `{ classification, scope, validation, confidence, reasoning }`
-- No separate table — triage is an event that happened to an issue
-
-**Core:**
-- `IssueTriage` module in `packages/core/src/issue/`
-- LLM-assisted classification (issue title + body + repo context)
-- Dedup check against open issues and existing plans
-- Validation rules (reproduction steps for bugs, acceptance criteria for features)
-
-**GitHub Integration:**
-- Webhook handler for `issues.opened` and `issues.labeled`
-- Bot comment on issue with triage result (classification, scope, linked plan)
-- Label automation based on classification
-
-**Console:**
-- Triage queue view: unprocessed issues sorted by priority
-- Manual override controls for classification and scope
-- Bulk assign issues to plans
+### What's Still Needed
+- **Core module**: `IssueTriage` in `packages/core/src/issue/` for persistent triage logic
+- **Automated triage**: Webhook handler for `issues.opened` — auto-classify on arrival
+- **GitHub integration**: Bot comment on issue with triage result, label automation
+- **Triage queue**: Dedicated console view for unprocessed issues (currently handled via planner chat)
 
 ---
 
 ## Gap 2: Plan/PRD System
 
-**Status:** Not started
-**Priority:** High — core of the new workflow
+**Status:** Done — core system, console UI, dispatch, and AI planner all implemented
+**Priority:** Complete
 
-### What's Needed
-- Plan entity (schema above) with tags-based linking
-- Two creation paths: LLM plan agent draft and human-authored
-- Human review/approval gate before any agent dispatch
-- Agent-ready prompt generation from approved plan
+### What's Implemented
 
-### Implementation Approach
-
-**Core:**
-- `Plan` module in `packages/core/src/plan/`
-- `Plan.create()`, `Plan.update()`, `Plan.approve()`, `Plan.reject()`
-- `Plan.addTag()`, `Plan.removeTag()` — manages issue/repo links
-- `Plan.toPrompt()` — generates agent-ready prompt from plan body + linked issue context (fetched via tags)
-- `Plan.listEvents()` — find all events tagged with `plan:{id}`
-
-**LLM Plan Agent:**
-- New GitHub Action or workflow step:
-  1. Receives triaged issues (or manual selection from console)
-  2. Reads repo context (structure, recent changes, related code)
-  3. Drafts plan body with: scope, file references, acceptance criteria
-  4. Creates plan entity via API with status `draft`
-- Reuses existing agent harness with a "planner" prompt/skill
+**Core (`packages/core/src/plan/`):**
+- `Plan.create()`, `Plan.update()`, `Plan.fromID()`, `Plan.list()` — full CRUD
+- `Plan.composePrompt()` / `Plan.toPrompt()` — structured prompt with linked issue content
+- Status lifecycle: draft → review → approved → implementing → completed (+ rejected)
+- Tags-based linking: `gh:repo:`, `gh:issue:`, `plan:` tags
 
 **Console:**
-- Plan list view with status filters (draft, review, approved, implementing)
-- Plan editor: edit markdown body, manage tags, change status
-- Plan detail view: linked issues (from tags), agent run events, resulting PRs
-- Approval workflow: approve button triggers status change + enables dispatch
+- Plan list (PlanList), Kanban (PlanKanban), detail (PlanDetail), form (PlanForm)
+- Create/edit pages with markdown editor
+- Status management and approval workflow
+- Dispatch drawer with multi-agent selection, prompt preview, config
+- AI planner chat for LLM-assisted plan drafting via conversational interface
 
-**API:**
-- `POST /plans` — create plan
-- `GET /plans` — list (filter by status, tags)
-- `GET /plans/:id` — detail (includes linked events via tag query)
-- `PATCH /plans/:id` — update body, tags, status
-- `POST /plans/:id/dispatch` — trigger agent workflow(s) from approved plan
+**What's Still Needed:**
+- Plan API endpoints in Hono (`packages/functions`) — see `.agents/plans/01-plan-api-endpoints.md`
+- `Plan.listEvents()` — find events tagged with `plan:{id}` (query exists but no dedicated helper)
 
 ---
 
 ## Gap 3: Multi-Agent Evaluation ("Merge War")
 
-**Status:** Partially exists (multiple harnesses work), needs orchestration
-**Priority:** Medium — depends on Plan system
+**Status:** Multi-dispatch done, comparison view + judge not started
+**Priority:** High — the comparison view is the core merge war interface
 
-### What's Needed
-- Dispatch same plan to N agents (same or different harnesses)
+### What's Implemented
+- Multi-dispatch via `dispatch.remote.ts` — dispatches same plan to N agents in parallel
 - All agent events tagged with `plan:{planId}` for correlation
-- LLM judge that analyzes all implementations and recommends one
-- Human reviewer sees comparison summary + individual PRs
+- Dispatch metadata in `plan.data.dispatched` tracks which agents were sent
 
-### Implementation Approach
+### What's Still Needed
 
-**Dispatch:**
-- `Plan.dispatch()` accepts list of agent configs (harness, model, prompt variant)
-- Creates N parallel workflow runs, each emitting events tagged with `plan:{planId}`
-- Each gets its own branch: `pr/plan-{id}-{agent}-{run}`
+**Comparison View (centerpiece):**
+- Replaces generic events list on plan detail page when agent runs exist
+- Side-by-side table: PR link, lines, tokens, cost, duration, turns, test results, review score
+- 1 run → single card with review. 2+ runs → full comparison table
+- Winner highlighted after judging. Merged/closed badges after merge
 
-**LLM Judge:**
-- New event type `plan.judged` emitted when all agent runs for a plan complete
-- Judge reads all PRs' diffs, metrics, and test results
-- Produces comparison report stored as event data + artifact
-- Tags: `plan:{planId}`, recommendation in data
+**LLM Judge — Single Implementation Review:**
+- "Review" button per agent run — evaluates one PR against plan acceptance criteria
+- Emits `implementation.reviewed` event with per-criterion pass/fail, shown inline
 
-**Console:**
-- Plan detail view shows all agent runs side-by-side (queried by `plan:{id}` tag)
-- Comparison table: lines changed, tokens used, duration, test pass rate
-- LLM judge summary displayed prominently
-- One-click merge for chosen PR, auto-close others
+**LLM Judge — Compare All Implementations:**
+- "Judge All" button (2+ implementations) — compares PRs, ranks, recommends winner
+- Emits `plan.judged` event with scores, reasoning, verdict rendered as markdown
+
+**Merge Winner:**
+- "Merge" button on winning row — merges PR, closes losing PRs, updates plan status
 
 **Metrics (derived from events):**
 - Win/loss record per harness type over time
@@ -350,58 +319,55 @@ Agent should read linked issues for additional context.
 |                       IMPLEMENTATION ROADMAP                         |
 +----------------------------------------------------------------------+
 
-  Phase A: Plan Foundation
+  Phase A: Plan Foundation ✓ DONE
   +---------------------------------------------+
-  |  1. plan table + migration (tags, data,     |
-  |     status, same patterns as event table)   |
-  |  2. Plan module in core (CRUD, tag mgmt,    |
-  |     status transitions)                     |
-  |  3. Plan API endpoints (create, list, get,  |
-  |     update, dispatch)                       |
-  |  4. Plan console pages (list, detail, edit, |
-  |     approve/reject)                         |
-  |  5. Wire dispatch: approved plan triggers   |
-  |     existing agent workflow with plan tag   |
-  |  6. Add plan:{id} tag to agent workflow     |
-  |     events (start/result/completed)         |
+  |  1. ✓ plan table + migration                |
+  |  2. ✓ Plan module in core (CRUD, prompt)    |
+  |  3.   Plan API endpoints (Hono) — NOT DONE  |
+  |  4. ✓ Plan console pages                    |
+  |  5. ✓ Dispatch with plan tags               |
+  |  6. ✓ plan:{id} tag on agent events         |
   +---------------------------------------------+
                     |
                     v
-  Phase B: Triage + LLM Drafting
+  Phase B: Triage + LLM Drafting ✓ MOSTLY DONE
   +---------------------------------------------+
-  |  7. issue.triaged event type + triage logic |
-  |  8. Triage webhook (issues.opened)          |
-  |  9. Triage queue in console                 |
-  | 10. LLM plan drafting agent/prompt          |
-  | 11. Plan approval gate in console           |
-  +---------------------------------------------+
-                    |
-                    v
-  Phase C: Multi-Agent Evaluation
-  +---------------------------------------------+
-  | 12. Multi-dispatch: N agents per plan       |
-  | 13. plan.judged event + LLM judge action    |
-  | 14. Comparison view in console              |
-  | 15. Merge winner + auto-close losers        |
+  |  7. ✓ Triage tools in AI planner chat       |
+  |  8.   Triage webhook (automated) — NOT DONE |
+  |  9.   Triage queue in console — NOT DONE    |
+  | 10. ✓ LLM plan drafting via planner chat    |
+  | 11. ✓ Plan approval gate in console         |
   +---------------------------------------------+
                     |
                     v
-  Phase D: Metrics + Observability
+  Phase C: Multi-Agent Evaluation — IN PROGRESS
   +---------------------------------------------+
-  | 16. Event tracing: plan -> agent -> PR      |
-  | 17. Dashboard (cycle time, cost, win/loss)  |
-  | 18. Notification system                     |
+  | 12. ✓ Multi-dispatch: N agents per plan     |
+  | 13.   Single-implementation LLM review      |
+  | 14.   Multi-implementation LLM judge        |
+  | 15.   Comparison view in console            |
+  | 16.   Merge winner + auto-close losers      |
+  +---------------------------------------------+
+                    |
+                    v
+  Phase D: Metrics + Observability — NOT STARTED
+  +---------------------------------------------+
+  | 17.   Metric components ($lib/metrics/)     |
+  | 18.   Repo overview uses new components     |
+  | 19.   Plan funnel + time range filtering    |
+  | 20.   Home dashboard (cross-repo metrics)   |
+  | 21.   Logged-out → minimal login page       |
   +---------------------------------------------+
 ```
 
-### Phase A Target
-Get the plan entity working end-to-end: create a plan in the console, link issues via tags, approve it, and have it dispatch to the existing agent workflow with a `plan:{id}` tag. Agent events are already captured — adding the plan tag links them. This alone changes the flow from "raw issue -> agent" to "issue -> plan -> approve -> agent".
+### Phase A — Done
+Plan entity works end-to-end: create plans in console, link issues via tags, approve, dispatch to agents with `plan:{id}` tag. Remaining: Plan API endpoints in Hono for external consumers (CLI, SDK, Actions).
 
-### Phase B Target
-Automate the front of the funnel: issues get triaged on arrival (stored as `issue.triaged` events), LLM drafts plans from triaged issues, humans review and approve. The manual creation path still works.
+### Phase B — Mostly Done
+AI planner chat handles triage + plan drafting via conversational interface. Remaining: automated webhook triage on `issues.opened`, dedicated triage queue view.
 
-### Phase C Target
-Enable competitive evaluation: same plan dispatched to multiple agents, LLM judge compares results (emits `plan.judged` event), human picks winner. All queryable via `plan:{id}` tag across events.
+### Phase C — In Progress
+Multi-dispatch works. Remaining: single-implementation LLM review, multi-implementation LLM judge (both manual trigger via buttons), comparison UI, merge winner action.
 
-### Phase D Target
-Close the loop: full observability from issue creation to merged PR. Since plans, triage, agent runs, and judgments all share the tag namespace, building dashboards is querying events by tag combinations.
+### Phase D — Not Started
+Refactor metrics into composable components, enhance repo overview with time range + plan funnel, then build cross-repo home dashboard for logged-in users (replacing the landing page). Logged-out users get a minimal login page.
