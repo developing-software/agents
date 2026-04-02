@@ -1,0 +1,115 @@
+name: Run Audit
+description: Run a Claude Code audit, generate a report, and create a GitHub issue with findings
+
+inputs:
+  audit_name:
+    description: "Audit identifier (e.g. metrics, validators)"
+    required: true
+  report_title:
+    description: "Title for the report header"
+    required: true
+  prompt:
+    description: "Claude Code audit prompt"
+    required: true
+  allowed_tools:
+    description: "Claude Code allowed tools"
+    required: false
+    default: 'Read,Write,Glob,Grep,Edit(.agents/reports/*),Bash(ls *),Bash(find *),Bash(wc *),Agent'
+  claude_code_oauth_token:
+    description: "Claude Code OAuth token"
+    required: true
+  token:
+    description: "Personal access token for emitting events to the Agents API"
+    required: false
+  url:
+    description: "Agents API base URL"
+    required: false
+    default: https://api.agents.developing.company/api
+
+outputs:
+  outcome:
+    description: "Audit outcome (success or failure)"
+    value: ${{ steps.claude.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - id: audit-started
+      uses: developing-software/agents/actions/event/emit@dev
+      if: inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        type: audit.started
+        tags: "type:audit-${{ inputs.audit_name }}"
+
+    - name: Prepare report file
+      shell: bash
+      run: |
+        mkdir -p .agents/reports
+        cat > .agents/reports/audit-${{ inputs.audit_name }}.md << 'EOF'
+        ## ${{ inputs.report_title }}
+
+        EOF
+
+    - name: Run Claude Code
+      id: claude
+      uses: anthropics/claude-code-action@v1
+      with:
+        claude_code_oauth_token: ${{ inputs.claude_code_oauth_token }}
+        claude_args: >-
+          --output-format stream-json
+          --verbose
+          --allowedTools "${{ inputs.allowed_tools }}"
+        show_full_output: true
+        prompt: ${{ inputs.prompt }}
+
+    - name: Verify report exists
+      if: success()
+      shell: bash
+      run: |
+        if [ ! -f .agents/reports/audit-${{ inputs.audit_name }}.md ]; then
+          echo "::error::Report file not found at .agents/reports/audit-${{ inputs.audit_name }}.md"
+          exit 1
+        fi
+        echo "Report generated ($(wc -l < .agents/reports/audit-${{ inputs.audit_name }}.md) lines)"
+
+    - name: Close previous audit issues
+      if: success()
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh issue list --label "audit-${{ inputs.audit_name }}" --state open --json number -q '.[].number' | while read -r num; do
+          gh issue close "$num" --comment "Superseded by new audit run: ${{ github.run_id }}"
+        done
+
+    - name: Ensure labels exist
+      if: success()
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh label create "audit-${{ inputs.audit_name }}" --color "0e8a16" --description "Automated ${{ inputs.audit_name }} audit" 2>/dev/null || true
+        gh label create audit --color "d4c5f9" --description "Audit report" 2>/dev/null || true
+
+    - name: Create audit issue
+      if: success()
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh issue create \
+          --title "${{ inputs.report_title }}: $(date -u +%Y-%m-%d)" \
+          --body-file .agents/reports/audit-${{ inputs.audit_name }}.md \
+          --label "audit-${{ inputs.audit_name }},audit"
+
+    - uses: developing-software/agents/actions/event/emit@dev
+      if: always() && inputs.token != ''
+      with:
+        token: ${{ inputs.token }}
+        url: ${{ inputs.url }}
+        parent_event_id: ${{ steps.audit-started.outputs.event_id }}
+        type: audit.completed
+        tags: "type:audit-${{ inputs.audit_name }}"
+        data: '{"outcome":"${{ steps.claude.outcome }}"}'

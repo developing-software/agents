@@ -1,10 +1,9 @@
-name: Metrics Audit
-run-name: "metrics-audit/${{ github.run_id }}"
+name: "Audit: Metrics"
+run-name: "audit-metrics/${{ github.run_id }}"
 
 on:
   schedule:
     - cron: "0 8 * * *" # Daily at 08:00 UTC
-    # - cron: "0 8 * * 1" # Alternative: Monday only at 08:00 UTC
   workflow_dispatch: {}
 
 jobs:
@@ -23,33 +22,12 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: ./actions/event/emit
-        continue-on-error: true
+      - uses: ./.github/actions/audit
         with:
-          token: ${{ secrets.AGENTS_TOKEN }}
-          type: audit.started
-          origin: cron
-          tags: "type:metrics-audit"
-          inherit_context: "false"
-
-      - name: Prepare report file
-        run: |
-          mkdir -p .agents/reports
-          cat > .agents/reports/metrics-audit.md << 'EOF'
-          ## Metrics Audit Report
-
-          EOF
-
-      - name: Run Claude Code
-        id: claude
-        uses: anthropics/claude-code-action@v1
-        with:
+          audit_name: metrics
+          report_title: Metrics Audit
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: >-
-            --output-format stream-json
-            --verbose
-            --allowedTools "Read,Write,Glob,Grep,Edit(.agents/reports/*),Bash(ls *),Bash(find *),Bash(wc *),Agent"
-          show_full_output: true
+          token: ${{ secrets.AGENTS_TOKEN }}
           prompt: |
             You are running a metrics audit of this repository.
 
@@ -57,12 +35,12 @@ jobs:
 
             ## Output
 
-            The file `.agents/reports/metrics-audit.md` already exists with a header. Append your findings to it.
+            The file `.agents/reports/audit-metrics.md` already exists with a header. Append your findings to it.
 
             IMPORTANT:
             - Do NOT create GitHub issues or PRs -- the workflow handles that.
             - Do NOT modify any source files -- this is a read-only audit.
-            - Only write to `.agents/reports/metrics-audit.md`.
+            - Only write to `.agents/reports/audit-metrics.md`.
             - Fill in every section with real findings. No placeholders or template text.
 
             ## Execution Strategy
@@ -70,7 +48,7 @@ jobs:
             Use subagents (Agent tool) to parallelize the audit. Each subagent should:
             - Research its assigned audit category by reading the relevant files
             - Return its findings as structured text back to you
-            Then you compile all findings and write the final report to `.agents/reports/metrics-audit.md`.
+            Then you compile all findings and write the final report to `.agents/reports/audit-metrics.md`.
 
             Launch these subagents in parallel:
             1. **Tag Consistency agent** -- Steps 1-5 below
@@ -136,7 +114,7 @@ jobs:
 
             ## Report Format
 
-            Write `.agents/reports/metrics-audit.md` with these sections. Fill every section with real findings -- no placeholders.
+            Write `.agents/reports/audit-metrics.md` with these sections. Fill every section with real findings -- no placeholders.
 
             - **Summary** -- Total findings count, severity breakdown (critical / improvement / suggestion).
             - **Tag System > Inconsistencies Found** -- Each: what, file:line, suggested fix.
@@ -147,50 +125,3 @@ jobs:
             - **Console Display > Improvement Opportunities** -- New stat cards, pages, filters, dashboards.
             - **New Metric Opportunities** -- Ordered by impact. What metric, how to derive from existing events, where to display.
             - **Recommended Actions** -- Prioritized, each actionable as a standalone issue.
-
-      - name: Verify report exists
-        if: success()
-        run: |
-          if [ ! -f .agents/reports/metrics-audit.md ]; then
-            echo "::error::Report file not found at .agents/reports/metrics-audit.md"
-            exit 1
-          fi
-          echo "Report generated ($(wc -l < .agents/reports/metrics-audit.md) lines)"
-
-      - name: Close previous audit issues
-        if: success()
-        run: |
-          gh issue list --label metrics-audit --state open --json number -q '.[].number' | while read -r num; do
-            gh issue close "$num" --comment "Superseded by new audit run: ${{ github.run_id }}"
-          done
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Ensure labels exist
-        if: success()
-        run: |
-          gh label create metrics-audit --color "0e8a16" --description "Automated metrics audit" 2>/dev/null || true
-          gh label create audit --color "d4c5f9" --description "Audit report" 2>/dev/null || true
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Create audit issue
-        if: success()
-        run: |
-          gh issue create \
-            --title "Metrics Audit: $(date -u +%Y-%m-%d)" \
-            --body-file .agents/reports/metrics-audit.md \
-            --label "metrics-audit,audit"
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - uses: ./actions/event/emit
-        if: always()
-        continue-on-error: true
-        with:
-          token: ${{ secrets.AGENTS_TOKEN }}
-          type: audit.completed
-          origin: cron
-          tags: "type:metrics-audit"
-          data: '{"outcome":"${{ steps.claude.outcome }}"}'
-          inherit_context: "false"
