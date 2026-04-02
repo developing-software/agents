@@ -1,4 +1,4 @@
-name: "Audit: Architecture"
+name: "Audit → Architecture"
 run-name: "audit-architecture/${{ github.run_id }}"
 
 on:

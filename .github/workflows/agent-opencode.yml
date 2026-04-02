@@ -1,5 +1,5 @@
-name: OpenCode - Implement
-run-name: "opencode/run-${{ github.run_id }}"
+name: "Agent → OpenCode"
+run-name: "agent-opencode/${{ github.run_id }}"
 
 on:
   workflow_call:

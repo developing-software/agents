@@ -1,5 +1,5 @@
-name: Codex - Implement
-run-name: "codex/run-${{ github.run_id }}"
+name: "Agent → Codex"
+run-name: "agent-codex/${{ github.run_id }}"
 
 on:
   workflow_call:

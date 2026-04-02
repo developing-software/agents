@@ -1,4 +1,4 @@
-name: "Audit: Metrics"
+name: "Audit → Metrics"
 run-name: "audit-metrics/${{ github.run_id }}"
 
 on:

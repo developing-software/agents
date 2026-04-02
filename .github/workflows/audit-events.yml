@@ -1,4 +1,4 @@
-name: "Audit: Events"
+name: "Audit → Events"
 run-name: "audit-events/${{ github.run_id }}"
 
 on:
