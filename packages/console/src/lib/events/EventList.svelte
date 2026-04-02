@@ -16,7 +16,7 @@
     extractMetrics,
     formatMetricValue,
   } from './event-helpers';
-  import TagPill from '$lib/tag/TagPill.svelte';
+  import TagPill from '$lib/ui/tag/TagPill.svelte';
 
   type EventItem = {
     id: string;

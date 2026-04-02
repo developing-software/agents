@@ -5,8 +5,8 @@
     relativeTime,
     PLAN_STATUSES,
   } from './plan-helpers';
-  import TagList from '$lib/tag/TagList.svelte';
-  import EmptyState from '$lib/EmptyState.svelte';
+  import TagList from '$lib/ui/tag/TagList.svelte';
+  import EmptyState from '$lib/ui/EmptyState.svelte';
 
   type PlanItem = {
     id: string;

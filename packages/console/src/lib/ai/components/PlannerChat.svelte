@@ -2,7 +2,7 @@
 	import { tick } from 'svelte';
 	import type { Chat } from '@ai-sdk/svelte';
 	import { isToolUIPart, getToolName } from 'ai';
-	import Markdown from '$lib/Markdown.svelte';
+	import Markdown from '$lib/ui/Markdown.svelte';
 	import ToolCard from '$lib/ai/components/ToolCard.svelte';
 	import ToolOutput from '$lib/ai/components/ToolOutput.svelte';
 	import TriageResult from '$lib/ai/components/TriageResult.svelte';

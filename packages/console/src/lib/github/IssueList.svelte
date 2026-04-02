@@ -1,7 +1,7 @@
 <script lang="ts">
   import { SvelteSet } from 'svelte/reactivity';
-  import GitHubLink from '$lib/GitHubLink.svelte';
-  import EmptyState from '$lib/EmptyState.svelte';
+  import GitHubLink from '$lib/ui/GitHubLink.svelte';
+  import EmptyState from '$lib/ui/EmptyState.svelte';
   import { issueStateColor, issueStateDotStyle } from './github-helpers';
 
   interface Props {

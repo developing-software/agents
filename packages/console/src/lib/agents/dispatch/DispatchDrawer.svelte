@@ -1,8 +1,8 @@
 <script lang="ts">
   import Drawer from '$lib/ui/Drawer.svelte';
   import { previewPrompt, dispatchPlan } from './dispatch.remote';
-  import { statusDotColor, statusBadgeStyle } from '$lib/plans/plan-helpers';
-  import TagList from '$lib/tag/TagList.svelte';
+  import { statusDotColor, statusBadgeStyle } from '$lib/agents/plans/plan-helpers';
+  import TagList from '$lib/ui/tag/TagList.svelte';
 
   type PlanItem = {
     id: string;

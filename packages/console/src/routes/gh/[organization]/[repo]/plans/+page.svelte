@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import PlanList from '$lib/plans/PlanList.svelte';
-  import PlanKanban from '$lib/plans/PlanKanban.svelte';
-  import DispatchDrawer from '$lib/dispatch/DispatchDrawer.svelte';
+  import PlanList from '$lib/agents/plans/PlanList.svelte';
+  import PlanKanban from '$lib/agents/plans/PlanKanban.svelte';
+  import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
   import PlannerDrawer from '$lib/ai/components/PlannerDrawer.svelte';
 
   let { data }: PageProps = $props();

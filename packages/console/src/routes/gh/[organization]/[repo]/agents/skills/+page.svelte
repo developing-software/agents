@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import EmptyState from '$lib/EmptyState.svelte';
+  import EmptyState from '$lib/ui/EmptyState.svelte';
 
   let { data }: PageProps = $props();
 

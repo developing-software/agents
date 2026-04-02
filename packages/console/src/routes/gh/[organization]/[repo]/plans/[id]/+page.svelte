@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import PlanDetail from '$lib/plans/PlanDetail.svelte';
+  import PlanDetail from '$lib/agents/plans/PlanDetail.svelte';
   import Events from '$lib/events/Events.svelte';
-  import DispatchDrawer from '$lib/dispatch/DispatchDrawer.svelte';
+  import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
   import PlannerDrawer from '$lib/ai/components/PlannerDrawer.svelte';
   import PlanImplementations from '$lib/ai/components/PlanImplementations.svelte';
-  import { updatePlan } from '$lib/plans/plans.remote';
-  import { PLAN_STATUSES, statusDotColor } from '$lib/plans/plan-helpers';
+  import { updatePlan } from '$lib/agents/plans/plans.remote';
+  import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
   let { data }: PageProps = $props();

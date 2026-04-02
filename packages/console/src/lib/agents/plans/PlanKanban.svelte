@@ -5,7 +5,7 @@
     relativeTime,
     PLAN_STATUSES,
   } from './plan-helpers';
-  import TagList from '$lib/tag/TagList.svelte';
+  import TagList from '$lib/ui/tag/TagList.svelte';
 
   type PlanItem = {
     id: string;

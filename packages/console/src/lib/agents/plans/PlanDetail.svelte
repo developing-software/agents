@@ -1,7 +1,7 @@
 <script lang="ts">
   import { statusBadgeStyle, authorBadgeStyle, relativeTime } from './plan-helpers';
-  import Markdown from '$lib/Markdown.svelte';
-  import TagList from '$lib/tag/TagList.svelte';
+  import Markdown from '$lib/ui/Markdown.svelte';
+  import TagList from '$lib/ui/tag/TagList.svelte';
 
   let {
     plan,

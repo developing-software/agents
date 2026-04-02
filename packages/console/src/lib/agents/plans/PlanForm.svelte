@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { createPlan, updatePlan } from './plans.remote';
 	import { PLAN_STATUSES } from './plan-helpers';
-	import MarkdownEditor from '$lib/MarkdownEditor.svelte';
+	import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
 	import { listIssues } from '$lib/github/github.remote';
 	import IssueList from '$lib/github/IssueList.svelte';
 

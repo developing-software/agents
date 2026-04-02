@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { listAgentRuns } from '$lib/events/events.remote';
-  import EmptyState from '$lib/EmptyState.svelte';
+  import EmptyState from '$lib/ui/EmptyState.svelte';
   import {
     relativeTime,
     originBadgeStyle,
@@ -13,7 +13,7 @@
   } from '$lib/events/event-helpers';
   import EventOverview from '$lib/events/EventOverview.svelte';
   import EventAgentsOverview from '$lib/events/EventAgentsOverview.svelte';
-  import ArtifactViewer from '$lib/ArtifactViewer.svelte';
+  import ArtifactViewer from '$lib/ui/ArtifactViewer.svelte';
   import { SvelteMap } from 'svelte/reactivity';
 
   let { data }: PageProps = $props();

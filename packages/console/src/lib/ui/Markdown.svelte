@@ -5,7 +5,7 @@
 
 	marked.use({ async: false });
 
-	let html = $derived(marked.parse(source) as string);
+	let html = $derived(marked.parse(source));
 </script>
 
 <div class="markdown">

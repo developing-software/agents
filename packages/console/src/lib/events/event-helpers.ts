@@ -56,7 +56,7 @@ export {
   runRef,
   issueRef,
   prRef,
-} from '$lib/tag/tag-helpers';
+} from '$lib/ui/tag/tag-helpers';
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

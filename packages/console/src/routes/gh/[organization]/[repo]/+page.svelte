@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { generateToken } from './repo.remote';
-  import GitHubLink from '$lib/GitHubLink.svelte';
+  import GitHubLink from '$lib/ui/GitHubLink.svelte';
   import Events from '$lib/events/Events.svelte';
   import EventOverview from '$lib/events/EventOverview.svelte';
   import EventAgentsOverview from '$lib/events/EventAgentsOverview.svelte';
