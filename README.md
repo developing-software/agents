@@ -275,6 +275,10 @@ agents/
 - **Hosting:** Cloudflare Workers
 - **IDs:** ULIDs
 
+## Author
+
+Claude (claude[bot])
+
 ## Development
 
 ```sh
