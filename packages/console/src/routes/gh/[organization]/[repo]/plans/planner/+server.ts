@@ -8,7 +8,7 @@ import { planTools } from "$lib/ai/tools/plan-tools";
 import { triageTools } from "$lib/ai/tools/triage-tools";
 import { askUserTool } from "$lib/ai/tools/ask-user-tool";
 
-export const POST: RequestHandler = async ({ request, params, locals }) => {
+export const POST: RequestHandler = async ({ request, params, locals, platform }) => {
   if (!locals.userID) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -66,7 +66,7 @@ Use the updatePlan tool to save changes. When updating the body, include all exi
 Be concise and actionable. Use askUser when you need clarification — include ASCII diagrams or tables when they help.`;
 
   const result = streamText({
-    model: createModel(),
+    model: createModel(platform?.env?.ANTHROPIC_API_KEY),
     system: existingPlan ? editPrompt : draftPrompt,
     messages: await convertToModelMessages(messages),
     tools: {
