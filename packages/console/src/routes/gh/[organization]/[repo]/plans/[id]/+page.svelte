@@ -4,6 +4,7 @@
   import Events from '$lib/events/Events.svelte';
   import DispatchDrawer from '$lib/dispatch/DispatchDrawer.svelte';
   import PlannerDrawer from '$lib/ai/components/PlannerDrawer.svelte';
+  import PlanImplementations from '$lib/ai/components/PlanImplementations.svelte';
   import { updatePlan } from '$lib/plans/plans.remote';
   import { PLAN_STATUSES, statusDotColor } from '$lib/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
@@ -56,15 +57,27 @@
 
   <PlanDetail plan={data.plan} />
 
-  <div class="events-section">
-    <span class="section-title">Events</span>
-    <Events
-      organization={data.organization}
-      repoName={data.repoName}
-      filterTags={[`plan:${data.plan.id}`]}
-      emptyText="No events linked to this plan"
-    />
-  </div>
+  {#if data.plan.status === 'implementing' || data.plan.status === 'completed'}
+    <div class="events-section">
+      <span class="section-title">Implementations</span>
+      <PlanImplementations
+        organization={data.organization}
+        repoName={data.repoName}
+        planId={data.plan.id}
+        planStatus={data.plan.status}
+      />
+    </div>
+  {:else}
+    <div class="events-section">
+      <span class="section-title">Events</span>
+      <Events
+        organization={data.organization}
+        repoName={data.repoName}
+        filterTags={[`plan:${data.plan.id}`]}
+        emptyText="No events linked to this plan"
+      />
+    </div>
+  {/if}
 
   <DispatchDrawer
     plan={data.plan}
