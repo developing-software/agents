@@ -306,6 +306,11 @@
                         <span class="token-val">{((run.cache_read_input_tokens / cacheTotal) * 100).toFixed(0)}%</span>
                       </div>
                     {/if}
+                  {#if run.cache_creation_input_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Cache write</span>
+                      <span class="token-val">{run.cache_creation_input_tokens.toLocaleString()}</span>
+                    </div>
                   {/if}
                 </div>
               </div>
