@@ -41,6 +41,7 @@ jobs:
             --output-format stream-json
             --verbose
             --allowedTools "Read,Glob,Grep,Write(.agents/reports/*),Bash(mkdir *),Bash(ls *),Bash(find *),Bash(wc *),Bash(date *)"
+          show_full_output: true
           prompt: |
             You are running a metrics audit of this repository.
 
