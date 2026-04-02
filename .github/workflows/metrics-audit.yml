@@ -32,6 +32,14 @@ jobs:
           tags: "type:metrics-audit"
           inherit_context: "false"
 
+      - name: Prepare report file
+        run: |
+          mkdir -p .agents/reports
+          cat > .agents/reports/metrics-audit.md << 'EOF'
+          ## Metrics Audit Report
+
+          EOF
+
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
@@ -40,7 +48,7 @@ jobs:
           claude_args: >-
             --output-format stream-json
             --verbose
-            --allowedTools "Read,Glob,Grep,Write(.agents/reports/*),Bash(mkdir *),Bash(ls *),Bash(find *),Bash(wc *),Bash(date *)"
+            --allowedTools "Read,Write,Glob,Grep,Edit(.agents/reports/*),Bash(ls *),Bash(find *),Bash(wc *),Agent"
           show_full_output: true
           prompt: |
             You are running a metrics audit of this repository.
@@ -49,17 +57,30 @@ jobs:
 
             ## Output
 
-            Write your complete findings to `.agents/reports/metrics-audit.md` (create the directory with `mkdir -p .agents/reports` first).
+            The file `.agents/reports/metrics-audit.md` already exists with a header. Append your findings to it.
 
             IMPORTANT:
             - Do NOT create GitHub issues or PRs -- the workflow handles that.
             - Do NOT modify any source files -- this is a read-only audit.
-            - Only create the report file.
-            - Fill in every section with real findings from your analysis. Do not leave placeholders or template text.
+            - Only write to `.agents/reports/metrics-audit.md`.
+            - Fill in every section with real findings. No placeholders or template text.
+
+            ## Execution Strategy
+
+            Use subagents (Agent tool) to parallelize the audit. Each subagent should:
+            - Research its assigned audit category by reading the relevant files
+            - Return its findings as structured text back to you
+            Then you compile all findings and write the final report to `.agents/reports/metrics-audit.md`.
+
+            Launch these subagents in parallel:
+            1. **Tag Consistency agent** -- Steps 1-5 below
+            2. **Metric Completeness agent** -- Steps 6-9 below
+            3. **Console Display agent** -- Steps 10-12 below
+            4. **Opportunities agent** -- Steps 13-15 below
+
+            After all subagents complete, compile their findings into the report file.
 
             ## Audit Protocol
-
-            Follow these steps in order. Read each file carefully and take notes before cross-referencing.
 
             ### Step 1-5: Tag Consistency
 
