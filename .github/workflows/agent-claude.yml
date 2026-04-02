@@ -75,6 +75,7 @@ jobs:
           claude_args: --model ${{ env.MODEL }} --output-format stream-json --verbose --dangerously-skip-permissions
           prompt: |
             ${{ inputs.prompt }}
+          allowed_bots: "*"
           additional_permissions: |
             actions: read
 

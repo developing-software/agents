@@ -17,8 +17,14 @@
 		<span class="tool-name">{name}</span>
 		{#if state === 'input-streaming' || state === 'input-available'}
 			<span class="tool-status running">running...</span>
+		{:else if state === 'approval-requested'}
+			<span class="tool-status approval">approval required</span>
+		{:else if state === 'approval-responded'}
+			<span class="tool-status running">executing...</span>
 		{:else if state === 'output-available'}
 			<span class="tool-status done">done</span>
+		{:else if state === 'output-denied'}
+			<span class="tool-status denied">denied</span>
 		{:else if state === 'output-error'}
 			<span class="tool-status error">error</span>
 		{/if}
@@ -68,6 +74,16 @@
 	.tool-status.done {
 		color: var(--color-success);
 		background: color-mix(in srgb, var(--color-success) 10%, transparent);
+	}
+
+	.tool-status.approval {
+		color: var(--color-warning);
+		background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+	}
+
+	.tool-status.denied {
+		color: var(--color-danger);
+		background: color-mix(in srgb, var(--color-danger) 10%, transparent);
 	}
 
 	.tool-status.error {

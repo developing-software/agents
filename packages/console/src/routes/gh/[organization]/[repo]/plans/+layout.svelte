@@ -8,7 +8,6 @@
 
   const tabs = $derived([
     { label: 'Plans', href: basePath },
-    { label: 'Planner', href: `${basePath}/planner` },
   ]);
 
   function isActive(href: string) {

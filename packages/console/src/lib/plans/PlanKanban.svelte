@@ -63,7 +63,7 @@
               <TagList tags={plan.tags} limit={2} />
               <span class="card-time">{relativeTime(plan.timeCreated)}</span>
             </div>
-            {#if plan.status === 'approved' && ondispatch}
+            {#if ondispatch}
               <div class="card-actions">
                 {#if dispatched.has(plan.id)}
                   <span class="dispatched-badge">dispatched</span>

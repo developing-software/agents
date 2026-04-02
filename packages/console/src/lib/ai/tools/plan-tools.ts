@@ -18,6 +18,7 @@ export function planTools(ctx: PlanToolsContext) {
         issueNumbers: z.array(z.number()).describe("Related issue numbers"),
         tags: z.array(z.string()).optional().describe("Additional tags"),
       }),
+      needsApproval: true,
       execute: async ({ title, body, issueNumbers, tags }) => {
         const issueTags = issueNumbers.map((n) => `gh:issue:${n}`);
         const id = await Plan.create({
@@ -41,6 +42,7 @@ export function planTools(ctx: PlanToolsContext) {
         status: z.enum(["draft", "review", "approved", "rejected"]).optional(),
         tags: z.array(z.string()).optional(),
       }),
+      needsApproval: true,
       execute: async ({ id, ...input }) => {
         await Plan.update(id, input);
         return { id, updated: Object.keys(input) };

@@ -3,6 +3,7 @@
   import PlanList from '$lib/plans/PlanList.svelte';
   import PlanKanban from '$lib/plans/PlanKanban.svelte';
   import DispatchDrawer from '$lib/dispatch/DispatchDrawer.svelte';
+  import PlannerDrawer from '$lib/planner/PlannerDrawer.svelte';
 
   let { data }: PageProps = $props();
 
@@ -14,6 +15,10 @@
   let selectedPlan = $state<PlanItem | null>(null);
   let dispatched = $state(new Set<string>());
 
+  let plannerOpen = $state(false);
+  let plannerMode = $state<'draft' | 'edit'>('draft');
+  let plannerPlan = $state<{ id: string; title: string; status: string } | undefined>(undefined);
+
   function openDrawer(plan: PlanItem) {
     selectedPlan = plan;
     drawerOpen = true;
@@ -21,6 +26,17 @@
 
   function handleDispatched(planId: string) {
     dispatched = new Set([...dispatched, planId]);
+  }
+
+  function openPlanner() {
+    plannerMode = 'draft';
+    plannerPlan = undefined;
+    plannerOpen = true;
+  }
+
+  function handlePlanCreated(plan: { id: string; title: string; status: string }) {
+    plannerMode = 'edit';
+    plannerPlan = plan;
   }
 </script>
 
@@ -34,6 +50,7 @@
         <button type="button" class="tab" class:tab-active={view === 'kanban'} onclick={() => { view = 'kanban'; }}>Board</button>
       </div>
 
+      <button type="button" class="planner-btn" onclick={openPlanner}>Planner</button>
       <a href="/gh/{data.organization}/{data.repoName}/plans/create" class="new-btn">+ New Plan</a>
     </div>
   </div>
@@ -54,6 +71,15 @@
     ondispatched={handleDispatched}
   />
 {/if}
+
+<PlannerDrawer
+  bind:open={plannerOpen}
+  organization={data.organization}
+  repoName={data.repoName}
+  mode={plannerMode}
+  plan={plannerPlan}
+  onplancreated={handlePlanCreated}
+/>
 
 <style>
   .header {
@@ -98,6 +124,19 @@
   }
   .tab:hover { color: var(--color-muted); }
   .tab-active { background: var(--color-surface); color: var(--color-text); }
+
+  .planner-btn {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .planner-btn:hover { background: color-mix(in srgb, var(--color-accent) 20%, transparent); }
 
   .new-btn {
     font-family: "JetBrains Mono", monospace;

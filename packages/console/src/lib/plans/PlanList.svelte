@@ -91,7 +91,7 @@
 
         <a href="/gh/{organization}/{repoName}/plans/{plan.id}" class="detail-link">&rarr;</a>
 
-        {#if plan.status === 'approved' && ondispatch}
+        {#if ondispatch}
           {#if dispatched.has(plan.id)}
             <span class="dispatched-badge">dispatched</span>
           {:else}

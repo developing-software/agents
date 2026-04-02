@@ -6,7 +6,8 @@
 	import ToolCard from '$lib/ai/components/ToolCard.svelte';
 	import ToolOutput from '$lib/ai/components/ToolOutput.svelte';
 	import TriageResult from '$lib/ai/components/TriageResult.svelte';
-	import AskUser from '$lib/ai/components/AskUser.svelte';
+	import AskUserInput from '$lib/ai/components/AskUserInput.svelte';
+	import ToolApproval from '$lib/ai/components/ToolApproval.svelte';
 
 	type PlanSummary = {
 		id: string;
@@ -29,6 +30,28 @@
 
 	let isActive = $derived(chat.status === 'submitted' || chat.status === 'streaming');
 	let hasMessages = $derived(chat.messages.length > 0);
+
+	// Find a pending askUser tool that needs user response
+	let pendingAsk = $derived.by(() => {
+		for (const message of chat.messages) {
+			for (const part of message.parts) {
+				if (
+					isToolUIPart(part) &&
+					getToolName(part) === 'askUser' &&
+					part.state === 'input-available'
+				) {
+					const input = part.input as { question: string; options?: string[]; context?: string };
+					return {
+						toolCallId: part.toolCallId,
+						question: input.question,
+						options: input.options,
+						context: input.context,
+					};
+				}
+			}
+		}
+		return null;
+	});
 
 	const draftSuggestions = [
 		'Triage open issues',
@@ -92,6 +115,14 @@
 	function handleAskUserResponse(toolCallId: string, answer: string) {
 		chat.addToolOutput({ tool: 'askUser', toolCallId, output: answer });
 	}
+
+	function handleApprove(id: string, reason?: string) {
+		chat.addToolApprovalResponse({ id, approved: true, reason });
+	}
+
+	function handleDeny(id: string, reason?: string) {
+		chat.addToolApprovalResponse({ id, approved: false, reason });
+	}
 </script>
 
 <div class="planner-chat">
@@ -123,18 +154,34 @@
 						{:else if isToolUIPart(part)}
 							{@const toolName = getToolName(part)}
 							{#if toolName === 'askUser' && part.state === 'input-available'}
-								{@const input = part.input as { question: string; options?: string[]; context?: string }}
-								<AskUser
-									question={input.question}
-									options={input.options}
-									context={input.context}
-									onrespond={(answer) => handleAskUserResponse(part.toolCallId, answer)}
-								/>
+								<!-- Read-only inline display — interactive controls are in the input area -->
+								{@const input = part.input as { question: string; context?: string }}
+								<div class="ask-pending">
+									<div class="ask-pending-question">{input.question}</div>
+									{#if input.context}
+										<div class="ask-pending-context">
+											<Markdown source={'```\n' + input.context + '\n```'} />
+										</div>
+									{/if}
+									<div class="ask-pending-hint">Awaiting your response below...</div>
+								</div>
 							{:else if toolName === 'askUser' && part.state === 'output-available'}
 								<div class="ask-answered">
 									<span class="ask-answered-label">Answered:</span>
 									{part.output}
 								</div>
+							{:else if (toolName === 'createPlan' || toolName === 'updatePlan') && part.state === 'approval-requested'}
+								<ToolApproval
+									{toolName}
+									input={part.input}
+									approvalId={part.approval.id}
+									onapprove={handleApprove}
+									ondeny={handleDeny}
+								/>
+							{:else if (toolName === 'createPlan' || toolName === 'updatePlan') && part.state === 'output-denied'}
+								<ToolCard name={toolName} state={part.state}>
+									<span class="approval-denied-text">Denied{part.approval?.reason ? `: ${part.approval.reason}` : ''}</span>
+								</ToolCard>
 							{:else}
 								<ToolCard name={toolName} state={part.state}>
 									{#if part.state === 'output-available' && part.output != null}
@@ -163,46 +210,55 @@
 		{/if}
 	</div>
 
-	<div class="input-area">
-		{#if !hasMessages}
-			<div class="suggestions">
-				{#each suggestions as suggestion (suggestion)}
-					<button class="suggestion-chip" onclick={() => selectSuggestion(suggestion)}>
-						{suggestion}
-					</button>
-				{/each}
-			</div>
-		{/if}
+	{#if pendingAsk}
+		<AskUserInput
+			question={pendingAsk.question}
+			options={pendingAsk.options}
+			context={pendingAsk.context}
+			onrespond={(answer) => handleAskUserResponse(pendingAsk.toolCallId, answer)}
+		/>
+	{:else}
+		<div class="input-area">
+			{#if !hasMessages}
+				<div class="suggestions">
+					{#each suggestions as suggestion (suggestion)}
+						<button class="suggestion-chip" onclick={() => selectSuggestion(suggestion)}>
+							{suggestion}
+						</button>
+					{/each}
+				</div>
+			{/if}
 
-		<div class="input-row">
-			<textarea
-				bind:this={textareaEl}
-				bind:value={inputValue}
-				oninput={autoGrow}
-				onkeydown={handleKeydown}
-				placeholder="Ask the planner agent..."
-				rows={1}
-				disabled={isActive}
-			></textarea>
-			<button
-				class="send-btn"
-				onclick={isActive ? () => chat.stop() : send}
-				disabled={!isActive && !inputValue.trim()}
-				title={isActive ? 'Stop' : 'Send'}
-			>
-				{#if isActive}
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-						<rect x="6" y="6" width="12" height="12" rx="2" />
-					</svg>
-				{:else}
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<line x1="22" y1="2" x2="11" y2="13" />
-						<polygon points="22 2 15 22 11 13 2 9 22 2" />
-					</svg>
-				{/if}
-			</button>
+			<div class="input-row">
+				<textarea
+					bind:this={textareaEl}
+					bind:value={inputValue}
+					oninput={autoGrow}
+					onkeydown={handleKeydown}
+					placeholder="Ask the planner agent..."
+					rows={1}
+					disabled={isActive}
+				></textarea>
+				<button
+					class="send-btn"
+					onclick={isActive ? () => chat.stop() : send}
+					disabled={!isActive && !inputValue.trim()}
+					title={isActive ? 'Stop' : 'Send'}
+				>
+					{#if isActive}
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+							<rect x="6" y="6" width="12" height="12" rx="2" />
+						</svg>
+					{:else}
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<line x1="22" y1="2" x2="11" y2="13" />
+							<polygon points="22 2 15 22 11 13 2 9 22 2" />
+						</svg>
+					{/if}
+				</button>
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>
 
 <style>
@@ -292,6 +348,44 @@
 		margin: 8px 0;
 	}
 
+	/* AskUser inline displays */
+	.ask-pending {
+		margin: 6px 0;
+		padding: 10px 12px;
+		background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+		border: 1px solid color-mix(in srgb, var(--color-accent) 20%, var(--color-border));
+		border-radius: 4px;
+	}
+
+	.ask-pending-question {
+		font-size: 13px;
+		color: var(--color-text);
+		font-weight: 500;
+		margin-bottom: 4px;
+	}
+
+	.ask-pending-context {
+		margin-bottom: 4px;
+		font-size: 12px;
+	}
+
+	.ask-pending-context :global(pre) {
+		margin: 0;
+		padding: 8px 10px;
+		background: var(--color-bg);
+		border: 1px solid var(--color-border);
+		border-radius: 3px;
+		font-size: 11px;
+		overflow-x: auto;
+	}
+
+	.ask-pending-hint {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 10px;
+		color: var(--color-dim);
+		font-style: italic;
+	}
+
 	.ask-answered {
 		margin: 6px 0;
 		padding: 6px 10px;
@@ -307,6 +401,11 @@
 		font-size: 10px;
 		color: var(--color-dim);
 		margin-right: 6px;
+	}
+
+	.approval-denied-text {
+		font-size: 11px;
+		color: var(--color-danger);
 	}
 
 	.tool-error-text {
