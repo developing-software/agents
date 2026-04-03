@@ -52,7 +52,7 @@ runs:
         } >> $GITHUB_OUTPUT
         exit $exit_code
 
-    - uses: developing-software/agents/actions/event/result@dev
+    - uses: developing-software/agents/actions/event/data@dev
       if: always()
       with:
         key: checks/typecheck/${{ inputs.name }}
