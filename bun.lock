@@ -17,18 +17,6 @@
         "typescript": "catalog:",
       },
     },
-    "actions/agent/workflow": {
-      "name": "workflow-run-action",
-      "dependencies": {
-        "@actions/core": "catalog:action",
-        "@actions/exec": "catalog:action",
-        "@agents/actions-core": "workspace:*",
-        "@agents/sdk": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/node": "catalog:action",
-      },
-    },
     "actions/artifact/upload": {
       "name": "artifact-upload-action",
       "dependencies": {
@@ -1119,8 +1107,6 @@
     "workerd": ["workerd@1.20260317.1", "", { "optionalDependencies": { "@cloudflare/workerd-darwin-64": "1.20260317.1", "@cloudflare/workerd-darwin-arm64": "1.20260317.1", "@cloudflare/workerd-linux-64": "1.20260317.1", "@cloudflare/workerd-linux-arm64": "1.20260317.1", "@cloudflare/workerd-windows-64": "1.20260317.1" }, "bin": { "workerd": "bin/workerd" } }, "sha512-ZuEq1OdrJBS+NV+L5HMYPCzVn49a2O60slQiiLpG44jqtlOo+S167fWC76kEXteXLLLydeuRrluRel7WdOUa4g=="],
 
     "workers": ["workers@workspace:packages/workers"],
-
-    "workflow-run-action": ["workflow-run-action@workspace:actions/agent/workflow"],
 
     "worktop": ["worktop@0.8.0-next.18", "", { "dependencies": { "mrmime": "^2.0.0", "regexparam": "^3.0.0" } }, "sha512-+TvsA6VAVoMC3XDKR5MoC/qlLqDixEfOBysDEKnPIPou/NvoPWCAuXHXMsswwlvmEuvX56lQjvELLyLuzTKvRw=="],
 
