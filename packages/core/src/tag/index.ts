@@ -7,9 +7,9 @@ export type GhRefTag = `gh:${string}`;
 export type GhRepoTag = `gh:repo:${string}`;
 export type GhIssueTag = `gh:issue:${number}`;
 export type GhPrTag = `gh:pr:${number}`;
-export type GhRunTag = `gh:run:${number}`;
+export type GhWorkflowTag = `gh:workflow:${number}`;
 export type GhBranchTag = `gh:branch:${string}`;
-export type GhTag = GhRepoTag | GhIssueTag | GhPrTag | GhRunTag | GhBranchTag;
+export type GhTag = GhRepoTag | GhIssueTag | GhPrTag | GhWorkflowTag | GhBranchTag;
 
 // --- plan refs ---
 export type PlanTag = `plan:${string}`;
@@ -31,7 +31,7 @@ export const Tags = {
   ghRepo: (nameWithOwner: string): GhRepoTag => `gh:repo:${nameWithOwner}`,
   ghIssue: (n: number): GhIssueTag => `gh:issue:${n}`,
   ghPr: (n: number): GhPrTag => `gh:pr:${n}`,
-  ghRun: (n: number): GhRunTag => `gh:run:${n}`,
+  ghWorkflow: (n: number): GhWorkflowTag => `gh:workflow:${n}`,
   ghBranch: (name: string): GhBranchTag => `gh:branch:${name}`,
   plan: (id: string): PlanTag => `plan:${id}`,
   scope: (label: string): ScopeTag => `scope:${label}`,

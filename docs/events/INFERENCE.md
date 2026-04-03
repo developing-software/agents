@@ -54,9 +54,9 @@ Group by tags to compare:
 
 Events can be chained without explicit `parentEventId` using tag-based inference:
 
-1. **By issue:** Match `gh:repo:` + `gh:issue:` tags to find the root event for an issue
-2. **By PR:** Match `gh:repo:` + `gh:pr:` tags to find all events related to a PR
-3. **By run:** Match `gh:run:` tag to find all events in a single workflow run
+1. **By PR:** Match `gh:pr:` tag to find all events related to a PR
+2. **By workflow:** Match `gh:workflow:` tag to find all events in a single workflow run
+3. **By issue:** Match `gh:issue:` tag to find the root event for an issue
 
 `Event.inferParentEventId()` implements this: it searches for existing events with the same tag combination and returns the most recent match as the parent.
 

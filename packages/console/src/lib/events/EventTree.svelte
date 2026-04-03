@@ -8,7 +8,7 @@
     envTag,
     serviceTag,
     branchTag,
-    runRef,
+    workflowRef,
     otherTags,
   } from './event-helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
@@ -87,9 +87,9 @@
       {@const env = envTag(node.tags)}
       {@const svc = serviceTag(node.tags)}
       {@const branch = branchTag(node.tags)}
-      {@const run = runRef(node.tags)}
+      {@const workflow = workflowRef(node.tags)}
       {@const other = otherTags(node.tags)}
-      {@const hasMeta = env || svc || branch || run !== null || other.length > 0}
+      {@const hasMeta = env || svc || branch || workflow !== null || other.length > 0}
       <div class="node" style="padding-left: {depth * 16}px;">
         <button
           type="button"
@@ -116,8 +116,8 @@
             {#if branch}
               <span class="meta-branch">&#x238B; {branch}</span>
             {/if}
-            {#if run !== null}
-              <span class="meta-dim">run #{run}</span>
+            {#if workflow !== null}
+              <span class="meta-dim">workflow #{workflow}</span>
             {/if}
             {#each other as tag (tag)}
               <TagPill {tag} />

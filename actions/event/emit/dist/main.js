@@ -19874,7 +19874,7 @@ function githubTags() {
   if (repo)
     tags.push(`gh:repo:${repo}`);
   if (runId)
-    tags.push(`gh:run:${runId}`);
+    tags.push(`gh:workflow:${runId}`);
   const prMatch = ref?.match(/^refs\/pull\/(\d+)\//);
   if (prMatch) {
     tags.push(`gh:pr:${prMatch[1]}`);

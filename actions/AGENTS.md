@@ -24,7 +24,7 @@ Reusable GitHub Actions for observable workflows. The core idea: `event/init` pr
   |   DEV_AGENTS_EVENT_ID                         |
   |                                               |
   | Writes initial tags:                          |
-  |   gh-repo, gh-run, gh-branch/gh-pr           |
+  |   gh-repo, gh-workflow, gh-branch/gh-pr       |
   |   + user-provided tags                        |
   |                                               |
   | Emits:                                        |
@@ -50,7 +50,7 @@ Reusable GitHub Actions for observable workflows. The core idea: `event/init` pr
 
   $DEV_AGENTS_TAGS_DIR/
     gh-repo              "gh:repo:owner/repo"
-    gh-run               "gh:run:123456"
+    gh-workflow           "gh:workflow:123456"
     gh-branch            "gh:branch:claude/issue-42-123"
     harness              "harness:claude-code"
     model                "model:claude-sonnet-4-6"

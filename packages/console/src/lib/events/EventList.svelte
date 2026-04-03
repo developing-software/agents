@@ -11,7 +11,7 @@
     envTag,
     serviceTag,
     branchTag,
-    runRef,
+    workflowRef,
     otherTags,
     extractMetrics,
     formatMetricValue,
@@ -105,10 +105,10 @@
           {@const env = envTag(e.tags)}
           {@const svc = serviceTag(e.tags)}
           {@const branch = branchTag(e.tags)}
-          {@const run = runRef(e.tags)}
+          {@const workflow = workflowRef(e.tags)}
           {@const other = otherTags(e.tags)}
           {@const mets = extractMetrics(e.data)}
-          {@const hasMeta = mets || env || svc || branch || run !== null || other.length > 0}
+          {@const hasMeta = mets || env || svc || branch || workflow !== null || other.length > 0}
           <div
             class="event-item"
             class:event-item-child={child}
@@ -140,8 +140,8 @@
                 {#if branch}
                   <span class="meta-branch">⎇ {branch}</span>
                 {/if}
-                {#if run !== null}
-                  <span class="meta-dim">run #{run}</span>
+                {#if workflow !== null}
+                  <span class="meta-dim">workflow #{workflow}</span>
                 {/if}
                 {#if mets}
                   {#if mets.model}

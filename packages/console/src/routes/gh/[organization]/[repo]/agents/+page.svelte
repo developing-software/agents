@@ -8,7 +8,7 @@
     issueRef,
     prRef,
     branchTag,
-    runRef,
+    workflowRef,
     formatBytes,
   } from '$lib/events/event-helpers';
   import EventOverview from '$lib/events/EventOverview.svelte';
@@ -181,7 +181,7 @@
         {@const issue = issueRef(run.tags)}
         {@const pr = prRef(run.tags)}
         {@const branch = branchTag(run.tags)}
-        {@const ghRun = runRef(run.tags)}
+        {@const ghWorkflow = workflowRef(run.tags)}
         {@const isExpanded = expandedId === run.id}
         {@const eventIds = [run.id, ...(run.parentEventId ? [run.parentEventId] : [])]}
         {@const runArtifacts = mergedArtifacts(eventIds)}
@@ -307,15 +307,15 @@
                 </div>
               </div>
 
-              {#if branch || ghRun !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
+              {#if branch || ghWorkflow !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
                 <div class="detail-section">
                   <span class="detail-label">Context</span>
                   <div class="context-items">
                     {#if branch}
                       <span class="context-branch">&#x2387; {branch}</span>
                     {/if}
-                    {#if ghRun !== null}
-                      <span class="context-dim">run #{ghRun}</span>
+                    {#if ghWorkflow !== null}
+                      <span class="context-dim">workflow #{ghWorkflow}</span>
                     {/if}
                     {#if run.linesAdded !== null || run.linesRemoved !== null}
                       <span class="context-lines">

@@ -44,7 +44,7 @@ export function extractNumericTag(tags: string[], prefix: string): number | null
 export const envTag = (tags: string[]) => extractTag(tags, 'env:');
 export const serviceTag = (tags: string[]) => extractTag(tags, 'service:');
 export const branchTag = (tags: string[]) => extractTag(tags, 'gh:branch:');
-export const runRef = (tags: string[]) => extractNumericTag(tags, 'gh:run:');
+export const workflowRef = (tags: string[]) => extractNumericTag(tags, 'gh:workflow:');
 export const issueRef = (tags: string[]) => extractNumericTag(tags, 'gh:issue:');
 export const prRef = (tags: string[]) => extractNumericTag(tags, 'gh:pr:');
 export const planRef = (tags: string[]) => extractTag(tags, 'plan:');

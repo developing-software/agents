@@ -22,7 +22,7 @@ function githubTags(): string[] {
   const refName = process.env.GITHUB_REF_NAME; // main or 123/merge
 
   if (repo) tags.push(`gh:repo:${repo}`);
-  if (runId) tags.push(`gh:run:${runId}`);
+  if (runId) tags.push(`gh:workflow:${runId}`);
 
   const prMatch = ref?.match(/^refs\/pull\/(\d+)\//);
   if (prMatch) {

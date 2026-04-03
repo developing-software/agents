@@ -217,17 +217,17 @@ export namespace Event {
       }
     }
 
-    const issueTag = opts.tags?.find((tag) => tag.startsWith("gh:issue:"));
-    if (issueTag) {
-      const parentEventId = await findParent({ tags: [issueTag] }).catch(() => undefined);
+    const workflowTag = opts.tags?.find((tag) => tag.startsWith("gh:workflow:"));
+    if (workflowTag) {
+      const parentEventId = await findParent({ tags: [workflowTag] }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;
       }
     }
 
-    const runTag = opts.tags?.find((tag) => tag.startsWith("gh:run:"));
-    if (runTag) {
-      const parentEventId = await findParent({ tags: [runTag] }).catch(() => undefined);
+    const issueTag = opts.tags?.find((tag) => tag.startsWith("gh:issue:"));
+    if (issueTag) {
+      const parentEventId = await findParent({ tags: [issueTag] }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;
       }

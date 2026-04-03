@@ -122,7 +122,7 @@ Plans and events share the same tag namespace. Searching across both is a query 
     |     tags: [plan:01JV..., gh:repo:acme/api, harness:claude-code]
     |       |
     |       +---> event type=agent.result
-    |       |     tags: [plan:01JV..., gh:run:789, harness:claude-code]
+    |       |     tags: [plan:01JV..., gh:workflow:789, harness:claude-code]
     |       |
     |       +---> event type=agent.completed
     |             tags: [plan:01JV..., gh:pr:87, harness:claude-code]
@@ -131,7 +131,7 @@ Plans and events share the same tag namespace. Searching across both is a query 
           tags: [plan:01JV..., gh:repo:acme/api, harness:codex]
             |
             +---> event type=agent.result
-            |     tags: [plan:01JV..., gh:run:790, harness:codex]
+            |     tags: [plan:01JV..., gh:workflow:790, harness:codex]
             |
             +---> event type=agent.completed
                   tags: [plan:01JV..., gh:pr:88, harness:codex]

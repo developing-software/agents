@@ -56,7 +56,7 @@ async function run() {
     writeTag(tagsDir, "gh-repo", `gh:repo:${repository}`);
   }
   if (runId) {
-    writeTag(tagsDir, "gh-run", `gh:run:${runId}`);
+    writeTag(tagsDir, "gh-workflow", `gh:workflow:${runId}`);
   }
 
   const githubRef = process.env.GITHUB_REF ?? "";
@@ -97,7 +97,7 @@ async function run() {
       // Collect all tags
       const allTags = uniqueTags(extraTags.concat(
         repository ? [`gh:repo:${repository}`] : [],
-        runId ? [`gh:run:${runId}`] : [],
+        runId ? [`gh:workflow:${runId}`] : [],
         prMatch ? [`gh:pr:${prMatch[1]}`] : [],
         githubRef.startsWith("refs/heads/") ? [`gh:branch:${githubRef.replace("refs/heads/", "")}`] : [],
       ));

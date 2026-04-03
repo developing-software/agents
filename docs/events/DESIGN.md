@@ -70,7 +70,7 @@ agent.started
   └── agent.completed   (all collected data)
 ```
 
-Parent inference works via tag matching — when `parentEventId` isn't explicit, `Event.inferParentEventId()` finds existing events with matching `gh:pr:`, `gh:issue:`, or `gh:run:` tags.
+Parent inference works via tag matching — when `parentEventId` isn't explicit, `Event.inferParentEventId()` finds existing events with matching `gh:pr:`, `gh:issue:`, or `gh:workflow:` tags.
 
 ## Tags vs Data
 
@@ -85,7 +85,7 @@ gh:repo:owner/name     # repository reference
 gh:issue:42            # issue number
 gh:pr:15               # pull request number
 gh:branch:main         # branch name
-gh:run:12345           # GitHub Actions run ID
+gh:workflow:12345           # GitHub Actions run ID
 env:production         # environment / base branch
 harness:claude         # agent harness name
 model:claude-sonnet-4-20250514  # LLM model identifier
