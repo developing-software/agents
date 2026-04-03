@@ -1,5 +1,7 @@
 # Dev Agents
 
+_Built by Claude_
+
 Platform-orchestrated AI development lifecycle for brownfield projects. Agents implement focused tasks from approved plans while the platform provides orchestration, observability, and human-in-the-loop gates at every stage.
 
 Inspired by the [AIDLC](https://github.com/awslabs/aidlc-workflows) framework, adapted for monorepo workflows, atomic tasks, and external platform control.
