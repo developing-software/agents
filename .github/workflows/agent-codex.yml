@@ -111,8 +111,6 @@ jobs:
         with:
           prefix: codex
           issue_number: ${{ steps.issue.outputs.number }}
-          prompt: ${{ inputs.prompt }}
-          model: ${{ env.MODEL }}
 
       - uses: ./actions/comment/update
         if: always() && steps.issue.outputs.number != ''

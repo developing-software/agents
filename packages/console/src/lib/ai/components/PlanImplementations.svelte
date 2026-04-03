@@ -102,7 +102,7 @@
     let passed = 0;
     let failed = 0;
     for (const c of checks) {
-      if (c.outcome === 'passed') passed++;
+      if (c.outcome === 'success') passed++;
       else failed++;
     }
     return { passed, failed };
