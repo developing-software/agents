@@ -293,3 +293,7 @@ bun run lint         # lint (oxlint)
 bun run typecheck    # type check
 bun test             # run tests
 ```
+
+## Contributor
+
+- Codex
