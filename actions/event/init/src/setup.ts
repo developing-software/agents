@@ -23,7 +23,7 @@ function writeTag(tagsDir: string, slug: string, value: string) {
 
 function parseTagLines(raw: string): string[] {
   return raw
-    .split("\n")
+    .split(/[\n,]/)
     .map((line) => line.trim())
     .filter(Boolean);
 }

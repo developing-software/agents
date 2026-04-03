@@ -7,7 +7,7 @@ function readTags(raw: string) {
   return [
     ...new Set(
       raw
-        .split("\n")
+        .split(/[\n,]/)
         .map((value) => value.trim())
         .filter(Boolean),
     ),

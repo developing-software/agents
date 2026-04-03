@@ -19871,8 +19871,7 @@ function writeTag(tagsDir, slug, value) {
 `);
 }
 function parseTagLines(raw) {
-  return raw.split(`
-`).map((line) => line.trim()).filter(Boolean);
+  return raw.split(/[\n,]/).map((line) => line.trim()).filter(Boolean);
 }
 async function run() {
   const startMs = Date.now();

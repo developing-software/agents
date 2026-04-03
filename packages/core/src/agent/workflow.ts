@@ -86,7 +86,7 @@ export namespace AgentWorkflow {
     const workflowInputs: Record<string, string> = {
       prompt: prompt!,
     };
-    if (tags.length > 0) workflowInputs.tags = tags.join(",");
+    if (tags.length > 0) workflowInputs.tags = tags.join("\n");
     if (input.model) workflowInputs.model = input.model;
 
     const ref = input.ref ?? "dev";

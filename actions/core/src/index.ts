@@ -75,7 +75,7 @@ export function readContextTags(): string[] {
 
 export function readOptionalTags(raw: string): string[] {
   return raw
-    .split("\n")
+    .split(/[\n,]/)
     .map((value) => value.trim())
     .filter(Boolean);
 }

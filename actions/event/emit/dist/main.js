@@ -19861,8 +19861,7 @@ function readContextTags() {
 // actions/event/emit/src/main.ts
 function readTags(raw) {
   return [
-    ...new Set(raw.split(`
-`).map((value) => value.trim()).filter(Boolean))
+    ...new Set(raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean))
   ];
 }
 function githubTags() {
