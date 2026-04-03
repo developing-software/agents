@@ -60,7 +60,7 @@ Issues are triaged, validated, and grouped into plans. Plans can be authored by 
   +----------------------+
         |
         | platform groups
-        | issues into pla"}n
+        | issues into plan
         v
   +----------------------+      +----------------------+
   |  LLM PLAN AGENT      |      |   HUMAN AUTHOR       |
@@ -233,14 +233,13 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
   +-----------------------------+    +-----------------------------+
   |    GitHub Actions            |    |    Database (Postgres)      |
   |                             |    |                             |
-  |  actions/agent/workflow      |    |  - events (tags, parent    |
-  |    - start (branch, emit)  |    |       chaining, data)       |
-  |    - finish (PR, metrics)   |    |  - plans (tags, status,    |
-  |  actions/agent/claude       |    |       lifecycle)            |
-  |  actions/agent/codex        |    |  - repositories             |
-  |  actions/agent/opencode     |    |  - users + flags            |
-  |  actions/event/emit         |    |  - installations            |
-  |  actions/artifact/upload    |    |                             |
+  |  actions/agent/claude       |    |  - events (tags, parent    |
+  |  actions/agent/codex        |    |       chaining, data)       |
+  |  actions/agent/opencode     |    |  - plans (tags, status,    |
+  |  actions/git/branch,pr      |    |       lifecycle)            |
+  |  actions/event/emit,init    |    |  - repositories             |
+  |  actions/comment/create     |    |  - users + flags            |
+  |  actions/artifact/upload    |    |  - installations            |
   +-----------------------------+    +-----------------------------+
 ```
 
@@ -258,14 +257,21 @@ agents/
   actions/
     core/           Shared action utilities
     agent/
-      workflow/     Orchestration (start/finish hooks, branch, PR)
       claude/       Claude Code agent harness
       codex/        Codex agent harness
       opencode/     OpenCode agent harness
-      result/       Result aggregation
+    git/
+      branch/       Branch creation
+      commit/       Commit with metadata
+      pr/           Pull request creation
     event/
       emit/         Post events to the Agents API
+      init/         Initialize event context
+      data/         Attach data to events
       tag/          Tag management for events
+    comment/
+      create/       Create GitHub comments
+      update/       Update GitHub comments
     artifact/
       upload/       Upload artifacts to R2 storage
   .agents/
