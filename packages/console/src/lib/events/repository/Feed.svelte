@@ -1,6 +1,6 @@
 <script lang="ts">
-  import EventList from './EventList.svelte';
-  import EventTree from './EventTree.svelte';
+  import EventList from './FeedList.svelte';
+  import EventTree from './FeedTree.svelte';
 
   let {
     organization,

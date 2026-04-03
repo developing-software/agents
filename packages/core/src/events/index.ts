@@ -1,4 +1,4 @@
-import { and, arrayContains, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
+import { and, arrayContains, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
@@ -152,6 +152,7 @@ export namespace Event {
   export async function list(opts: {
     source?: string;
     sourceId?: string;
+    sourceIds?: string[];
     tags?: string[];
     type?: string;
     limit?: number;
@@ -162,6 +163,7 @@ export namespace Event {
       const conditions = [];
       if (opts.source) conditions.push(eq(eventTable.source, opts.source));
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
+      if (opts.sourceIds?.length) conditions.push(inArray(eventTable.sourceId, opts.sourceIds));
       if (opts.tags?.length) conditions.push(arrayContains(eventTable.tags, opts.tags));
       if (opts.type) conditions.push(eq(eventTable.type, opts.type));
       if (opts.from) conditions.push(gte(eventTable.timeCreated, new Date(opts.from)));

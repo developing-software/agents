@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import Events from '$lib/events/Events.svelte';
+  import Events from '$lib/events/repository/Feed.svelte';
 
   let { data }: PageProps = $props();
 </script>

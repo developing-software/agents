@@ -7,7 +7,7 @@ import { Plan } from "@agents/core/plan/index";
 import { PlanJudge } from "@agents/core/plan/judge";
 import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
 import { createModel } from "./model";
-import { flattenChecks } from "$lib/events/event-helpers";
+import { flattenChecks } from "$lib/events/helpers";
 
 // -- Helpers --
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { listEvents } from './events.remote';
-  import EventDetail from './EventDetail.svelte';
+  import { listEvents } from './repository.remote';
+  import EventDetail from './FeedDetail.svelte';
   import {
     eventDotColor,
     originBadgeStyle,
@@ -15,7 +15,7 @@
     otherTags,
     extractMetrics,
     formatMetricValue,
-  } from './event-helpers';
+  } from '../helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
 
   type EventItem = {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getEventSummary } from './events.remote';
+  import { getEventSummary } from './agents.remote';
 
   let {
     organization,

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getAgentComparison, getAgentStats } from './events.remote';
+  import { getAgentComparison, getAgentStats } from './agents.remote';
 
   let {
     organization,

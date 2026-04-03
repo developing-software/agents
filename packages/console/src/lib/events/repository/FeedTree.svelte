@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { listTree, getEventDetail } from './events.remote';
-  import EventDetail from './EventDetail.svelte';
+  import { listTree, getEventDetail } from './repository.remote';
+  import EventDetail from './FeedDetail.svelte';
   import {
     eventDotColor,
     originBadgeStyle,
@@ -10,7 +10,7 @@
     branchTag,
     workflowRef,
     otherTags,
-  } from './event-helpers';
+  } from '../helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
 
   type TreeNode = {

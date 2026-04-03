@@ -2,9 +2,9 @@
   import type { PageProps } from './$types';
   import { generateToken } from './repo.remote';
   import GitHubLink from '$lib/ui/GitHubLink.svelte';
-  import Events from '$lib/events/Events.svelte';
-  import EventOverview from '$lib/events/EventOverview.svelte';
-  import EventAgentsOverview from '$lib/events/EventAgentsOverview.svelte';
+  import Events from '$lib/events/repository/Feed.svelte';
+  import EventOverview from '$lib/events/agents/Overview.svelte';
+  import EventAgentsOverview from '$lib/events/agents/AgentsOverview.svelte';
 
   let { data }: PageProps = $props();
 

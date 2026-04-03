@@ -1,6 +1,6 @@
 <script lang="ts">
   import ArtifactViewer from '$lib/ui/ArtifactViewer.svelte';
-  import { originBadgeStyle, eventDotColor, formatBytes } from './event-helpers';
+  import { originBadgeStyle, eventDotColor, formatBytes } from '../helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
 
   let {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import { listAgentRuns } from '$lib/events/events.remote';
+  import { listAgentRuns } from '$lib/events/agents/agents.remote';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import {
     relativeTime,
@@ -10,9 +10,9 @@
     branchTag,
     workflowRef,
     formatBytes,
-  } from '$lib/events/event-helpers';
-  import EventOverview from '$lib/events/EventOverview.svelte';
-  import EventAgentsOverview from '$lib/events/EventAgentsOverview.svelte';
+  } from '$lib/events/helpers';
+  import EventOverview from '$lib/events/agents/Overview.svelte';
+  import EventAgentsOverview from '$lib/events/agents/AgentsOverview.svelte';
   import ArtifactViewer from '$lib/ui/ArtifactViewer.svelte';
   import { SvelteMap } from 'svelte/reactivity';
 
