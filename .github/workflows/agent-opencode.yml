@@ -47,7 +47,6 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,15 +84,31 @@ jobs:
         env:
           DEV_AGENTS_HARNESS: opencode
 
+      - name: Get OpenCode version
+        id: opencode-version
+        run: |
+          VERSION=$(curl -sf https://api.github.com/repos/anomalyco/opencode/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
+          echo "version=${VERSION:-latest}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache OpenCode
+        id: opencode-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.opencode/bin
+          key: opencode-${{ runner.os }}-${{ runner.arch }}-${{ steps.opencode-version.outputs.version }}
+
+      - name: Install OpenCode
+        if: steps.opencode-cache.outputs.cache-hit != 'true'
+        run: curl -fsSL https://opencode.ai/install | bash
+
+      - name: Add OpenCode to PATH
+        run: echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
       - name: Run OpenCode
         id: run-opencode
-        uses: anomalyco/opencode/github@latest
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        with:
-          model: ${{ env.MODEL }}
-          prompt: |
-            ${{ inputs.prompt }}
+        run: opencode run --agent build --model "${{ env.MODEL }}" "${{ inputs.prompt }}"
 
       - uses: ./actions/agent/opencode
         if: always()
