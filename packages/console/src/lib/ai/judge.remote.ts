@@ -7,6 +7,7 @@ import { Plan } from "@agents/core/plan/index";
 import { PlanJudge } from "@agents/core/plan/judge";
 import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
 import { createModel } from "./model";
+import { flattenChecks } from "$lib/events/event-helpers";
 
 // -- Helpers --
 
@@ -29,7 +30,7 @@ interface PlanRun {
   cost_usd: number | null;
   input_tokens: number | null;
   output_tokens: number | null;
-  num_turns: number | null;
+  turns: number | null;
   durationMs: number | null;
   linesAdded: number | null;
   linesRemoved: number | null;
@@ -52,29 +53,24 @@ export const listPlanRuns = query(
 
     const tags = [`plan:${planId}`];
 
-    // Fetch agent events for this plan
-    const results = await Event.list({ type: "agent.result", source: "repository", sourceId: repo.id, tags, limit: 20 });
-    const completed = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, tags, limit: 20 });
-
-    // Index completed events by parentEventId
-    const completedByParent = new Map<string, (typeof completed)[number]>();
-    for (const c of completed) {
-      if (c.parentEventId) completedByParent.set(c.parentEventId, c);
-    }
+    // Fetch agent.completed events for this plan
+    const events = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, tags, limit: 20 });
 
     const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
 
-    // Build runs from agent.result events paired with agent.completed
+    // Build runs from agent.completed events
     const runs: PlanRun[] = [];
-    for (const e of results) {
+    for (const e of events) {
       const d = e.data as Record<string, unknown> | undefined;
-      const m = d?.metrics as Record<string, unknown> | undefined;
-      const paired = e.parentEventId ? completedByParent.get(e.parentEventId) : undefined;
-      const pd = paired?.data as Record<string, unknown> | undefined;
-      const checks = (pd?.checks ?? []) as Array<{ category: string; name: string; outcome: string }>;
+      const agentMeta = d?.agent as Record<string, unknown> | undefined;
+      const m = agentMeta?.metrics as Record<string, unknown> | undefined;
+      const tokens = m?.tokens as Record<string, unknown> | undefined;
+      const diffMeta = d?.diff as Record<string, unknown> | undefined;
+      const prMeta = d?.pr as Record<string, unknown> | undefined;
+      const workflow = d?.workflow as Record<string, unknown> | undefined;
+      const checks = flattenChecks(d?.checks);
 
-      const allTags = [...e.tags, ...(paired?.tags ?? [])];
-      const prNumber = extractPrNumber(allTags);
+      const prNumber = typeof prMeta?.number === "number" ? prMeta.number : extractPrNumber(e.tags);
 
       // Get live PR state
       let prState: string | null = null;
@@ -89,21 +85,21 @@ export const listPlanRuns = query(
 
       runs.push({
         id: e.id,
-        agent: typeof d?.agent === "string" ? d.agent : "unknown",
+        agent: typeof agentMeta?.name === "string" ? agentMeta.name : "unknown",
         model: typeof m?.model === "string" ? m.model : null,
         prNumber,
         prState,
-        prUrl: typeof pd?.prUrl === "string" ? pd.prUrl : null,
-        runUrl: typeof pd?.runUrl === "string" ? pd.runUrl : null,
+        prUrl: typeof prMeta?.url === "string" ? prMeta.url : null,
+        runUrl: typeof workflow?.runUrl === "string" ? workflow.runUrl : null,
         cost_usd: typeof m?.cost_usd === "number" ? m.cost_usd : null,
-        input_tokens: typeof m?.input_tokens === "number" ? m.input_tokens : null,
-        output_tokens: typeof m?.output_tokens === "number" ? m.output_tokens : null,
-        num_turns: typeof m?.num_turns === "number" ? m.num_turns : null,
-        durationMs: typeof pd?.durationMs === "number" ? pd.durationMs : null,
-        linesAdded: typeof pd?.linesAdded === "number" ? pd.linesAdded : null,
-        linesRemoved: typeof pd?.linesRemoved === "number" ? pd.linesRemoved : null,
+        input_tokens: typeof tokens?.input === "number" ? tokens.input : null,
+        output_tokens: typeof tokens?.output === "number" ? tokens.output : null,
+        turns: typeof m?.turns === "number" ? m.turns : null,
+        durationMs: typeof workflow?.durationMs === "number" ? workflow.durationMs : null,
+        linesAdded: typeof diffMeta?.linesAdded === "number" ? diffMeta.linesAdded : null,
+        linesRemoved: typeof diffMeta?.linesRemoved === "number" ? diffMeta.linesRemoved : null,
         checks,
-        tags: allTags,
+        tags: e.tags,
         timeCreated: e.timeCreated,
       });
     }

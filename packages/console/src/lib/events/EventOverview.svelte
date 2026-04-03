@@ -28,8 +28,8 @@
   }
 
   function getTotalTokens(metrics: { name: string; sum: number; count: number }[]): string | null {
-    const input = metrics.find((m) => m.name === 'input_tokens');
-    const output = metrics.find((m) => m.name === 'output_tokens');
+    const input = metrics.find((m) => m.name === 'input');
+    const output = metrics.find((m) => m.name === 'output');
     if (!input && !output) return null;
     const total = (input?.sum ?? 0) + (output?.sum ?? 0);
     if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}M`;

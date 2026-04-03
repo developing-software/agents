@@ -96,8 +96,8 @@ runs:
 
         # Write PR metadata
         if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ] && [ -n "$PR_URL" ]; then
-          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/pr"
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/pr"
           jq -nc --arg url "$PR_URL" --arg num "${PR_NUMBER:-}" \
             '{url: $url, number: (if $num == "" then null else ($num | tonumber) end)}' \
-            > "$DEV_AGENTS_RESULTS_DIR/metadata/pr/data.json"
+            > "$DEV_AGENTS_RESULTS_DIR/pr/data.json"
         fi

@@ -13,7 +13,7 @@ Events are the backbone of observability in this system. Every meaningful action
   type: string             // Event type (e.g., "agent.started")
   origin: OriginType       // Where the event came from
   tags: string[]           // Filterable, searchable labels
-  data: Record<string, unknown>  // Arbitrary payload
+  data: Record<string, unknown>  // Arbitrary payload (open schema)
   timeCreated: string      // ISO timestamp
 }
 ```
@@ -36,8 +36,7 @@ Events are the backbone of observability in this system. Every meaningful action
 | Type | Origin | Description |
 |------|--------|-------------|
 | `agent.started` | action | Agent workflow begins |
-| `agent.result` | action | Harness finishes, emits metrics |
-| `agent.completed` | action | Workflow finishes, emits checks + duration + diff stats |
+| `agent.completed` | action | Workflow finishes, emits all collected data |
 
 ### GitHub Webhooks
 
@@ -68,8 +67,7 @@ Events form trees via `parentEventId`. A typical agent run chain:
 
 ```
 agent.started
-  ├── agent.result      (harness metrics)
-  └── agent.completed   (checks, duration, diff)
+  └── agent.completed   (all collected data)
 ```
 
 Parent inference works via tag matching — when `parentEventId` isn't explicit, `Event.inferParentEventId()` finds existing events with matching `gh:pr:`, `gh:issue:`, or `gh:run:` tags.
@@ -94,6 +92,7 @@ model:claude-sonnet-4-20250514  # LLM model identifier
 plan:01JABCDEF         # plan ID
 type:bug               # issue classification
 scope:small            # issue scope
+check:tests/unit:success  # check outcome
 ```
 
 **Good tag values:** single word, short identifier, number, enum value.
@@ -103,7 +102,7 @@ scope:small            # issue scope
 Data holds **everything that is NOT small and simple:**
 
 - Strings longer than ~50 chars (`finalMessage`, `errorMessage`, `stackTrace`)
-- Nested objects (`metrics`, `checks[]`)
+- Nested objects (`metrics`, `checks`)
 - Arrays
 - Numeric measurements (`durationMs`, `linesAdded`, `cost_usd`)
 - URLs (`prUrl`, `runUrl`)
@@ -124,11 +123,67 @@ Is it a short identifier, enum, or number you'd filter/group by?
   → Tag (e.g., harness:claude, model:gpt-4o, gh:issue:42)
 
 Is it a measurement, long string, object, or array?
-  → Data (e.g., cost_usd, finalMessage, checks[])
+  → Data (e.g., cost_usd, finalMessage, checks)
 
 Is it categorical AND you also need it in the payload for display?
   → Both tag AND data (e.g., model is a tag for filtering + in data for display)
 ```
+
+## Data Convention
+
+Event data uses an **open schema**. Any action can write any key. The `{type}.completed` event's data is assembled from `data.json` files in the results directory — the teardown recursively walks the directory tree and builds a nested object.
+
+Common keys for `agent.completed`:
+
+```ts
+data: {
+  workflow: {                     // computed by teardown
+    durationMs: number,
+    runUrl: string,
+  },
+  checks: {                       // from event/data key=checks/...
+    tests: {
+      unit: { outcome: "success" },
+    },
+    lint: {
+      oxlint: { outcome: "success" },
+    },
+    typecheck: {
+      tsc: { outcome: "success" },
+    },
+  },
+  agent: {                        // from agent/claude, agent/opencode, etc.
+    name: string,
+    sessionId: string | null,
+    finalMessage: string | null,
+    metrics: {
+      tokens: {
+        input: number | null,
+        output: number | null,
+        reasoning: number | null,
+        cache_read: number | null,
+        cache_creation: number | null,
+      },
+      turns: number | null,
+      cost_usd: number | null,
+      model: string | null,
+    } | null,
+  },
+  diff: {                         // from git/commit
+    linesAdded: number,
+    linesRemoved: number,
+  },
+  pr: {                           // from git/pr
+    number: number,
+    url: string,
+  },
+  branch: {                       // from git/branch
+    name: string,
+  },
+}
+```
+
+These keys are conventions, not enforced schemas. Any action can write additional keys via `event/data`.
 
 ## Data Schemas by Event Type
 
@@ -136,57 +191,14 @@ Is it categorical AND you also need it in the payload for display?
 
 ```ts
 data: {
-  agent: string | null,    // agent name
-  harness: string | null,  // harness type
-  model: string | null,    // model override
-  branch: string,          // working branch
   runUrl: string,          // GitHub Actions run URL
-}
-```
-
-### agent.result
-
-```ts
-data: {
-  agent: string,
-  model: string | null,
-  finalMessage: string,     // agent's last output
-  sessionId: string | null, // harness session ID
-  metrics: {
-    input_tokens: number | null,
-    output_tokens: number | null,
-    reasoning_tokens: number | null,
-    cache_read_input_tokens: number | null,
-    cache_creation_input_tokens: number | null,
-    num_turns: number | null,
-    cost_usd: number | null,
-    model: string | null,
-  }
+  // + any extra data passed via event/init data input
 }
 ```
 
 ### agent.completed
 
-```ts
-data: {
-  agent: string | null,
-  model: string | null,
-  branch: string,
-  issueNumber: number | null,
-  pullRequestNumber: number | null,
-  linesAdded: number,
-  linesRemoved: number,
-  durationMs: number,
-  prUrl: string,
-  runUrl: string,
-  metrics: Record<string, unknown> | null,  // copied from agent.result
-  checks: Array<{
-    category: string,     // e.g., "tests", "lint"
-    name: string,         // e.g., "unit", "oxlint"
-    outcome: "success" | "failure"
-  }>
-}
-```
+Open schema — see Data Convention above.
 
 ### github.issues.{action}
 

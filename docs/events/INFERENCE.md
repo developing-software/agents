@@ -4,25 +4,25 @@ Inference means deriving useful metrics, relationships, and insights from existi
 
 ## Derivable Metrics
 
-These metrics can be computed from existing `agent.result` and `agent.completed` event data.
+These metrics can be computed from existing `agent.completed` event data.
 
 ### Token Efficiency
 
 | Metric | Formula | Source Fields | Use |
 |--------|---------|---------------|-----|
-| Cost per 1k tokens | `cost_usd / (input_tokens + output_tokens) * 1000` | agent.result.metrics | Compare model cost efficiency |
-| Cache hit ratio | `cache_read / (cache_read + input_tokens)` | agent.result.metrics | Measure prompt caching effectiveness |
-| Reasoning depth | `reasoning_tokens / output_tokens` | agent.result.metrics | Gauge how much "thinking" a model does |
-| Token ratio | `output_tokens / input_tokens` | agent.result.metrics | Detect verbose or terse models |
-| Effective input cost | `(input_tokens - cache_read) * per_token_rate` | agent.result.metrics | True cost of new context |
+| Cost per 1k tokens | `cost_usd / (tokens.input + tokens.output) * 1000` | agent.completed.data.agent.metrics | Compare model cost efficiency |
+| Cache hit ratio | `tokens.cache_read / (tokens.cache_read + tokens.input)` | agent.completed.data.agent.metrics | Measure prompt caching effectiveness |
+| Reasoning depth | `tokens.reasoning / tokens.output` | agent.completed.data.agent.metrics | Gauge how much "thinking" a model does |
+| Token ratio | `tokens.output / tokens.input` | agent.completed.data.agent.metrics | Detect verbose or terse models |
+| Effective input cost | `(tokens.input - tokens.cache_read) * per_token_rate` | agent.completed.data.agent.metrics | True cost of new context |
 
 ### Run Performance
 
 | Metric | Formula | Source Fields | Use |
 |--------|---------|---------------|-----|
 | Lines per minute | `(linesAdded + linesRemoved) / (durationMs / 60000)` | agent.completed.data | Measure agent productivity |
-| Cost per line changed | `cost_usd / (linesAdded + linesRemoved)` | agent.result + completed | Value per dollar spent |
-| Turns per minute | `num_turns / (durationMs / 60000)` | agent.result + completed | Agent interaction speed |
+| Cost per line changed | `cost_usd / (linesAdded + linesRemoved)` | agent.completed.data | Value per dollar spent |
+| Turns per minute | `turns / (durationMs / 60000)` | agent.completed.data | Agent interaction speed |
 | Check pass rate | `passed / (passed + failed)` per category | agent.completed.data.checks | Quality signal per check type |
 
 ### Trend Analysis
@@ -31,10 +31,10 @@ These require aggregation over time windows using `Event.list()` with `from`/`to
 
 | Metric | Method | Use |
 |--------|--------|-----|
-| Cost trend | Sum `cost_usd` per day/week from agent.result events | Budget monitoring |
+| Cost trend | Sum `cost_usd` per day/week from agent.completed events | Budget monitoring |
 | Duration trend | Avg `durationMs` per day/week from agent.completed | Performance regression detection |
 | Pass rate trend | Check pass % per week from agent.completed | Quality signal over time |
-| Token trend | Sum input+output per day from agent.result | Usage growth tracking |
+| Token trend | Sum input+output per day from agent.completed | Usage growth tracking |
 | Cache effectiveness trend | Avg cache hit ratio per week | Are prompts getting better cached? |
 
 ### Comparative Analysis
@@ -62,7 +62,7 @@ Events can be chained without explicit `parentEventId` using tag-based inference
 
 ### Tree Queries
 
-`Event.listTree()` uses a recursive CTE to return the full event tree from a root event. This is how the console pairs `agent.result` with `agent.completed` — both share the same parent (`agent.started`).
+`Event.listTree()` uses a recursive CTE to return the full event tree from a root event. This is how the console links `agent.completed` back to `agent.started` — both share the same parent chain.
 
 ### Cross-Event Pairing
 
@@ -70,7 +70,7 @@ Some metrics require joining data from multiple events in a chain:
 
 | Want | Need | How |
 |------|------|-----|
-| Full run summary | agent.result + agent.completed | Both share `parentEventId` pointing to `agent.started` |
+| Full run summary | agent.completed | All data (metrics, diff, pr, checks) in one event |
 | Issue lifecycle | github.issues.opened → agent.completed → github.pull_request.closed | Tag chain via `gh:issue:N` |
 | Plan execution | plan events → agent.completed → github.pull_request.reviewed | Tag chain via `plan:ID` |
 
@@ -79,8 +79,8 @@ Some metrics require joining data from multiple events in a chain:
 The console already computes these from events:
 
 - **Per-agent stats:** count, avg duration, check pass rates (from `agent.completed`)
-- **Per-agent metrics:** sum/avg tokens, cost, turns, model distribution (from `agent.result`)
-- **Per-run detail:** paired result+completed with PR state lookup
+- **Per-agent metrics:** sum/avg tokens, cost, turns, model distribution (from `agent.completed`)
+- **Per-run detail:** agent data with PR state lookup
 - **Event summary:** aggregated metrics across all runs for a repo
 
 ## Not Yet Computed (Opportunities)
@@ -89,9 +89,9 @@ These are feasible with existing data but not implemented:
 
 ### High Impact
 
-1. **Cost-per-token by model** — group `agent.result` by `model:` tag, compute `cost_usd / total_tokens`. Directly answers "which model gives best value?"
+1. **Cost-per-token by model** — group `agent.completed` by `model:` tag, compute `cost_usd / total_tokens`. Directly answers "which model gives best value?"
 
-2. **Cache hit ratio dashboard** — `cache_read / (cache_read + input_tokens)` per run, trended over time. Shows whether prompt engineering and caching strategy are improving.
+2. **Cache hit ratio dashboard** — `tokens.cache_read / (tokens.cache_read + tokens.input)` per run, trended over time. Shows whether prompt engineering and caching strategy are improving.
 
 3. **Check flakiness** — for each check name, compute `failure_count / total_count` over a rolling window. Identifies unreliable checks that need attention.
 
@@ -99,7 +99,7 @@ These are feasible with existing data but not implemented:
 
 ### Medium Impact
 
-5. **Reasoning token ratio by model** — some models use extended thinking. Compare `reasoning_tokens / output_tokens` across models to understand thinking patterns.
+5. **Reasoning token ratio by model** — some models use extended thinking. Compare `tokens.reasoning / tokens.output` across models to understand thinking patterns.
 
 6. **Lines-per-dollar** — `(linesAdded + linesRemoved) / cost_usd`. Crude but useful productivity metric for cost justification.
 
@@ -119,7 +119,7 @@ Some useful inferences are blocked by missing data:
 
 | Blocked Inference | Missing Data | Fix |
 |---|---|---|
-| Harness crash detection | No event on harness failure before `agent.result` | Emit `agent.failed` in error paths |
+| Harness crash detection | No event on harness failure before completion | Emit `agent.failed` in error paths |
 | Per-step timing | Only aggregate duration, no step-level events | Emit intermediate events or structured step data |
 | Expected vs actual cost | No baseline/budget in event data | Add budget field to agent config or plan |
 | Concurrent run ordering | Multiple runs with same parent, no sequence number | Add sequence/attempt field to `agent.started` data |

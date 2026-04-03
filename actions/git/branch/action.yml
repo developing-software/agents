@@ -45,8 +45,8 @@ runs:
 
         # Write branch metadata
         if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
-          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/branch"
-          jq -nc --arg name "$BRANCH" '{name: $name}' > "$DEV_AGENTS_RESULTS_DIR/metadata/branch/data.json"
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/branch"
+          jq -nc --arg name "$BRANCH" '{name: $name}' > "$DEV_AGENTS_RESULTS_DIR/branch/data.json"
         fi
 
         # Write tags

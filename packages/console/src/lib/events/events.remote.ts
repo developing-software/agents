@@ -2,6 +2,7 @@ import { query } from "$app/server";
 import { z } from "zod";
 import { Repository } from "@agents/core/repository/index";
 import { Event } from "@agents/core/events/index";
+import { flattenChecks } from "./event-helpers";
 
 const input = z.object({
   organization: z.string(),
@@ -48,7 +49,9 @@ export const getAgentStats = query(
     for (const e of events) {
       const d = e.data as Record<string, unknown> | undefined;
       if (!d) continue;
-      const agent = typeof d.agent === 'string' ? d.agent : 'unknown';
+      const agentMeta = d.agent as Record<string, unknown> | undefined;
+      const workflow = d.workflow as Record<string, unknown> | undefined;
+      const agent = typeof agentMeta?.name === 'string' ? agentMeta.name : 'unknown';
 
       let entry = agents.get(agent);
       if (!entry) {
@@ -57,26 +60,21 @@ export const getAgentStats = query(
       }
       entry.count++;
 
-      if (typeof d.durationMs === 'number') {
-        entry.totalDurationMs += d.durationMs;
+      if (typeof workflow?.durationMs === 'number') {
+        entry.totalDurationMs += workflow.durationMs;
         entry.durationCount++;
       }
 
-      const checks = d.checks;
-      if (Array.isArray(checks)) {
-        for (const c of checks) {
-          if (!c || typeof c !== 'object') continue;
-          const { category, name, outcome } = c as Record<string, unknown>;
-          if (typeof category !== 'string' || typeof name !== 'string') continue;
-          const key = `${category}/${name}`;
-          let stat = entry.checks.get(key);
-          if (!stat) {
-            stat = { category, name, passed: 0, failed: 0 };
-            entry.checks.set(key, stat);
-          }
-          if (outcome === 'success') stat.passed++;
-          else stat.failed++;
+      const checks = flattenChecks(d.checks);
+      for (const c of checks) {
+        const key = `${c.category}/${c.name}`;
+        let stat = entry.checks.get(key);
+        if (!stat) {
+          stat = { category: c.category, name: c.name, passed: 0, failed: 0 };
+          entry.checks.set(key, stat);
         }
+        if (c.outcome === 'success') stat.passed++;
+        else stat.failed++;
       }
     }
 
@@ -95,9 +93,9 @@ export const getAgentComparison = query(
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) return [];
 
-    const events = await Event.list({ type: "agent.result", source: "repository", sourceId: repo.id, limit: 500 });
+    const events = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, limit: 500 });
 
-    const METRIC_KEYS = ['input_tokens', 'output_tokens', 'reasoning_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
+    const TOKEN_KEYS = ['input', 'output', 'reasoning', 'cache_read', 'cache_creation'] as const;
     const agents = new Map<string, {
       agent: string;
       count: number;
@@ -108,7 +106,9 @@ export const getAgentComparison = query(
     }>();
 
     for (const e of events) {
-      const agent = typeof e.data?.agent === 'string' ? e.data.agent : 'unknown';
+      const d = e.data as Record<string, unknown> | undefined;
+      const agentMeta = d?.agent as Record<string, unknown> | undefined;
+      const agent = typeof agentMeta?.name === 'string' ? agentMeta.name : 'unknown';
 
       let entry = agents.get(agent);
       if (!entry) {
@@ -118,10 +118,20 @@ export const getAgentComparison = query(
       entry.count++;
       if (e.timeCreated > entry.lastSeen) entry.lastSeen = e.timeCreated;
 
-      const m = e.data?.metrics;
+      const m = agentMeta?.metrics;
       if (m && typeof m === 'object') {
         const obj = m as Record<string, unknown>;
-        for (const key of METRIC_KEYS) {
+        const tokens = obj.tokens as Record<string, unknown> | undefined;
+        if (tokens && typeof tokens === 'object') {
+          for (const key of TOKEN_KEYS) {
+            const val = tokens[key];
+            if (typeof val === 'number') {
+              entry.sums[key] = (entry.sums[key] ?? 0) + val;
+              entry.counts[key] = (entry.counts[key] ?? 0) + 1;
+            }
+          }
+        }
+        for (const key of ['turns', 'cost_usd'] as const) {
           const val = obj[key];
           if (typeof val === 'number') {
             entry.sums[key] = (entry.sums[key] ?? 0) + val;
@@ -145,40 +155,36 @@ export const listAgentRuns = query(
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) return [];
 
-    const results = await Event.list({ type: "agent.result", source: "repository", sourceId: repo.id, limit });
-    const completed = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, limit });
+    const events = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, limit });
 
-    // Index completed events by parentEventId for pairing
-    const completedByParent = new Map<string, typeof completed[number]>();
-    for (const c of completed) {
-      if (c.parentEventId) completedByParent.set(c.parentEventId, c);
-    }
-
-    return results.map((e) => {
+    return events.map((e) => {
       const d = e.data as Record<string, unknown> | undefined;
-      const m = d?.metrics as Record<string, unknown> | undefined;
-      const paired = e.parentEventId ? completedByParent.get(e.parentEventId) : undefined;
-      const pd = paired?.data as Record<string, unknown> | undefined;
-      const checks = pd?.checks as Array<{ category: string; name: string; outcome: string }> | undefined;
+      const agentMeta = d?.agent as Record<string, unknown> | undefined;
+      const m = agentMeta?.metrics as Record<string, unknown> | undefined;
+      const tokens = m?.tokens as Record<string, unknown> | undefined;
+      const diffMeta = d?.diff as Record<string, unknown> | undefined;
+      const prMeta = d?.pr as Record<string, unknown> | undefined;
+      const workflow = d?.workflow as Record<string, unknown> | undefined;
+      const checks = flattenChecks(d?.checks);
 
       return {
         id: e.id,
         parentEventId: e.parentEventId,
-        agent: typeof d?.agent === 'string' ? d.agent : 'unknown',
+        agent: typeof agentMeta?.name === 'string' ? agentMeta.name : 'unknown',
         model: typeof m?.model === 'string' ? m.model : null,
         cost_usd: typeof m?.cost_usd === 'number' ? m.cost_usd : null,
-        input_tokens: typeof m?.input_tokens === 'number' ? m.input_tokens : null,
-        output_tokens: typeof m?.output_tokens === 'number' ? m.output_tokens : null,
-        reasoning_tokens: typeof m?.reasoning_tokens === 'number' ? m.reasoning_tokens : null,
-        cache_read_input_tokens: typeof m?.cache_read_input_tokens === 'number' ? m.cache_read_input_tokens : null,
-        cache_creation_input_tokens: typeof m?.cache_creation_input_tokens === 'number' ? m.cache_creation_input_tokens : null,
-        num_turns: typeof m?.num_turns === 'number' ? m.num_turns : null,
-        durationMs: typeof pd?.durationMs === 'number' ? pd.durationMs : null,
-        linesAdded: typeof pd?.linesAdded === 'number' ? pd.linesAdded : null,
-        linesRemoved: typeof pd?.linesRemoved === 'number' ? pd.linesRemoved : null,
-        prUrl: typeof pd?.prUrl === 'string' ? pd.prUrl : null,
-        runUrl: typeof pd?.runUrl === 'string' ? pd.runUrl : null,
-        checks: checks ?? [],
+        input_tokens: typeof tokens?.input === 'number' ? tokens.input : null,
+        output_tokens: typeof tokens?.output === 'number' ? tokens.output : null,
+        reasoning_tokens: typeof tokens?.reasoning === 'number' ? tokens.reasoning : null,
+        cache_read_tokens: typeof tokens?.cache_read === 'number' ? tokens.cache_read : null,
+        cache_creation_tokens: typeof tokens?.cache_creation === 'number' ? tokens.cache_creation : null,
+        turns: typeof m?.turns === 'number' ? m.turns : null,
+        durationMs: typeof workflow?.durationMs === 'number' ? workflow.durationMs : null,
+        linesAdded: typeof diffMeta?.linesAdded === 'number' ? diffMeta.linesAdded : null,
+        linesRemoved: typeof diffMeta?.linesRemoved === 'number' ? diffMeta.linesRemoved : null,
+        prUrl: typeof prMeta?.url === 'string' ? prMeta.url : null,
+        runUrl: typeof workflow?.runUrl === 'string' ? workflow.runUrl : null,
+        checks,
         origin: e.origin,
         tags: e.tags,
         timeCreated: e.timeCreated,
@@ -199,9 +205,6 @@ export const getEventSummary = query(
       avgDurationMs: 0,
     };
 
-    // agent.completed is used here (rather than agent.result) because it carries
-    // durationMs, checks, linesAdded, and linesRemoved which are not present in
-    // agent.result. The metrics field is a copy from the result file — intentional.
     const events = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, limit: 200 });
 
     const agentCounts: Record<string, number> = {};
@@ -213,31 +216,44 @@ export const getEventSummary = query(
     let totalLinesAdded = 0;
     let totalLinesRemoved = 0;
 
-    const METRIC_KEYS = ['input_tokens', 'output_tokens', 'reasoning_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'num_turns', 'cost_usd'] as const;
+    const TOKEN_KEYS = ['input', 'output', 'reasoning', 'cache_read', 'cache_creation'] as const;
 
     for (const e of events) {
       const d = e.data as Record<string, unknown> | undefined;
       if (!d) continue;
+      const agentMeta = d.agent as Record<string, unknown> | undefined;
+      const diffMeta = d.diff as Record<string, unknown> | undefined;
+      const workflow = d.workflow as Record<string, unknown> | undefined;
 
       // Agent counts
-      const agent = typeof d.agent === 'string' ? d.agent : 'unknown';
+      const agent = typeof agentMeta?.name === 'string' ? agentMeta.name : 'unknown';
       agentCounts[agent] = (agentCounts[agent] ?? 0) + 1;
 
       // Duration
-      if (typeof d.durationMs === 'number') {
-        totalDurationMs += d.durationMs;
+      if (typeof workflow?.durationMs === 'number') {
+        totalDurationMs += workflow.durationMs;
         durationCount++;
       }
 
       // Lines changed
-      if (typeof d.linesAdded === 'number') totalLinesAdded += d.linesAdded;
-      if (typeof d.linesRemoved === 'number') totalLinesRemoved += d.linesRemoved;
+      if (typeof diffMeta?.linesAdded === 'number') totalLinesAdded += diffMeta.linesAdded;
+      if (typeof diffMeta?.linesRemoved === 'number') totalLinesRemoved += diffMeta.linesRemoved;
 
       // Metrics
-      const m = d.metrics;
+      const m = agentMeta?.metrics;
       if (m && typeof m === 'object') {
         const obj = m as Record<string, unknown>;
-        for (const key of METRIC_KEYS) {
+        const tokens = obj.tokens as Record<string, unknown> | undefined;
+        if (tokens && typeof tokens === 'object') {
+          for (const key of TOKEN_KEYS) {
+            const val = tokens[key];
+            if (typeof val === 'number') {
+              metricSums[key] = (metricSums[key] ?? 0) + val;
+              metricCounts[key] = (metricCounts[key] ?? 0) + 1;
+            }
+          }
+        }
+        for (const key of ['turns', 'cost_usd'] as const) {
           const val = obj[key];
           if (typeof val === 'number') {
             metricSums[key] = (metricSums[key] ?? 0) + val;
@@ -247,21 +263,16 @@ export const getEventSummary = query(
       }
 
       // Checks
-      const checks = d.checks;
-      if (Array.isArray(checks)) {
-        for (const c of checks) {
-          if (!c || typeof c !== 'object') continue;
-          const { category, name, outcome } = c as Record<string, unknown>;
-          if (typeof category !== 'string' || typeof name !== 'string') continue;
-          const key = `${category}/${name}`;
-          let stat = checkStats.get(key);
-          if (!stat) {
-            stat = { category, name, passed: 0, failed: 0 };
-            checkStats.set(key, stat);
-          }
-          if (outcome === 'success') stat.passed++;
-          else stat.failed++;
+      const checks = flattenChecks(d.checks);
+      for (const c of checks) {
+        const key = `${c.category}/${c.name}`;
+        let stat = checkStats.get(key);
+        if (!stat) {
+          stat = { category: c.category, name: c.name, passed: 0, failed: 0 };
+          checkStats.set(key, stat);
         }
+        if (c.outcome === 'success') stat.passed++;
+        else stat.failed++;
       }
     }
 

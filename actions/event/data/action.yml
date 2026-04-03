@@ -1,0 +1,44 @@
+name: Write Event Data
+description: Write structured data to the results folder and optionally tag the context
+
+inputs:
+  key:
+    description: "Data key path (e.g. agent, diff, checks/tests/unit). Slashes create nested directories."
+    required: true
+  data:
+    description: "JSON string to write as the data value"
+    required: true
+  tag:
+    description: "Optional tag string to write to the tags directory"
+    required: false
+  output:
+    description: "Optional path to output file to copy alongside data.json"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Write data
+      if: always()
+      shell: bash
+      env:
+        DATA_KEY: ${{ inputs.key }}
+        DATA_JSON: ${{ inputs.data }}
+        TAG_VALUE: ${{ inputs.tag }}
+        OUTPUT_PATH: ${{ inputs.output }}
+      run: |
+        if [ -z "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
+          exit 0
+        fi
+        mkdir -p "$DEV_AGENTS_RESULTS_DIR/$DATA_KEY"
+        printf '%s\n' "$DATA_JSON" > "$DEV_AGENTS_RESULTS_DIR/$DATA_KEY/data.json"
+
+        if [ -n "$OUTPUT_PATH" ] && [ -f "$OUTPUT_PATH" ]; then
+          cp "$OUTPUT_PATH" "$DEV_AGENTS_RESULTS_DIR/$DATA_KEY/output.txt"
+        fi
+
+        # Write tag if provided
+        if [ -n "$TAG_VALUE" ] && [ -n "${DEV_AGENTS_TAGS_DIR:-}" ]; then
+          SLUG=$(echo "$TAG_VALUE" | sed 's/:/-/g; s/\//-/g')
+          printf '%s\n' "$TAG_VALUE" > "$DEV_AGENTS_TAGS_DIR/$SLUG"
+        fi

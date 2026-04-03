@@ -45,12 +45,8 @@ runs:
           --argjson turns     "${NUM_TURNS:-null}" \
           --arg     model     "${MODEL:-}" \
           '{
-            input_tokens: $input,
-            output_tokens: $output,
-            reasoning_tokens: $reasoning,
-            cache_read_input_tokens: $cread,
-            cache_creation_input_tokens: null,
-            num_turns: $turns,
+            tokens: { input: $input, output: $output, reasoning: $reasoning, cache_read: $cread, cache_creation: null },
+            turns: $turns,
             cost_usd: null,
             model: (if $model == "" then null else $model end)
           }')
@@ -72,13 +68,13 @@ runs:
         FINAL_MESSAGE: ${{ inputs.final_message }}
       run: |
         if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
-          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/agent"
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/agent"
           jq -nc \
             --arg name "codex" \
             --arg finalMessage "${FINAL_MESSAGE:-}" \
             --argjson metrics "${METRICS_JSON:-null}" \
             '{name: $name, sessionId: null, finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
-            > "$DEV_AGENTS_RESULTS_DIR/metadata/agent/data.json"
+            > "$DEV_AGENTS_RESULTS_DIR/agent/data.json"
         fi
 
     - uses: developing-software/agents/actions/artifact/upload@dev

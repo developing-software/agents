@@ -42,12 +42,8 @@ runs:
             --argjson cost      "${COST:-null}" \
             --arg     model     "${MODEL:-}" \
             '{
-              input_tokens: $input,
-              output_tokens: $output,
-              reasoning_tokens: $reasoning,
-              cache_read_input_tokens: $cread,
-              cache_creation_input_tokens: $ccreate,
-              num_turns: $turns,
+              tokens: { input: $input, output: $output, reasoning: $reasoning, cache_read: $cread, cache_creation: $ccreate },
+              turns: $turns,
               cost_usd: $cost,
               model: (if $model == "" then null else $model end)
             }')
@@ -87,14 +83,14 @@ runs:
       shell: bash
       run: |
         if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
-          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/agent"
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/agent"
           jq -nc \
             --arg name "opencode" \
             --arg sessionId "${SESSION_ID:-}" \
             --arg finalMessage "${LAST_MSG:-}" \
             --argjson metrics "${METRICS_JSON:-null}" \
             '{name: $name, sessionId: (if $sessionId == "" then null else $sessionId end), finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
-            > "$DEV_AGENTS_RESULTS_DIR/metadata/agent/data.json"
+            > "$DEV_AGENTS_RESULTS_DIR/agent/data.json"
         fi
 
     - uses: developing-software/agents/actions/artifact/upload@dev

@@ -24,7 +24,7 @@
     cost_usd: number | null;
     input_tokens: number | null;
     output_tokens: number | null;
-    num_turns: number | null;
+    turns: number | null;
     durationMs: number | null;
     linesAdded: number | null;
     linesRemoved: number | null;
@@ -271,7 +271,7 @@
               <span class="metric-value">{formatDuration(run.durationMs)}</span>
 
               <span class="metric-label">turns</span>
-              <span class="metric-value">{run.num_turns ?? '--'}</span>
+              <span class="metric-value">{run.turns ?? '--'}</span>
 
               <span class="metric-label">checks</span>
               <span class="metric-value">

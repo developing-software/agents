@@ -222,8 +222,8 @@
               </span>
             {/if}
 
-            {#if run.num_turns !== null}
-              <span class="turns">{run.num_turns} turns</span>
+            {#if run.turns !== null}
+              <span class="turns">{run.turns} turns</span>
             {/if}
 
             <span class="badge" style={originBadgeStyle(run.origin)}>{run.origin}</span>
@@ -292,16 +292,16 @@
                       <span class="token-val">{run.reasoning_tokens.toLocaleString()}</span>
                     </div>
                   {/if}
-                  {#if run.cache_read_input_tokens !== null}
+                  {#if run.cache_read_tokens !== null}
                     <div class="token-row">
                       <span class="token-key">Cache read</span>
-                      <span class="token-val">{run.cache_read_input_tokens.toLocaleString()}</span>
+                      <span class="token-val">{run.cache_read_tokens.toLocaleString()}</span>
                     </div>
                   {/if}
-                  {#if run.cache_creation_input_tokens !== null}
+                  {#if run.cache_creation_tokens !== null}
                     <div class="token-row">
                       <span class="token-key">Cache write</span>
-                      <span class="token-val">{run.cache_creation_input_tokens.toLocaleString()}</span>
+                      <span class="token-val">{run.cache_creation_tokens.toLocaleString()}</span>
                     </div>
                   {/if}
                 </div>

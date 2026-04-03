@@ -1,12 +1,14 @@
 // Shared utility functions for event rendering
 
 export type EventMetrics = {
-  input_tokens: number | null;
-  output_tokens: number | null;
-  reasoning_tokens: number | null;
-  cache_read_input_tokens: number | null;
-  cache_creation_input_tokens: number | null;
-  num_turns: number | null;
+  tokens: {
+    input: number | null;
+    output: number | null;
+    reasoning: number | null;
+    cache_read: number | null;
+    cache_creation: number | null;
+  };
+  turns: number | null;
   cost_usd: number | null;
   model: string | null;
 };
@@ -65,23 +67,41 @@ export function formatBytes(bytes: number): string {
 }
 
 export function extractMetrics(data: Record<string, unknown>): EventMetrics | null {
-  const m = data?.metrics;
+  const agent = data?.agent as Record<string, unknown> | undefined;
+  const m = agent?.metrics as Record<string, unknown> | undefined;
   if (!m || typeof m !== 'object') return null;
-  const obj = m as Record<string, unknown>;
+  const tokens = m.tokens as Record<string, unknown> | undefined;
   return {
-    input_tokens: typeof obj.input_tokens === 'number' ? obj.input_tokens : null,
-    output_tokens: typeof obj.output_tokens === 'number' ? obj.output_tokens : null,
-    reasoning_tokens: typeof obj.reasoning_tokens === 'number' ? obj.reasoning_tokens : null,
-    cache_read_input_tokens: typeof obj.cache_read_input_tokens === 'number' ? obj.cache_read_input_tokens : null,
-    cache_creation_input_tokens: typeof obj.cache_creation_input_tokens === 'number' ? obj.cache_creation_input_tokens : null,
-    num_turns: typeof obj.num_turns === 'number' ? obj.num_turns : null,
-    cost_usd: typeof obj.cost_usd === 'number' ? obj.cost_usd : null,
-    model: typeof obj.model === 'string' ? obj.model : null,
+    tokens: {
+      input: typeof tokens?.input === 'number' ? tokens.input : null,
+      output: typeof tokens?.output === 'number' ? tokens.output : null,
+      reasoning: typeof tokens?.reasoning === 'number' ? tokens.reasoning : null,
+      cache_read: typeof tokens?.cache_read === 'number' ? tokens.cache_read : null,
+      cache_creation: typeof tokens?.cache_creation === 'number' ? tokens.cache_creation : null,
+    },
+    turns: typeof m.turns === 'number' ? m.turns : null,
+    cost_usd: typeof m.cost_usd === 'number' ? m.cost_usd : null,
+    model: typeof m.model === 'string' ? m.model : null,
   };
 }
 
 export function formatMetricValue(name: string, value: number): string {
   if (name === 'cost_usd') return `$${value.toFixed(3)}`;
-  if (name.includes('tokens')) return value.toLocaleString();
+  if (name === 'tokens') return value.toLocaleString();
   return String(value);
+}
+
+export function flattenChecks(raw: unknown): Array<{ category: string; name: string; outcome: string }> {
+  if (!raw || typeof raw !== 'object') return [];
+  const result: Array<{ category: string; name: string; outcome: string }> = [];
+  for (const [category, names] of Object.entries(raw)) {
+    if (!names || typeof names !== 'object') continue;
+    for (const [name, checkData] of Object.entries(names as Record<string, unknown>)) {
+      const outcome = typeof (checkData as Record<string, unknown>)?.outcome === 'string'
+        ? (checkData as Record<string, unknown>).outcome as string
+        : 'unknown';
+      result.push({ category, name, outcome });
+    }
+  }
+  return result;
 }

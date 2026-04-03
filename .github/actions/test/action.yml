@@ -58,9 +58,9 @@ runs:
     - uses: developing-software/agents/actions/event/result@dev
       if: always()
       with:
-        category: tests
-        name: ${{ inputs.name }}
-        outcome: ${{ steps.run-tests.outputs.outcome }}
+        key: checks/tests/${{ inputs.name }}
+        data: '{"outcome":"${{ steps.run-tests.outputs.outcome }}"}'
+        tag: check:tests/${{ inputs.name }}:${{ steps.run-tests.outputs.outcome }}
         output: ${{ runner.temp }}/test-output.txt
 
     - uses: developing-software/agents/actions/artifact/upload@dev

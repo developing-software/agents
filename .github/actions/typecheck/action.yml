@@ -55,9 +55,9 @@ runs:
     - uses: developing-software/agents/actions/event/result@dev
       if: always()
       with:
-        category: typecheck
-        name: ${{ inputs.name }}
-        outcome: ${{ steps.run-typecheck.outputs.outcome }}
+        key: checks/typecheck/${{ inputs.name }}
+        data: '{"outcome":"${{ steps.run-typecheck.outputs.outcome }}"}'
+        tag: check:typecheck/${{ inputs.name }}:${{ steps.run-typecheck.outputs.outcome }}
         output: ${{ runner.temp }}/typecheck-output.txt
 
     - uses: developing-software/agents/actions/artifact/upload@dev

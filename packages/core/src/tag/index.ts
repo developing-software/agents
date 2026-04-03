@@ -18,8 +18,12 @@ export type TypeTag = `type:${string}`;
 export type HarnessTag = `harness:${string}`;
 export type ModelTag = `model:${string}`;
 
+// --- check & metric ---
+export type CheckTag = `check:${string}`;
+export type MetricTag = `metric:${string}`;
+
 // --- union of all valid tags ---
-export type Tag = EnvTag | ServiceTag | GhTag | PlanTag | ScopeTag | TypeTag | HarnessTag | ModelTag | (string & {});
+export type Tag = EnvTag | ServiceTag | GhTag | PlanTag | ScopeTag | TypeTag | HarnessTag | ModelTag | CheckTag | MetricTag | (string & {});
 
 // --- tag builders ---
 export const Tags = {
@@ -34,4 +38,6 @@ export const Tags = {
   type: (label: string): TypeTag => `type:${label}`,
   harness: (name: string): HarnessTag => `harness:${name}`,
   model: (m: string): ModelTag => `model:${m}`,
+  check: (category: string, name: string, outcome: string): CheckTag => `check:${category}/${name}:${outcome}`,
+  metric: (key: string, value: string): MetricTag => `metric:${key}:${value}`,
 } as const;

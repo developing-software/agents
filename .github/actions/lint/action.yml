@@ -55,9 +55,9 @@ runs:
     - uses: developing-software/agents/actions/event/result@dev
       if: always()
       with:
-        category: lint
-        name: ${{ inputs.name }}
-        outcome: ${{ steps.run-lint.outputs.outcome }}
+        key: checks/lint/${{ inputs.name }}
+        data: '{"outcome":"${{ steps.run-lint.outputs.outcome }}"}'
+        tag: check:lint/${{ inputs.name }}:${{ steps.run-lint.outputs.outcome }}
         output: ${{ runner.temp }}/lint-output.txt
 
     - uses: developing-software/agents/actions/artifact/upload@dev

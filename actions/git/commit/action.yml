@@ -87,8 +87,8 @@ runs:
 
         # Write diff metadata
         if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
-          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/diff"
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/diff"
           jq -nc --argjson added "$LINES_ADDED" --argjson removed "$LINES_REMOVED" \
             '{linesAdded: $added, linesRemoved: $removed}' \
-            > "$DEV_AGENTS_RESULTS_DIR/metadata/diff/data.json"
+            > "$DEV_AGENTS_RESULTS_DIR/diff/data.json"
         fi

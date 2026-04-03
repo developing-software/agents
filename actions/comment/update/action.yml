@@ -34,33 +34,33 @@ runs:
         [ -n "$BRANCH" ] && LINES+=("> **Branch:** \`${BRANCH}\`")
         LINES+=("> **Agent:** ${HARNESS}")
 
-        # Read PR metadata
-        PR_FILE="${DEV_AGENTS_RESULTS_DIR:-}/metadata/pr/data.json"
+        # Read PR data
+        PR_FILE="${DEV_AGENTS_RESULTS_DIR:-}/pr/data.json"
         if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ] && [ -f "$PR_FILE" ]; then
           PR_URL=$(jq -r '.url // empty' "$PR_FILE")
           [ -n "$PR_URL" ] && LINES+=("> **PR:** ${PR_URL}")
         fi
 
-        # Read diff metadata
-        DIFF_FILE="${DEV_AGENTS_RESULTS_DIR:-}/metadata/diff/data.json"
+        # Read diff data
+        DIFF_FILE="${DEV_AGENTS_RESULTS_DIR:-}/diff/data.json"
         if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ] && [ -f "$DIFF_FILE" ]; then
           ADDED=$(jq -r '.linesAdded // 0' "$DIFF_FILE")
           REMOVED=$(jq -r '.linesRemoved // 0' "$DIFF_FILE")
           LINES+=("> **Lines:** +${ADDED} / -${REMOVED}")
         fi
 
-        # Scan results dir for check outcomes
-        if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
+        # Scan checks dir for check outcomes
+        if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ] && [ -d "$DEV_AGENTS_RESULTS_DIR/checks" ]; then
           CHECK_LINES=()
-          for cat_dir in "$DEV_AGENTS_RESULTS_DIR"/*/; do
+          for cat_dir in "$DEV_AGENTS_RESULTS_DIR/checks"/*/; do
+            [ -d "$cat_dir" ] || continue
             cat_name=$(basename "$cat_dir")
-            [ "$cat_name" = "metadata" ] && continue
             for name_dir in "$cat_dir"*/; do
               [ -d "$name_dir" ] || continue
               check_name=$(basename "$name_dir")
-              result_file="$name_dir/result.json"
-              if [ -f "$result_file" ]; then
-                outcome=$(jq -r '.outcome // "unknown"' "$result_file")
+              data_file="$name_dir/data.json"
+              if [ -f "$data_file" ]; then
+                outcome=$(jq -r '.outcome // "unknown"' "$data_file")
                 CHECK_LINES+=("> - **${cat_name}/${check_name}:** ${outcome}")
               fi
             done

@@ -1,5 +1,5 @@
 name: Run All Checks
-description: Run lint, typecheck, and tests — writes results and auto-tags via event/result
+description: Run lint, typecheck, and tests — writes results via event/data
 
 inputs:
   install:

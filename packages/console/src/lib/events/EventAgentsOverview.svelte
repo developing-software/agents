@@ -104,10 +104,10 @@
         {#each agents as agent (agent.agent)}
           {@const color = agentColor(agent.agent)}
           {@const models = Object.entries(agent.models).sort((a, b) => b[1] - a[1])}
-          {@const cacheRead = agent.sums.cache_read_input_tokens ?? 0}
-          {@const cacheCreation = agent.sums.cache_creation_input_tokens ?? 0}
+          {@const cacheRead = agent.sums.cache_read ?? 0}
+          {@const cacheCreation = agent.sums.cache_creation ?? 0}
           {@const cacheTotal = cacheRead + cacheCreation}
-          {@const cacheCount = Math.max(agent.counts.cache_read_input_tokens ?? 0, agent.counts.cache_creation_input_tokens ?? 0)}
+          {@const cacheCount = Math.max(agent.counts.cache_read ?? 0, agent.counts.cache_creation ?? 0)}
 
           <div class="agent-card">
             <div class="card-header">
@@ -132,18 +132,18 @@
                   <span class="metric-avg">avg {formatCost(agent.sums.cost_usd / agent.counts.cost_usd)}</span>
                 </div>
               {/if}
-              {#if agent.sums.input_tokens != null}
+              {#if agent.sums.input != null}
                 <div class="metric">
                   <span class="metric-label">input tokens</span>
-                  <span class="metric-total">{formatTokens(agent.sums.input_tokens)}</span>
-                  <span class="metric-avg">avg {formatTokens(Math.round(agent.sums.input_tokens / agent.counts.input_tokens))}</span>
+                  <span class="metric-total">{formatTokens(agent.sums.input)}</span>
+                  <span class="metric-avg">avg {formatTokens(Math.round(agent.sums.input / agent.counts.input))}</span>
                 </div>
               {/if}
-              {#if agent.sums.output_tokens != null}
+              {#if agent.sums.output != null}
                 <div class="metric">
                   <span class="metric-label">output tokens</span>
-                  <span class="metric-total">{formatTokens(agent.sums.output_tokens)}</span>
-                  <span class="metric-avg">avg {formatTokens(Math.round(agent.sums.output_tokens / agent.counts.output_tokens))}</span>
+                  <span class="metric-total">{formatTokens(agent.sums.output)}</span>
+                  <span class="metric-avg">avg {formatTokens(Math.round(agent.sums.output / agent.counts.output))}</span>
                 </div>
               {/if}
               {#if cacheTotal > 0}
@@ -153,11 +153,11 @@
                   <span class="metric-avg">avg {formatTokens(Math.round(cacheTotal / (cacheCount || 1)))}</span>
                 </div>
               {/if}
-              {#if agent.sums.num_turns != null}
+              {#if agent.sums.turns != null}
                 <div class="metric">
                   <span class="metric-label">turns</span>
-                  <span class="metric-total">{formatPlain(agent.sums.num_turns)}</span>
-                  <span class="metric-avg">avg {formatPlain(agent.sums.num_turns / agent.counts.num_turns)}</span>
+                  <span class="metric-total">{formatPlain(agent.sums.turns)}</span>
+                  <span class="metric-avg">avg {formatPlain(agent.sums.turns / agent.counts.turns)}</span>
                 </div>
               {/if}
             </div>

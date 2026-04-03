@@ -37,7 +37,7 @@ async function run() {
 
   // Create results directory
   const resultsDir = join(runnerTemp, ".dev-agents-results");
-  mkdirSync(join(resultsDir, "metadata"), { recursive: true });
+  mkdirSync(resultsDir, { recursive: true });
   core.exportVariable("DEV_AGENTS_RESULTS_DIR", resultsDir);
 
   // Create tags directory

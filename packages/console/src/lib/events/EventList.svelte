@@ -150,14 +150,14 @@
                   {#if mets.cost_usd !== null}
                     <span class="meta-metric"><span class="meta-metric-name">cost</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('cost_usd', mets.cost_usd)}</span></span>
                   {/if}
-                  {#if mets.num_turns !== null}
-                    <span class="meta-metric"><span class="meta-metric-name">turns</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{mets.num_turns}</span></span>
+                  {#if mets.turns !== null}
+                    <span class="meta-metric"><span class="meta-metric-name">turns</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{mets.turns}</span></span>
                   {/if}
-                  {#if mets.input_tokens !== null}
-                    <span class="meta-metric"><span class="meta-metric-name">in</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('input_tokens', mets.input_tokens)}</span></span>
+                  {#if mets.tokens.input !== null}
+                    <span class="meta-metric"><span class="meta-metric-name">in</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('tokens', mets.tokens.input)}</span></span>
                   {/if}
-                  {#if mets.output_tokens !== null}
-                    <span class="meta-metric"><span class="meta-metric-name">out</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('output_tokens', mets.output_tokens)}</span></span>
+                  {#if mets.tokens.output !== null}
+                    <span class="meta-metric"><span class="meta-metric-name">out</span><span class="meta-metric-sep">:</span><span class="meta-metric-val">{formatMetricValue('tokens', mets.tokens.output)}</span></span>
                   {/if}
                 {/if}
                 {#each other as tag (tag)}
