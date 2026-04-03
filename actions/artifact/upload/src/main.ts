@@ -2,9 +2,9 @@ import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { basename, join } from "path";
 import * as core from "@actions/core";
 
-const agentsToken = core.getInput("token", { required: true });
-const apiUrl = core.getInput("url");
-const eventId = process.env.AGENTS_WORKFLOW_EVENT_ID;
+const agentsToken = core.getInput("token") || process.env.DEV_AGENTS_TOKEN;
+const apiUrl = core.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
+const eventId = process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID;
 
 async function uploadFile(filePath: string, name: string): Promise<void> {
   const contentType = filePath.endsWith(".json") ? "application/json" : "text/plain";
@@ -27,8 +27,12 @@ async function uploadFile(filePath: string, name: string): Promise<void> {
 }
 
 async function run() {
+  if (!agentsToken) {
+    core.info("No agents token available, skipping artifact upload");
+    return;
+  }
   if (!eventId) {
-    core.info("AGENTS_WORKFLOW_EVENT_ID not set, skipping artifact upload");
+    core.info("No event ID available, skipping artifact upload");
     return;
   }
 

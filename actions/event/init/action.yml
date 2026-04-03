@@ -1,0 +1,26 @@
+name: Initialize Event Context
+description: Auto-setup and auto-teardown for event lifecycle — creates results dir, tags dir, and emits lifecycle events
+
+inputs:
+  type:
+    description: "Event type prefix (e.g. agent, ci) — emits {type}.started / {type}.completed"
+    required: true
+  token:
+    description: Personal access token for posting events to the Agents API
+    required: false
+  url:
+    description: Agents API base URL
+    required: false
+    default: https://api.agents.developing.company/api
+  tags:
+    description: "Extra tags to attach to events (one per line)"
+    required: false
+  data:
+    description: "Extra JSON data to include in the started event"
+    required: false
+
+runs:
+  using: node20
+  main: dist/setup.js
+  post: dist/teardown.js
+  post-if: always()

@@ -19843,8 +19843,14 @@ class DevAgentSdk extends HeyApiClient {
 // actions/core/src/index.ts
 var core = __toESM(require_core(), 1);
 var exec = __toESM(require_exec(), 1);
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
+import { join } from "path";
 function readContextTags() {
+  const tagsDir = process.env.DEV_AGENTS_TAGS_DIR;
+  if (tagsDir && existsSync(tagsDir)) {
+    const files = readdirSync(tagsDir);
+    return files.map((file) => readFileSync(join(tagsDir, file), "utf8").trim()).filter(Boolean);
+  }
   const contextFile = process.env.AGENTS_CONTEXT_TAGS_FILE;
   if (!contextFile || !existsSync(contextFile))
     return [];
@@ -19855,7 +19861,8 @@ function readContextTags() {
 // actions/event/emit/src/main.ts
 function readTags(raw) {
   return [
-    ...new Set(raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean))
+    ...new Set(raw.split(`
+`).map((value) => value.trim()).filter(Boolean))
   ];
 }
 function githubTags() {
@@ -19886,15 +19893,15 @@ function readData(raw) {
   return parsed;
 }
 async function run() {
-  const agentsToken = core2.getInput("token");
+  const agentsToken = core2.getInput("token") || process.env.DEV_AGENTS_TOKEN;
   if (!agentsToken) {
     core2.warning("token not set, skipping event emit");
     return;
   }
-  const apiUrl = core2.getInput("url");
+  const apiUrl = core2.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
   const eventIdEnv = core2.getInput("event_id_env") || "EVENT_ID";
   const inheritContext = core2.getInput("inherit_context") !== "false";
-  const parentEventId = core2.getInput("parent_event_id") || (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "") || "";
+  const parentEventId = core2.getInput("parent_event_id") || (inheritContext ? process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID : "") || "";
   const origin = core2.getInput("origin");
   const type = core2.getInput("type", { required: true });
   const explicitTags = readTags(core2.getInput("tags"));

@@ -1,0 +1,58 @@
+name: Create Branch
+description: Create and push a working branch for agent workflows
+
+inputs:
+  prefix:
+    description: "Branch prefix (e.g. claude, codex, opencode)"
+    required: true
+  issue_number:
+    description: "Optional issue number — uses naming {prefix}/issue-{N}-{runId}"
+    required: false
+
+outputs:
+  branch:
+    description: Created branch name
+    value: ${{ steps.create.outputs.branch }}
+
+runs:
+  using: composite
+  steps:
+    - name: Create branch
+      id: create
+      shell: bash
+      env:
+        PREFIX: ${{ inputs.prefix }}
+        ISSUE_NUMBER: ${{ inputs.issue_number }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        RUN_ID="${GITHUB_RUN_ID}"
+        if [ -n "$ISSUE_NUMBER" ]; then
+          BRANCH="${PREFIX}/issue-${ISSUE_NUMBER}-${RUN_ID}"
+        else
+          BRANCH="${PREFIX}/run-${RUN_ID}"
+        fi
+
+        git checkout -b "$BRANCH"
+        git push origin "$BRANCH" --force
+
+        INITIAL_SHA=$(git rev-parse HEAD)
+
+        echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+        echo "DEV_AGENTS_BRANCH=$BRANCH" >> "$GITHUB_ENV"
+        echo "DEV_AGENTS_INITIAL_SHA=$INITIAL_SHA" >> "$GITHUB_ENV"
+
+        # Write branch metadata
+        if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/branch"
+          jq -nc --arg name "$BRANCH" '{name: $name}' > "$DEV_AGENTS_RESULTS_DIR/metadata/branch/data.json"
+        fi
+
+        # Write tags
+        if [ -n "${DEV_AGENTS_TAGS_DIR:-}" ]; then
+          printf 'gh:branch:%s\n' "$BRANCH" > "$DEV_AGENTS_TAGS_DIR/gh-branch"
+          if [ -n "$ISSUE_NUMBER" ]; then
+            printf 'gh:issue:%s\n' "$ISSUE_NUMBER" > "$DEV_AGENTS_TAGS_DIR/gh-issue"
+          fi
+        fi

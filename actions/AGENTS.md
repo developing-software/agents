@@ -1,113 +1,232 @@
 # actions/
 
-Reusable GitHub Actions for AI-driven implementation workflows. The core idea: a generic `agents/workflow` harness wraps any AI agent — the harness handles workflow scaffolding (branch, commit, PR, results aggregation, API events), while the agent does the code work.
+Reusable GitHub Actions for observable workflows. The core idea: `event/init` provides a generic lifecycle harness that any workflow can adopt for rich observability — metadata collection, tag aggregation, and event emission. Agent workflows are composed from small, single-purpose actions.
 
-## Design principles
+## Architecture
 
-- **Agent-agnostic** — `agents/workflow` has zero knowledge of Claude, Codex, or any specific agent. Agents run as plain workflow steps between start and post phases.
-- **Composable** — each action has one responsibility. Tag collection, event emission, and artifact upload are separate actions composed in the workflow.
-- **Results folder** — steps communicate structured results via `$AGENTS_RESULTS_DIR`. Each step writes `result.json` files; the finish phase aggregates them into a single `agent.completed` event.
-- **Context tags** — actions communicate shared observable data via `AGENTS_CONTEXT_TAGS_FILE`. Each line is a tag (`namespace:key:value`). All `event/emit` calls inherit these tags automatically.
+```
+                        Workflow Step Execution
+                        ======================
+
+  event/init (setup)                              event/init (teardown)
+  ==================                              =====================
+  |                                               |
+  | Creates:                                      | Reads:
+  |   DEV_AGENTS_RESULTS_DIR/                     |   checks: {cat}/{name}/result.json
+  |     metadata/                                 |   metadata: metadata/{key}/data.json
+  |   DEV_AGENTS_TAGS_DIR/                        |   tags: DEV_AGENTS_TAGS_DIR/*
+  |                                               |
+  | Exports env:                                  | Emits:
+  |   DEV_AGENTS_TOKEN                            |   {type}.completed
+  |   DEV_AGENTS_API_URL                          |     { durationMs, runUrl,
+  |   DEV_AGENTS_RESULTS_DIR                      |       checks: [...],
+  |   DEV_AGENTS_TAGS_DIR                         |       metadata: {...} }
+  |   DEV_AGENTS_RUN_URL                          |
+  |   DEV_AGENTS_EVENT_ID                         |
+  |                                               |
+  | Writes initial tags:                          |
+  |   gh-repo, gh-run, gh-branch/gh-pr           |
+  |   + user-provided tags                        |
+  |                                               |
+  | Emits:                                        |
+  |   {type}.started                              |
+  |                                               |
+  +---> [workflow steps run here] ----------------+
+
+                    Results Dir Layout
+                    ==================
+
+  $DEV_AGENTS_RESULTS_DIR/
+    tests/unit/result.json            <-- check (from event/result)
+    lint/oxlint/result.json           <-- check (from event/result)
+    typecheck/tsc/result.json         <-- check (from event/result)
+    metadata/
+      agent/data.json                 <-- metadata (from agent/claude, etc.)
+      branch/data.json                <-- metadata (from git/branch)
+      diff/data.json                  <-- metadata (from git/commit)
+      pr/data.json                    <-- metadata (from git/pr)
+
+                    Tags Dir Layout
+                    ================
+
+  $DEV_AGENTS_TAGS_DIR/
+    gh-repo              "gh:repo:owner/repo"
+    gh-run               "gh:run:123456"
+    gh-branch            "gh:branch:claude/issue-42-123"
+    harness              "harness:claude-code"
+    model                "model:claude-sonnet-4-6"
+    check-tests-unit     "check:tests/unit:success"
+    check-lint-oxlint    "check:lint/oxlint:success"
+    gh-pr                "gh:pr:99"
+```
+
+## Design Principles
+
+- **Generic lifecycle** -- `event/init` knows nothing about agents, git, or PRs. It creates a results dir and tags dir, emits `{type}.started`, and on teardown aggregates whatever checks and metadata were written by any steps.
+- **Composable** -- each action has one job. Branch creation, committing, PR creation, commenting, result writing, tagging, and event emission are all separate.
+- **Env-based token** -- `event/init` exports `DEV_AGENTS_TOKEN` so downstream actions pick it up automatically. No need to pass `token:` to every step.
+- **Directory-based tags** -- tags are flat files in `DEV_AGENTS_TAGS_DIR`. The filename is a slug, the content is the full tag string. Writing the same slug overwrites, preventing duplicates.
+- **Results folder** -- steps write structured data into `DEV_AGENTS_RESULTS_DIR`. Two concepts: **checks** (`{category}/{name}/result.json`) and **metadata** (`metadata/{key}/data.json`). The teardown aggregates both.
 
 ## Structure
 
 ```
 actions/
-  core/             — shared TypeScript utilities for Node20 actions
-  agent/
-    workflow/       — harness: branch setup + PR creation + results aggregation + lifecycle events
-    result/         — helper: write check result.json + copy output to results folder
-    claude/         — collect Claude Code metrics, write agent/result.json, emit agent.result
-    codex/          — collect Codex result, write agent/result.json, emit agent.result
   event/
-    emit/           — post an event to the Agents API (inherits context tags by default)
-    tag/            — append a tag to the workflow context
+    init/             Node.js pre/post: lifecycle setup + teardown
+    emit/             Post an event to the Agents API
+    tag/              Write a tag file to the context
+    result/           Write a check result + auto-tag
+    metadata/         Write structured metadata
+  git/
+    branch/           Create + push a working branch
+    commit/           Stage, commit, push, compute diff metrics
+    pr/               Create a PR, write PR metadata + tag
+  comment/
+    create/           Post an issue comment, export comment ID
+    update/           Update an issue comment with status
+  agent/
+    claude/           Collect Claude Code metrics -> metadata/agent
+    opencode/         Collect OpenCode metrics -> metadata/agent
+    codex/            Collect Codex metrics -> metadata/agent
   artifact/
-    upload/         — upload a file or directory to the Agents API under the workflow event
+    upload/           Upload a file to the Agents API R2 storage
+  core/               Shared TypeScript utilities for Node20 actions
 ```
 
 ## Actions
 
-### `agents/workflow`
+### `event/init`
 
-The core harness. Runs as a `node20` action with `main` and `post` entrypoints.
+The core lifecycle harness. Node.js action with `main` (setup) and `post` (teardown).
 
-- **main** (`src/start.ts`): creates the implementation branch, initialises `AGENTS_CONTEXT_TAGS_FILE`, creates `AGENTS_RESULTS_DIR`, derives agent name from harness, exports `AGENTS_WORKFLOW_EVENT_ID`, posts `agent.started` event
-- **post** (`src/finish.ts`): commits and pushes agent changes, creates the PR, reads `AGENTS_RESULTS_DIR` to aggregate agent metrics and check outcomes, posts `agent.completed` with full aggregated data
+**Setup** (runs first):
+- Creates `DEV_AGENTS_RESULTS_DIR` and `DEV_AGENTS_TAGS_DIR`
+- Exports `DEV_AGENTS_TOKEN` and `DEV_AGENTS_API_URL` to env for all downstream steps
+- Writes GitHub context tags (repo, run, branch/PR)
+- Writes user-provided tags
+- Emits `{type}.started` event
 
-The post step always runs (`post-if: always()`), even if the agent step fails.
+**Teardown** (runs last, always):
+- Walks results dir: non-`metadata/` dirs as checks, `metadata/{key}/data.json` as structured metadata
+- Reads all tags from `DEV_AGENTS_TAGS_DIR`
+- Emits `{type}.completed` with `{ durationMs, runUrl, checks, metadata }`
 
-### `event/tag`
-
-Appends a tag to `$AGENTS_CONTEXT_TAGS_FILE`. Accepts either a full `tag` string or a `key`+`value` shorthand (formatted as `metric:key:value`). No-op if `AGENTS_CONTEXT_TAGS_FILE` is not set.
+The teardown is fully agnostic -- it has no knowledge of agents, git, or PRs.
 
 ### `event/emit`
 
-Posts an event to the Agents API. By default reads `$AGENTS_CONTEXT_TAGS_FILE` and merges all context tags into the event (`inherit_context: 'true'`). Pass `inherit_context: 'false'` to emit an event without inheriting context. Exports the created event ID to `event_id_env` (default: `EVENT_ID`).
+Posts an event to the Agents API. Inherits context tags from `DEV_AGENTS_TAGS_DIR` by default. Falls back to `DEV_AGENTS_TOKEN` env if no `token` input is provided.
+
+### `event/tag`
+
+Writes a single tag file to `DEV_AGENTS_TAGS_DIR`. Takes `slug` (filename) and `value` (full tag string). Writing the same slug overwrites.
+
+### `event/result`
+
+Writes a check result to the results folder and auto-tags the context. After writing `{category}/{name}/result.json`, writes a `check:{category}/{name}:{outcome}` tag. Also live-updates the issue comment if `DEV_AGENTS_COMMENT_ID` is set.
+
+### `event/metadata`
+
+Writes arbitrary structured JSON to `metadata/{key}/data.json` in the results folder.
+
+### `git/branch`
+
+Creates and pushes a working branch. Names it `{prefix}/issue-{N}-{runId}` (with issue) or `{prefix}/run-{runId}` (without). Exports `DEV_AGENTS_BRANCH` and `DEV_AGENTS_INITIAL_SHA`. Writes branch metadata and tags.
+
+### `git/commit`
+
+Stages changes, detects if the agent already committed (via `DEV_AGENTS_INITIAL_SHA`), commits if needed, pushes, and computes diff metrics. Writes `metadata/diff/data.json`.
+
+### `git/pr`
+
+Creates a PR (idempotent). Auto-generates title and body from prefix + issue number. Writes `gh-pr` tag and `metadata/pr/data.json`.
+
+### `comment/create`
+
+Posts a comment on a GitHub issue. Auto-generates a progress comment if no body is provided. Exports `DEV_AGENTS_COMMENT_ID` for subsequent updates.
+
+### `comment/update`
+
+Updates the comment identified by `DEV_AGENTS_COMMENT_ID`. Auto-generates a status body from the results dir (checks, PR, diff metrics) if no body is provided.
 
 ### `agent/claude`
 
-Runs **after** `anthropics/claude-code-action`. Parses token usage and cost from the execution JSON, writes `$AGENTS_RESULTS_DIR/agent/result.json` with metrics, then emits `agent.result` with `{"agent":"claude", ...}` in the event data (exports `CLAUDE_EVENT_ID`). Uploads `claude_code_execution.json` to the Agents API.
+Runs after `anthropics/claude-code-action`. Extracts token usage, cost, and session info from the execution JSON. Writes `metadata/agent/data.json`. Uploads the execution file as an artifact.
+
+### `agent/opencode`
+
+Runs after `anomalyco/opencode/github`. Extracts metrics from the OpenCode session export. Writes `metadata/agent/data.json`. Uploads the session file as an artifact.
 
 ### `agent/codex`
 
-Runs **after** `openai/codex-action`. Writes `$AGENTS_RESULTS_DIR/agent/result.json`, emits `agent.result` with `{"agent":"codex", ...}` in the event data (exports `CODEX_EVENT_ID`).
+Runs after `openai/codex-action`. Extracts metrics from the Codex session JSONL. Writes `metadata/agent/data.json`. Uploads the session file as an artifact.
 
 ### `artifact/upload`
 
-Uploads a file or directory to the Agents API R2 bucket via `POST /events/:id/artifacts`, using `$AGENTS_WORKFLOW_EVENT_ID` as the event. Accepts a `path` (file or directory) and an optional `name` override (single-file only). Skips silently if `AGENTS_WORKFLOW_EVENT_ID` is not set.
+Uploads a file or directory to the Agents API R2 storage under the current event. Falls back to `DEV_AGENTS_TOKEN` and `DEV_AGENTS_EVENT_ID` from env.
 
-## Env var conventions
+## Env Var Conventions
 
-| Variable                   | Set by                  | Read by                                                        | Purpose                                         |
-| -------------------------- | ----------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
-| `AGENTS_CONTEXT_TAGS_FILE` | `agents/workflow` start | `event/emit`, `event/tag`, `agent/*`, `agents/workflow` finish | Path to the tag context file (one tag per line) |
-| `AGENTS_WORKFLOW_EVENT_ID` | `agents/workflow` start | `artifact/upload`, `agent/*`, `agents/workflow` finish         | ID of the `agent.started` event                 |
-| `AGENTS_RESULTS_DIR`       | `agents/workflow` start | `agent/*`, test/lint actions, `agents/workflow` finish          | Path to results folder for inter-step data      |
-| `CLAUDE_EVENT_ID`          | `agent/claude`          | downstream steps                                               | ID of the `agent.result` event                  |
-| `CODEX_EVENT_ID`           | `agent/codex`           | downstream steps                                               | ID of the `agent.result` event                  |
+| Variable | Set by | Purpose |
+|---|---|---|
+| `DEV_AGENTS_TOKEN` | `event/init` | Agents API token, inherited by all downstream actions |
+| `DEV_AGENTS_API_URL` | `event/init` | Agents API base URL |
+| `DEV_AGENTS_RESULTS_DIR` | `event/init` | Path to results folder for checks and metadata |
+| `DEV_AGENTS_TAGS_DIR` | `event/init` | Path to tags directory (one file per tag) |
+| `DEV_AGENTS_RUN_URL` | `event/init` | GitHub Actions run URL |
+| `DEV_AGENTS_EVENT_ID` | `event/init` | ID of the `{type}.started` event |
+| `DEV_AGENTS_BRANCH` | `git/branch` | Name of the created working branch |
+| `DEV_AGENTS_INITIAL_SHA` | `git/branch` | SHA before agent changes (for commit detection) |
+| `DEV_AGENTS_COMMENT_ID` | `comment/create` | Issue comment ID for live updates |
+| `DEV_AGENTS_HARNESS` | workflow (manual) | Agent harness name, used in comments |
 
-## Results folder convention
+## Event Types
 
 ```
-$AGENTS_RESULTS_DIR/
-  agent/
-    result.json          # { agent, sessionId, finalMessage, metrics }
-  tests/
-    unit/
-      result.json        # { outcome: "success"|"failure" }
-      output.txt
-  lint/
-    oxlint/
-      result.json
-      output.txt
+{type}.started      emitted by event/init setup
+{type}.completed    emitted by event/init teardown (parent: started event)
+  data: { durationMs, runUrl, checks: [...], metadata: {...} }
+
+lint.started        emitted by .github/actions/lint
+lint.completed      emitted by .github/actions/lint (parent: lint.started)
+
+tests.started       emitted by .github/actions/test
+tests.completed     emitted by .github/actions/test (parent: tests.started)
+
+typecheck.started   emitted by .github/actions/typecheck
+typecheck.completed emitted by .github/actions/typecheck (parent: typecheck.started)
 ```
 
-`result.json` always has at least `{ outcome: "success"|"failure" }`. The finish phase globs `*/*/result.json` (skipping `agent/`) to build a `checks[]` array and reads `agent/result.json` for metrics.
-
-## Workflow pattern
+## Composed Agent Workflow
 
 ```
 actions/checkout
 oven-sh/setup-bun + bun install
-./actions/agent/workflow          <- sets up branch, results dir, emits agent.started
-<agent step>                       <- claude-code-action, codex-action, etc.
-./actions/agent/<name>             <- writes agent/result.json, emits agent.result
-./.github/actions/test             <- runs tests, writes tests/{name}/result.json
-./.github/actions/lint             <- runs lint, writes lint/{name}/result.json
-[post] ./actions/agent/workflow   <- commits, pushes, creates PR, aggregates results, emits agent.completed
+./actions/event/init            sets up lifecycle, exports token to env
+./actions/git/branch            creates working branch
+./actions/comment/create        posts progress comment on issue
+<agent step>                    claude-code-action, codex-action, etc.
+./actions/agent/<name>          writes metadata/agent/data.json
+./.github/actions/check         runs lint + typecheck + tests, writes results + auto-tags
+./actions/git/commit            commits, pushes, writes diff metadata
+./actions/git/pr                creates PR, writes PR metadata + tag
+./actions/comment/update        updates comment with final status
+[auto] event/init teardown      aggregates everything, emits {type}.completed
 ```
 
-## Event types
+## Standalone CI Workflow
 
 ```
-agent.started
-  -> agent.result       (child of AGENTS_WORKFLOW_EVENT_ID)
-agent.completed         (parentEventId -> agent.started)
+actions/checkout
+oven-sh/setup-bun + bun install
+./actions/event/init            type: ci, exports token to env
+./.github/actions/check         runs lint + typecheck + tests, writes results + auto-tags
+[auto] event/init teardown      emits ci.completed with check results
 ```
 
-## Adding a new agent
+## Adding a New Agent
 
-1. Create `actions/agent/<name>/action.yml` — write `$AGENTS_RESULTS_DIR/agent/result.json`, emit `agent.result` via `./actions/event/emit` with `agent` and `finalMessage` in `data`, upload any execution artifact via `./actions/artifact/upload`
-2. Create `.github/workflows/<name>-implement.yml` following the workflow pattern above
-3. No changes needed to `agents/workflow` itself
+1. Create `actions/agent/<name>/action.yml` -- extract metrics from agent output, write `metadata/agent/data.json` via `$DEV_AGENTS_RESULTS_DIR`, upload any session artifact via `artifact/upload`
+2. Create `.github/workflows/agent-<name>.yml` following the composed agent workflow pattern
+3. No changes needed to `event/init` or any other infrastructure action

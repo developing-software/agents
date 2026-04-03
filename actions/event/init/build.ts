@@ -2,7 +2,7 @@ export {};
 
 const ROOT = import.meta.dir;
 
-const entrypoints = ["src/start.ts", "src/finish.ts"];
+const entrypoints = ["src/setup.ts", "src/teardown.ts"];
 
 const results = await Promise.all(
   entrypoints.map((entrypoint) =>

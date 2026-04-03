@@ -3,8 +3,8 @@ description: Upload a file or directory to the Agents API R2 storage under the w
 
 inputs:
   token:
-    description: Personal access token for posting events to the Agents API
-    required: true
+    description: Personal access token for posting events to the Agents API (falls back to DEV_AGENTS_TOKEN env)
+    required: false
   url:
     description: Agents API base URL
     required: false

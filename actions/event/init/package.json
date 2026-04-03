@@ -1,5 +1,5 @@
 {
-  "name": "workflow-run-action",
+  "name": "event-init-action",
   "private": true,
   "type": "module",
   "scripts": {

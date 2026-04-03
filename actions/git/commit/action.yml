@@ -1,0 +1,94 @@
+name: Commit and Push
+description: Stage changes, commit, push, and compute diff metrics
+
+inputs:
+  message:
+    description: "Optional commit message (auto-generates if not provided)"
+    required: false
+  issue_number:
+    description: "Optional issue number for auto-generated commit message"
+    required: false
+  base_branch:
+    description: "Base branch for diff metrics (default: repo default branch)"
+    required: false
+
+outputs:
+  outcome:
+    description: "committed, already-committed, or no-changes"
+    value: ${{ steps.commit.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - name: Commit and push
+      id: commit
+      shell: bash
+      env:
+        COMMIT_MSG: ${{ inputs.message }}
+        ISSUE_NUMBER: ${{ inputs.issue_number }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Re-configure git auth
+        TOKEN="${GITHUB_TOKEN:-$GH_TOKEN}"
+        ENCODED_AUTH=$(printf 'x-access-token:%s' "$TOKEN" | base64)
+        git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $ENCODED_AUTH"
+
+        # Check if agent already committed
+        CURRENT_SHA=$(git rev-parse HEAD)
+        AGENT_COMMITTED="false"
+        if [ -n "${DEV_AGENTS_INITIAL_SHA:-}" ] && [ "$CURRENT_SHA" != "$DEV_AGENTS_INITIAL_SHA" ]; then
+          AGENT_COMMITTED="true"
+        fi
+
+        # Stage any remaining uncommitted changes
+        git add -A
+        DIFF_CODE=0
+        git diff --staged --quiet || DIFF_CODE=$?
+
+        if [ "$DIFF_CODE" -eq 0 ] && [ "$AGENT_COMMITTED" = "false" ]; then
+          echo "outcome=no-changes" >> "$GITHUB_OUTPUT"
+          echo "::warning::No changes to commit"
+          exit 0
+        fi
+
+        if [ "$DIFF_CODE" -ne 0 ]; then
+          # Build commit message
+          if [ -z "$COMMIT_MSG" ]; then
+            if [ -n "$ISSUE_NUMBER" ]; then
+              COMMIT_MSG="feat: implement issue #${ISSUE_NUMBER}"
+            else
+              COMMIT_MSG="feat: implement task"
+            fi
+          fi
+          git commit -m "$COMMIT_MSG"
+          echo "outcome=committed" >> "$GITHUB_OUTPUT"
+        else
+          echo "outcome=already-committed" >> "$GITHUB_OUTPUT"
+        fi
+
+        BRANCH="${DEV_AGENTS_BRANCH:-$(git branch --show-current)}"
+        git push origin "$BRANCH"
+
+        # Resolve base branch for diff metrics
+        if [ -z "$BASE_BRANCH" ]; then
+          BASE_BRANCH=$(gh repo view --json defaultBranchRef -q '.defaultBranchRef.name' 2>/dev/null || echo "main")
+        fi
+
+        # Compute diff metrics
+        git fetch origin "$BASE_BRANCH" --depth=1 2>/dev/null || true
+        LINES_ADDED=0
+        LINES_REMOVED=0
+        while IFS=$'\t' read -r added removed _file; do
+          [ "$added" = "-" ] && continue
+          LINES_ADDED=$((LINES_ADDED + ${added:-0}))
+          LINES_REMOVED=$((LINES_REMOVED + ${removed:-0}))
+        done < <(git diff "origin/${BASE_BRANCH}..HEAD" --numstat 2>/dev/null || true)
+
+        # Write diff metadata
+        if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/diff"
+          jq -nc --argjson added "$LINES_ADDED" --argjson removed "$LINES_REMOVED" \
+            '{linesAdded: $added, linesRemoved: $removed}' \
+            > "$DEV_AGENTS_RESULTS_DIR/metadata/diff/data.json"
+        fi

@@ -1,15 +1,6 @@
 name: Collect OpenCode Agent Data
 description: Capture token usage from opencode session export and emit result event with metrics in data
 
-inputs:
-  token:
-    description: Personal access token for posting events to the Agents API
-    required: false
-  url:
-    description: Agents API base URL
-    required: false
-    default: https://api.agents.developing.company/api
-
 runs:
   using: composite
   steps:
@@ -91,35 +82,23 @@ runs:
           echo "AGENT_MODEL=$MODEL" >> "$GITHUB_ENV"
         fi
 
-    - name: Write agent result to results folder
+    - name: Write agent result to metadata folder
       if: always()
       shell: bash
       run: |
-        if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
-          mkdir -p "$AGENTS_RESULTS_DIR/agent"
+        if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/agent"
           jq -nc \
-            --arg agent "opencode" \
+            --arg name "opencode" \
             --arg sessionId "${SESSION_ID:-}" \
             --arg finalMessage "${LAST_MSG:-}" \
             --argjson metrics "${METRICS_JSON:-null}" \
-            '{agent: $agent, sessionId: (if $sessionId == "" then null else $sessionId end), finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
-            > "$AGENTS_RESULTS_DIR/agent/result.json"
+            '{name: $name, sessionId: (if $sessionId == "" then null else $sessionId end), finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
+            > "$DEV_AGENTS_RESULTS_DIR/metadata/agent/data.json"
         fi
 
-    - uses: developing-software/agents/actions/event/emit@dev
-      if: always() && inputs.token != ''
-      with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
-        event_id_env: OPENCODE_EVENT_ID
-        type: agent.result
-        data: >-
-          {"agent":"opencode","model":${{ toJSON(env.AGENT_MODEL) }},"finalMessage":${{ toJSON(env.LAST_MSG) }},"sessionId":${{ toJSON(env.SESSION_ID) }},"metrics":${{ env.METRICS_JSON || 'null' }}}
-
     - uses: developing-software/agents/actions/artifact/upload@dev
-      if: always() && inputs.token != ''
+      if: always()
       with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
         path: ${{ runner.temp }}/opencode-session.json
         name: opencode_session.json

@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
+import { join } from "path";
 import { createClient, createConfig } from "@agents/sdk/client";
 import { DevAgentSdk } from "@agents/sdk";
 
@@ -55,6 +56,15 @@ export function getContext(): GitHubContext {
 }
 
 export function readContextTags(): string[] {
+  // New: read from DEV_AGENTS_TAGS_DIR (flat files, one tag per file)
+  const tagsDir = process.env.DEV_AGENTS_TAGS_DIR;
+  if (tagsDir && existsSync(tagsDir)) {
+    const files = readdirSync(tagsDir);
+    return files
+      .map((file) => readFileSync(join(tagsDir, file), "utf8").trim())
+      .filter(Boolean);
+  }
+  // Legacy fallback: read from flat file
   const contextFile = process.env.AGENTS_CONTEXT_TAGS_FILE;
   if (!contextFile || !existsSync(contextFile)) return [];
   return readFileSync(contextFile, "utf8")
@@ -65,7 +75,7 @@ export function readContextTags(): string[] {
 
 export function readOptionalTags(raw: string): string[] {
   return raw
-    .split(/[\n,]/)
+    .split("\n")
     .map((value) => value.trim())
     .filter(Boolean);
 }

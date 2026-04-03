@@ -7,7 +7,7 @@ function readTags(raw: string) {
   return [
     ...new Set(
       raw
-        .split(/[\n,]/)
+        .split("\n")
         .map((value) => value.trim())
         .filter(Boolean),
     ),
@@ -44,17 +44,17 @@ function readData(raw: string): Record<string, unknown> | undefined {
 }
 
 async function run() {
-  const agentsToken = core.getInput("token");
+  const agentsToken = core.getInput("token") || process.env.DEV_AGENTS_TOKEN;
   if (!agentsToken) {
     core.warning("token not set, skipping event emit");
     return;
   }
-  const apiUrl = core.getInput("url");
+  const apiUrl = core.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
   const eventIdEnv = core.getInput("event_id_env") || "EVENT_ID";
   const inheritContext = core.getInput("inherit_context") !== "false";
   const parentEventId =
     core.getInput("parent_event_id") ||
-    (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "") ||
+    (inheritContext ? (process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID) : "") ||
     "";
   const origin = core.getInput("origin") as
     | "api"

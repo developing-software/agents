@@ -1,0 +1,70 @@
+name: Check
+run-name: "${{ github.event_name == 'pull_request' && format('check/pr-{0}', github.event.pull_request.number) || format('check/sha-{0}', github.sha) }}"
+
+on:
+  push:
+    branches: [dev, prod]
+  pull_request:
+
+concurrency:
+  group: ${{ format('check-{0}', github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha) }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - uses: ./actions/event/init
+        with:
+          type: ci
+          token: ${{ secrets.AGENTS_TOKEN }}
+
+      - name: Run checks
+        id: checks
+        uses: ./.github/actions/check
+        with:
+          install: "false"
+
+      - name: Write summary
+        if: always()
+        run: |
+          LINT="${{ steps.checks.outputs.lint-outcome }}"
+          TYPECHECK="${{ steps.checks.outputs.typecheck-outcome }}"
+          TEST="${{ steps.checks.outputs.test-outcome }}"
+
+          icon() { [ "$1" = "success" ] && echo "+" || echo "x"; }
+
+          {
+            echo "## Checks"
+            echo ""
+            echo "| Check | Result |"
+            echo "|-------|--------|"
+            echo "| Lint | $(icon "$LINT") $LINT |"
+            echo "| Typecheck | $(icon "$TYPECHECK") $TYPECHECK |"
+            echo "| Tests | $(icon "$TEST") $TEST |"
+
+            for file in lint-output.txt typecheck-output.txt test-output.txt; do
+              if [ -f "$RUNNER_TEMP/$file" ]; then
+                name="${file%-output.txt}"
+                echo ""
+                echo "<details><summary>${name} output</summary>"
+                echo ""
+                echo '```'
+                cat "$RUNNER_TEMP/$file"
+                echo '```'
+                echo "</details>"
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if checks failed
+        if: steps.checks.outputs.outcome == 'failure'
+        run: exit 1

@@ -60,6 +60,18 @@
         "@types/node": "catalog:action",
       },
     },
+    "actions/event/init": {
+      "name": "event-init-action",
+      "dependencies": {
+        "@actions/core": "catalog:action",
+        "@actions/exec": "catalog:action",
+        "@agents/actions-core": "workspace:*",
+        "@agents/sdk": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:action",
+      },
+    },
     "packages/cli": {
       "name": "cli",
       "bin": {
@@ -801,6 +813,8 @@
     "esrap": ["esrap@2.2.4", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.4.15", "@typescript-eslint/types": "^8.2.0" } }, "sha512-suICpxAmZ9A8bzJjEl/+rLJiDKC0X4gYWUxT6URAWBLvlXmtbZd5ySMu/N2ZGEtMCAmflUDPSehrP9BQcsGcSg=="],
 
     "event-emit-action": ["event-emit-action@workspace:actions/event/emit"],
+
+    "event-init-action": ["event-init-action@workspace:actions/event/init"],
 
     "event-target-shim": ["event-target-shim@5.0.1", "", {}, "sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ=="],
 

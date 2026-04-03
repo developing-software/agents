@@ -18798,9 +18798,9 @@ var require_core = __commonJS((exports) => {
 var core = __toESM(require_core(), 1);
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { basename, join } from "path";
-var agentsToken = core.getInput("token", { required: true });
-var apiUrl = core.getInput("url");
-var eventId = process.env.AGENTS_WORKFLOW_EVENT_ID;
+var agentsToken = core.getInput("token") || process.env.DEV_AGENTS_TOKEN;
+var apiUrl = core.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
+var eventId = process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID;
 async function uploadFile(filePath, name) {
   const contentType = filePath.endsWith(".json") ? "application/json" : "text/plain";
   const form = new FormData;
@@ -18819,8 +18819,12 @@ async function uploadFile(filePath, name) {
   }
 }
 async function run() {
+  if (!agentsToken) {
+    core.info("No agents token available, skipping artifact upload");
+    return;
+  }
   if (!eventId) {
-    core.info("AGENTS_WORKFLOW_EVENT_ID not set, skipping artifact upload");
+    core.info("No event ID available, skipping artifact upload");
     return;
   }
   const path = core.getInput("path", { required: true });

@@ -5,14 +5,6 @@ inputs:
   final_message:
     description: Final message output from openai/codex-action
     required: false
-  token:
-    description: Personal access token for posting events to the Agents API
-    required: false
-  url:
-    description: Agents API base URL
-    required: false
-    default: https://api.agents.developing.company/api
-
 runs:
   using: composite
   steps:
@@ -73,37 +65,24 @@ runs:
           echo "AGENT_MODEL=$MODEL" >> "$GITHUB_ENV"
         fi
 
-    - name: Write agent result to results folder
+    - name: Write agent result to metadata folder
       if: always()
       shell: bash
       env:
         FINAL_MESSAGE: ${{ inputs.final_message }}
       run: |
-        if [ -n "${AGENTS_RESULTS_DIR:-}" ]; then
-          mkdir -p "$AGENTS_RESULTS_DIR/agent"
+        if [ -n "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
+          mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/agent"
           jq -nc \
-            --arg agent "codex" \
+            --arg name "codex" \
             --arg finalMessage "${FINAL_MESSAGE:-}" \
             --argjson metrics "${METRICS_JSON:-null}" \
-            '{agent: $agent, sessionId: null, finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
-            > "$AGENTS_RESULTS_DIR/agent/result.json"
+            '{name: $name, sessionId: null, finalMessage: (if $finalMessage == "" then null else $finalMessage end), metrics: $metrics}' \
+            > "$DEV_AGENTS_RESULTS_DIR/metadata/agent/data.json"
         fi
 
-    - uses: developing-software/agents/actions/event/emit@dev
-      if: always() && inputs.token != ''
-
-      with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
-        event_id_env: CODEX_EVENT_ID
-        type: agent.result
-        data: >-
-          {"agent":"codex","model":${{ toJSON(env.AGENT_MODEL) }},"finalMessage":${{ toJSON(inputs.final_message) }},"sessionId":null,"metrics":${{ env.METRICS_JSON || 'null' }}}
-
     - uses: developing-software/agents/actions/artifact/upload@dev
-      if: always() && inputs.token != ''
+      if: always()
       with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
         path: ${{ runner.temp }}/codex-session.jsonl
         name: codex_session.jsonl

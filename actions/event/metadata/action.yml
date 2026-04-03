@@ -1,0 +1,26 @@
+name: Write Metadata
+description: Write arbitrary structured metadata to the results folder
+
+inputs:
+  key:
+    description: "Metadata key (e.g. timing, coverage, summary)"
+    required: true
+  data:
+    description: "JSON string to write as the metadata value"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Write metadata
+      if: always()
+      shell: bash
+      env:
+        META_KEY: ${{ inputs.key }}
+        META_DATA: ${{ inputs.data }}
+      run: |
+        if [ -z "${DEV_AGENTS_RESULTS_DIR:-}" ]; then
+          exit 0
+        fi
+        mkdir -p "$DEV_AGENTS_RESULTS_DIR/metadata/$META_KEY"
+        printf '%s\n' "$META_DATA" > "$DEV_AGENTS_RESULTS_DIR/metadata/$META_KEY/data.json"
