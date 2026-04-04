@@ -9,6 +9,7 @@
     serviceTag,
     branchTag,
     workflowRef,
+    triggerTag,
     otherTags,
   } from '../helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
@@ -88,8 +89,9 @@
       {@const svc = serviceTag(node.tags)}
       {@const branch = branchTag(node.tags)}
       {@const workflow = workflowRef(node.tags)}
+      {@const trigger = triggerTag(node.tags)}
       {@const other = otherTags(node.tags)}
-      {@const hasMeta = env || svc || branch || workflow !== null || other.length > 0}
+      {@const hasMeta = env || svc || branch || workflow !== null || trigger || other.length > 0}
       <div class="node" style="padding-left: {depth * 16}px;">
         <button
           type="button"
@@ -118,6 +120,9 @@
             {/if}
             {#if workflow !== null}
               <span class="meta-dim">workflow #{workflow}</span>
+            {/if}
+            {#if trigger}
+              <span class="meta-trigger">{trigger}</span>
             {/if}
             {#each other as tag (tag)}
               <TagPill {tag} />
@@ -207,6 +212,8 @@
   .meta-branch { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
 
   .meta-dim { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
+
+  .meta-trigger { font-family: "JetBrains Mono", monospace; font-size: 10px; padding: 0 4px; border-radius: 3px; background: color-mix(in srgb, var(--color-warning) 10%, transparent); color: var(--color-warning); border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent); line-height: 1.6; }
 
   .detail-loading { font-size: 11px; color: var(--color-dim); font-style: italic; padding: 4px 0; }
 

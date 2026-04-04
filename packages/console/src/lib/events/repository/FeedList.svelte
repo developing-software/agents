@@ -12,6 +12,7 @@
     serviceTag,
     branchTag,
     workflowRef,
+    triggerTag,
     otherTags,
     extractMetrics,
     formatMetricValue,
@@ -106,9 +107,10 @@
           {@const svc = serviceTag(e.tags)}
           {@const branch = branchTag(e.tags)}
           {@const workflow = workflowRef(e.tags)}
+          {@const trigger = triggerTag(e.tags)}
           {@const other = otherTags(e.tags)}
           {@const mets = extractMetrics(e.data)}
-          {@const hasMeta = mets || env || svc || branch || workflow !== null || other.length > 0}
+          {@const hasMeta = mets || env || svc || branch || workflow !== null || trigger || other.length > 0}
           <div
             class="event-item"
             class:event-item-child={child}
@@ -142,6 +144,9 @@
                 {/if}
                 {#if workflow !== null}
                   <span class="meta-dim">workflow #{workflow}</span>
+                {/if}
+                {#if trigger}
+                  <span class="meta-trigger">{trigger}</span>
                 {/if}
                 {#if mets}
                   {#if mets.model}
@@ -252,6 +257,8 @@
   .meta-branch { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
 
   .meta-dim { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--color-dim); }
+
+  .meta-trigger { font-family: "JetBrains Mono", monospace; font-size: 10px; padding: 0 4px; border-radius: 3px; background: color-mix(in srgb, var(--color-warning) 10%, transparent); color: var(--color-warning); border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent); line-height: 1.6; }
 
   .meta-metric { display: inline-flex; align-items: center; font-family: "JetBrains Mono", monospace; font-size: 10px; gap: 1px; }
   .meta-metric-name { color: var(--color-muted); }

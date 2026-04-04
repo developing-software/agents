@@ -84,6 +84,7 @@ export {
   workflowRef,
   issueRef,
   prRef,
+  triggerTag,
 } from "$lib/ui/tag/tag-helpers";
 
 export function formatBytes(bytes: number): string {

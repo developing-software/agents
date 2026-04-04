@@ -62,3 +62,4 @@ export const typeTag = (tags: string[]) => extractTag(tags, "type:");
 export const harnessTag = (tags: string[]) => extractTag(tags, "harness:");
 export const scopeTag = (tags: string[]) => extractTag(tags, "scope:");
 export const modelTag = (tags: string[]) => extractTag(tags, "model:");
+export const triggerTag = (tags: string[]) => extractTag(tags, "gh:trigger:");
