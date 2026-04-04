@@ -1,8 +1,19 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
 import { AgentWorkflow } from "@agents/core/agent";
+import { GithubBranch } from "@agents/core/github/repo/branch";
 import { Plan } from "@agents/core/plan/index";
+import { Repository } from "@agents/core/repository/index";
 import { error } from "@sveltejs/kit";
+
+export const listBranches = query(
+  z.object({ organization: z.string(), repoName: z.string() }),
+  async ({ organization, repoName }) => {
+    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
+    if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
+    return GithubBranch.list(repo);
+  },
+);
 
 export const previewPrompt = query(
   z.object({ planId: z.string() }),

@@ -1,8 +1,9 @@
 <script lang="ts">
   import Drawer from '$lib/ui/Drawer.svelte';
-  import { previewPrompt, dispatchPlan } from './dispatch.remote';
+  import { previewPrompt, dispatchPlan, listBranches } from './dispatch.remote';
   import { statusDotColor, statusBadgeStyle } from '$lib/agents/plans/plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
+  import { SvelteSet } from 'svelte/reactivity';
 
   type PlanItem = {
     id: string;
@@ -34,15 +35,37 @@
   } = $props();
 
   const AGENTS = [
-    { harness: 'claude' as const, label: 'Claude', description: 'Anthropic Claude agent' },
-    { harness: 'opencode' as const, label: 'OpenCode', description: 'OpenCode agent' },
-    { harness: 'codex' as const, label: 'Codex', description: 'OpenAI Codex agent' },
+    { harness: 'claude' as const, label: 'Claude' },
+    { harness: 'opencode' as const, label: 'OpenCode' },
+    { harness: 'codex' as const, label: 'Codex' },
   ];
 
-  let selectedAgents = $state<Set<string>>(new Set(['claude']));
-  let modelOverrides = $state<Record<string, string>>({});
+  const AGENT_MODELS: Record<string, { id: string; label: string }[]> = {
+    claude: [
+      { id: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
+      { id: 'claude-opus-4-6', label: 'Opus 4.6' },
+      { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
+    ],
+    opencode: [
+      { id: 'openai/gpt-5.4-pro', label: 'GPT 5.4 Pro' },
+      { id: 'openai/o3', label: 'o3' },
+      { id: 'openai/gpt-4.1', label: 'GPT 4.1' },
+    ],
+    codex: [
+      { id: 'o3', label: 'o3' },
+      { id: 'o4-mini', label: 'o4-mini' },
+      { id: 'gpt-4.1', label: 'GPT 4.1' },
+    ],
+  };
+
+  const SCOPE_OPTIONS = ['small', 'medium', 'large'] as const;
+  const TYPE_OPTIONS = ['bug', 'feature', 'task'] as const;
+
+  let selectedModels = new SvelteSet(['claude:claude-sonnet-4-6']);
+  let selectedScope = $state<string | null>(null);
+  let selectedType = $state<string | null>(null);
   let ref = $state('dev');
-  let extraTagsInput = $state('');
+  const branchesPromise = listBranches({ organization, repoName });
   let promptPreview = $state<string | null>(null);
   let promptExpanded = $state(false);
   let loadingPreview = $state(false);
@@ -50,15 +73,27 @@
   let dispatchError = $state<string | null>(null);
   let dispatchResults = $state<{ harness: string; status: string }[] | null>(null);
 
-  function toggleAgent(harness: string) {
-    const next = new Set(selectedAgents);
-    if (next.has(harness)) {
-      next.delete(harness);
-    } else {
-      next.add(harness);
-    }
-    selectedAgents = next;
+  function toggleModel(harness: string, modelId: string) {
+    const key = `${harness}:${modelId}`;
+    if (selectedModels.has(key)) selectedModels.delete(key);
+    else selectedModels.add(key);
   }
+
+  function hasAgent(harness: string): boolean {
+    return Array.from(selectedModels).some((k) => k.startsWith(harness + ':'));
+  }
+
+  let selectedCount = $derived(selectedModels.size);
+
+  const dispatchPreview = $derived(
+    Array.from(selectedModels).map((key) => {
+      const [harness, ...rest] = key.split(':');
+      const modelId = rest.join(':');
+      const agent = AGENTS.find((a) => a.harness === harness);
+      const model = AGENT_MODELS[harness]?.find((m) => m.id === modelId);
+      return { key, harness: agent?.label ?? harness, model: model?.label ?? modelId };
+    })
+  );
 
   async function loadPromptPreview() {
     if (promptPreview !== null) {
@@ -75,20 +110,19 @@
   }
 
   async function handleDispatch() {
-    if (selectedAgents.size === 0) return;
+    if (selectedModels.size === 0) return;
     dispatching = true;
     dispatchError = null;
     dispatchResults = null;
     try {
-      const extraTags = extraTagsInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
+      const extraTags: string[] = [];
+      if (selectedScope) extraTags.push(`scope:${selectedScope}`);
+      if (selectedType) extraTags.push(`type:${selectedType}`);
 
-      const agentList = Array.from(selectedAgents).map((harness) => ({
-        harness: harness as 'claude' | 'opencode' | 'codex',
-        model: modelOverrides[harness] || undefined,
-      }));
+      const agentList = Array.from(selectedModels).map((key) => {
+        const [harness, ...rest] = key.split(':');
+        return { harness: harness as 'claude' | 'opencode' | 'codex', model: rest.join(':') };
+      });
 
       const results = await dispatchPlan({
         planId: plan.id,
@@ -110,18 +144,16 @@
 
   function close() {
     open = false;
-    // Reset state for next open
     dispatchResults = null;
     dispatchError = null;
     promptPreview = null;
     promptExpanded = false;
-    selectedAgents = new Set(['claude']);
-    modelOverrides = {};
+    selectedModels.clear();
+    selectedModels.add('claude:claude-sonnet-4-6');
+    selectedScope = null;
+    selectedType = null;
     ref = 'dev';
-    extraTagsInput = '';
   }
-
-  let selectedCount = $derived(selectedAgents.size);
 </script>
 
 <Drawer bind:open title="Dispatch Plan" onclose={close}>
@@ -161,25 +193,23 @@
         <div class="section-label">Agents</div>
         <div class="agent-list">
           {#each AGENTS as agent (agent.harness)}
-            <label class="agent-row" class:agent-selected={selectedAgents.has(agent.harness)}>
-              <input
-                type="checkbox"
-                class="agent-checkbox"
-                checked={selectedAgents.has(agent.harness)}
-                onchange={() => toggleAgent(agent.harness)}
-              />
-              <span class="agent-name">{agent.label}</span>
-              <span class="agent-desc">{agent.description}</span>
-              {#if selectedAgents.has(agent.harness)}
-                <input
-                  type="text"
-                  class="model-input"
-                  placeholder="model override (optional)"
-                  bind:value={modelOverrides[agent.harness]}
-                  onclick={(e) => e.stopPropagation()}
-                />
-              {/if}
-            </label>
+            <div class="agent-group" class:agent-active={hasAgent(agent.harness)}>
+              <div class="agent-header">
+                <span class="agent-name">{agent.label}</span>
+              </div>
+              <div class="model-pills">
+                {#each AGENT_MODELS[agent.harness] ?? [] as model (model.id)}
+                  <button
+                    type="button"
+                    class="model-pill"
+                    class:model-pill-active={selectedModels.has(`${agent.harness}:${model.id}`)}
+                    onclick={() => toggleModel(agent.harness, model.id)}
+                  >
+                    {model.label}
+                  </button>
+                {/each}
+              </div>
+            </div>
           {/each}
         </div>
       </section>
@@ -188,11 +218,54 @@
       <section class="section">
         <div class="section-label">Configuration</div>
         <div class="config-grid">
-          <label class="config-label" for="ref-input">Git ref</label>
-          <input id="ref-input" type="text" class="config-input" bind:value={ref} placeholder="dev" />
+          <label class="config-label" for="ref-input">Branch</label>
+          {#await branchesPromise}
+            <span class="config-loading">Loading...</span>
+          {:then branches}
+            {#if branches.length > 0}
+              <select id="ref-input" class="config-select" bind:value={ref}>
+                {#each branches as branch (branch.name)}
+                  <option value={branch.name}>{branch.name}</option>
+                {/each}
+              </select>
+            {:else}
+              <input id="ref-input" type="text" class="config-input" bind:value={ref} placeholder="dev" />
+            {/if}
+          {:catch}
+            <input id="ref-input" type="text" class="config-input" bind:value={ref} placeholder="dev" />
+          {/await}
+        </div>
 
-          <label class="config-label" for="extra-tags-input">Extra tags</label>
-          <input id="extra-tags-input" type="text" class="config-input" bind:value={extraTagsInput} placeholder="tag1, tag2" />
+        <div class="tag-selector">
+          <span class="tag-selector-label">Scope</span>
+          <div class="tag-pills">
+            {#each SCOPE_OPTIONS as opt (opt)}
+              <button
+                type="button"
+                class="tag-pill"
+                class:tag-pill-active={selectedScope === opt}
+                onclick={() => { selectedScope = selectedScope === opt ? null : opt; }}
+              >
+                {opt}
+              </button>
+            {/each}
+          </div>
+        </div>
+
+        <div class="tag-selector">
+          <span class="tag-selector-label">Type</span>
+          <div class="tag-pills">
+            {#each TYPE_OPTIONS as opt (opt)}
+              <button
+                type="button"
+                class="tag-pill"
+                class:tag-pill-active={selectedType === opt}
+                onclick={() => { selectedType = selectedType === opt ? null : opt; }}
+              >
+                {opt}
+              </button>
+            {/each}
+          </div>
         </div>
       </section>
 
@@ -200,17 +273,38 @@
       <section class="section">
         <button type="button" class="preview-toggle" onclick={loadPromptPreview}>
           {#if loadingPreview}
-            Loading prompt…
+            Loading prompt...
           {:else if promptExpanded}
-            ▾ Prompt Preview
+            &#9662; Prompt Preview
           {:else}
-            ▸ Prompt Preview
+            &#9656; Prompt Preview
           {/if}
         </button>
         {#if promptExpanded && promptPreview !== null}
           <pre class="prompt-preview">{promptPreview}</pre>
         {/if}
       </section>
+
+      <!-- Dispatch Preview -->
+      {#if dispatchPreview.length > 0}
+        <section class="section">
+          <div class="section-label">Will dispatch</div>
+          <div class="preview-list">
+            {#each dispatchPreview as item (item.key)}
+              <div class="preview-row">
+                <span class="preview-harness">{item.harness}</span>
+                <span class="preview-sep">/</span>
+                <span class="preview-model">{item.model}</span>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  onclick={() => { selectedModels.delete(item.key); }}
+                >x</button>
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
 
       {#if dispatchError}
         <div class="error-msg">{dispatchError}</div>
@@ -225,7 +319,7 @@
           onclick={handleDispatch}
         >
           {#if dispatching}
-            Dispatching…
+            Dispatching...
           {:else}
             Dispatch to {selectedCount} agent{selectedCount === 1 ? '' : 's'}
           {/if}
@@ -301,28 +395,24 @@
     gap: 4px;
   }
 
-  .agent-row {
+  .agent-group {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
     padding: 8px 10px;
     border: 1px solid var(--color-border);
     border-radius: 4px;
-    cursor: pointer;
-    transition: border-color 0.1s, background 0.1s;
-    flex-wrap: wrap;
+    transition: border-color 0.1s;
   }
-  .agent-row:hover {
-    background: var(--color-elevated);
-  }
-  .agent-selected {
+  .agent-active {
     border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
-    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 4%, transparent);
   }
 
-  .agent-checkbox {
-    flex-shrink: 0;
-    accent-color: var(--color-accent);
+  .agent-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .agent-name {
@@ -333,26 +423,35 @@
     flex-shrink: 0;
   }
 
-  .agent-desc {
-    font-size: 11px;
-    color: var(--color-dim);
-    flex: 1;
+  .model-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 
-  .model-input {
+  .model-pill {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
-    padding: 2px 6px;
+    padding: 2px 8px;
+    border-radius: 10px;
     border: 1px solid var(--color-border);
-    border-radius: 3px;
-    background: var(--color-elevated);
-    color: var(--color-text);
-    width: 100%;
-    margin-top: 4px;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: all 0.1s;
   }
-  .model-input:focus {
-    outline: none;
+  .model-pill:hover {
+    border-color: var(--color-border-bright);
+    color: var(--color-text);
+  }
+  .model-pill-active {
+    background: var(--color-accent);
     border-color: var(--color-accent);
+    color: #fff;
+  }
+  .model-pill-active:hover {
+    opacity: 0.9;
+    color: #fff;
   }
 
   .config-grid {
@@ -369,6 +468,27 @@
     white-space: nowrap;
   }
 
+  .config-select {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-elevated);
+    color: var(--color-text);
+    cursor: pointer;
+    outline: none;
+  }
+  .config-select:focus {
+    border-color: var(--color-accent);
+  }
+
+  .config-loading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+  }
+
   .config-input {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
@@ -381,6 +501,50 @@
   .config-input:focus {
     outline: none;
     border-color: var(--color-accent);
+  }
+
+  .tag-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .tag-selector-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+    min-width: 50px;
+  }
+
+  .tag-pills {
+    display: flex;
+    gap: 4px;
+  }
+
+  .tag-pill {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .tag-pill:hover {
+    border-color: var(--color-border-bright);
+    color: var(--color-text);
+  }
+  .tag-pill-active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+  .tag-pill-active:hover {
+    opacity: 0.9;
+    color: #fff;
   }
 
   .preview-toggle {
@@ -408,6 +572,52 @@
     max-height: 200px;
     overflow-y: auto;
     margin: 0;
+  }
+
+  .preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .preview-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+  }
+
+  .preview-harness {
+    color: var(--color-text);
+    font-weight: 500;
+  }
+
+  .preview-sep {
+    color: var(--color-dim);
+  }
+
+  .preview-model {
+    color: var(--color-muted);
+    flex: 1;
+  }
+
+  .preview-remove {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    background: none;
+    border: none;
+    color: var(--color-dim);
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .preview-remove:hover {
+    color: var(--color-danger);
   }
 
   .error-msg {
