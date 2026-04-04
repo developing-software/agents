@@ -35,12 +35,7 @@
     ondispatched?: (planId: string) => void;
   } = $props();
 
-  const SCOPE_OPTIONS = ['small', 'medium', 'large'] as const;
-  const TYPE_OPTIONS = ['bug', 'feature', 'task'] as const;
-
   let selectedModels = new SvelteSet<string>();
-  let selectedScope = $state<string | null>(null);
-  let selectedType = $state<string | null>(null);
   let ref = $state('dev');
   const branchesPromise = listBranches({ organization, repoName });
   let promptPreview = $state<string | null>(null);
@@ -101,10 +96,6 @@
     dispatchError = null;
     dispatchResults = null;
     try {
-      const extraTags: string[] = [];
-      if (selectedScope) extraTags.push(`scope:${selectedScope}`);
-      if (selectedType) extraTags.push(`type:${selectedType}`);
-
       const agentList = Array.from(selectedModels).map((key) => {
         const [harness, ...rest] = key.split(':');
         return { harness: harness as 'claude' | 'opencode' | 'codex', model: rest.join(':') };
@@ -116,7 +107,6 @@
         repoName,
         agents: agentList,
         ref,
-        extraTags: extraTags.length > 0 ? extraTags : undefined,
       });
 
       dispatchResults = results;
@@ -139,8 +129,6 @@
     agentDataPromise.then(({ agents }) => {
       if (agents.length > 0) selectedModels.add(`${agents[0].id}:${agents[0].defaultModel}`);
     });
-    selectedScope = null;
-    selectedType = null;
     ref = 'dev';
   }
 </script>
@@ -226,37 +214,6 @@
           {/await}
         </div>
 
-        <div class="tag-selector">
-          <span class="tag-selector-label">Scope</span>
-          <div class="tag-pills">
-            {#each SCOPE_OPTIONS as opt (opt)}
-              <button
-                type="button"
-                class="tag-pill"
-                class:tag-pill-active={selectedScope === opt}
-                onclick={() => { selectedScope = selectedScope === opt ? null : opt; }}
-              >
-                {opt}
-              </button>
-            {/each}
-          </div>
-        </div>
-
-        <div class="tag-selector">
-          <span class="tag-selector-label">Type</span>
-          <div class="tag-pills">
-            {#each TYPE_OPTIONS as opt (opt)}
-              <button
-                type="button"
-                class="tag-pill"
-                class:tag-pill-active={selectedType === opt}
-                onclick={() => { selectedType = selectedType === opt ? null : opt; }}
-              >
-                {opt}
-              </button>
-            {/each}
-          </div>
-        </div>
       </section>
 
       <!-- Prompt Preview -->
@@ -467,50 +424,6 @@
   .config-input:focus {
     outline: none;
     border-color: var(--color-accent);
-  }
-
-  .tag-selector {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-  }
-
-  .tag-selector-label {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: var(--color-dim);
-    min-width: 50px;
-  }
-
-  .tag-pills {
-    display: flex;
-    gap: 4px;
-  }
-
-  .tag-pill {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-muted);
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-  .tag-pill:hover {
-    border-color: var(--color-border-bright);
-    color: var(--color-text);
-  }
-  .tag-pill-active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: #fff;
-  }
-  .tag-pill-active:hover {
-    opacity: 0.9;
-    color: #fff;
   }
 
   .preview-toggle {

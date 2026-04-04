@@ -66,14 +66,13 @@ export const dispatchPlan = command(
       }),
     ),
     ref: z.string().default("dev"),
-    extraTags: z.array(z.string()).optional(),
   }),
-  async ({ planId, organization, repoName, agents, ref, extraTags }) => {
+  async ({ planId, organization, repoName, agents, ref }) => {
     const plan = await Plan.fromID(planId);
     if (!plan) error(404, `Plan ${planId} not found`);
 
     const prompt = await Plan.toPrompt(plan);
-    const baseTags = [`plan:${planId}`, ...plan.tags, ...(extraTags ?? [])];
+    const baseTags = [`plan:${planId}`, ...plan.tags];
 
     const results: { harness: string; status: string }[] = [];
 
