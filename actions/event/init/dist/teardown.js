@@ -19976,12 +19976,13 @@ async function run() {
   const durationMs = Date.now() - startMs;
   const repository = process.env.GITHUB_REPOSITORY ?? "";
   const runUrl = process.env.DEV_AGENTS_RUN_URL ?? "";
+  const trigger = process.env.GITHUB_EVENT_NAME ?? "";
   const resultsDir = process.env.DEV_AGENTS_RESULTS_DIR;
   let data = {};
   if (resultsDir && existsSync2(resultsDir)) {
     data = readDataDir(resultsDir);
   }
-  data.workflow = { durationMs, runUrl };
+  data.workflow = { durationMs, runUrl, trigger };
   const tags = uniqueTags(readContextTags());
   if (agentsToken) {
     try {
