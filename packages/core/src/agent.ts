@@ -1,1 +1,1 @@
-export { AgentWorkflow, AgentDiscovery, AgentPrompt, AgentSkill } from "./agent/index";
+export { AgentWorkflow, AgentCompat, AgentDiscovery, AgentPrompt, AgentSkill } from "./agent/index";

@@ -1,8 +1,9 @@
 <script lang="ts">
   import Drawer from '$lib/ui/Drawer.svelte';
-  import { previewPrompt, dispatchPlan, listBranches } from './dispatch.remote';
+  import { previewPrompt, dispatchPlan, listBranches, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
   import { statusDotColor, statusBadgeStyle } from '$lib/agents/plans/plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
+  import ModelSelector from './ModelSelector.svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
   type PlanItem = {
@@ -34,34 +35,10 @@
     ondispatched?: (planId: string) => void;
   } = $props();
 
-  const AGENTS = [
-    { harness: 'claude' as const, label: 'Claude' },
-    { harness: 'opencode' as const, label: 'OpenCode' },
-    { harness: 'codex' as const, label: 'Codex' },
-  ];
-
-  const AGENT_MODELS: Record<string, { id: string; label: string }[]> = {
-    claude: [
-      { id: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
-      { id: 'claude-opus-4-6', label: 'Opus 4.6' },
-      { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
-    ],
-    opencode: [
-      { id: 'openai/gpt-5.4-pro', label: 'GPT 5.4 Pro' },
-      { id: 'openai/o3', label: 'o3' },
-      { id: 'openai/gpt-4.1', label: 'GPT 4.1' },
-    ],
-    codex: [
-      { id: 'o3', label: 'o3' },
-      { id: 'o4-mini', label: 'o4-mini' },
-      { id: 'gpt-4.1', label: 'GPT 4.1' },
-    ],
-  };
-
   const SCOPE_OPTIONS = ['small', 'medium', 'large'] as const;
   const TYPE_OPTIONS = ['bug', 'feature', 'task'] as const;
 
-  let selectedModels = new SvelteSet(['claude:claude-sonnet-4-6']);
+  let selectedModels = new SvelteSet<string>();
   let selectedScope = $state<string | null>(null);
   let selectedType = $state<string | null>(null);
   let ref = $state('dev');
@@ -73,11 +50,22 @@
   let dispatchError = $state<string | null>(null);
   let dispatchResults = $state<{ harness: string; status: string }[] | null>(null);
 
-  function toggleModel(harness: string, modelId: string) {
-    const key = `${harness}:${modelId}`;
-    if (selectedModels.has(key)) selectedModels.delete(key);
-    else selectedModels.add(key);
-  }
+  type AgentConfig = { id: string; label: string; multiProvider: boolean; defaultModel: string };
+  type AgentData = { agents: AgentConfig[]; featuredModels: Record<string, unknown[]> };
+
+  const agentDataPromise: Promise<AgentData> = listAgentConfigs({}).then(async (agents) => {
+    const entries = await Promise.all(
+      agents.map(async (a) => {
+        const models = await listFeaturedModels({ agent: a.id as 'claude' | 'opencode' | 'codex' });
+        return [a.id, models] as const;
+      }),
+    );
+    // Set default selection from the first agent's default model
+    if (selectedModels.size === 0 && agents.length > 0) {
+      selectedModels.add(`${agents[0].id}:${agents[0].defaultModel}`);
+    }
+    return { agents, featuredModels: Object.fromEntries(entries) };
+  });
 
   function hasAgent(harness: string): boolean {
     return Array.from(selectedModels).some((k) => k.startsWith(harness + ':'));
@@ -89,9 +77,7 @@
     Array.from(selectedModels).map((key) => {
       const [harness, ...rest] = key.split(':');
       const modelId = rest.join(':');
-      const agent = AGENTS.find((a) => a.harness === harness);
-      const model = AGENT_MODELS[harness]?.find((m) => m.id === modelId);
-      return { key, harness: agent?.label ?? harness, model: model?.label ?? modelId };
+      return { key, harness, model: modelId };
     })
   );
 
@@ -148,8 +134,11 @@
     dispatchError = null;
     promptPreview = null;
     promptExpanded = false;
+    // Re-initialize default selection from loaded config
     selectedModels.clear();
-    selectedModels.add('claude:claude-sonnet-4-6');
+    agentDataPromise.then(({ agents }) => {
+      if (agents.length > 0) selectedModels.add(`${agents[0].id}:${agents[0].defaultModel}`);
+    });
     selectedScope = null;
     selectedType = null;
     ref = 'dev';
@@ -191,27 +180,28 @@
       <!-- Agent Selection -->
       <section class="section">
         <div class="section-label">Agents</div>
-        <div class="agent-list">
-          {#each AGENTS as agent (agent.harness)}
-            <div class="agent-group" class:agent-active={hasAgent(agent.harness)}>
-              <div class="agent-header">
-                <span class="agent-name">{agent.label}</span>
+        {#await agentDataPromise}
+          <div class="models-loading">Loading models...</div>
+        {:then data}
+          <div class="agent-list">
+            {#each data.agents as agent (agent.id)}
+              <div class="agent-group" class:agent-active={hasAgent(agent.id)}>
+                <div class="agent-header">
+                  <span class="agent-name">{agent.label}</span>
+                </div>
+                <ModelSelector
+                  agent={agent.id}
+                  agentLabel={agent.label}
+                  featuredModels={data.featuredModels[agent.id] ?? []}
+                  selected={selectedModels}
+                  multiProvider={agent.multiProvider}
+                />
               </div>
-              <div class="model-pills">
-                {#each AGENT_MODELS[agent.harness] ?? [] as model (model.id)}
-                  <button
-                    type="button"
-                    class="model-pill"
-                    class:model-pill-active={selectedModels.has(`${agent.harness}:${model.id}`)}
-                    onclick={() => toggleModel(agent.harness, model.id)}
-                  >
-                    {model.label}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {/each}
-        </div>
+            {/each}
+          </div>
+        {:catch}
+          <div class="models-loading">Failed to load models</div>
+        {/await}
       </section>
 
       <!-- Configuration -->
@@ -423,35 +413,11 @@
     flex-shrink: 0;
   }
 
-  .model-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .model-pill {
+  .models-loading {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-muted);
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-  .model-pill:hover {
-    border-color: var(--color-border-bright);
-    color: var(--color-text);
-  }
-  .model-pill-active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: #fff;
-  }
-  .model-pill-active:hover {
-    opacity: 0.9;
-    color: #fff;
+    color: var(--color-dim);
+    padding: 8px 0;
   }
 
   .config-grid {

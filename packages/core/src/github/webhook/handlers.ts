@@ -1,4 +1,4 @@
-import type { GitHubWebhook } from "./index";
+import type { EmitterWebhookEventName, EmitterWebhookEvent } from "@octokit/webhooks";
 import { GithubInstallation } from "../installation/index";
 import { User } from "../../user/index";
 import { Log } from "../../util/log";
@@ -6,9 +6,16 @@ import { Event } from "../../events/index";
 import { Tags } from "../../tag";
 import { Repository } from "../../repository/index";
 
+interface WebhookEmitter {
+  on<E extends EmitterWebhookEventName>(
+    eventName: E,
+    handler: (event: EmitterWebhookEvent<E>) => Promise<void> | void,
+  ): void;
+}
+
 const log = Log.create({ namespace: "github.webhook" });
 
-export function registerHandlers(webhook: typeof GitHubWebhook) {
+export function registerHandlers(webhook: WebhookEmitter) {
   // App install / uninstall
   webhook.on("installation.created", async ({ payload }) => {
     const account = payload.installation.account;

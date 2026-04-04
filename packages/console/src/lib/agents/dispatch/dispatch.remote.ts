@@ -1,10 +1,43 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
-import { AgentWorkflow } from "@agents/core/agent";
+import { AgentWorkflow, AgentCompat } from "@agents/core/agent";
 import { GithubBranch } from "@agents/core/github/repo/branch";
 import { Plan } from "@agents/core/plan/index";
 import { Repository } from "@agents/core/repository/index";
 import { error } from "@sveltejs/kit";
+
+export const listAgentConfigs = query(z.object({}), async () => {
+  return AgentWorkflow.Agents.map((id) => {
+    const cfg = AgentCompat.config[id];
+    return {
+      id,
+      label: cfg.label,
+      multiProvider: cfg.providers.length > 1,
+      defaultModel: cfg.defaultModel,
+    };
+  });
+});
+
+export const listFeaturedModels = query(
+  z.object({ agent: z.enum(AgentWorkflow.Agents) }),
+  async ({ agent }) => AgentCompat.featuredModels(agent),
+);
+
+export const searchAgentModels = query(
+  z.object({ agent: z.enum(AgentWorkflow.Agents), search: z.string().optional() }),
+  async ({ agent, search }) => {
+    const models = await AgentCompat.allModels(agent);
+    if (!search) return models;
+    const q = search.toLowerCase();
+    return models.filter(
+      (m) =>
+        m.label.toLowerCase().includes(q) ||
+        m.modelId.toLowerCase().includes(q) ||
+        m.family?.toLowerCase().includes(q) ||
+        m.providerId.toLowerCase().includes(q),
+    );
+  },
+);
 
 export const listBranches = query(
   z.object({ organization: z.string(), repoName: z.string() }),
