@@ -279,6 +279,10 @@ agents/
     skills/         Agent skill definitions
 ```
 
+## Contributors
+
+- opencode
+
 ## Tech Stack
 
 - **Runtime:** Bun or CF Workers
