@@ -21,7 +21,7 @@ inputs:
     description: "Provider for pricing lookup (e.g. anthropic, openai)"
     required: false
   status:
-    description: "Job status at time of agent collection — pass ${{ job.status }}"
+    description: "Agent step outcome (e.g. success, failure, cancelled)"
     required: false
 
 runs:
