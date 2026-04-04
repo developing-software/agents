@@ -11,13 +11,11 @@
     agentLabel,
     featuredModels,
     selected,
-    multiProvider,
   }: {
     agent: string;
     agentLabel: string;
     featuredModels: AgentModelInfo[];
     selected: SvelteSet<string>;
-    multiProvider: boolean;
   } = $props();
 
   let activeTab = $state<'recommended' | 'all'>('recommended');
@@ -26,6 +24,26 @@
   let allTabLoaded = $state(false);
 
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  let providerFilter = $state<string | null>(null);
+
+  let providers = $derived.by(() => {
+    const seen = new Map<string, { id: string; name: string; logo: string }>();
+    for (const m of featuredModels) {
+      if (!seen.has(m.providerId)) {
+        seen.set(m.providerId, { id: m.providerId, name: m.providerName, logo: m.providerLogo });
+      }
+    }
+    return [...seen.values()];
+  });
+
+  let isMultiProvider = $derived(providers.length > 1);
+
+  function filterByProvider(models: AgentModelInfo[]): AgentModelInfo[] {
+    if (!providerFilter) return models;
+    return models.filter((m) => m.providerId === providerFilter);
+  }
+
+  let filteredFeatured = $derived(filterByProvider(featuredModels));
 
   let hasSelection = $derived(
     Array.from(selected).some((k) => k.startsWith(agent + ':'))
@@ -110,6 +128,34 @@
     </div>
   {/if}
 
+  <!-- Provider filter (multi-provider agents only) -->
+  {#if isMultiProvider}
+    <div class="provider-filter">
+      <button
+        type="button"
+        class="provider-pill"
+        class:provider-pill-active={providerFilter === null}
+        onclick={() => providerFilter = null}
+      >All</button>
+      {#each providers as provider (provider.id)}
+        <button
+          type="button"
+          class="provider-pill"
+          class:provider-pill-active={providerFilter === provider.id}
+          onclick={() => providerFilter = providerFilter === provider.id ? null : provider.id}
+        >
+          <img
+            class="provider-logo"
+            src={provider.logo}
+            alt=""
+            onerror={handleLogoError}
+          />
+          <span>{provider.name}</span>
+        </button>
+      {/each}
+    </div>
+  {/if}
+
   <!-- Tab bar -->
   <div class="tab-bar">
     <button
@@ -129,29 +175,28 @@
   <!-- Tab content -->
   {#if activeTab === 'recommended'}
     <div class="tab-content">
-      <div class="model-pills">
-        {#each featuredModels as model (model.id)}
-          <button
-            type="button"
-            class="model-pill"
-            class:model-pill-active={selected.has(`${agent}:${model.id}`)}
-            onclick={() => toggleModel(model.id)}
-          >
-            {#if multiProvider}
-              <img
-                class="provider-logo"
-                src={model.providerLogo}
-                alt=""
-                onerror={handleLogoError}
-              />
-            {/if}
-            <span class="model-pill-label">{model.label}</span>
-            {#if formatCost(model.cost)}
-              <span class="model-cost">{formatCost(model.cost)}</span>
-            {/if}
-          </button>
-        {/each}
-      </div>
+      {#each filteredFeatured as model (model.id)}
+        <button
+          type="button"
+          class="result-row"
+          class:result-row-active={selected.has(`${agent}:${model.id}`)}
+          onclick={() => toggleModel(model.id)}
+        >
+          <img
+            class="provider-logo"
+            src={model.providerLogo}
+            alt=""
+            onerror={handleLogoError}
+          />
+          <span class="result-name">{model.label}</span>
+          {#if model.family}
+            <span class="result-family">{model.family}</span>
+          {/if}
+          {#if formatCost(model.cost)}
+            <span class="model-cost">{formatCost(model.cost)}</span>
+          {/if}
+        </button>
+      {/each}
     </div>
   {:else}
     <div class="all-models-section">
@@ -167,24 +212,23 @@
           {#await searchPromise}
             <div class="results-status">Loading...</div>
           {:then results}
-            {#if results.length === 0}
+            {@const filtered = filterByProvider(results)}
+            {#if filtered.length === 0}
               <div class="results-status">No models found</div>
             {:else}
-              {#each results as model (model.id)}
+              {#each filtered as model (model.id)}
                 <button
                   type="button"
                   class="result-row"
                   class:result-row-active={selected.has(`${agent}:${model.id}`)}
                   onclick={() => toggleModel(model.id)}
                 >
-                  {#if multiProvider}
-                    <img
-                      class="provider-logo"
-                      src={model.providerLogo}
-                      alt=""
-                      onerror={handleLogoError}
-                    />
-                  {/if}
+                  <img
+                    class="provider-logo"
+                    src={model.providerLogo}
+                    alt=""
+                    onerror={handleLogoError}
+                  />
                   <span class="result-name">{model.label}</span>
                   {#if model.family}
                     <span class="result-family">{model.family}</span>
@@ -249,6 +293,37 @@
     color: var(--color-danger);
   }
 
+  /* Provider filter */
+  .provider-filter {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .provider-pill {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.1s;
+  }
+  .provider-pill:hover {
+    border-color: var(--color-border-bright);
+    color: var(--color-text);
+  }
+  .provider-pill-active {
+    background: var(--color-elevated);
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+
   /* Tab bar */
   .tab-bar {
     display: flex;
@@ -280,53 +355,10 @@
     overflow-y: auto;
   }
 
-  /* Model pills (Recommended tab) */
-  .model-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px 0;
-  }
-
-  .model-pill {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-muted);
-    cursor: pointer;
-    transition: all 0.1s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .model-pill:hover {
-    border-color: var(--color-border-bright);
-    color: var(--color-text);
-  }
-  .model-pill-active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: #fff;
-  }
-  .model-pill-active:hover {
-    opacity: 0.9;
-    color: #fff;
-  }
-
-  .model-pill-label {
-    white-space: nowrap;
-  }
-
   .model-cost {
     font-size: 9px;
     color: var(--color-dim);
     margin-left: 4px;
-  }
-  .model-pill-active .model-cost {
-    color: rgba(255, 255, 255, 0.7);
   }
 
   .provider-logo {
@@ -334,9 +366,6 @@
     height: 12px;
     flex-shrink: 0;
     opacity: 0.7;
-  }
-  .model-pill-active .provider-logo {
-    opacity: 1;
   }
 
   /* All Models tab */
@@ -363,7 +392,7 @@
     color: var(--color-dim);
   }
 
-  /* Result rows (All Models tab) */
+  /* Result rows (both tabs) */
   .results-status {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;

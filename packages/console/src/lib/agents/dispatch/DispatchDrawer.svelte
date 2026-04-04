@@ -182,7 +182,6 @@
                   agentLabel={agent.label}
                   featuredModels={data.featuredModels[agent.id] ?? []}
                   selected={selectedModels}
-                  multiProvider={agent.multiProvider}
                 />
               </div>
             {/each}
