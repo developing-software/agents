@@ -52,7 +52,7 @@ export namespace ModelsApi {
       validator(
         "param",
         z.object({
-          modelId: z.string().meta({
+          modelId: Models.Info.shape.id.meta({
             description: "Model ID to look up (supports longest-prefix-match)",
             example: "claude-sonnet-4-6",
           }),
@@ -93,17 +93,8 @@ export namespace ModelsApi {
       validator(
         "json",
         z.object({
-          model: z.string().meta({
-            description: "Model ID (supports longest-prefix-match)",
-            example: "claude-sonnet-4-6",
-          }),
-          tokens: z.object({
-            input: z.number().int().min(0).meta({ description: "Input tokens", example: 50000 }),
-            output: z.number().int().min(0).meta({ description: "Output tokens", example: 5000 }),
-            cacheRead: z.number().int().min(0).optional().meta({ description: "Cache read tokens" }),
-            cacheWrite: z.number().int().min(0).optional().meta({ description: "Cache write tokens" }),
-            reasoning: z.number().int().min(0).optional().meta({ description: "Reasoning tokens" }),
-          }).meta({ description: "Token counts from the model usage" }),
+          model: Models.Pricing.shape.model,
+          tokens: Models.TokenCounts,
         }),
       ),
       describeRoute({
@@ -117,7 +108,7 @@ export namespace ModelsApi {
               "application/json": {
                 schema: Result(
                   z.object({
-                    pricing: Models.Pricing.nullable().meta({ description: "Resolved pricing record" }),
+                    pricing: Models.Pricing.nullable(),
                     cost_usd: z.number().nullable().meta({ description: "Total cost in USD", example: 0.225 }),
                   }),
                 ),

@@ -40,7 +40,7 @@ export namespace Models {
   });
   export type Modalities = z.infer<typeof Modalities>;
 
-  export const Model = z.object({
+  export const Info = z.object({
     id: z.string(),
     name: z.string(),
     family: z.string().optional(),
@@ -60,7 +60,7 @@ export namespace Models {
     status: z.string().optional(),
     structured_output: z.boolean().optional(),
   });
-  export type Model = z.infer<typeof Model>;
+  export type Info = z.infer<typeof Info>;
 
   export const Provider = z.object({
     id: z.string(),
@@ -69,12 +69,23 @@ export namespace Models {
     doc: z.string().optional(),
     env: z.union([z.string(), z.array(z.string())]).optional(),
     npm: z.string().optional(),
-    models: z.record(z.string(), Model).optional(),
+    models: z.record(z.string(), Info).optional(),
   });
   export type Provider = z.infer<typeof Provider>;
 
   export const ApiResponse = z.record(z.string(), Provider);
   export type ApiResponse = z.infer<typeof ApiResponse>;
+
+  export const TokenCounts = z
+    .object({
+      input: z.number().int().min(0).meta({ description: "Input tokens", example: 50000 }),
+      output: z.number().int().min(0).meta({ description: "Output tokens", example: 5000 }),
+      cacheRead: z.number().int().min(0).optional().meta({ description: "Cache read tokens" }),
+      cacheWrite: z.number().int().min(0).optional().meta({ description: "Cache write tokens" }),
+      reasoning: z.number().int().min(0).optional().meta({ description: "Reasoning tokens" }),
+    })
+    .meta({ description: "Token counts from model usage" });
+  export type TokenCounts = z.infer<typeof TokenCounts>;
 
   export const Pricing = z
     .object({
@@ -115,11 +126,11 @@ export namespace Models {
   }
 
   export async function allModels(): Promise<
-    (Model & { providerId: string; providerName: string })[]
+    (Info & { providerId: string; providerName: string })[]
   > {
     return withCache({ key: "models:all-models", ttl: TTL }, async () => {
       const data = await list();
-      const result: (Model & {
+      const result: (Info & {
         providerId: string;
         providerName: string;
       })[] = [];
@@ -163,13 +174,7 @@ export namespace Models {
 
   /** Calculate cost in USD given token counts and a Cost record. All costs are $/1M tokens. */
   export function calculateCost(
-    tokens: {
-      input: number;
-      output: number;
-      cacheRead?: number;
-      cacheWrite?: number;
-      reasoning?: number;
-    },
+    tokens: TokenCounts,
     cost: Cost,
   ): number {
     let total = 0;
