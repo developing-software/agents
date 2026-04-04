@@ -167,17 +167,18 @@ export namespace Models {
     return `https://models.dev/logos/${providerId}.svg`;
   }
 
-  /** Lookup pricing for a model ID using exact match, then longest-prefix-match. */
-  export async function pricing(modelId: string): Promise<Pricing | null> {
+  /** Lookup pricing for a model ID using exact match, then longest-prefix-match. Optionally filter by provider. */
+  export async function pricing(modelId: string, providerId?: string): Promise<Pricing | null> {
     const models = await allModels();
     const lower = modelId.toLowerCase();
+    const candidates = providerId ? models.filter((m) => m.providerId === providerId) : models;
 
     // 1. Exact match
-    const exact = models.find((m) => m.id.toLowerCase() === lower);
+    const exact = candidates.find((m) => m.id.toLowerCase() === lower);
     if (exact?.cost) return { model: exact.id, provider: exact.providerId, cost: exact.cost };
 
     // 2. Longest prefix match (e.g. "claude-sonnet-4-6-20250514" → "claude-sonnet-4-6")
-    const prefixMatches = models
+    const prefixMatches = candidates
       .filter((m) => lower.startsWith(m.id.toLowerCase()) && m.cost)
       .sort((a, b) => b.id.length - a.id.length);
     if (prefixMatches[0])

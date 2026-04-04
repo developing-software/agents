@@ -93,6 +93,10 @@ export namespace ModelsApi {
         "json",
         z.object({
           model: Models.Pricing.shape.model,
+          provider: z.string().optional().meta({
+            description: "Provider ID to filter pricing lookup (e.g. anthropic, openai)",
+            example: "anthropic",
+          }),
           tokens: Models.TokenCounts,
         }),
       ),
@@ -124,8 +128,8 @@ export namespace ModelsApi {
         },
       }),
       async (c) => {
-        const { model, tokens } = c.req.valid("json");
-        const pricing = await Models.pricing(model);
+        const { model, provider, tokens } = c.req.valid("json");
+        const pricing = await Models.pricing(model, provider);
         const cost_usd = pricing ? Models.calculateCost(tokens, pricing.cost) : null;
         return c.json({ pricing, cost_usd });
       },

@@ -485,6 +485,7 @@ export class DevAgentSdk extends HeyApiClient {
   public postModelsCost<ThrowOnError extends boolean = false>(
     parameters: {
       model: string;
+      provider?: string;
       tokens: {
         /**
          * Input tokens
@@ -516,6 +517,7 @@ export class DevAgentSdk extends HeyApiClient {
         {
           args: [
             { in: "body", key: "model" },
+            { in: "body", key: "provider" },
             { in: "body", key: "tokens" },
           ],
         },

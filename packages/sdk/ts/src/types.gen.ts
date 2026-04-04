@@ -977,6 +977,10 @@ export type PostModelsCostData = {
      */
     model: string;
     /**
+     * Provider ID to filter pricing lookup (e.g. anthropic, openai)
+     */
+    provider?: string;
+    /**
      * Token counts from model usage
      */
     tokens: {

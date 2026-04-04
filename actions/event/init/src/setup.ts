@@ -122,6 +122,7 @@ async function run() {
           tags: allTags,
           data: {
             runUrl,
+            trigger: process.env.GITHUB_EVENT_NAME ?? "",
             ...extraData,
           },
         },

@@ -91,10 +91,12 @@ jobs:
           prompt: |
             ${{ inputs.prompt }}
 
-      - uses: ./actions/agent/codex
+      - uses: ./actions/agent
         if: always()
         with:
+          agent: codex
           final_message: ${{ steps.run-codex.outputs.final-message }}
+          provider: openai
 
       - uses: ./.github/actions/check
         if: always()

@@ -98,12 +98,14 @@ jobs:
           additional_permissions: |
             actions: read
 
-      - uses: ./actions/agent/claude
+      - uses: ./actions/agent
         if: always()
         with:
+          agent: claude-code
           execution_file: ${{ steps.run-claude.outputs.execution_file }}
           session_id: ${{ steps.run-claude.outputs.session_id }}
           model: ${{ env.MODEL }}
+          provider: anthropic
 
       - uses: ./.github/actions/check
         if: always()

@@ -2090,6 +2090,11 @@
                     "description": "Resolved model ID",
                     "example": "claude-sonnet-4-6"
                   },
+                  "provider": {
+                    "description": "Provider ID to filter pricing lookup (e.g. anthropic, openai)",
+                    "example": "anthropic",
+                    "type": "string"
+                  },
                   "tokens": {
                     "type": "object",
                     "properties": {

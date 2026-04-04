@@ -19845,6 +19845,71 @@ class DevAgentSdk extends HeyApiClient {
       ...params
     });
   }
+  postGithubDispatch(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "owner" },
+          { in: "body", key: "repo" },
+          { in: "body", key: "agent" },
+          { in: "body", key: "prompt" },
+          { in: "body", key: "issue_number" },
+          { in: "body", key: "tags" },
+          { in: "body", key: "model" },
+          { in: "body", key: "ref" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/github/dispatch",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
+  getModelsPricing(options) {
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing",
+      ...options
+    });
+  }
+  getModelsPricingByModelId(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }] }]);
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing/{modelId}",
+      ...options,
+      ...params
+    });
+  }
+  postModelsCost(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "model" },
+          { in: "body", key: "provider" },
+          { in: "body", key: "tokens" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/cost",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
 }
 // actions/core/src/index.ts
 function uniqueTags(tags) {
@@ -19941,6 +20006,7 @@ async function run() {
           tags: allTags,
           data: {
             runUrl,
+            trigger: process.env.GITHUB_EVENT_NAME ?? "",
             ...extraData
           }
         }

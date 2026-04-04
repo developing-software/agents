@@ -48,6 +48,7 @@ async function run() {
   const durationMs = Date.now() - startMs;
   const repository = process.env.GITHUB_REPOSITORY ?? "";
   const runUrl = process.env.DEV_AGENTS_RUN_URL ?? "";
+  const trigger = process.env.GITHUB_EVENT_NAME ?? "";
 
   // Aggregate data from results directory
   const resultsDir = process.env.DEV_AGENTS_RESULTS_DIR;
@@ -58,7 +59,7 @@ async function run() {
   }
 
   // Add computed workflow data
-  data.workflow = { durationMs, runUrl };
+  data.workflow = { durationMs, runUrl, trigger };
 
   // Read tags
   const tags = uniqueTags(readContextTags());

@@ -110,8 +110,11 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: opencode run --agent build --model "${{ env.MODEL }}" "${{ inputs.prompt }}"
 
-      - uses: ./actions/agent/opencode
+      - uses: ./actions/agent
         if: always()
+        with:
+          agent: opencode
+          provider: openai
 
       - uses: ./.github/actions/check
         if: always()
