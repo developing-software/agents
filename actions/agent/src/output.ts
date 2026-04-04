@@ -1,11 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import * as core from "@actions/core";
-import type { ExtractorResult, PricingResult } from "./types";
+import type { ExtractorResult, AgentPricing } from "./types";
 
 export async function writeResults(
   result: ExtractorResult,
-  pricing: PricingResult | null,
+  pricing: AgentPricing | null,
 ): Promise<void> {
   const resultsDir = process.env.DEV_AGENTS_RESULTS_DIR;
   if (!resultsDir) {
@@ -15,6 +15,11 @@ export async function writeResults(
 
   const agentDir = join(resultsDir, "agent");
   mkdirSync(agentDir, { recursive: true });
+
+  // Backfill cost from pricing when agent didn't report it
+  if (result.metrics && result.metrics.cost_usd == null && pricing?.cost_usd != null) {
+    result.metrics.cost_usd = pricing.cost_usd;
+  }
 
   const output: Record<string, unknown> = {
     name: result.name,

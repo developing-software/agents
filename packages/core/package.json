@@ -8,7 +8,8 @@
     "./*": [
       "./src/*.ts",
       "./src/*/index.ts"
-    ]
+    ],
+    "./events/agent": "./src/events/agent/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

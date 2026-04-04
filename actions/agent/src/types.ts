@@ -1,3 +1,8 @@
+import type { AgentEvent } from "@agents/core/events/agent";
+
+export type AgentMetrics = AgentEvent.Completed.Metrics;
+export type AgentPricing = AgentEvent.Completed.Pricing;
+
 export interface ExtractorInputs {
   agent: string;
   executionFile: string;
@@ -8,19 +13,6 @@ export interface ExtractorInputs {
   status: string;
 }
 
-export interface AgentMetrics {
-  tokens: {
-    input: number | null;
-    output: number | null;
-    reasoning: number | null;
-    cache_read: number | null;
-    cache_creation: number | null;
-  };
-  turns: number | null;
-  cost_usd: number | null;
-  model: string | null;
-}
-
 export interface ExtractorResult {
   name: string;
   sessionId: string | null;
@@ -28,12 +20,4 @@ export interface ExtractorResult {
   metrics: AgentMetrics | null;
   artifactPath: string | null;
   artifactName: string | null;
-}
-
-export interface PricingResult {
-  heuristic: "agent-reported" | "models-dev";
-  model: string;
-  provider: string;
-  cost: Record<string, number | undefined>;
-  cost_usd: number | null;
 }

@@ -1,17 +1,8 @@
 // Shared utility functions for event rendering
 
-export type EventMetrics = {
-  tokens: {
-    input: number | null;
-    output: number | null;
-    reasoning: number | null;
-    cache_read: number | null;
-    cache_creation: number | null;
-  };
-  turns: number | null;
-  cost_usd: number | null;
-  model: string | null;
-};
+import { AgentEvent } from "@agents/core/events/agent";
+
+export type EventMetrics = AgentEvent.Completed.Metrics;
 
 export function eventDotColor(type: string): string {
   if (type.startsWith("agent.")) return "var(--color-accent)";
@@ -71,22 +62,7 @@ export function formatBytes(bytes: number): string {
 }
 
 export function extractMetrics(data: Record<string, unknown>): EventMetrics | null {
-  const agent = data?.agent as Record<string, unknown> | undefined;
-  const m = agent?.metrics as Record<string, unknown> | undefined;
-  if (!m || typeof m !== "object") return null;
-  const tokens = m.tokens as Record<string, unknown> | undefined;
-  return {
-    tokens: {
-      input: typeof tokens?.input === "number" ? tokens.input : null,
-      output: typeof tokens?.output === "number" ? tokens.output : null,
-      reasoning: typeof tokens?.reasoning === "number" ? tokens.reasoning : null,
-      cache_read: typeof tokens?.cache_read === "number" ? tokens.cache_read : null,
-      cache_creation: typeof tokens?.cache_creation === "number" ? tokens.cache_creation : null,
-    },
-    turns: typeof m.turns === "number" ? m.turns : null,
-    cost_usd: typeof m.cost_usd === "number" ? m.cost_usd : null,
-    model: typeof m.model === "string" ? m.model : null,
-  };
+  return AgentEvent.Completed.parse(data).agent.metrics;
 }
 
 export function formatMetricValue(name: string, value: number): string {

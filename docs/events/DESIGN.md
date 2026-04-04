@@ -133,57 +133,21 @@ Is it categorical AND you also need it in the payload for display?
 
 Event data uses an **open schema**. Any action can write any key. The `{type}.completed` event's data is assembled from `data.json` files in the results directory — the teardown recursively walks the directory tree and builds a nested object.
 
-Common keys for `agent.completed`:
-
-```ts
-data: {
-  workflow: {                     // computed by teardown
-    durationMs: number,
-    runUrl: string,
-  },
-  checks: {                       // from event/data key=checks/...
-    tests: {
-      unit: { outcome: "success" },
-    },
-    lint: {
-      oxlint: { outcome: "success" },
-    },
-    typecheck: {
-      tsc: { outcome: "success" },
-    },
-  },
-  agent: {                        // from agent/claude, agent/opencode, etc.
-    name: string,
-    sessionId: string | null,
-    finalMessage: string | null,
-    metrics: {
-      tokens: {
-        input: number | null,
-        output: number | null,
-        reasoning: number | null,
-        cache_read: number | null,
-        cache_creation: number | null,
-      },
-      turns: number | null,
-      cost_usd: number | null,
-      model: string | null,
-    } | null,
-  },
-  diff: {                         // from git/commit
-    linesAdded: number,
-    linesRemoved: number,
-  },
-  pr: {                           // from git/pr
-    number: number,
-    url: string,
-  },
-  branch: {                       // from git/branch
-    name: string,
-  },
-}
-```
-
 These keys are conventions, not enforced schemas. Any action can write additional keys via `event/data`.
+
+## Typed Event Schemas
+
+Event data schemas are defined as **self-contained Zod modules** in `packages/core/src/events/{type}/index.ts`. Each module exports a namespace following the `{Type}Event` convention, with subnamespaces per lifecycle phase:
+
+- `AgentEvent.Completed.Data` — full `agent.completed` event body schema
+- `AgentEvent.Completed.parse(raw)` — never throws, returns typed defaults for missing/invalid fields
+- `AgentEvent.resolveAgent(name)` — normalizes agent name aliases (e.g. `"claude"` → `"claude-code"`)
+
+**Convention:** `{Type}Event.{Phase}.Data` is the composed Zod schema for a specific event. Shared utilities like alias resolution live on the parent namespace. Other event types follow the same pattern (e.g. `TestsEvent.Completed.Data`, `LintEvent.Completed.Data`).
+
+**Constraints:** These modules import only `zod` — no DB, drizzle, or internal dependencies. This allows them to be used by both `@agents/core` consumers and GitHub Actions.
+
+**Source of truth:** See `packages/core/src/events/agent/index.ts` for the `agent.completed` schema, including agent/metrics/pricing/workflow/diff/pr/checks fields.
 
 ## Data Schemas by Event Type
 
@@ -198,7 +162,7 @@ data: {
 
 ### agent.completed
 
-Open schema — see Data Convention above.
+Typed schema: `AgentEvent.Completed.Data` in `packages/core/src/events/agent/index.ts`. Includes agent info, metrics, pricing, workflow, diff, PR, and checks.
 
 ### github.issues.{action}
 

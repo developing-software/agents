@@ -1,11 +1,11 @@
 import * as core from "@actions/core";
 import { createApiClient } from "@agents/actions-core";
-import type { AgentMetrics, PricingResult } from "./types";
+import type { AgentMetrics, AgentPricing } from "./types";
 
 export async function enrichWithPricing(
   metrics: AgentMetrics | null,
   provider?: string,
-): Promise<PricingResult | null> {
+): Promise<AgentPricing | null> {
   if (!metrics?.model) return null;
 
   const token = process.env.DEV_AGENTS_TOKEN;

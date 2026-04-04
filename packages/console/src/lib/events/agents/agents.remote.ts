@@ -2,6 +2,7 @@ import { query } from "$app/server";
 import { z } from "zod";
 import { Repository } from "@agents/core/repository/index";
 import { Event } from "@agents/core/events/index";
+import { AgentEvent } from "@agents/core/events/agent";
 import { flattenChecks } from "../helpers";
 
 const repoInput = z.object({ organization: z.string(), repoName: z.string() });
@@ -29,11 +30,9 @@ export const getAgentStats = query(repoInput, async ({ organization, repoName })
   >();
 
   for (const e of events) {
-    const d = e.data as Record<string, unknown> | undefined;
-    if (!d) continue;
-    const agentMeta = d.agent as Record<string, unknown> | undefined;
-    const workflow = d.workflow as Record<string, unknown> | undefined;
-    const agent = typeof agentMeta?.name === "string" ? agentMeta.name : "unknown";
+    if (!e.data) continue;
+    const parsed = AgentEvent.Completed.parse(e.data);
+    const agent = parsed.agent.name;
 
     let entry = agents.get(agent);
     if (!entry) {
@@ -42,12 +41,12 @@ export const getAgentStats = query(repoInput, async ({ organization, repoName })
     }
     entry.count++;
 
-    if (typeof workflow?.durationMs === "number") {
-      entry.totalDurationMs += workflow.durationMs;
+    if (parsed.workflow.durationMs > 0) {
+      entry.totalDurationMs += parsed.workflow.durationMs;
       entry.durationCount++;
     }
 
-    const checks = flattenChecks(d.checks);
+    const checks = flattenChecks(parsed.checks);
     for (const c of checks) {
       const key = `${c.category}/${c.name}`;
       let stat = entry.checks.get(key);
@@ -95,9 +94,8 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
   >();
 
   for (const e of events) {
-    const d = e.data as Record<string, unknown> | undefined;
-    const agentMeta = d?.agent as Record<string, unknown> | undefined;
-    const agent = typeof agentMeta?.name === "string" ? agentMeta.name : "unknown";
+    const parsed = AgentEvent.Completed.parse(e.data);
+    const agent = parsed.agent.name;
 
     let entry = agents.get(agent);
     if (!entry) {
@@ -107,29 +105,25 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
     entry.count++;
     if (e.timeCreated > entry.lastSeen) entry.lastSeen = e.timeCreated;
 
-    const m = agentMeta?.metrics;
-    if (m && typeof m === "object") {
-      const obj = m as Record<string, unknown>;
-      const tokens = obj.tokens as Record<string, unknown> | undefined;
-      if (tokens && typeof tokens === "object") {
-        for (const key of TOKEN_KEYS) {
-          const val = tokens[key];
-          if (typeof val === "number") {
-            entry.sums[key] = (entry.sums[key] ?? 0) + val;
-            entry.counts[key] = (entry.counts[key] ?? 0) + 1;
-          }
-        }
-      }
-      for (const key of ["turns", "cost_usd"] as const) {
-        const val = obj[key];
+    const metrics = parsed.agent.metrics;
+    if (metrics) {
+      const tokens = metrics.tokens;
+      for (const key of TOKEN_KEYS) {
+        const val = tokens[key];
         if (typeof val === "number") {
           entry.sums[key] = (entry.sums[key] ?? 0) + val;
           entry.counts[key] = (entry.counts[key] ?? 0) + 1;
         }
       }
-      const model = obj.model;
-      if (typeof model === "string") {
-        entry.models[model] = (entry.models[model] ?? 0) + 1;
+      for (const key of ["turns", "cost_usd"] as const) {
+        const val = metrics[key];
+        if (typeof val === "number") {
+          entry.sums[key] = (entry.sums[key] ?? 0) + val;
+          entry.counts[key] = (entry.counts[key] ?? 0) + 1;
+        }
+      }
+      if (metrics.model) {
+        entry.models[metrics.model] = (entry.models[metrics.model] ?? 0) + 1;
       }
     }
   }
@@ -170,38 +164,34 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
   const TOKEN_KEYS = ["input", "output", "reasoning", "cache_read", "cache_creation"] as const;
 
   for (const e of events) {
-    const d = e.data as Record<string, unknown> | undefined;
-    if (!d) continue;
-    const agentMeta = d.agent as Record<string, unknown> | undefined;
-    const diffMeta = d.diff as Record<string, unknown> | undefined;
-    const workflow = d.workflow as Record<string, unknown> | undefined;
+    if (!e.data) continue;
+    const parsed = AgentEvent.Completed.parse(e.data);
 
-    const agent = typeof agentMeta?.name === "string" ? agentMeta.name : "unknown";
+    const agent = parsed.agent.name;
     agentCounts[agent] = (agentCounts[agent] ?? 0) + 1;
 
-    if (typeof workflow?.durationMs === "number") {
-      totalDurationMs += workflow.durationMs;
+    if (parsed.workflow.durationMs > 0) {
+      totalDurationMs += parsed.workflow.durationMs;
       durationCount++;
     }
 
-    if (typeof diffMeta?.linesAdded === "number") totalLinesAdded += diffMeta.linesAdded;
-    if (typeof diffMeta?.linesRemoved === "number") totalLinesRemoved += diffMeta.linesRemoved;
+    if (parsed.diff) {
+      totalLinesAdded += parsed.diff.linesAdded;
+      totalLinesRemoved += parsed.diff.linesRemoved;
+    }
 
-    const m = agentMeta?.metrics;
-    if (m && typeof m === "object") {
-      const obj = m as Record<string, unknown>;
-      const tokens = obj.tokens as Record<string, unknown> | undefined;
-      if (tokens && typeof tokens === "object") {
-        for (const key of TOKEN_KEYS) {
-          const val = tokens[key];
-          if (typeof val === "number") {
-            metricSums[key] = (metricSums[key] ?? 0) + val;
-            metricCounts[key] = (metricCounts[key] ?? 0) + 1;
-          }
+    const metrics = parsed.agent.metrics;
+    if (metrics) {
+      const tokens = metrics.tokens;
+      for (const key of TOKEN_KEYS) {
+        const val = tokens[key];
+        if (typeof val === "number") {
+          metricSums[key] = (metricSums[key] ?? 0) + val;
+          metricCounts[key] = (metricCounts[key] ?? 0) + 1;
         }
       }
       for (const key of ["turns", "cost_usd"] as const) {
-        const val = obj[key];
+        const val = metrics[key];
         if (typeof val === "number") {
           metricSums[key] = (metricSums[key] ?? 0) + val;
           metricCounts[key] = (metricCounts[key] ?? 0) + 1;
@@ -209,7 +199,7 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
       }
     }
 
-    const checks = flattenChecks(d.checks);
+    const checks = flattenChecks(parsed.checks);
     for (const c of checks) {
       const key = `${c.category}/${c.name}`;
       let stat = checkStats.get(key);
@@ -276,39 +266,35 @@ export const getDashboardSummary = query(z.object({}), async () => {
 
   for (const e of events) {
     totalRuns++;
+    if (!e.data) continue;
 
-    const d = e.data as Record<string, unknown> | undefined;
-    if (!d) continue;
+    const parsed = AgentEvent.Completed.parse(e.data);
 
-    const agentMeta = d.agent as Record<string, unknown> | undefined;
-    const diffMeta = d.diff as Record<string, unknown> | undefined;
-    const workflow = d.workflow as Record<string, unknown> | undefined;
-
-    if (typeof workflow?.durationMs === "number") {
-      totalDurationMs += workflow.durationMs;
+    if (parsed.workflow.durationMs > 0) {
+      totalDurationMs += parsed.workflow.durationMs;
       durationCount++;
     }
 
-    if (typeof diffMeta?.linesAdded === "number") totalLinesAdded += diffMeta.linesAdded;
-    if (typeof diffMeta?.linesRemoved === "number") totalLinesRemoved += diffMeta.linesRemoved;
+    if (parsed.diff) {
+      totalLinesAdded += parsed.diff.linesAdded;
+      totalLinesRemoved += parsed.diff.linesRemoved;
+    }
 
-    const m = agentMeta?.metrics as Record<string, unknown> | undefined;
+    const metrics = parsed.agent.metrics;
     let eventCost = 0;
-    if (m && typeof m === "object") {
-      if (typeof m.cost_usd === "number") {
-        totalCost += m.cost_usd;
-        eventCost = m.cost_usd;
+    if (metrics) {
+      if (typeof metrics.cost_usd === "number") {
+        totalCost += metrics.cost_usd;
+        eventCost = metrics.cost_usd;
       }
-      const tokens = m.tokens as Record<string, unknown> | undefined;
-      if (tokens && typeof tokens === "object") {
-        for (const key of ["input", "output"] as const) {
-          const val = tokens[key];
-          if (typeof val === "number") totalTokens += val;
-        }
+      const tokens = metrics.tokens;
+      for (const key of ["input", "output"] as const) {
+        const val = tokens[key];
+        if (typeof val === "number") totalTokens += val;
       }
     }
 
-    const checks = flattenChecks(d.checks);
+    const checks = flattenChecks(parsed.checks);
     for (const c of checks) {
       if (c.outcome === "success") globalPassed++;
       else globalFailed++;
@@ -384,33 +370,30 @@ export const listAgentRuns = query(
     });
 
     return events.map((e) => {
-      const d = e.data as Record<string, unknown> | undefined;
-      const agentMeta = d?.agent as Record<string, unknown> | undefined;
-      const m = agentMeta?.metrics as Record<string, unknown> | undefined;
-      const tokens = m?.tokens as Record<string, unknown> | undefined;
-      const diffMeta = d?.diff as Record<string, unknown> | undefined;
-      const prMeta = d?.pr as Record<string, unknown> | undefined;
-      const workflow = d?.workflow as Record<string, unknown> | undefined;
-      const checks = flattenChecks(d?.checks);
+      const parsed = AgentEvent.Completed.parse(e.data);
+      const metrics = parsed.agent.metrics;
+      const tokens = metrics?.tokens;
+      const checks = flattenChecks(parsed.checks);
 
       return {
         id: e.id,
         parentEventId: e.parentEventId,
-        agent: typeof agentMeta?.name === "string" ? agentMeta.name : "unknown",
-        model: typeof m?.model === "string" ? m.model : null,
-        cost_usd: typeof m?.cost_usd === "number" ? m.cost_usd : null,
-        input_tokens: typeof tokens?.input === "number" ? tokens.input : null,
-        output_tokens: typeof tokens?.output === "number" ? tokens.output : null,
-        reasoning_tokens: typeof tokens?.reasoning === "number" ? tokens.reasoning : null,
-        cache_read_tokens: typeof tokens?.cache_read === "number" ? tokens.cache_read : null,
-        cache_creation_tokens:
-          typeof tokens?.cache_creation === "number" ? tokens.cache_creation : null,
-        turns: typeof m?.turns === "number" ? m.turns : null,
-        durationMs: typeof workflow?.durationMs === "number" ? workflow.durationMs : null,
-        linesAdded: typeof diffMeta?.linesAdded === "number" ? diffMeta.linesAdded : null,
-        linesRemoved: typeof diffMeta?.linesRemoved === "number" ? diffMeta.linesRemoved : null,
-        prUrl: typeof prMeta?.url === "string" ? prMeta.url : null,
-        runUrl: typeof workflow?.runUrl === "string" ? workflow.runUrl : null,
+        agent: parsed.agent.name,
+        model: metrics?.model ?? null,
+        cost_usd: metrics?.cost_usd ?? null,
+        input_tokens: tokens?.input ?? null,
+        output_tokens: tokens?.output ?? null,
+        reasoning_tokens: tokens?.reasoning ?? null,
+        cache_read_tokens: tokens?.cache_read ?? null,
+        cache_creation_tokens: tokens?.cache_creation ?? null,
+        turns: metrics?.turns ?? null,
+        durationMs: parsed.workflow.durationMs || null,
+        linesAdded: parsed.diff?.linesAdded ?? null,
+        linesRemoved: parsed.diff?.linesRemoved ?? null,
+        prUrl: parsed.pr?.url || null,
+        runUrl: parsed.workflow.runUrl || null,
+        provider: parsed.agent.pricing?.provider ?? null,
+        pricing_heuristic: parsed.agent.pricing?.heuristic ?? null,
         checks,
         origin: e.origin,
         tags: e.tags,

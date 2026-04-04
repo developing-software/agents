@@ -18,7 +18,7 @@
   });
 
   const AGENT_COLORS: Record<string, string> = {
-    claude: 'var(--color-accent)',
+    'claude-code': 'var(--color-accent)',
     codex: 'var(--color-success)',
     opencode: '#e879f9',
   };
