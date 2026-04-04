@@ -4,7 +4,13 @@ export interface CacheAdapter {
   delete(key: string): Promise<void>;
 }
 
-// Minimal interface to avoid a hard dep on @cloudflare/workers-types
+// Minimal interfaces to avoid a hard dep on @cloudflare/workers-types
+export interface CacheStorage {
+  match(request: Request): Promise<Response | undefined>;
+  put(request: Request, response: Response): Promise<void>;
+  delete(request: Request): Promise<boolean>;
+}
+
 export interface KVNamespace {
   get(key: string, type: "text"): Promise<string | null>;
   put(
@@ -40,7 +46,7 @@ export class KvAdapter implements CacheAdapter {
 }
 
 export class CacheApiAdapter implements CacheAdapter {
-  constructor(private readonly cache: Cache) {}
+  constructor(private readonly cache: CacheStorage) {}
 
   private toRequest(key: string): Request {
     return new Request(

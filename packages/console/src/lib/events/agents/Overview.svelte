@@ -89,10 +89,10 @@
             <span class="stat-value">{getTotalTokens(summary.metrics)}</span>
           </div>
         {/if}
-        {#if formatLinesChanged(summary.totalLinesAdded, summary.totalLinesRemoved) !== null}
+        {#if formatLinesChanged(summary.totalLinesAdded ?? 0, summary.totalLinesRemoved ?? 0) !== null}
           <div class="stat-card">
             <span class="stat-label">Lines Changed</span>
-            <span class="stat-value lines-changed">{formatLinesChanged(summary.totalLinesAdded, summary.totalLinesRemoved)}</span>
+            <span class="stat-value lines-changed">{formatLinesChanged(summary.totalLinesAdded ?? 0, summary.totalLinesRemoved ?? 0)}</span>
           </div>
         {/if}
         <div class="stat-card">

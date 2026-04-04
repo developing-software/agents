@@ -10,6 +10,7 @@ import { TokenApi } from "./handler/token";
 import { AuthApi } from "./handler/auth";
 import { EventApi } from "./handler/event";
 import { GitHubApi } from "./handler/github";
+import { ModelsApi } from "./handler/models";
 import { auth } from "./middleware";
 
 
@@ -32,6 +33,7 @@ export const routes = app
   .route("/token", TokenApi.route)
   .route("/events", EventApi.route)
   .route("/github", GitHubApi.route)
+  .route("/models", ModelsApi.route)
   .onError((error, c) => {
     if (error instanceof VisibleError) {
       return c.json<ErrorResponseType>(error.toResponse(), error.statusCode());
