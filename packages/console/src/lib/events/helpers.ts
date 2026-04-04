@@ -4,6 +4,37 @@ import { AgentEvent } from "@agents/core/events/agent";
 
 export type EventMetrics = AgentEvent.Completed.Metrics;
 
+// ── Formatters ──────────────────────────────────────────────────────────
+
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  const s = ms / 1000;
+  if (s < 60) return `${s.toFixed(1)}s`;
+  const m = Math.floor(s / 60);
+  const rem = Math.round(s % 60);
+  return rem > 0 ? `${m}m ${rem}s` : `${m}m`;
+}
+
+export function formatCost(v: number): string {
+  return `$${v.toFixed(2)}`;
+}
+
+export function formatTokens(v: number): string {
+  return v.toLocaleString();
+}
+
+export function formatTokensCompact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
+}
+
+export function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ── Display helpers ─────────────────────────────────────────────────────
+
 export function eventDotColor(type: string): string {
   if (type.startsWith("agent.")) return "var(--color-accent)";
   if (type.startsWith("tests.")) return "var(--color-success)";
@@ -72,18 +103,13 @@ export function formatMetricValue(name: string, value: number): string {
 }
 
 export function flattenChecks(
-  raw: unknown,
+  raw: Record<string, Record<string, { outcome: string }>> | undefined,
 ): Array<{ category: string; name: string; outcome: string }> {
-  if (!raw || typeof raw !== "object") return [];
+  if (!raw) return [];
   const result: Array<{ category: string; name: string; outcome: string }> = [];
   for (const [category, names] of Object.entries(raw)) {
-    if (!names || typeof names !== "object") continue;
-    for (const [name, checkData] of Object.entries(names as Record<string, unknown>)) {
-      const outcome =
-        typeof (checkData as Record<string, unknown>)?.outcome === "string"
-          ? ((checkData as Record<string, unknown>).outcome as string)
-          : "unknown";
-      result.push({ category, name, outcome });
+    for (const [name, checkData] of Object.entries(names)) {
+      result.push({ category, name, outcome: checkData.outcome });
     }
   }
   return result;

@@ -69,6 +69,22 @@ export const getAgentStats = query(repoInput, async ({ organization, repoName })
     .sort((a, b) => b.count - a.count);
 });
 
+interface Totals {
+  total: number;
+  count: number;
+}
+
+function addToTotals(t: Totals, val: number | null | undefined): void {
+  if (typeof val === "number") {
+    t.total += val;
+    t.count++;
+  }
+}
+
+function totals(): Totals {
+  return { total: 0, count: 0 };
+}
+
 export const getAgentComparison = query(repoInput, async ({ organization, repoName }) => {
   const repo = await Repository.findByFullName(`${organization}/${repoName}`);
   if (!repo) return [];
@@ -80,14 +96,14 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
     limit: 500,
   });
 
-  const TOKEN_KEYS = ["input", "output", "reasoning", "cache_read", "cache_creation"] as const;
   const agents = new Map<
     string,
     {
       agent: string;
       count: number;
-      sums: Record<string, number>;
-      counts: Record<string, number>;
+      cost: Totals;
+      tokens: { input: Totals; output: Totals; cache: Totals };
+      turns: Totals;
       models: Record<string, number>;
       lastSeen: string;
     }
@@ -99,7 +115,15 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
 
     let entry = agents.get(agent);
     if (!entry) {
-      entry = { agent, count: 0, sums: {}, counts: {}, models: {}, lastSeen: e.timeCreated };
+      entry = {
+        agent,
+        count: 0,
+        cost: totals(),
+        tokens: { input: totals(), output: totals(), cache: totals() },
+        turns: totals(),
+        models: {},
+        lastSeen: e.timeCreated,
+      };
       agents.set(agent, entry);
     }
     entry.count++;
@@ -107,28 +131,30 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
 
     const metrics = parsed.agent.metrics;
     if (metrics) {
-      const tokens = metrics.tokens;
-      for (const key of TOKEN_KEYS) {
-        const val = tokens[key];
-        if (typeof val === "number") {
-          entry.sums[key] = (entry.sums[key] ?? 0) + val;
-          entry.counts[key] = (entry.counts[key] ?? 0) + 1;
-        }
+      addToTotals(entry.cost, metrics.cost_usd);
+      addToTotals(entry.tokens.input, metrics.tokens.input);
+      addToTotals(entry.tokens.output, metrics.tokens.output);
+      addToTotals(entry.turns, metrics.turns);
+
+      const cacheVal =
+        (metrics.tokens.cache_read ?? 0) + (metrics.tokens.cache_creation ?? 0);
+      if (metrics.tokens.cache_read != null || metrics.tokens.cache_creation != null) {
+        entry.tokens.cache.total += cacheVal;
+        entry.tokens.cache.count++;
       }
-      for (const key of ["turns", "cost_usd"] as const) {
-        const val = metrics[key];
-        if (typeof val === "number") {
-          entry.sums[key] = (entry.sums[key] ?? 0) + val;
-          entry.counts[key] = (entry.counts[key] ?? 0) + 1;
-        }
-      }
+
       if (metrics.model) {
         entry.models[metrics.model] = (entry.models[metrics.model] ?? 0) + 1;
       }
     }
   }
 
-  return [...agents.values()].sort((a, b) => b.count - a.count);
+  return [...agents.values()]
+    .map((a) => ({
+      ...a,
+      models: Object.entries(a.models).sort((x, y) => y[1] - x[1]) as [string, number][],
+    }))
+    .sort((a, b) => b.count - a.count);
 });
 
 export const getEventSummary = query(repoInput, async ({ organization, repoName }) => {
@@ -137,9 +163,12 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
     return {
       total: 0,
       byAgent: [] as [string, number][],
-      metrics: [] as { name: string; sum: number; count: number }[],
+      totalCost: 0,
+      totalTokens: 0,
       checks: [] as { category: string; name: string; passed: number; failed: number }[],
       avgDurationMs: 0,
+      totalLinesAdded: 0,
+      totalLinesRemoved: 0,
     };
 
   const events = await Event.list({
@@ -150,8 +179,6 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
   });
 
   const agentCounts: Record<string, number> = {};
-  const metricSums: Record<string, number> = {};
-  const metricCounts: Record<string, number> = {};
   const checkStats = new Map<
     string,
     { category: string; name: string; passed: number; failed: number }
@@ -160,8 +187,8 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
   let durationCount = 0;
   let totalLinesAdded = 0;
   let totalLinesRemoved = 0;
-
-  const TOKEN_KEYS = ["input", "output", "reasoning", "cache_read", "cache_creation"] as const;
+  let totalCost = 0;
+  let totalTokens = 0;
 
   for (const e of events) {
     if (!e.data) continue;
@@ -182,21 +209,9 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
 
     const metrics = parsed.agent.metrics;
     if (metrics) {
-      const tokens = metrics.tokens;
-      for (const key of TOKEN_KEYS) {
-        const val = tokens[key];
-        if (typeof val === "number") {
-          metricSums[key] = (metricSums[key] ?? 0) + val;
-          metricCounts[key] = (metricCounts[key] ?? 0) + 1;
-        }
-      }
-      for (const key of ["turns", "cost_usd"] as const) {
-        const val = metrics[key];
-        if (typeof val === "number") {
-          metricSums[key] = (metricSums[key] ?? 0) + val;
-          metricCounts[key] = (metricCounts[key] ?? 0) + 1;
-        }
-      }
+      if (typeof metrics.cost_usd === "number") totalCost += metrics.cost_usd;
+      if (typeof metrics.tokens.input === "number") totalTokens += metrics.tokens.input;
+      if (typeof metrics.tokens.output === "number") totalTokens += metrics.tokens.output;
     }
 
     const checks = flattenChecks(parsed.checks);
@@ -215,11 +230,8 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
   return {
     total: events.length,
     byAgent: Object.entries(agentCounts).sort((a, b) => b[1] - a[1]) as [string, number][],
-    metrics: Object.entries(metricSums).map(([name, sum]) => ({
-      name,
-      sum,
-      count: metricCounts[name]!,
-    })),
+    totalCost,
+    totalTokens,
     checks: [...checkStats.values()],
     avgDurationMs: durationCount > 0 ? Math.round(totalDurationMs / durationCount) : 0,
     totalLinesAdded,

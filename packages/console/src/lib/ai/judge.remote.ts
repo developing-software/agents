@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { Repository } from "@agents/core/repository/index";
 import { Event } from "@agents/core/events/index";
+import { AgentEvent } from "@agents/core/events/agent";
 import { Plan } from "@agents/core/plan/index";
 import { PlanJudge } from "@agents/core/plan/judge";
 import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
@@ -72,16 +73,11 @@ export const listPlanRuns = query(
     // Build runs from agent.completed events
     const runs: PlanRun[] = [];
     for (const e of events) {
-      const d = e.data as Record<string, unknown> | undefined;
-      const agentMeta = d?.agent as Record<string, unknown> | undefined;
-      const m = agentMeta?.metrics as Record<string, unknown> | undefined;
-      const tokens = m?.tokens as Record<string, unknown> | undefined;
-      const diffMeta = d?.diff as Record<string, unknown> | undefined;
-      const prMeta = d?.pr as Record<string, unknown> | undefined;
-      const workflow = d?.workflow as Record<string, unknown> | undefined;
-      const checks = flattenChecks(d?.checks);
-
-      const prNumber = typeof prMeta?.number === "number" ? prMeta.number : extractPrNumber(e.tags);
+      const parsed = AgentEvent.Completed.parse(e.data);
+      const metrics = parsed.agent.metrics;
+      const tokens = metrics?.tokens;
+      const checks = flattenChecks(parsed.checks);
+      const prNumber = extractPrNumber(e.tags);
 
       // Get live PR state
       let prState: string | null = null;
@@ -96,19 +92,19 @@ export const listPlanRuns = query(
 
       runs.push({
         id: e.id,
-        agent: typeof agentMeta?.name === "string" ? agentMeta.name : "unknown",
-        model: typeof m?.model === "string" ? m.model : null,
+        agent: parsed.agent.name,
+        model: metrics?.model ?? null,
         prNumber,
         prState,
-        prUrl: typeof prMeta?.url === "string" ? prMeta.url : null,
-        runUrl: typeof workflow?.runUrl === "string" ? workflow.runUrl : null,
-        cost_usd: typeof m?.cost_usd === "number" ? m.cost_usd : null,
-        input_tokens: typeof tokens?.input === "number" ? tokens.input : null,
-        output_tokens: typeof tokens?.output === "number" ? tokens.output : null,
-        turns: typeof m?.turns === "number" ? m.turns : null,
-        durationMs: typeof workflow?.durationMs === "number" ? workflow.durationMs : null,
-        linesAdded: typeof diffMeta?.linesAdded === "number" ? diffMeta.linesAdded : null,
-        linesRemoved: typeof diffMeta?.linesRemoved === "number" ? diffMeta.linesRemoved : null,
+        prUrl: parsed.pr?.url || null,
+        runUrl: parsed.workflow.runUrl || null,
+        cost_usd: metrics?.cost_usd ?? null,
+        input_tokens: tokens?.input ?? null,
+        output_tokens: tokens?.output ?? null,
+        turns: metrics?.turns ?? null,
+        durationMs: parsed.workflow.durationMs || null,
+        linesAdded: parsed.diff?.linesAdded ?? null,
+        linesRemoved: parsed.diff?.linesRemoved ?? null,
         checks,
         tags: e.tags,
         timeCreated: e.timeCreated,

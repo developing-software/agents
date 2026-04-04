@@ -10,6 +10,10 @@
     branchTag,
     workflowRef,
     formatBytes,
+    capitalize,
+    formatCost,
+    formatDuration,
+    formatTokensCompact,
   } from '$lib/events/helpers';
   import EventOverview from '$lib/events/agents/Overview.svelte';
   import EventAgentsOverview from '$lib/events/agents/AgentsOverview.svelte';
@@ -114,29 +118,6 @@
 
   function toggleRow(id: string) {
     expandedId = expandedId === id ? null : id;
-  }
-
-  function capitalize(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  function formatTokensCompact(n: number): string {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-    return String(n);
-  }
-
-  function formatDuration(ms: number): string {
-    if (ms < 1000) return `${ms}ms`;
-    const secs = ms / 1000;
-    if (secs < 60) return `${secs.toFixed(1)}s`;
-    const mins = Math.floor(secs / 60);
-    const remSecs = Math.round(secs % 60);
-    return `${mins}m ${remSecs}s`;
-  }
-
-  function formatCost(v: number): string {
-    return `$${v.toFixed(2)}`;
   }
 
   function checkStatus(checks: Array<{ category: string; name: string; outcome: string }>): 'pass' | 'fail' | 'none' {

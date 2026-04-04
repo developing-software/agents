@@ -1,5 +1,12 @@
 <script lang="ts">
   import { getAgentComparison, getAgentStats } from './agents.remote';
+  import {
+    capitalize,
+    formatCost,
+    formatDuration,
+    formatTokens,
+    relativeTime,
+  } from '../helpers';
 
   let {
     organization,
@@ -27,46 +34,13 @@
 
   function agentColor(agent: string): string {
     if (AGENT_COLORS[agent]) return AGENT_COLORS[agent];
-    // Stable fallback based on agent name hash
     let hash = 0;
     for (let i = 0; i < agent.length; i++) hash = (hash * 31 + agent.charCodeAt(i)) | 0;
     return FALLBACK_COLORS[Math.abs(hash) % FALLBACK_COLORS.length];
   }
 
-  function capitalize(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  function formatCost(v: number): string {
-    return `$${v.toFixed(2)}`;
-  }
-
-  function formatTokens(v: number): string {
-    return v.toLocaleString();
-  }
-
   function formatPlain(v: number): string {
     return String(Math.round(v * 100) / 100);
-  }
-
-  function formatDuration(ms: number): string {
-    if (ms < 1000) return `${ms}ms`;
-    const secs = ms / 1000;
-    if (secs < 60) return `${secs.toFixed(1)}s`;
-    const mins = Math.floor(secs / 60);
-    const remSecs = Math.round(secs % 60);
-    return `${mins}m ${remSecs}s`;
-  }
-
-  function relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
   }
 </script>
 
@@ -103,11 +77,6 @@
       <div class="cards">
         {#each agents as agent (agent.agent)}
           {@const color = agentColor(agent.agent)}
-          {@const models = Object.entries(agent.models).sort((a, b) => b[1] - a[1])}
-          {@const cacheRead = agent.sums.cache_read ?? 0}
-          {@const cacheCreation = agent.sums.cache_creation ?? 0}
-          {@const cacheTotal = cacheRead + cacheCreation}
-          {@const cacheCount = Math.max(agent.counts.cache_read ?? 0, agent.counts.cache_creation ?? 0)}
 
           <div class="agent-card">
             <div class="card-header">
@@ -116,48 +85,48 @@
               <span class="run-badge">{agent.count} runs</span>
             </div>
 
-            {#if models.length > 0}
+            {#if agent.models.length > 0}
               <div class="models">
-                {#each models as [model, count] (model)}
+                {#each agent.models as [model, count] (model)}
                   <span class="model-pill">{model} <span class="model-count">{count}</span></span>
                 {/each}
               </div>
             {/if}
 
             <div class="metrics-grid">
-              {#if agent.sums.cost_usd != null}
+              {#if agent.cost.count > 0}
                 <div class="metric">
                   <span class="metric-label">cost</span>
-                  <span class="metric-total">{formatCost(agent.sums.cost_usd)}</span>
-                  <span class="metric-avg">avg {formatCost(agent.sums.cost_usd / agent.counts.cost_usd)}</span>
+                  <span class="metric-total">{formatCost(agent.cost.total)}</span>
+                  <span class="metric-avg">avg {formatCost(agent.cost.total / agent.cost.count)}</span>
                 </div>
               {/if}
-              {#if agent.sums.input != null}
+              {#if agent.tokens.input.count > 0}
                 <div class="metric">
                   <span class="metric-label">input tokens</span>
-                  <span class="metric-total">{formatTokens(agent.sums.input)}</span>
-                  <span class="metric-avg">avg {formatTokens(Math.round(agent.sums.input / agent.counts.input))}</span>
+                  <span class="metric-total">{formatTokens(agent.tokens.input.total)}</span>
+                  <span class="metric-avg">avg {formatTokens(Math.round(agent.tokens.input.total / agent.tokens.input.count))}</span>
                 </div>
               {/if}
-              {#if agent.sums.output != null}
+              {#if agent.tokens.output.count > 0}
                 <div class="metric">
                   <span class="metric-label">output tokens</span>
-                  <span class="metric-total">{formatTokens(agent.sums.output)}</span>
-                  <span class="metric-avg">avg {formatTokens(Math.round(agent.sums.output / agent.counts.output))}</span>
+                  <span class="metric-total">{formatTokens(agent.tokens.output.total)}</span>
+                  <span class="metric-avg">avg {formatTokens(Math.round(agent.tokens.output.total / agent.tokens.output.count))}</span>
                 </div>
               {/if}
-              {#if cacheTotal > 0}
+              {#if agent.tokens.cache.total > 0}
                 <div class="metric">
                   <span class="metric-label">cache tokens</span>
-                  <span class="metric-total">{formatTokens(cacheTotal)}</span>
-                  <span class="metric-avg">avg {formatTokens(Math.round(cacheTotal / (cacheCount || 1)))}</span>
+                  <span class="metric-total">{formatTokens(agent.tokens.cache.total)}</span>
+                  <span class="metric-avg">avg {formatTokens(Math.round(agent.tokens.cache.total / (agent.tokens.cache.count || 1)))}</span>
                 </div>
               {/if}
-              {#if agent.sums.turns != null}
+              {#if agent.turns.count > 0}
                 <div class="metric">
                   <span class="metric-label">turns</span>
-                  <span class="metric-total">{formatPlain(agent.sums.turns)}</span>
-                  <span class="metric-avg">avg {formatPlain(agent.sums.turns / agent.counts.turns)}</span>
+                  <span class="metric-total">{formatPlain(agent.turns.total)}</span>
+                  <span class="metric-avg">avg {formatPlain(agent.turns.total / agent.turns.count)}</span>
                 </div>
               {/if}
             </div>
@@ -167,13 +136,13 @@
         {/each}
       </div>
 
-      {#if agents.filter((a) => a.sums.cost_usd != null).length >= 2}
-        {@const costAgents = agents.filter((a) => a.sums.cost_usd != null)}
-        {@const totalCost = costAgents.reduce((s, a) => s + a.sums.cost_usd, 0)}
+      {#if agents.filter((a) => a.cost.count > 0).length >= 2}
+        {@const costAgents = agents.filter((a) => a.cost.count > 0)}
+        {@const totalCost = costAgents.reduce((s, a) => s + a.cost.total, 0)}
         <div class="comparison">
           <div class="cost-bar">
             {#each costAgents as a (a.agent)}
-              {@const pct = totalCost > 0 ? (a.sums.cost_usd / totalCost) * 100 : 0}
+              {@const pct = totalCost > 0 ? (a.cost.total / totalCost) * 100 : 0}
               <div
                 class="cost-segment"
                 style="width:{pct}%;background:{agentColor(a.agent)};"
@@ -182,7 +151,7 @@
           </div>
           <div class="cost-legend">
             {#each costAgents as a (a.agent)}
-              {@const pct = totalCost > 0 ? (a.sums.cost_usd / totalCost) * 100 : 0}
+              {@const pct = totalCost > 0 ? (a.cost.total / totalCost) * 100 : 0}
               <span class="legend-item">
                 <span class="legend-dot" style="background:{agentColor(a.agent)};"></span>
                 {capitalize(a.agent)} {Math.round(pct)}%

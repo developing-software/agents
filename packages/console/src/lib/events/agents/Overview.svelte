@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getEventSummary } from './agents.remote';
+  import { formatDuration, formatCost, formatTokensCompact } from '../helpers';
 
   let {
     organization,
@@ -13,36 +14,7 @@
     return getEventSummary({ organization, repoName });
   });
 
-  function formatDuration(ms: number): string {
-    if (ms < 1000) return `${Math.round(ms)}ms`;
-    const s = ms / 1000;
-    if (s < 60) return `${s.toFixed(1)}s`;
-    const m = Math.floor(s / 60);
-    const rem = Math.round(s % 60);
-    return rem > 0 ? `${m}m ${rem}s` : `${m}m`;
-  }
-
-  function getCost(metrics: { name: string; sum: number; count: number }[]): string {
-    const cost = metrics.find((m) => m.name === 'cost_usd');
-    return cost ? `$${cost.sum.toFixed(2)}` : '$0.00';
-  }
-
-  function getTotalTokens(metrics: { name: string; sum: number; count: number }[]): string | null {
-    const input = metrics.find((m) => m.name === 'input');
-    const output = metrics.find((m) => m.name === 'output');
-    if (!input && !output) return null;
-    const total = (input?.sum ?? 0) + (output?.sum ?? 0);
-    if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}M`;
-    if (total >= 1_000) return `${(total / 1_000).toFixed(1)}k`;
-    return String(total);
-  }
-
-  function formatLinesChanged(added: number, removed: number): string | null {
-    if (added === 0 && removed === 0) return null;
-    return `+${added} / -${removed}`;
-  }
-
-  function getPassRate(checks: { category: string; name: string; passed: number; failed: number }[]): string {
+  function getPassRate(checks: { passed: number; failed: number }[]): string {
     const totalPassed = checks.reduce((acc, c) => acc + c.passed, 0);
     const totalAll = checks.reduce((acc, c) => acc + c.passed + c.failed, 0);
     if (totalAll === 0) return '—';
@@ -81,18 +53,18 @@
         </div>
         <div class="stat-card">
           <span class="stat-label">Total Cost</span>
-          <span class="stat-value">{getCost(summary.metrics)}</span>
+          <span class="stat-value">{formatCost(summary.totalCost)}</span>
         </div>
-        {#if getTotalTokens(summary.metrics) !== null}
+        {#if summary.totalTokens > 0}
           <div class="stat-card">
             <span class="stat-label">Total Tokens</span>
-            <span class="stat-value">{getTotalTokens(summary.metrics)}</span>
+            <span class="stat-value">{formatTokensCompact(summary.totalTokens)}</span>
           </div>
         {/if}
-        {#if formatLinesChanged(summary.totalLinesAdded ?? 0, summary.totalLinesRemoved ?? 0) !== null}
+        {#if summary.totalLinesAdded > 0 || summary.totalLinesRemoved > 0}
           <div class="stat-card">
             <span class="stat-label">Lines Changed</span>
-            <span class="stat-value lines-changed">{formatLinesChanged(summary.totalLinesAdded ?? 0, summary.totalLinesRemoved ?? 0)}</span>
+            <span class="stat-value lines-changed">+{summary.totalLinesAdded} / -{summary.totalLinesRemoved}</span>
           </div>
         {/if}
         <div class="stat-card">
