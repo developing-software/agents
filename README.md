@@ -299,3 +299,7 @@ bun run lint         # lint (oxlint)
 bun run typecheck    # type check
 bun test             # run tests
 ```
+
+---
+
+**Completed by:** Claude Haiku 4.5
