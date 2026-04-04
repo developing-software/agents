@@ -85,8 +85,11 @@
               <span class="run-badge">{agent.count} runs</span>
             </div>
 
-            {#if agent.models.length > 0}
+            {#if agent.models.length > 0 || agent.providers.length > 0}
               <div class="models">
+                {#each agent.providers as [provider] (provider)}
+                  <span class="provider-pill">{provider}</span>
+                {/each}
                 {#each agent.models as [model, count] (model)}
                   <span class="model-pill">{model} <span class="model-count">{count}</span></span>
                 {/each}
@@ -95,10 +98,16 @@
 
             <div class="metrics-grid">
               {#if agent.cost.count > 0}
+                {@const estimatedPct = agent.cost.total > 0 ? Math.round((agent.costEstimated / agent.cost.total) * 100) : 0}
                 <div class="metric">
                   <span class="metric-label">cost</span>
                   <span class="metric-total">{formatCost(agent.cost.total)}</span>
                   <span class="metric-avg">avg {formatCost(agent.cost.total / agent.cost.count)}</span>
+                  {#if estimatedPct > 0 && estimatedPct < 100}
+                    <span class="metric-note">~{estimatedPct}% estimated</span>
+                  {:else if estimatedPct === 100}
+                    <span class="metric-note">estimated</span>
+                  {/if}
                 </div>
               {/if}
               {#if agent.tokens.input.count > 0}
@@ -263,6 +272,16 @@
 
   .models { display: flex; flex-wrap: wrap; gap: 4px; }
 
+  .provider-pill {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    line-height: 1.6;
+  }
+
   .model-pill {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
@@ -308,6 +327,13 @@
     font-size: 11px;
     color: var(--color-dim);
     font-variant-numeric: tabular-nums;
+  }
+
+  .metric-note {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    color: var(--color-warning);
+    font-style: italic;
   }
 
   .last-seen {

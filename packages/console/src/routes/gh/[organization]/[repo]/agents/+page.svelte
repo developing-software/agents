@@ -182,7 +182,12 @@
             {/if}
 
             {#if run.cost_usd !== null}
-              <span class="cost">{formatCost(run.cost_usd)}</span>
+              {@const estimated = run.pricing_heuristic !== null && run.pricing_heuristic !== 'agent-reported'}
+              <span
+                class="cost"
+                class:cost-estimated={estimated}
+                title={estimated ? 'Estimated from model pricing' : 'Agent-reported cost'}
+              >{#if estimated}~{/if}{formatCost(run.cost_usd)}</span>
             {/if}
 
             {#if run.durationMs !== null}
@@ -287,6 +292,30 @@
                   {/if}
                 </div>
               </div>
+
+              {#if run.provider || run.pricing_heuristic}
+                <div class="detail-section">
+                  <span class="detail-label">Pricing</span>
+                  <div class="pricing-info">
+                    {#if run.provider}
+                      <div class="pricing-row">
+                        <span class="pricing-key">Provider</span>
+                        <span class="pricing-val">{run.provider}</span>
+                      </div>
+                    {/if}
+                    {#if run.pricing_heuristic}
+                      {@const isReported = run.pricing_heuristic === 'agent-reported'}
+                      <div class="pricing-row">
+                        <span class="pricing-key">Cost source</span>
+                        <span class="pricing-val">
+                          <span class="heuristic-dot" style="background:{isReported ? 'var(--color-success)' : 'var(--color-warning)'};"></span>
+                          {isReported ? 'agent-reported' : run.pricing_heuristic === 'models-dev' ? 'estimated (model pricing)' : run.pricing_heuristic}
+                        </span>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/if}
 
               {#if branch || ghWorkflow !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
                 <div class="detail-section">
@@ -474,6 +503,10 @@
     color: var(--color-accent);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
+  }
+
+  .cost-estimated {
+    color: var(--color-warning);
   }
 
   /* ------------------------------------------------------------------ */
@@ -669,6 +702,45 @@
     font-size: 10px;
     color: var(--color-text);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Pricing detail                                                      */
+  /* ------------------------------------------------------------------ */
+  .pricing-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pricing-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pricing-key {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-muted);
+    width: 72px;
+    flex-shrink: 0;
+  }
+
+  .pricing-val {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .heuristic-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 
   /* ------------------------------------------------------------------ */

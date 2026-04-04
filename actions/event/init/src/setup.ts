@@ -56,6 +56,11 @@ async function run() {
     writeTag(tagsDir, "gh-workflow", `gh:workflow:${runId}`);
   }
 
+  const trigger = process.env.GITHUB_EVENT_NAME ?? "";
+  if (trigger) {
+    writeTag(tagsDir, "gh-trigger", `gh:trigger:${trigger}`);
+  }
+
   const githubRef = process.env.GITHUB_REF ?? "";
   const prMatch = githubRef.match(/^refs\/pull\/(\d+)/);
   if (prMatch) {
@@ -96,6 +101,7 @@ async function run() {
         extraTags.concat(
           repository ? [`gh:repo:${repository}`] : [],
           runId ? [`gh:workflow:${runId}`] : [],
+          trigger ? [`gh:trigger:${trigger}`] : [],
           prMatch ? [`gh:pr:${prMatch[1]}`] : [],
           githubRef.startsWith("refs/heads/")
             ? [`gh:branch:${githubRef.replace("refs/heads/", "")}`]

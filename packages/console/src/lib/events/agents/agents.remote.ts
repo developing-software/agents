@@ -105,6 +105,9 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
       tokens: { input: Totals; output: Totals; cache: Totals };
       turns: Totals;
       models: Record<string, number>;
+      providers: Record<string, number>;
+      costReported: number;
+      costEstimated: number;
       lastSeen: string;
     }
   >();
@@ -122,6 +125,9 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
         tokens: { input: totals(), output: totals(), cache: totals() },
         turns: totals(),
         models: {},
+        providers: {},
+        costReported: 0,
+        costEstimated: 0,
         lastSeen: e.timeCreated,
       };
       agents.set(agent, entry);
@@ -147,12 +153,24 @@ export const getAgentComparison = query(repoInput, async ({ organization, repoNa
         entry.models[metrics.model] = (entry.models[metrics.model] ?? 0) + 1;
       }
     }
+
+    const pricing = parsed.agent.pricing;
+    if (pricing) {
+      if (pricing.provider) {
+        entry.providers[pricing.provider] = (entry.providers[pricing.provider] ?? 0) + 1;
+      }
+      if (typeof metrics?.cost_usd === "number") {
+        if (pricing.heuristic === "agent-reported") entry.costReported += metrics.cost_usd;
+        else entry.costEstimated += metrics.cost_usd;
+      }
+    }
   }
 
   return [...agents.values()]
     .map((a) => ({
       ...a,
       models: Object.entries(a.models).sort((x, y) => y[1] - x[1]) as [string, number][],
+      providers: Object.entries(a.providers).sort((x, y) => y[1] - x[1]) as [string, number][],
     }))
     .sort((a, b) => b.count - a.count);
 });
