@@ -11,7 +11,8 @@ export type TriageContext = {
 export function triageTools(ctx: TriageContext) {
   return {
     triageIssue: tool({
-      description: "Record a triage result for an issue. Call this after analyzing an issue to classify it.",
+      description:
+        "Record a triage result for an issue. Call this after analyzing an issue to classify it.",
       inputSchema: z.object({
         issueNumber: z.number(),
         type: z.enum(["bug", "feature", "task", "question"]),

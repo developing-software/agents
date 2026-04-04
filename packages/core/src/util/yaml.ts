@@ -89,9 +89,7 @@ function parseBlock(
       result[key] = null;
     } else if (rawValue.startsWith("[") && rawValue.endsWith("]")) {
       const inner = rawValue.slice(1, -1);
-      result[key] = inner
-        ? inner.split(",").map((s) => parseScalar(s.trim()))
-        : [];
+      result[key] = inner ? inner.split(",").map((s) => parseScalar(s.trim())) : [];
     } else {
       result[key] = parseScalar(rawValue);
     }

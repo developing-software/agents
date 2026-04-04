@@ -15,14 +15,11 @@ export const listBranches = query(
   },
 );
 
-export const previewPrompt = query(
-  z.object({ planId: z.string() }),
-  async ({ planId }) => {
-    const plan = await Plan.fromID(planId);
-    if (!plan) error(404, `Plan ${planId} not found`);
-    return Plan.toPrompt(plan);
-  },
-);
+export const previewPrompt = query(z.object({ planId: z.string() }), async ({ planId }) => {
+  const plan = await Plan.fromID(planId);
+  if (!plan) error(404, `Plan ${planId} not found`);
+  return Plan.toPrompt(plan);
+});
 
 export const dispatchPlan = command(
   z.object({

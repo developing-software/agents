@@ -99,6 +99,7 @@ actions/
 The core lifecycle harness. Node.js action with `main` (setup) and `post` (teardown).
 
 **Setup** (runs first):
+
 - Creates `DEV_AGENTS_RESULTS_DIR` and `DEV_AGENTS_TAGS_DIR`
 - Exports `DEV_AGENTS_TOKEN` and `DEV_AGENTS_API_URL` to env for all downstream steps
 - Writes GitHub context tags (repo, run, branch/PR)
@@ -106,6 +107,7 @@ The core lifecycle harness. Node.js action with `main` (setup) and `post` (teard
 - Emits `{type}.started` event
 
 **Teardown** (runs last, always):
+
 - Recursively walks results dir for `data.json` files — nested directories create nested objects
 - Reads all tags from `DEV_AGENTS_TAGS_DIR`
 - Emits `{type}.completed` with `{ workflow: {durationMs, runUrl}, ...data }`
@@ -177,18 +179,18 @@ Uploads a file or directory to the Agents API R2 storage under the current event
 
 ## Env Var Conventions
 
-| Variable | Set by | Purpose |
-|---|---|---|
-| `DEV_AGENTS_TOKEN` | `event/init` | Agents API token, inherited by all downstream actions |
-| `DEV_AGENTS_API_URL` | `event/init` | Agents API base URL |
-| `DEV_AGENTS_RESULTS_DIR` | `event/init` | Path to results folder for data collection |
-| `DEV_AGENTS_TAGS_DIR` | `event/init` | Path to tags directory (one file per tag) |
-| `DEV_AGENTS_RUN_URL` | `event/init` | GitHub Actions run URL |
-| `DEV_AGENTS_EVENT_ID` | `event/init` | ID of the `{type}.started` event |
-| `DEV_AGENTS_BRANCH` | `git/branch` | Name of the created working branch |
-| `DEV_AGENTS_INITIAL_SHA` | `git/branch` | SHA before agent changes (for commit detection) |
-| `DEV_AGENTS_COMMENT_ID` | `comment/create` | Issue comment ID for live updates |
-| `DEV_AGENTS_HARNESS` | workflow (manual) | Agent harness name, used in comments |
+| Variable                 | Set by            | Purpose                                               |
+| ------------------------ | ----------------- | ----------------------------------------------------- |
+| `DEV_AGENTS_TOKEN`       | `event/init`      | Agents API token, inherited by all downstream actions |
+| `DEV_AGENTS_API_URL`     | `event/init`      | Agents API base URL                                   |
+| `DEV_AGENTS_RESULTS_DIR` | `event/init`      | Path to results folder for data collection            |
+| `DEV_AGENTS_TAGS_DIR`    | `event/init`      | Path to tags directory (one file per tag)             |
+| `DEV_AGENTS_RUN_URL`     | `event/init`      | GitHub Actions run URL                                |
+| `DEV_AGENTS_EVENT_ID`    | `event/init`      | ID of the `{type}.started` event                      |
+| `DEV_AGENTS_BRANCH`      | `git/branch`      | Name of the created working branch                    |
+| `DEV_AGENTS_INITIAL_SHA` | `git/branch`      | SHA before agent changes (for commit detection)       |
+| `DEV_AGENTS_COMMENT_ID`  | `comment/create`  | Issue comment ID for live updates                     |
+| `DEV_AGENTS_HARNESS`     | workflow (manual) | Agent harness name, used in comments                  |
 
 ## Event Types
 

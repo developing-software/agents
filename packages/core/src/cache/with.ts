@@ -6,10 +6,7 @@ export interface CacheOptions {
   ttl?: number;
 }
 
-export async function withCache<T>(
-  options: CacheOptions,
-  fetcher: () => Promise<T>,
-): Promise<T> {
+export async function withCache<T>(options: CacheOptions, fetcher: () => Promise<T>): Promise<T> {
   const cache = useCache();
   if (!cache) return fetcher();
 

@@ -13,11 +13,7 @@ export interface CacheStorage {
 
 export interface KVNamespace {
   get(key: string, type: "text"): Promise<string | null>;
-  put(
-    key: string,
-    value: string,
-    options?: { expirationTtl?: number },
-  ): Promise<void>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
   delete(key: string): Promise<void>;
 }
 
@@ -49,9 +45,7 @@ export class CacheApiAdapter implements CacheAdapter {
   constructor(private readonly cache: CacheStorage) {}
 
   private toRequest(key: string): Request {
-    return new Request(
-      `https://cache.internal/${encodeURIComponent(key)}`,
-    );
+    return new Request(`https://cache.internal/${encodeURIComponent(key)}`);
   }
 
   async get<T>(key: string): Promise<T | null> {

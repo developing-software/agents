@@ -11,10 +11,7 @@ function slugify(tag: string): string {
   const parts = tag.split(":");
   if (parts.length <= 2) return parts[0]!;
   // Use all parts except the last value, joined with -
-  return parts
-    .slice(0, -1)
-    .join("-")
-    .replace(/\//g, "-");
+  return parts.slice(0, -1).join("-").replace(/\//g, "-");
 }
 
 function writeTag(tagsDir: string, slug: string, value: string) {
@@ -95,12 +92,16 @@ async function run() {
   if (agentsToken) {
     try {
       // Collect all tags
-      const allTags = uniqueTags(extraTags.concat(
-        repository ? [`gh:repo:${repository}`] : [],
-        runId ? [`gh:workflow:${runId}`] : [],
-        prMatch ? [`gh:pr:${prMatch[1]}`] : [],
-        githubRef.startsWith("refs/heads/") ? [`gh:branch:${githubRef.replace("refs/heads/", "")}`] : [],
-      ));
+      const allTags = uniqueTags(
+        extraTags.concat(
+          repository ? [`gh:repo:${repository}`] : [],
+          runId ? [`gh:workflow:${runId}`] : [],
+          prMatch ? [`gh:pr:${prMatch[1]}`] : [],
+          githubRef.startsWith("refs/heads/")
+            ? [`gh:branch:${githubRef.replace("refs/heads/", "")}`]
+            : [],
+        ),
+      );
 
       let extraData: Record<string, unknown> = {};
       const dataInput = core.getInput("data");

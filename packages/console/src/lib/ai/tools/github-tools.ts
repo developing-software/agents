@@ -51,12 +51,14 @@ export function githubTools(ctx: RepoContext) {
         }
         if (remove?.length) {
           for (const label of remove) {
-            await octokit.rest.issues.removeLabel({
-              owner: ctx.owner,
-              repo: ctx.repo,
-              issue_number: number,
-              name: label,
-            }).catch(() => {});
+            await octokit.rest.issues
+              .removeLabel({
+                owner: ctx.owner,
+                repo: ctx.repo,
+                issue_number: number,
+                name: label,
+              })
+              .catch(() => {});
           }
         }
         return { number, added: add ?? [], removed: remove ?? [] };

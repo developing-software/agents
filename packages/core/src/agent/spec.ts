@@ -18,10 +18,7 @@ export namespace AgentPrompt {
   /**
    * List all prompts from .agents/prompts/ (markdown files).
    */
-  export async function list(
-    repo: RepoRef,
-    ref?: string,
-  ): Promise<Info[]> {
+  export async function list(repo: RepoRef, ref?: string): Promise<Info[]> {
     const entries = await GithubContent.listDir(repo, ".agents/prompts", ref);
     if (!entries) return [];
 
@@ -43,11 +40,7 @@ export namespace AgentPrompt {
   /**
    * Read a single prompt by name.
    */
-  export async function get(
-    repo: RepoRef,
-    name: string,
-    ref?: string,
-  ): Promise<Info | null> {
+  export async function get(repo: RepoRef, name: string, ref?: string): Promise<Info | null> {
     const path = `.agents/prompts/${name}.md`;
     const content = await GithubContent.readFile(repo, path, ref);
     if (!content) return null;

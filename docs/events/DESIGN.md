@@ -20,45 +20,45 @@ Events are the backbone of observability in this system. Every meaningful action
 
 ## Origins
 
-| Origin | Description |
-|--------|-------------|
-| `action` | GitHub Actions workflows (agent runs, event/emit action) |
-| `webhook` | GitHub webhook handlers (issues, PRs, pushes) |
-| `console` | Console server-side commands (triage, review, judge) |
-| `cli` | CLI tools (reserved, not actively used) |
-| `api` | Direct API posts (reserved) |
-| `cron` | Scheduled tasks (reserved) |
+| Origin    | Description                                              |
+| --------- | -------------------------------------------------------- |
+| `action`  | GitHub Actions workflows (agent runs, event/emit action) |
+| `webhook` | GitHub webhook handlers (issues, PRs, pushes)            |
+| `console` | Console server-side commands (triage, review, judge)     |
+| `cli`     | CLI tools (reserved, not actively used)                  |
+| `api`     | Direct API posts (reserved)                              |
+| `cron`    | Scheduled tasks (reserved)                               |
 
 ## Event Types
 
 ### Agent Lifecycle
 
-| Type | Origin | Description |
-|------|--------|-------------|
-| `agent.started` | action | Agent workflow begins |
+| Type              | Origin | Description                                 |
+| ----------------- | ------ | ------------------------------------------- |
+| `agent.started`   | action | Agent workflow begins                       |
 | `agent.completed` | action | Workflow finishes, emits all collected data |
 
 ### GitHub Webhooks
 
-| Type | Origin | Description |
-|------|--------|-------------|
-| `github.issues.{action}` | webhook | Issue opened, closed, reopened, labeled, etc. |
-| `github.pull_request.{action}` | webhook | PR opened, closed, synchronize, etc. |
-| `github.push` | webhook | Push to a branch |
+| Type                           | Origin  | Description                                   |
+| ------------------------------ | ------- | --------------------------------------------- |
+| `github.issues.{action}`       | webhook | Issue opened, closed, reopened, labeled, etc. |
+| `github.pull_request.{action}` | webhook | PR opened, closed, synchronize, etc.          |
+| `github.push`                  | webhook | Push to a branch                              |
 
 ### Console Operations
 
-| Type | Origin | Description |
-|------|--------|-------------|
-| `github.issue.triaged` | console | AI classification of an issue (type, scope, actionable) |
-| `github.pull_request.reviewed` | console | AI review of a PR against a plan |
-| `plan.evaluated` | console | AI comparison of multiple implementations |
+| Type                           | Origin  | Description                                             |
+| ------------------------------ | ------- | ------------------------------------------------------- |
+| `github.issue.triaged`         | console | AI classification of an issue (type, scope, actionable) |
+| `github.pull_request.reviewed` | console | AI review of a PR against a plan                        |
+| `plan.evaluated`               | console | AI comparison of multiple implementations               |
 
 ### Infrastructure
 
-| Type | Origin | Description |
-|------|--------|-------------|
-| `audit.started` | action | Audit workflow begins |
+| Type              | Origin | Description             |
+| ----------------- | ------ | ----------------------- |
+| `audit.started`   | action | Audit workflow begins   |
 | `audit.completed` | action | Audit workflow finishes |
 
 ## Event Chains
@@ -109,12 +109,12 @@ Data holds **everything that is NOT small and simple:**
 
 ### Anti-patterns
 
-| Anti-pattern | Why it's bad | Fix |
-|---|---|---|
-| Long string as a tag | Bloats tag index, not filterable | Move to `data` |
-| Categorical value only in `data` | Can't filter/group by it | Also add as a tag |
-| Numeric metric as a tag | Tags are strings, can't aggregate | Put in `data` |
-| Redundant tag + data without purpose | Confusing, maintenance burden | Pick one or document why both |
+| Anti-pattern                         | Why it's bad                      | Fix                           |
+| ------------------------------------ | --------------------------------- | ----------------------------- |
+| Long string as a tag                 | Bloats tag index, not filterable  | Move to `data`                |
+| Categorical value only in `data`     | Can't filter/group by it          | Also add as a tag             |
+| Numeric metric as a tag              | Tags are strings, can't aggregate | Put in `data`                 |
+| Redundant tag + data without purpose | Confusing, maintenance burden     | Pick one or document why both |
 
 ### Decision guide
 

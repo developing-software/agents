@@ -11,10 +11,13 @@ export type PlanToolsContext = {
 export function planTools(ctx: PlanToolsContext) {
   return {
     createPlan: tool({
-      description: "Create a new plan/PRD linking issues with scope, files, and acceptance criteria",
+      description:
+        "Create a new plan/PRD linking issues with scope, files, and acceptance criteria",
       inputSchema: z.object({
         title: z.string().describe("Plan title"),
-        body: z.string().describe("Markdown body with ## Scope, ## Files, ## Acceptance Criteria sections"),
+        body: z
+          .string()
+          .describe("Markdown body with ## Scope, ## Files, ## Acceptance Criteria sections"),
         issueNumbers: z.array(z.number()).describe("Related issue numbers"),
         tags: z.array(z.string()).optional().describe("Additional tags"),
       }),
@@ -52,7 +55,9 @@ export function planTools(ctx: PlanToolsContext) {
     listPlans: tool({
       description: "List existing plans for this repository",
       inputSchema: z.object({
-        status: z.enum(["draft", "review", "approved", "implementing", "completed", "rejected"]).optional(),
+        status: z
+          .enum(["draft", "review", "approved", "implementing", "completed", "rejected"])
+          .optional(),
       }),
       execute: async ({ status }) => {
         return Plan.list({

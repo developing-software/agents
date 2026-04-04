@@ -20,11 +20,7 @@ export class CacheClient {
   }
 
   set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    return this.adapter.set(
-      this.key(key),
-      value,
-      ttl ?? this.options.defaultTtl ?? 300,
-    );
+    return this.adapter.set(this.key(key), value, ttl ?? this.options.defaultTtl ?? 300);
   }
 
   delete(key: string): Promise<void> {

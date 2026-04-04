@@ -89,7 +89,10 @@ async function run() {
   // List top-level data keys
   for (const key of Object.keys(data)) {
     if (key === "workflow") continue;
-    summaryRows.push([key, typeof data[key] === "object" ? JSON.stringify(data[key]) : String(data[key])]);
+    summaryRows.push([
+      key,
+      typeof data[key] === "object" ? JSON.stringify(data[key]) : String(data[key]),
+    ]);
   }
 
   await core.summary

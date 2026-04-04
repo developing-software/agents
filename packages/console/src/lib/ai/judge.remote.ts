@@ -49,12 +49,23 @@ export const listPlanRuns = query(
   }),
   async ({ organization, repoName, planId }) => {
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) return { runs: [], reviews: {} as Record<number, PlanJudge.ReviewResult>, judgment: null as PlanJudge.CompareResult | null };
+    if (!repo)
+      return {
+        runs: [],
+        reviews: {} as Record<number, PlanJudge.ReviewResult>,
+        judgment: null as PlanJudge.CompareResult | null,
+      };
 
     const tags = [`plan:${planId}`];
 
     // Fetch agent.completed events for this plan
-    const events = await Event.list({ type: "agent.completed", source: "repository", sourceId: repo.id, tags, limit: 20 });
+    const events = await Event.list({
+      type: "agent.completed",
+      source: "repository",
+      sourceId: repo.id,
+      tags,
+      limit: 20,
+    });
 
     const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
 
@@ -105,8 +116,20 @@ export const listPlanRuns = query(
     }
 
     // Fetch existing reviews and judgment
-    const reviewEvents = await Event.list({ type: "github.pull_request.reviewed", source: "repository", sourceId: repo.id, tags, limit: 20 });
-    const judgmentEvents = await Event.list({ type: "plan.evaluated", source: "repository", sourceId: repo.id, tags, limit: 1 });
+    const reviewEvents = await Event.list({
+      type: "github.pull_request.reviewed",
+      source: "repository",
+      sourceId: repo.id,
+      tags,
+      limit: 20,
+    });
+    const judgmentEvents = await Event.list({
+      type: "plan.evaluated",
+      source: "repository",
+      sourceId: repo.id,
+      tags,
+      limit: 1,
+    });
 
     const reviews: Record<number, PlanJudge.ReviewResult> = {};
     for (const re of reviewEvents) {

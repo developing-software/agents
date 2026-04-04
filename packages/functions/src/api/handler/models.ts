@@ -12,8 +12,7 @@ export namespace ModelsApi {
       describeRoute({
         tags: ["Models"],
         summary: "List all model pricing",
-        description:
-          "Returns pricing data for all models. Costs are in dollars per 1M tokens.",
+        description: "Returns pricing data for all models. Costs are in dollars per 1M tokens.",
         responses: {
           200: {
             content: {
@@ -109,7 +108,10 @@ export namespace ModelsApi {
                 schema: Result(
                   z.object({
                     pricing: Models.Pricing.nullable(),
-                    cost_usd: z.number().nullable().meta({ description: "Total cost in USD", example: 0.225 }),
+                    cost_usd: z
+                      .number()
+                      .nullable()
+                      .meta({ description: "Total cost in USD", example: 0.225 }),
                   }),
                 ),
               },

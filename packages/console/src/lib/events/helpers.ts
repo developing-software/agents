@@ -14,21 +14,25 @@ export type EventMetrics = {
 };
 
 export function eventDotColor(type: string): string {
-  if (type.startsWith('agent.')) return 'var(--color-accent)';
-  if (type.startsWith('tests.')) return 'var(--color-success)';
-  if (type.startsWith('lint.')) return 'var(--color-merged)';
-  if (type.startsWith('github.issues.')) return 'var(--color-success)';
-  if (type.startsWith('github.pull_request.')) return 'var(--color-merged)';
-  if (type === 'github.push') return 'var(--color-dim)';
-  return 'var(--color-warning)';
+  if (type.startsWith("agent.")) return "var(--color-accent)";
+  if (type.startsWith("tests.")) return "var(--color-success)";
+  if (type.startsWith("lint.")) return "var(--color-merged)";
+  if (type.startsWith("github.issues.")) return "var(--color-success)";
+  if (type.startsWith("github.pull_request.")) return "var(--color-merged)";
+  if (type === "github.push") return "var(--color-dim)";
+  return "var(--color-warning)";
 }
 
 export function originBadgeStyle(origin: string): string {
   switch (origin) {
-    case 'action': return 'background: color-mix(in srgb, var(--color-accent) 15%, transparent); color: var(--color-accent);';
-    case 'cli': return 'background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning);';
-    case 'console': return 'background: color-mix(in srgb, var(--color-merged) 12%, transparent); color: var(--color-merged);';
-    default: return 'background: var(--color-elevated); color: var(--color-muted);';
+    case "action":
+      return "background: color-mix(in srgb, var(--color-accent) 15%, transparent); color: var(--color-accent);";
+    case "cli":
+      return "background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning);";
+    case "console":
+      return "background: color-mix(in srgb, var(--color-merged) 12%, transparent); color: var(--color-merged);";
+    default:
+      return "background: var(--color-elevated); color: var(--color-muted);";
   }
 }
 
@@ -44,7 +48,7 @@ export function relativeTime(iso: string): string {
 }
 
 export function typePrefix(type: string): string {
-  const dot = type.indexOf('.');
+  const dot = type.indexOf(".");
   return dot === -1 ? type : type.slice(0, dot);
 }
 
@@ -58,7 +62,7 @@ export {
   workflowRef,
   issueRef,
   prRef,
-} from '$lib/ui/tag/tag-helpers';
+} from "$lib/ui/tag/tag-helpers";
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -69,37 +73,40 @@ export function formatBytes(bytes: number): string {
 export function extractMetrics(data: Record<string, unknown>): EventMetrics | null {
   const agent = data?.agent as Record<string, unknown> | undefined;
   const m = agent?.metrics as Record<string, unknown> | undefined;
-  if (!m || typeof m !== 'object') return null;
+  if (!m || typeof m !== "object") return null;
   const tokens = m.tokens as Record<string, unknown> | undefined;
   return {
     tokens: {
-      input: typeof tokens?.input === 'number' ? tokens.input : null,
-      output: typeof tokens?.output === 'number' ? tokens.output : null,
-      reasoning: typeof tokens?.reasoning === 'number' ? tokens.reasoning : null,
-      cache_read: typeof tokens?.cache_read === 'number' ? tokens.cache_read : null,
-      cache_creation: typeof tokens?.cache_creation === 'number' ? tokens.cache_creation : null,
+      input: typeof tokens?.input === "number" ? tokens.input : null,
+      output: typeof tokens?.output === "number" ? tokens.output : null,
+      reasoning: typeof tokens?.reasoning === "number" ? tokens.reasoning : null,
+      cache_read: typeof tokens?.cache_read === "number" ? tokens.cache_read : null,
+      cache_creation: typeof tokens?.cache_creation === "number" ? tokens.cache_creation : null,
     },
-    turns: typeof m.turns === 'number' ? m.turns : null,
-    cost_usd: typeof m.cost_usd === 'number' ? m.cost_usd : null,
-    model: typeof m.model === 'string' ? m.model : null,
+    turns: typeof m.turns === "number" ? m.turns : null,
+    cost_usd: typeof m.cost_usd === "number" ? m.cost_usd : null,
+    model: typeof m.model === "string" ? m.model : null,
   };
 }
 
 export function formatMetricValue(name: string, value: number): string {
-  if (name === 'cost_usd') return `$${value.toFixed(3)}`;
-  if (name === 'tokens') return value.toLocaleString();
+  if (name === "cost_usd") return `$${value.toFixed(3)}`;
+  if (name === "tokens") return value.toLocaleString();
   return String(value);
 }
 
-export function flattenChecks(raw: unknown): Array<{ category: string; name: string; outcome: string }> {
-  if (!raw || typeof raw !== 'object') return [];
+export function flattenChecks(
+  raw: unknown,
+): Array<{ category: string; name: string; outcome: string }> {
+  if (!raw || typeof raw !== "object") return [];
   const result: Array<{ category: string; name: string; outcome: string }> = [];
   for (const [category, names] of Object.entries(raw)) {
-    if (!names || typeof names !== 'object') continue;
+    if (!names || typeof names !== "object") continue;
     for (const [name, checkData] of Object.entries(names as Record<string, unknown>)) {
-      const outcome = typeof (checkData as Record<string, unknown>)?.outcome === 'string'
-        ? (checkData as Record<string, unknown>).outcome as string
-        : 'unknown';
+      const outcome =
+        typeof (checkData as Record<string, unknown>)?.outcome === "string"
+          ? ((checkData as Record<string, unknown>).outcome as string)
+          : "unknown";
       result.push({ category, name, outcome });
     }
   }

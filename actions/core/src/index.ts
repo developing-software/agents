@@ -60,9 +60,7 @@ export function readContextTags(): string[] {
   const tagsDir = process.env.DEV_AGENTS_TAGS_DIR;
   if (tagsDir && existsSync(tagsDir)) {
     const files = readdirSync(tagsDir);
-    return files
-      .map((file) => readFileSync(join(tagsDir, file), "utf8").trim())
-      .filter(Boolean);
+    return files.map((file) => readFileSync(join(tagsDir, file), "utf8").trim()).filter(Boolean);
   }
   // Legacy fallback: read from flat file
   const contextFile = process.env.AGENTS_CONTEXT_TAGS_FILE;

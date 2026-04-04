@@ -54,21 +54,14 @@ export namespace AgentSkill {
   /**
    * List skills in .agents/skills/ for a repo.
    */
-  export async function listAgentsSkills(
-    repo: RepoRef,
-    ref?: string,
-  ): Promise<SkillInfo[]> {
+  export async function listAgentsSkills(repo: RepoRef, ref?: string): Promise<SkillInfo[]> {
     const entries = await GithubContent.listDir(repo, ".agents/skills", ref);
     if (!entries) return [];
 
     const skills: SkillInfo[] = [];
     for (const entry of entries) {
       if (entry.type !== "dir") continue;
-      const content = await GithubContent.readFile(
-        repo,
-        `${entry.path}/SKILL.md`,
-        ref,
-      );
+      const content = await GithubContent.readFile(repo, `${entry.path}/SKILL.md`, ref);
       if (!content) continue;
       skills.push(parseSkillFile(content, entry.name, ".agents"));
     }
@@ -78,21 +71,14 @@ export namespace AgentSkill {
   /**
    * List skills in .claude/skills/ for a repo.
    */
-  export async function listClaudeSkills(
-    repo: RepoRef,
-    ref?: string,
-  ): Promise<SkillInfo[]> {
+  export async function listClaudeSkills(repo: RepoRef, ref?: string): Promise<SkillInfo[]> {
     const entries = await GithubContent.listDir(repo, ".claude/skills", ref);
     if (!entries) return [];
 
     const skills: SkillInfo[] = [];
     for (const entry of entries) {
       if (entry.type !== "dir") continue;
-      const content = await GithubContent.readFile(
-        repo,
-        `${entry.path}/SKILL.md`,
-        ref,
-      );
+      const content = await GithubContent.readFile(repo, `${entry.path}/SKILL.md`, ref);
       if (!content) continue;
       skills.push(parseSkillFile(content, entry.name, ".claude"));
     }
@@ -129,7 +115,8 @@ export namespace AgentSkill {
           source.path,
           source.ref,
         );
-        if (!sourceContent) throw new Error(`Skill not found at ${source.owner}/${source.repo}/${source.path}`);
+        if (!sourceContent)
+          throw new Error(`Skill not found at ${source.owner}/${source.repo}/${source.path}`);
         content = sourceContent;
         name = source.path.split("/").slice(-2, -1)[0] ?? "skill";
         break;
@@ -142,13 +129,7 @@ export namespace AgentSkill {
     }
 
     const targetPath = `${target}/skills/${name}/SKILL.md`;
-    await GithubContent.writeFile(
-      repo,
-      targetPath,
-      content,
-      `Add skill: ${name}`,
-      branch,
-    );
+    await GithubContent.writeFile(repo, targetPath, content, `Add skill: ${name}`, branch);
   }
 
   /**
@@ -159,12 +140,8 @@ export namespace AgentSkill {
     skillId: string,
     branch?: string,
   ): Promise<void> {
-    const content = await GithubContent.readFile(
-      repo,
-      `.agents/skills/${skillId}/SKILL.md`,
-    );
-    if (!content)
-      throw new Error(`Skill '${skillId}' not found in .agents/skills/`);
+    const content = await GithubContent.readFile(repo, `.agents/skills/${skillId}/SKILL.md`);
+    if (!content) throw new Error(`Skill '${skillId}' not found in .agents/skills/`);
 
     await GithubContent.writeFile(
       repo,
@@ -184,10 +161,7 @@ export namespace AgentSkill {
     target: ".agents" | ".claude",
     branch?: string,
   ): Promise<void> {
-    const dir = await GithubContent.listDir(
-      repo,
-      `${target}/skills/${skillId}`,
-    );
+    const dir = await GithubContent.listDir(repo, `${target}/skills/${skillId}`);
     if (!dir) return;
 
     // delete all files in the skill directory

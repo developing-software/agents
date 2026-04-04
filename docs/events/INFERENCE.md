@@ -8,45 +8,45 @@ These metrics can be computed from existing `agent.completed` event data.
 
 ### Token Efficiency
 
-| Metric | Formula | Source Fields | Use |
-|--------|---------|---------------|-----|
-| Cost per 1k tokens | `cost_usd / (tokens.input + tokens.output) * 1000` | agent.completed.data.agent.metrics | Compare model cost efficiency |
-| Cache hit ratio | `tokens.cache_read / (tokens.cache_read + tokens.input)` | agent.completed.data.agent.metrics | Measure prompt caching effectiveness |
-| Reasoning depth | `tokens.reasoning / tokens.output` | agent.completed.data.agent.metrics | Gauge how much "thinking" a model does |
-| Token ratio | `tokens.output / tokens.input` | agent.completed.data.agent.metrics | Detect verbose or terse models |
-| Effective input cost | `(tokens.input - tokens.cache_read) * per_token_rate` | agent.completed.data.agent.metrics | True cost of new context |
+| Metric               | Formula                                                  | Source Fields                      | Use                                    |
+| -------------------- | -------------------------------------------------------- | ---------------------------------- | -------------------------------------- |
+| Cost per 1k tokens   | `cost_usd / (tokens.input + tokens.output) * 1000`       | agent.completed.data.agent.metrics | Compare model cost efficiency          |
+| Cache hit ratio      | `tokens.cache_read / (tokens.cache_read + tokens.input)` | agent.completed.data.agent.metrics | Measure prompt caching effectiveness   |
+| Reasoning depth      | `tokens.reasoning / tokens.output`                       | agent.completed.data.agent.metrics | Gauge how much "thinking" a model does |
+| Token ratio          | `tokens.output / tokens.input`                           | agent.completed.data.agent.metrics | Detect verbose or terse models         |
+| Effective input cost | `(tokens.input - tokens.cache_read) * per_token_rate`    | agent.completed.data.agent.metrics | True cost of new context               |
 
 ### Run Performance
 
-| Metric | Formula | Source Fields | Use |
-|--------|---------|---------------|-----|
-| Lines per minute | `(linesAdded + linesRemoved) / (durationMs / 60000)` | agent.completed.data | Measure agent productivity |
-| Cost per line changed | `cost_usd / (linesAdded + linesRemoved)` | agent.completed.data | Value per dollar spent |
-| Turns per minute | `turns / (durationMs / 60000)` | agent.completed.data | Agent interaction speed |
-| Check pass rate | `passed / (passed + failed)` per category | agent.completed.data.checks | Quality signal per check type |
+| Metric                | Formula                                              | Source Fields               | Use                           |
+| --------------------- | ---------------------------------------------------- | --------------------------- | ----------------------------- |
+| Lines per minute      | `(linesAdded + linesRemoved) / (durationMs / 60000)` | agent.completed.data        | Measure agent productivity    |
+| Cost per line changed | `cost_usd / (linesAdded + linesRemoved)`             | agent.completed.data        | Value per dollar spent        |
+| Turns per minute      | `turns / (durationMs / 60000)`                       | agent.completed.data        | Agent interaction speed       |
+| Check pass rate       | `passed / (passed + failed)` per category            | agent.completed.data.checks | Quality signal per check type |
 
 ### Trend Analysis
 
 These require aggregation over time windows using `Event.list()` with `from`/`to` filters:
 
-| Metric | Method | Use |
-|--------|--------|-----|
-| Cost trend | Sum `cost_usd` per day/week from agent.completed events | Budget monitoring |
-| Duration trend | Avg `durationMs` per day/week from agent.completed | Performance regression detection |
-| Pass rate trend | Check pass % per week from agent.completed | Quality signal over time |
-| Token trend | Sum input+output per day from agent.completed | Usage growth tracking |
-| Cache effectiveness trend | Avg cache hit ratio per week | Are prompts getting better cached? |
+| Metric                    | Method                                                  | Use                                |
+| ------------------------- | ------------------------------------------------------- | ---------------------------------- |
+| Cost trend                | Sum `cost_usd` per day/week from agent.completed events | Budget monitoring                  |
+| Duration trend            | Avg `durationMs` per day/week from agent.completed      | Performance regression detection   |
+| Pass rate trend           | Check pass % per week from agent.completed              | Quality signal over time           |
+| Token trend               | Sum input+output per day from agent.completed           | Usage growth tracking              |
+| Cache effectiveness trend | Avg cache hit ratio per week                            | Are prompts getting better cached? |
 
 ### Comparative Analysis
 
 Group by tags to compare:
 
-| Comparison | Group By | Metrics | Use |
-|------------|----------|---------|-----|
-| Model vs model | `model:*` tag | cost, tokens, duration, pass rate | Choose best model for workload |
-| Harness vs harness | `harness:*` tag | cost, tokens, duration, pass rate | Compare agent implementations |
-| Branch activity | `gh:branch:*` tag | event count, lines changed | Identify active development areas |
-| Issue complexity | `scope:*` tag | duration, cost, lines changed | Validate scope estimates |
+| Comparison         | Group By          | Metrics                           | Use                               |
+| ------------------ | ----------------- | --------------------------------- | --------------------------------- |
+| Model vs model     | `model:*` tag     | cost, tokens, duration, pass rate | Choose best model for workload    |
+| Harness vs harness | `harness:*` tag   | cost, tokens, duration, pass rate | Compare agent implementations     |
+| Branch activity    | `gh:branch:*` tag | event count, lines changed        | Identify active development areas |
+| Issue complexity   | `scope:*` tag     | duration, cost, lines changed     | Validate scope estimates          |
 
 ## Event Chain Inference
 
@@ -68,11 +68,11 @@ Events can be chained without explicit `parentEventId` using tag-based inference
 
 Some metrics require joining data from multiple events in a chain:
 
-| Want | Need | How |
-|------|------|-----|
-| Full run summary | agent.completed | All data (metrics, diff, pr, checks) in one event |
-| Issue lifecycle | github.issues.opened → agent.completed → github.pull_request.closed | Tag chain via `gh:issue:N` |
-| Plan execution | plan events → agent.completed → github.pull_request.reviewed | Tag chain via `plan:ID` |
+| Want             | Need                                                                | How                                               |
+| ---------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
+| Full run summary | agent.completed                                                     | All data (metrics, diff, pr, checks) in one event |
+| Issue lifecycle  | github.issues.opened → agent.completed → github.pull_request.closed | Tag chain via `gh:issue:N`                        |
+| Plan execution   | plan events → agent.completed → github.pull_request.reviewed        | Tag chain via `plan:ID`                           |
 
 ## Currently Computed (in Console)
 
@@ -117,9 +117,9 @@ These are feasible with existing data but not implemented:
 
 Some useful inferences are blocked by missing data:
 
-| Blocked Inference | Missing Data | Fix |
-|---|---|---|
-| Harness crash detection | No event on harness failure before completion | Emit `agent.failed` in error paths |
-| Per-step timing | Only aggregate duration, no step-level events | Emit intermediate events or structured step data |
-| Expected vs actual cost | No baseline/budget in event data | Add budget field to agent config or plan |
+| Blocked Inference       | Missing Data                                       | Fix                                                |
+| ----------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| Harness crash detection | No event on harness failure before completion      | Emit `agent.failed` in error paths                 |
+| Per-step timing         | Only aggregate duration, no step-level events      | Emit intermediate events or structured step data   |
+| Expected vs actual cost | No baseline/budget in event data                   | Add budget field to agent config or plan           |
 | Concurrent run ordering | Multiple runs with same parent, no sequence number | Add sequence/attempt field to `agent.started` data |

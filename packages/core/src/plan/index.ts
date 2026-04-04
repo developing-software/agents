@@ -158,10 +158,7 @@ export namespace Plan {
     });
   }
 
-  export async function update(
-    id: string,
-    input: UpdateInput,
-  ): Promise<void> {
+  export async function update(id: string, input: UpdateInput): Promise<void> {
     return createTransaction(async (tx) => {
       const values: Record<string, unknown> = { timeUpdated: new Date() };
       if (input.title !== undefined) values.title = input.title;
@@ -174,10 +171,7 @@ export namespace Plan {
     });
   }
 
-  export async function composePrompt(
-    plan: Info,
-    opts: ToPromptOptions = {},
-  ): Promise<string> {
+  export async function composePrompt(plan: Info, opts: ToPromptOptions = {}): Promise<string> {
     const options = ToPromptOptions.parse(opts);
     const issueNumbers = plan.tags
       .filter((t) => t.startsWith("gh:issue:"))
@@ -196,9 +190,7 @@ export namespace Plan {
           issueNumbers.map((n) => GithubIssue.get(repo, n).catch(() => null)),
         );
 
-        const validIssues = issues.filter(
-          (i): i is GithubIssue.Info => i !== null,
-        );
+        const validIssues = issues.filter((i): i is GithubIssue.Info => i !== null);
         if (validIssues.length > 0) {
           sections.push("## Linked Issues");
           for (const issue of validIssues) {
@@ -212,10 +204,7 @@ export namespace Plan {
     return sections.join("\n\n");
   }
 
-  export async function toPrompt(
-    plan: Info,
-    opts: ToPromptOptions = {},
-  ): Promise<string> {
+  export async function toPrompt(plan: Info, opts: ToPromptOptions = {}): Promise<string> {
     return composePrompt(plan, opts);
   }
 

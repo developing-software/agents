@@ -22,9 +22,6 @@ export const listTree = query(input, async ({ organization, repoName, tags }) =>
   return Event.listTree({ source: "repository", sourceId: repo.id, tags });
 });
 
-export const getEventDetail = query(
-  z.object({ eventId: z.string() }),
-  async ({ eventId }) => {
-    return Event.fromID(eventId);
-  },
-);
+export const getEventDetail = query(z.object({ eventId: z.string() }), async ({ eventId }) => {
+  return Event.fromID(eventId);
+});

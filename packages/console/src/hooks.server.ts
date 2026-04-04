@@ -43,9 +43,7 @@ const handleCache: Handle = async ({ event, resolve }) => {
   if (!event.platform?.caches) return resolve(event);
   const cache = await event.platform.caches.open("agents:v1");
   const adapter = new CacheApiAdapter(cache);
-  return withCacheContext(adapter, { prefix: "console" }, () =>
-    resolve(event),
-  );
+  return withCacheContext(adapter, { prefix: "console" }, () => resolve(event));
 };
 
 export const handle = sequence(handleDb, handleCache, handleAuth);

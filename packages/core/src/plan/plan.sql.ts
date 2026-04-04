@@ -2,7 +2,14 @@ import { pgTable as table, text, json, index } from "drizzle-orm/pg-core";
 import { id, timestamps, ulid } from "../drizzle/types";
 import type { Tag } from "../tag";
 
-export const PlanStatus = ["draft", "review", "approved", "implementing", "completed", "rejected"] as const;
+export const PlanStatus = [
+  "draft",
+  "review",
+  "approved",
+  "implementing",
+  "completed",
+  "rejected",
+] as const;
 export type PlanStatus = (typeof PlanStatus)[number];
 
 export const AuthorType = ["human", "llm"] as const;

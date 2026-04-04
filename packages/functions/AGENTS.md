@@ -22,10 +22,10 @@ src/
 ```ts
 import { Actor } from "@agents/core/actor";
 
-Actor.use()            // get current actor ({ type, properties }) — falls back to "public"
-Actor.userID()         // get userID or throw 401 if unauthenticated
-Actor.assert("user")   // assert type and return typed actor, throws 401 if mismatch
-Actor.assertFlag(flag) // assert the user has a feature flag, throws 403 if not
+Actor.use(); // get current actor ({ type, properties }) — falls back to "public"
+Actor.userID(); // get userID or throw 401 if unauthenticated
+Actor.assert("user"); // assert type and return typed actor, throws 401 if mismatch
+Actor.assertFlag(flag); // assert the user has a feature flag, throws 403 if not
 ```
 
 Middleware sets the actor via `Actor.provide(type, properties, next)` — handlers never call `provide` directly.

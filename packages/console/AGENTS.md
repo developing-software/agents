@@ -80,42 +80,42 @@ Defined in `src/routes/layout.css` — always use these, never hardcode hex valu
 
 **Surfaces**
 
-| Token | Value | Use |
-|---|---|---|
-| `--color-bg` | `#111113` | Page background |
-| `--color-surface` | `#1a1a1c` | Topbar, sidebar, panels |
+| Token              | Value     | Use                         |
+| ------------------ | --------- | --------------------------- |
+| `--color-bg`       | `#111113` | Page background             |
+| `--color-surface`  | `#1a1a1c` | Topbar, sidebar, panels     |
 | `--color-elevated` | `#222224` | Cards, inputs, active items |
-| `--color-hover` | `#2a2a2c` | Hover backgrounds |
+| `--color-hover`    | `#2a2a2c` | Hover backgrounds           |
 
 **Borders**
 
-| Token | Value | Use |
-|---|---|---|
-| `--color-border` | `#2c2c2e` | Default borders |
+| Token                   | Value     | Use                         |
+| ----------------------- | --------- | --------------------------- |
+| `--color-border`        | `#2c2c2e` | Default borders             |
 | `--color-border-bright` | `#3c3c3e` | Prominent / focused borders |
 
 **Text**
 
-| Token | Value | Use |
-|---|---|---|
-| `--color-text` | `#d8d8d8` | Primary text |
-| `--color-muted` | `#8c8c8e` | Secondary / inactive text |
-| `--color-dim` | `#565658` | Tertiary text, timestamps, placeholders |
+| Token           | Value     | Use                                     |
+| --------------- | --------- | --------------------------------------- |
+| `--color-text`  | `#d8d8d8` | Primary text                            |
+| `--color-muted` | `#8c8c8e` | Secondary / inactive text               |
+| `--color-dim`   | `#565658` | Tertiary text, timestamps, placeholders |
 
 **Accent & Semantic**
 
-| Token | Value | Use |
-|---|---|---|
-| `--color-accent` | `#5c8fcc` | Links, active state, focus ring |
-| `--color-accent-dim` | `#5c8fcc1f` | Tinted accent backgrounds |
-| `--color-success` | `#4faa70` | Open issues, success |
-| `--color-success-dim` | `#4faa701f` | Success tint |
-| `--color-danger` | `#c1666b` | Errors, closed issues |
-| `--color-danger-dim` | `#c1666b1f` | Danger tint |
-| `--color-merged` | `#9068c2` | Merged PRs |
-| `--color-merged-dim` | `#9068c21f` | Merged tint |
-| `--color-warning` | `#c98e42` | Warnings, CLI badge |
-| `--color-warning-dim` | `#c98e421f` | Warning tint |
+| Token                 | Value       | Use                             |
+| --------------------- | ----------- | ------------------------------- |
+| `--color-accent`      | `#5c8fcc`   | Links, active state, focus ring |
+| `--color-accent-dim`  | `#5c8fcc1f` | Tinted accent backgrounds       |
+| `--color-success`     | `#4faa70`   | Open issues, success            |
+| `--color-success-dim` | `#4faa701f` | Success tint                    |
+| `--color-danger`      | `#c1666b`   | Errors, closed issues           |
+| `--color-danger-dim`  | `#c1666b1f` | Danger tint                     |
+| `--color-merged`      | `#9068c2`   | Merged PRs                      |
+| `--color-merged-dim`  | `#9068c21f` | Merged tint                     |
+| `--color-warning`     | `#c98e42`   | Warnings, CLI badge             |
+| `--color-warning-dim` | `#c98e421f` | Warning tint                    |
 
 ### Typography
 

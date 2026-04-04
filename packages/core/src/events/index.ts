@@ -9,6 +9,7 @@ import { Examples } from "../examples";
 import { eventTable } from "./event.sql";
 import { OriginType } from "./types";
 import type { R2Bucket } from "@cloudflare/workers-types";
+import { Repository } from "../repository/index";
 
 const log = Log.create({ service: "event" });
 
@@ -62,45 +63,49 @@ export namespace Event {
 
   export type TreeNode = Info & { children: TreeNode[] };
 
-  export const IngestInput = z
-    .object({
-      repositoryId: z.string().optional().meta({
-        description: Common.IdDescription,
-        example: Examples.Repository.id,
-      }),
-      repoFullName: z.string().optional().meta({
-        description: "Full repository name in `owner/repo` format.",
-        example: Examples.Repository.fullName,
-      }),
-      parentEventId: Info.shape.parentEventId.optional().meta({
-        description: "Parent event ID to group related events.",
-        example: null,
-      }),
-      origin: z.enum(OriginType).meta({
-        description: "Origin of the event.",
-        example: Examples.Event.origin,
-      }),
-      type: Info.shape.type,
-      tags: Info.shape.tags.optional(),
-      data: Info.shape.data.optional(),
-    })
-    .refine((value) => Boolean(value.repositoryId || value.repoFullName), {
-      message: "Either `repositoryId` or `repoFullName` is required",
-      path: ["repositoryId"],
-    })
-    .meta({
-      ref: "EventIngestInput",
-      description: "Event payload submitted by external producers.",
-      example: {
-        repoFullName: Examples.Repository.fullName,
-        origin: Examples.Event.origin,
-        type: Examples.Event.type,
-        tags: Examples.Event.tags,
-        data: Examples.Event.data,
-      },
-    });
+  export namespace Source {
+    /** Identifies an event source. Extensible — add new variants as new source types are supported. */
+    export const Ref = z
+      .union([
+        z.object({
+          repositoryId: z.string().meta({
+            description: Common.IdDescription,
+            example: Examples.Repository.id,
+          }),
+        }),
+        z.object({
+          repoFullName: z.string().meta({
+            description: "Full repository name in `owner/repo` format.",
+            example: Examples.Repository.fullName,
+          }),
+        }),
+      ])
+      .meta({
+        description: "Source identifier — provide one of `repositoryId` or `repoFullName`.",
+      });
+    export type Ref = z.infer<typeof Ref>;
 
-  export type IngestInput = z.infer<typeof IngestInput>;
+    export interface Resolved {
+      source: string;
+      sourceId: string;
+      label: string;
+    }
+
+    /** Resolve a SourceRef to a concrete source type and ID. */
+    export async function resolve(input: Ref): Promise<Resolved | null> {
+      if ("repositoryId" in input) {
+        const repo = await Repository.findByID(input.repositoryId);
+        if (repo) return { source: "repository", sourceId: repo.id, label: input.repositoryId };
+      }
+
+      if ("repoFullName" in input) {
+        const repo = await Repository.findByFullName(input.repoFullName);
+        if (repo) return { source: "repository", sourceId: repo.id, label: input.repoFullName };
+      }
+
+      return null;
+    }
+  }
 
   export const create = fn(
     z.object({
@@ -237,7 +242,6 @@ export namespace Event {
 
     return opts.parentEventId;
   }
-
 
   export async function listTree(opts: {
     source?: string;

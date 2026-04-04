@@ -62,12 +62,8 @@ describe("Models", () => {
   });
 
   test("logoUrl() returns correct URL", () => {
-    expect(Models.logoUrl("anthropic")).toBe(
-      "https://models.dev/logos/anthropic.svg",
-    );
-    expect(Models.logoUrl("openai")).toBe(
-      "https://models.dev/logos/openai.svg",
-    );
+    expect(Models.logoUrl("anthropic")).toBe("https://models.dev/logos/anthropic.svg");
+    expect(Models.logoUrl("openai")).toBe("https://models.dev/logos/openai.svg");
   });
 
   test("pricing() returns exact match", async () => {
@@ -117,10 +113,7 @@ describe("Models", () => {
   });
 
   test("pricingBatch() returns pricing for multiple models", async () => {
-    const result = await Models.pricingBatch([
-      "claude-sonnet-4-6",
-      "not-a-real-model-xyz",
-    ]);
+    const result = await Models.pricingBatch(["claude-sonnet-4-6", "not-a-real-model-xyz"]);
     expect(result["claude-sonnet-4-6"]).not.toBeNull();
     expect(result["not-a-real-model-xyz"]).toBeNull();
   });

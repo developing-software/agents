@@ -34,6 +34,7 @@ The full lifecycle works end-to-end: issues are triaged via AI planner chat, pla
 The `Plan` module in core has full CRUD but no Hono handlers expose it. Without these, only the console can manage plans.
 
 **What's needed:**
+
 - `packages/functions/src/api/handler/plan.ts` — new handler
 - Routes: `GET /plans`, `GET /plans/:id`, `POST /plans`, `PATCH /plans/:id`, `DELETE /plans/:id`
 - Register in `packages/functions/src/api/routes.ts`
@@ -46,6 +47,7 @@ The `Plan` module in core has full CRUD but no Hono handlers expose it. Without 
 When all dispatched agents finish (all `agent.completed` events received), the plan should auto-transition to "completed" if at least one PR was merged, or stay "implementing" if PRs are still open.
 
 **What's needed:**
+
 - Webhook or event listener that checks plan status when `agent.completed` fires
 - Logic: count expected agents (from `plan.data.dispatched`) vs received `agent.completed` events
 - Auto-complete only if a PR was merged; otherwise surface "all agents done, awaiting review" state
@@ -55,6 +57,7 @@ When all dispatched agents finish (all `agent.completed` events received), the p
 **Priority:** Medium — currently manual via planner chat
 
 **What's needed:**
+
 - `IssueTriage` module in `packages/core/src/issue/` for persistent triage logic
 - Webhook handler for `issues.opened` — auto-classify on arrival
 - GitHub bot comment on issue with triage result + label automation
@@ -65,6 +68,7 @@ When all dispatched agents finish (all `agent.completed` events received), the p
 **Priority:** Medium — no visibility into agent performance trends
 
 **What's needed:**
+
 - Composable metric components in `$lib/metrics/` (cost, duration, win/loss, lines changed)
 - Repo overview page enhanced with time range filtering + plan funnel visualization
 - Home dashboard (cross-repo metrics) for logged-in users
@@ -104,7 +108,7 @@ actions/
 - Plans live in the platform DB (not as repo files)
 - Plans can link many issues/artifacts via tags (like the event system)
 - File references use relative paths in the markdown body
-- Agent runs are events (`agent.started`,  `agent.completed`), linked to plans via `plan:{planId}` tag
+- Agent runs are events (`agent.started`, `agent.completed`), linked to plans via `plan:{planId}` tag
 - No separate join tables — tags handle all relationships
 - LLM judge runs from the console (server-side via `judge.remote.ts`), results stored as events (`github.pull_request.reviewed`, `plan.evaluated`)
 

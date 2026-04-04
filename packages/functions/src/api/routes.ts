@@ -13,7 +13,6 @@ import { GitHubApi } from "./handler/github";
 import { ModelsApi } from "./handler/models";
 import { auth } from "./middleware";
 
-
 const log = Log.create({ namespace: "api" });
 
 export const app = new Hono();

@@ -85,10 +85,7 @@ export namespace GithubContent {
   /**
    * Get full repo tree (recursive).
    */
-  export async function getTree(
-    repo: RepoRef,
-    ref?: string,
-  ): Promise<TreeEntry[]> {
+  export async function getTree(repo: RepoRef, ref?: string): Promise<TreeEntry[]> {
     const octokit = await GitHub.appClient(repo.installationId);
     const sha = ref ?? "HEAD";
     const { data } = await octokit.rest.git.getTree({

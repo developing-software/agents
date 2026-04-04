@@ -42,7 +42,9 @@ export const updatePlan = command(
     id: z.string(),
     title: z.string().optional(),
     body: z.string().optional(),
-    status: z.enum(["draft", "review", "approved", "implementing", "completed", "rejected"]).optional(),
+    status: z
+      .enum(["draft", "review", "approved", "implementing", "completed", "rejected"])
+      .optional(),
     tags: z.array(z.string()).optional(),
   }),
   async ({ id, ...input }) => {

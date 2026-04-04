@@ -49,12 +49,17 @@ async function run() {
     core.warning("token not set, skipping event emit");
     return;
   }
-  const apiUrl = core.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
+  const apiUrl =
+    core.getInput("url") ||
+    process.env.DEV_AGENTS_API_URL ||
+    "https://api.agents.developing.company/api";
   const eventIdEnv = core.getInput("event_id_env") || "EVENT_ID";
   const inheritContext = core.getInput("inherit_context") !== "false";
   const parentEventId =
     core.getInput("parent_event_id") ||
-    (inheritContext ? (process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID) : "") ||
+    (inheritContext
+      ? process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID
+      : "") ||
     "";
   const origin = core.getInput("origin") as
     | "api"

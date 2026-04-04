@@ -23,10 +23,7 @@ export namespace AgentDiscovery {
   /**
    * Find all AGENTS.md files in a repo via recursive tree search.
    */
-  export async function findAgentFiles(
-    repo: RepoRef,
-    ref?: string,
-  ): Promise<AgentFile[]> {
+  export async function findAgentFiles(repo: RepoRef, ref?: string): Promise<AgentFile[]> {
     const tree = await GithubContent.getTree(repo, ref);
     return tree
       .filter(
@@ -66,10 +63,7 @@ export namespace AgentDiscovery {
   /**
    * Check if .claude/ folder exists and return its file paths.
    */
-  export async function detectClaudeFolder(
-    repo: RepoRef,
-    ref?: string,
-  ): Promise<string[]> {
+  export async function detectClaudeFolder(repo: RepoRef, ref?: string): Promise<string[]> {
     const entries = await GithubContent.listDir(repo, ".claude", ref);
     if (!entries) return [];
     return entries.map((e) => e.path);

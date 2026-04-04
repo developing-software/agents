@@ -3,7 +3,10 @@ import { basename, join } from "path";
 import * as core from "@actions/core";
 
 const agentsToken = core.getInput("token") || process.env.DEV_AGENTS_TOKEN;
-const apiUrl = core.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
+const apiUrl =
+  core.getInput("url") ||
+  process.env.DEV_AGENTS_API_URL ||
+  "https://api.agents.developing.company/api";
 const eventId = process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID;
 
 async function uploadFile(filePath: string, name: string): Promise<void> {

@@ -7,13 +7,34 @@ const TTL = 21600; // 6 hours
 export namespace Models {
   export const Cost = z
     .object({
-      input: z.number().optional().meta({ description: "Input cost per 1M tokens (USD)", example: 3 }),
-      output: z.number().optional().meta({ description: "Output cost per 1M tokens (USD)", example: 15 }),
-      cache_read: z.number().optional().meta({ description: "Cache read cost per 1M tokens (USD)", example: 0.3 }),
-      cache_write: z.number().optional().meta({ description: "Cache write cost per 1M tokens (USD)", example: 3.75 }),
-      reasoning: z.number().optional().meta({ description: "Reasoning token cost per 1M tokens (USD)" }),
-      input_audio: z.number().optional().meta({ description: "Audio input cost per 1M tokens (USD)" }),
-      output_audio: z.number().optional().meta({ description: "Audio output cost per 1M tokens (USD)" }),
+      input: z
+        .number()
+        .optional()
+        .meta({ description: "Input cost per 1M tokens (USD)", example: 3 }),
+      output: z
+        .number()
+        .optional()
+        .meta({ description: "Output cost per 1M tokens (USD)", example: 15 }),
+      cache_read: z
+        .number()
+        .optional()
+        .meta({ description: "Cache read cost per 1M tokens (USD)", example: 0.3 }),
+      cache_write: z
+        .number()
+        .optional()
+        .meta({ description: "Cache write cost per 1M tokens (USD)", example: 3.75 }),
+      reasoning: z
+        .number()
+        .optional()
+        .meta({ description: "Reasoning token cost per 1M tokens (USD)" }),
+      input_audio: z
+        .number()
+        .optional()
+        .meta({ description: "Audio input cost per 1M tokens (USD)" }),
+      output_audio: z
+        .number()
+        .optional()
+        .meta({ description: "Audio output cost per 1M tokens (USD)" }),
       context_over_200k: z
         .object({
           input: z.number().optional(),
@@ -27,7 +48,10 @@ export namespace Models {
 
   export const Limit = z
     .object({
-      context: z.number().optional().meta({ description: "Context window size in tokens", example: 200000 }),
+      context: z
+        .number()
+        .optional()
+        .meta({ description: "Context window size in tokens", example: 200000 }),
       output: z.number().optional().meta({ description: "Max output tokens", example: 64000 }),
       input: z.number().optional().meta({ description: "Max input tokens" }),
     })
@@ -113,16 +137,11 @@ export namespace Models {
     });
   }
 
-  export async function provider(
-    id: string,
-  ): Promise<Provider | undefined> {
-    return withCache(
-      { key: "models:provider", params: [id], ttl: TTL },
-      async () => {
-        const data = await list();
-        return data[id];
-      },
-    );
+  export async function provider(id: string): Promise<Provider | undefined> {
+    return withCache({ key: "models:provider", params: [id], ttl: TTL }, async () => {
+      const data = await list();
+      return data[id];
+    });
   }
 
   export async function allModels(): Promise<
@@ -155,8 +174,7 @@ export namespace Models {
 
     // 1. Exact match
     const exact = models.find((m) => m.id.toLowerCase() === lower);
-    if (exact?.cost)
-      return { model: exact.id, provider: exact.providerId, cost: exact.cost };
+    if (exact?.cost) return { model: exact.id, provider: exact.providerId, cost: exact.cost };
 
     // 2. Longest prefix match (e.g. "claude-sonnet-4-6-20250514" → "claude-sonnet-4-6")
     const prefixMatches = models
@@ -173,10 +191,7 @@ export namespace Models {
   }
 
   /** Calculate cost in USD given token counts and a Cost record. All costs are $/1M tokens. */
-  export function calculateCost(
-    tokens: TokenCounts,
-    cost: Cost,
-  ): number {
+  export function calculateCost(tokens: TokenCounts, cost: Cost): number {
     let total = 0;
     if (cost.input) total += (tokens.input / 1_000_000) * cost.input;
     if (cost.output) total += (tokens.output / 1_000_000) * cost.output;
@@ -190,9 +205,7 @@ export namespace Models {
   }
 
   /** Batch pricing lookup for multiple model IDs. */
-  export async function pricingBatch(
-    modelIds: string[],
-  ): Promise<Record<string, Pricing | null>> {
+  export async function pricingBatch(modelIds: string[]): Promise<Record<string, Pricing | null>> {
     const result: Record<string, Pricing | null> = {};
     for (const id of modelIds) {
       result[id] = await pricing(id);

@@ -14,7 +14,7 @@ inputs:
   allowed_tools:
     description: "Claude Code allowed tools"
     required: false
-    default: 'Read,Write,Glob,Grep,Edit(.agents/reports/*),Bash(ls *),Bash(find *),Bash(wc *),Agent'
+    default: "Read,Write,Glob,Grep,Edit(.agents/reports/*),Bash(ls *),Bash(find *),Bash(wc *),Agent"
   claude_code_oauth_token:
     description: "Claude Code OAuth token"
     required: true

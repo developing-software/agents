@@ -10,8 +10,12 @@ export namespace PlanJudge {
     overallScore: z.number().describe("Score from 1 to 10"),
     summary: z.string().describe("Brief overall assessment of the implementation"),
     strengths: z.array(z.string().describe("A specific strength")).describe("List of strengths"),
-    concerns: z.array(z.string().describe("A specific concern")).describe("List of concerns or issues found"),
-    suggestions: z.array(z.string().describe("An actionable suggestion")).describe("List of actionable improvement suggestions"),
+    concerns: z
+      .array(z.string().describe("A specific concern"))
+      .describe("List of concerns or issues found"),
+    suggestions: z
+      .array(z.string().describe("An actionable suggestion"))
+      .describe("List of actionable improvement suggestions"),
   });
   export type ReviewResult = z.infer<typeof ReviewResult>;
 
@@ -20,16 +24,22 @@ export namespace PlanJudge {
     agent: z.string().describe("Name of the agent"),
     prNumber: z.number().describe("Pull request number"),
     score: z.number().describe("Score from 1 to 10"),
-    strengths: z.array(z.string().describe("A specific strength")).describe("Key strengths of this implementation"),
-    weaknesses: z.array(z.string().describe("A specific weakness")).describe("Key weaknesses of this implementation"),
+    strengths: z
+      .array(z.string().describe("A specific strength"))
+      .describe("Key strengths of this implementation"),
+    weaknesses: z
+      .array(z.string().describe("A specific weakness"))
+      .describe("Key weaknesses of this implementation"),
   });
 
   export const CompareResult = z.object({
     rankings: z.array(CompareRanking).describe("Implementations ranked from best to worst"),
-    winner: z.object({
-      agent: z.string().describe("Name of the winning agent"),
-      prNumber: z.number().describe("Pull request number of the winning implementation"),
-    }).describe("The recommended winner"),
+    winner: z
+      .object({
+        agent: z.string().describe("Name of the winning agent"),
+        prNumber: z.number().describe("Pull request number of the winning implementation"),
+      })
+      .describe("The recommended winner"),
     reasoning: z.string().describe("Detailed explanation of the ranking decision"),
   });
   export type CompareResult = z.infer<typeof CompareResult>;
