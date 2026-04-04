@@ -97,7 +97,7 @@ Issues are triaged, validated, and grouped into plans. Plans can be authored by 
               +----------------------+
                         |
                         v
-                  CONSTRUCTION -->
+                   CONSTRUCTION -->
 ```
 
 ### Phase 2: Construction (Agent-Executed)
@@ -299,3 +299,7 @@ bun run lint         # lint (oxlint)
 bun run typecheck    # type check
 bun test             # run tests
 ```
+
+---
+
+**Contributor:** opencode
