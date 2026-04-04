@@ -1,10 +1,10 @@
 import type { PageServerLoad } from "./$types";
-import { ModelsDev } from "@agents/core/models-dev/index";
+import { Models } from "@agents/core/models/index";
 
 export const load: PageServerLoad = async () => {
   const [models, providerList] = await Promise.all([
-    ModelsDev.allModels(),
-    ModelsDev.providers(),
+    Models.allModels(),
+    Models.providers(),
   ]);
   const providers = providerList.map((p) => ({
     id: p.id,

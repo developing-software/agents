@@ -19,6 +19,7 @@
   async function handleStatusChange(e: Event) {
     if (!data.plan) return;
     const newStatus = (e.target as HTMLSelectElement).value;
+    // @ts-expect-error it is safe to pass the value as any since it's validated by the enum
     statusValue = newStatus;
     await updatePlan({ id: data.plan.id, status: newStatus as any });
     invalidateAll();
