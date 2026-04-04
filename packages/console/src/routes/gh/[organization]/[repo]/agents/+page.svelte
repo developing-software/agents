@@ -120,14 +120,21 @@
     expandedId = expandedId === id ? null : id;
   }
 
-  function checkStatus(checks: Array<{ category: string; name: string; outcome: string }>): 'pass' | 'fail' | 'none' {
-    if (checks.length === 0) return 'none';
-    return checks.every((c) => c.outcome === 'success') ? 'pass' : 'fail';
+  function runStatus(
+    checks: Array<{ outcome: string }>,
+    conclusion: string | null,
+  ): 'pass' | 'fail' | 'cancelled' | 'none' {
+    if (conclusion === 'cancelled') return 'cancelled';
+    if (conclusion === 'failure') return 'fail';
+    if (checks.length > 0 && !checks.every((c) => c.outcome === 'success')) return 'fail';
+    if (checks.length > 0 || conclusion === 'success') return 'pass';
+    return 'none';
   }
 
-  function statusDotColor(status: 'pass' | 'fail' | 'none'): string {
+  function statusDotColor(status: 'pass' | 'fail' | 'cancelled' | 'none'): string {
     if (status === 'pass') return 'var(--color-success)';
     if (status === 'fail') return 'var(--color-danger)';
+    if (status === 'cancelled') return 'var(--color-warning)';
     return 'var(--color-dim)';
   }
 </script>
@@ -158,7 +165,7 @@
   {:else}
     <div class="runs-table">
       {#each runs as run (run.id)}
-        {@const status = checkStatus(run.checks)}
+        {@const status = runStatus(run.checks, run.conclusion)}
         {@const issue = issueRef(run.tags)}
         {@const pr = prRef(run.tags)}
         {@const branch = branchTag(run.tags)}
@@ -317,10 +324,26 @@
                 </div>
               {/if}
 
-              {#if branch || ghWorkflow !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
+              {#if run.conclusion || run.agentStatus || branch || ghWorkflow !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
                 <div class="detail-section">
                   <span class="detail-label">Context</span>
                   <div class="context-items">
+                    {#if run.conclusion}
+                      <span
+                        class="context-status"
+                        class:status-success={run.conclusion === 'success'}
+                        class:status-failure={run.conclusion === 'failure'}
+                        class:status-cancelled={run.conclusion === 'cancelled'}
+                      >workflow: {run.conclusion}</span>
+                    {/if}
+                    {#if run.agentStatus}
+                      <span
+                        class="context-status"
+                        class:status-success={run.agentStatus === 'success'}
+                        class:status-failure={run.agentStatus === 'failure'}
+                        class:status-cancelled={run.agentStatus === 'cancelled'}
+                      >agent: {run.agentStatus}</span>
+                    {/if}
                     {#if branch}
                       <span class="context-branch">&#x2387; {branch}</span>
                     {/if}
@@ -764,6 +787,15 @@
     font-size: 10px;
     color: var(--color-dim);
   }
+
+  .context-status {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+  }
+
+  .status-success { color: var(--color-success); }
+  .status-failure { color: var(--color-danger); }
+  .status-cancelled { color: var(--color-warning); }
 
   .context-lines {
     font-family: "JetBrains Mono", monospace;

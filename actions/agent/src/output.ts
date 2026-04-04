@@ -6,6 +6,7 @@ import type { ExtractorResult, AgentPricing } from "./types";
 export async function writeResults(
   result: ExtractorResult,
   pricing: AgentPricing | null,
+  status: string | null,
 ): Promise<void> {
   const resultsDir = process.env.DEV_AGENTS_RESULTS_DIR;
   if (!resultsDir) {
@@ -25,6 +26,7 @@ export async function writeResults(
     name: result.name,
     sessionId: result.sessionId,
     finalMessage: result.finalMessage,
+    status,
     metrics: result.metrics,
   };
 

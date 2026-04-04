@@ -12477,7 +12477,7 @@ var require_fetch = __commonJS((exports, module) => {
       this.emit("terminated", error);
     }
   }
-  function fetch(input, init = {}) {
+  function fetch2(input, init = {}) {
     webidl.argumentLengthCheck(arguments, 1, { header: "globalThis.fetch" });
     const p = createDeferredPromise();
     let requestObject;
@@ -13334,7 +13334,7 @@ var require_fetch = __commonJS((exports, module) => {
     }
   }
   module.exports = {
-    fetch,
+    fetch: fetch2,
     Fetch,
     fetching,
     finalizeAndReportTiming
@@ -16374,7 +16374,7 @@ var require_undici = __commonJS((exports, module) => {
   exports.getGlobalDispatcher = getGlobalDispatcher;
   if (util.nodeMajor > 16 || util.nodeMajor === 16 && util.nodeMinor >= 8) {
     let fetchImpl = null;
-    exports.fetch = async function fetch(resource) {
+    exports.fetch = async function fetch2(resource) {
       if (!fetchImpl) {
         fetchImpl = require_fetch().fetch;
       }
@@ -19939,6 +19939,43 @@ function createApiClient(token, baseUrl) {
 }
 
 // actions/event/init/src/teardown.ts
+async function fetchWorkflowStatus() {
+  const token = process.env.GITHUB_TOKEN;
+  const repo = process.env.GITHUB_REPOSITORY;
+  const runId = process.env.GITHUB_RUN_ID;
+  const jobId = process.env.GITHUB_JOB;
+  if (!token || !repo || !runId)
+    return { conclusion: null, jobs: [] };
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json"
+      }
+    });
+    if (!res.ok)
+      return { conclusion: null, jobs: [] };
+    const data = await res.json();
+    if (!data.jobs?.length)
+      return { conclusion: null, jobs: [] };
+    const jobs = [];
+    let conclusion = null;
+    const isCurrentJob = (name) => jobId != null && (name === jobId || name.endsWith(` / ${jobId}`));
+    for (const job of data.jobs) {
+      if (isCurrentJob(job.name)) {
+        const steps = job.steps ?? [];
+        const derived = steps.some((s) => s.conclusion === "failure") ? "failure" : steps.some((s) => s.conclusion === "cancelled") ? "cancelled" : "success";
+        conclusion = derived;
+        jobs.push({ name: job.name, conclusion: derived });
+      } else {
+        jobs.push({ name: job.name, conclusion: job.conclusion });
+      }
+    }
+    return { conclusion, jobs };
+  } catch {
+    return { conclusion: null, jobs: [] };
+  }
+}
 function readDataDir(dir) {
   const result = {};
   if (!existsSync2(dir))
@@ -19982,7 +20019,14 @@ async function run() {
   if (resultsDir && existsSync2(resultsDir)) {
     data = readDataDir(resultsDir);
   }
-  data.workflow = { durationMs, runUrl, trigger };
+  const status = await fetchWorkflowStatus();
+  data.workflow = {
+    durationMs,
+    runUrl,
+    trigger,
+    conclusion: status.conclusion,
+    jobs: status.jobs.length > 0 ? status.jobs : undefined
+  };
   const tags = uniqueTags(readContextTags());
   if (agentsToken) {
     try {

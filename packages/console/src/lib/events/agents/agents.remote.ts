@@ -187,6 +187,9 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
       avgDurationMs: 0,
       totalLinesAdded: 0,
       totalLinesRemoved: 0,
+      workflowSuccess: 0,
+      workflowFailure: 0,
+      workflowCancelled: 0,
     };
 
   const events = await Event.list({
@@ -207,6 +210,9 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
   let totalLinesRemoved = 0;
   let totalCost = 0;
   let totalTokens = 0;
+  let workflowSuccess = 0;
+  let workflowFailure = 0;
+  let workflowCancelled = 0;
 
   for (const e of events) {
     if (!e.data) continue;
@@ -214,6 +220,11 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
 
     const agent = parsed.agent.name;
     agentCounts[agent] = (agentCounts[agent] ?? 0) + 1;
+
+    const conclusion = parsed.workflow.conclusion;
+    if (conclusion === "success") workflowSuccess++;
+    else if (conclusion === "failure") workflowFailure++;
+    else if (conclusion === "cancelled") workflowCancelled++;
 
     if (parsed.workflow.durationMs > 0) {
       totalDurationMs += parsed.workflow.durationMs;
@@ -254,6 +265,9 @@ export const getEventSummary = query(repoInput, async ({ organization, repoName 
     avgDurationMs: durationCount > 0 ? Math.round(totalDurationMs / durationCount) : 0,
     totalLinesAdded,
     totalLinesRemoved,
+    workflowSuccess,
+    workflowFailure,
+    workflowCancelled,
   };
 });
 
@@ -422,6 +436,8 @@ export const listAgentRuns = query(
         linesRemoved: parsed.diff?.linesRemoved ?? null,
         prUrl: parsed.pr?.url || null,
         runUrl: parsed.workflow.runUrl || null,
+        agentStatus: parsed.agent.status ?? null,
+        conclusion: parsed.workflow.conclusion ?? null,
         provider: parsed.agent.pricing?.provider ?? null,
         pricing_heuristic: parsed.agent.pricing?.heuristic ?? null,
         checks,

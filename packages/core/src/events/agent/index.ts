@@ -56,12 +56,18 @@ export namespace AgentEvent {
       cost_usd: z.number().nullable().catch(null),
     });
 
+    export const Status = z
+      .enum(["success", "failure", "cancelled"])
+      .nullable()
+      .catch(null);
+
     export const Data = z.object({
       agent: z
         .object({
           name: z.string().catch("unknown"),
           sessionId: z.string().nullable().catch(null),
           finalMessage: z.string().nullable().catch(null),
+          status: Status,
           metrics: Metrics.nullable().catch(null),
           pricing: Pricing.nullable().catch(null),
         })
@@ -69,6 +75,7 @@ export namespace AgentEvent {
           name: "unknown",
           sessionId: null,
           finalMessage: null,
+          status: null,
           metrics: null,
           pricing: null,
         }),
@@ -77,8 +84,9 @@ export namespace AgentEvent {
           durationMs: z.number().catch(0),
           runUrl: z.string().catch(""),
           trigger: z.string().catch(""),
+          conclusion: Status,
         })
-        .catch({ durationMs: 0, runUrl: "", trigger: "" }),
+        .catch({ durationMs: 0, runUrl: "", trigger: "", conclusion: null }),
       diff: z
         .object({
           linesAdded: z.number().catch(0),

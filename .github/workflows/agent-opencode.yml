@@ -47,6 +47,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -115,6 +116,7 @@ jobs:
         with:
           agent: opencode
           provider: openai
+          status: ${{ steps.run-opencode.outcome }}
 
       - uses: ./.github/actions/check
         if: always()

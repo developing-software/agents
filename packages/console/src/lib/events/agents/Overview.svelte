@@ -81,6 +81,18 @@
             ></div>
           </div>
         </div>
+        {#if summary.workflowSuccess + summary.workflowFailure + summary.workflowCancelled > 0}
+          {@const wfTotal = summary.workflowSuccess + summary.workflowFailure + summary.workflowCancelled}
+          {@const wfRate = Math.round((summary.workflowSuccess / wfTotal) * 100)}
+          <div class="stat-card">
+            <span class="stat-label">Workflow Success</span>
+            <span class="stat-value">{wfRate}%</span>
+            <div class="mini-bar-track">
+              <div class="mini-bar-pass" style="width:{wfRate}%;"></div>
+              <div class="mini-bar-fail" style="width:{100 - wfRate}%;"></div>
+            </div>
+          </div>
+        {/if}
       </div>
 
       {#if summary.checks.length > 0}

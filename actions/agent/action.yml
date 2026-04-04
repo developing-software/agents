@@ -21,7 +21,7 @@ inputs:
     description: "Provider for pricing lookup (e.g. anthropic, openai)"
     required: false
   status:
-    description: "Run status override"
+    description: "Job status at time of agent collection — pass ${{ job.status }}"
     required: false
 
 runs:

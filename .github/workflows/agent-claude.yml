@@ -106,6 +106,7 @@ jobs:
           session_id: ${{ steps.run-claude.outputs.session_id }}
           model: ${{ env.MODEL }}
           provider: anthropic
+          status: ${{ steps.run-claude.outcome }}
 
       - uses: ./.github/actions/check
         if: always()

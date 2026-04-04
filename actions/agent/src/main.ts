@@ -49,7 +49,8 @@ async function run() {
     }
 
     const pricing = await enrichWithPricing(result.metrics, inputs.provider);
-    await writeResults(result, pricing);
+    const status = inputs.status || null;
+    await writeResults(result, pricing, status);
     await uploadArtifact(result);
     exportEnvVars(result.metrics?.model ?? null);
 

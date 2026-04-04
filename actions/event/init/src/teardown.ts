@@ -3,6 +3,80 @@ import { join } from "path";
 import * as core from "@actions/core";
 import { createApiClient, readContextTags, uniqueTags } from "@agents/actions-core";
 
+interface WorkflowStatus {
+  conclusion: string | null;
+  jobs: Array<{ name: string; conclusion: string | null }>;
+}
+
+/**
+ * Fetch workflow status from the GitHub Jobs API.
+ * By post-handler time all regular steps have completed, so their
+ * conclusions are available. Returns the conclusion of the current job
+ * (derived from step outcomes) and metadata for all jobs in the run.
+ */
+async function fetchWorkflowStatus(): Promise<WorkflowStatus> {
+  const token = process.env.GITHUB_TOKEN;
+  const repo = process.env.GITHUB_REPOSITORY;
+  const runId = process.env.GITHUB_RUN_ID;
+  const jobId = process.env.GITHUB_JOB; // job key from YAML, e.g. "implement"
+  if (!token || !repo || !runId) return { conclusion: null, jobs: [] };
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+        },
+      },
+    );
+    if (!res.ok) return { conclusion: null, jobs: [] };
+
+    const data = (await res.json()) as {
+      jobs?: Array<{
+        name: string;
+        status: string;
+        conclusion: string | null;
+        steps?: Array<{ conclusion: string | null }>;
+      }>;
+    };
+    if (!data.jobs?.length) return { conclusion: null, jobs: [] };
+
+    // Build jobs metadata — completed jobs have their conclusion,
+    // the current job gets its conclusion derived from step outcomes
+    const jobs: WorkflowStatus["jobs"] = [];
+    let conclusion: string | null = null;
+
+    // Find the current job by GITHUB_JOB key.
+    // For workflow_call the API name is prefixed (e.g. "caller / implement"),
+    // so we match exact name OR name ending with " / {jobId}".
+    const isCurrentJob = (name: string) =>
+      jobId != null && (name === jobId || name.endsWith(` / ${jobId}`));
+
+    for (const job of data.jobs) {
+      if (isCurrentJob(job.name)) {
+        // Current job — derive conclusion from step outcomes
+        // (the job itself is still in_progress during post handlers)
+        const steps = job.steps ?? [];
+        const derived = steps.some((s) => s.conclusion === "failure")
+          ? "failure"
+          : steps.some((s) => s.conclusion === "cancelled")
+            ? "cancelled"
+            : "success";
+        conclusion = derived;
+        jobs.push({ name: job.name, conclusion: derived });
+      } else {
+        jobs.push({ name: job.name, conclusion: job.conclusion });
+      }
+    }
+
+    return { conclusion, jobs };
+  } catch {
+    return { conclusion: null, jobs: [] };
+  }
+}
+
 function readDataDir(dir: string): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   if (!existsSync(dir)) return result;
@@ -58,8 +132,17 @@ async function run() {
     data = readDataDir(resultsDir);
   }
 
+  // Fetch workflow status from GitHub Jobs API
+  const status = await fetchWorkflowStatus();
+
   // Add computed workflow data
-  data.workflow = { durationMs, runUrl, trigger };
+  data.workflow = {
+    durationMs,
+    runUrl,
+    trigger,
+    conclusion: status.conclusion,
+    jobs: status.jobs.length > 0 ? status.jobs : undefined,
+  };
 
   // Read tags
   const tags = uniqueTags(readContextTags());

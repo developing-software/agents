@@ -45,6 +45,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -97,6 +98,7 @@ jobs:
           agent: codex
           final_message: ${{ steps.run-codex.outputs.final-message }}
           provider: openai
+          status: ${{ steps.run-codex.outcome }}
 
       - uses: ./.github/actions/check
         if: always()
