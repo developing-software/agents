@@ -34,10 +34,10 @@ export default {
       const token = parsed.options["token"];
       const url = parsed.options["url"] ?? API_BASE;
 
-      if (!type) {
-        log.error("Missing required option: --type");
+      if (!type || !repo) {
+        log.error(`Missing required option: ${!type ? "--type" : "--repo"}`);
         log.info(
-          "Usage: dev-agents events emit --type <type> [--repo <owner/repo>] [--parent-event-id <id>] [--data <json>] [--tags <tags>] [--token <token>] [--url <url>]",
+          "Usage: dev-agents events emit --type <type> --repo <owner/repo> [--parent-event-id <id>] [--data <json>] [--tags <tags>] [--token <token>] [--url <url>]",
         );
         process.exit(1);
       }
