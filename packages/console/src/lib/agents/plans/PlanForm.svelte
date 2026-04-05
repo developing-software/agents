@@ -61,10 +61,10 @@
 		try {
 			if (isEdit && plan) {
 				await updatePlan({ id: plan.id, title, body, status, tags });
-				goto(`/gh/${organization}/${repoName}/plans/${plan.id}`);
+				goto(`/gh/${organization}/${repoName}/agents/plans/${plan.id}`);
 			} else {
 				const result = await createPlan({ title, body, authorType, tags, repoId });
-				goto(`/gh/${organization}/${repoName}/plans/${result.id}`);
+				goto(`/gh/${organization}/${repoName}/agents/plans/${result.id}`);
 			}
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to save plan';

@@ -8,6 +8,7 @@
 
   const tabs = $derived([
     { label: 'Runs', href: basePath },
+    { label: 'Plans', href: `${basePath}/plans` },
     { label: 'Config', href: `${basePath}/config` },
     { label: 'Skills', href: `${basePath}/skills` },
     { label: 'Prompts', href: `${basePath}/prompts` },
@@ -44,6 +45,13 @@
     align-items: stretch;
     flex-shrink: 0;
     padding: 0 16px;
+    margin: -20px -24px 20px;
+  }
+
+  @media (max-width: 600px) {
+    .sub-nav {
+      margin: -12px -16px 12px;
+    }
   }
 
   .sub-tab-list {

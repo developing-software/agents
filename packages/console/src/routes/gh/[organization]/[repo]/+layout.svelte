@@ -10,15 +10,13 @@
     { label: 'Issues', href: `/gh/${data.organization}/${data.repoName}/issues` },
     { label: 'Pull Requests', href: `/gh/${data.organization}/${data.repoName}/pulls` },
     { label: 'Agents', href: `/gh/${data.organization}/${data.repoName}/agents` },
-    { label: 'Plans', href: `/gh/${data.organization}/${data.repoName}/plans` },
     { label: 'Actions', href: `/gh/${data.organization}/${data.repoName}/actions` },
   ]);
 
   function isActive(href: string) {
-    if (href.includes('/tree') || href.includes('/agents') || href.includes('/plans')) {
-      return page.url.pathname.startsWith(href);
-    }
-    return page.url.pathname === href;
+    const base = `/gh/${data.organization}/${data.repoName}`;
+    if (href === base) return page.url.pathname === href;
+    return page.url.pathname.startsWith(href);
   }
 </script>
 
@@ -118,5 +116,11 @@
 
   .content-area {
     padding: 20px 24px;
+  }
+
+  @media (max-width: 600px) {
+    .content-area {
+      padding: 12px 16px;
+    }
   }
 </style>

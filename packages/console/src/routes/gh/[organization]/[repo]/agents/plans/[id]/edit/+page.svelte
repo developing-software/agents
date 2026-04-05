@@ -7,14 +7,14 @@
 
 {#if data.plan}
 	<div class="header">
-		<a href="/gh/{data.organization}/{data.repoName}/plans/{data.plan.id}" class="back">&larr; Plan</a>
+		<a href="/gh/{data.organization}/{data.repoName}/agents/plans/{data.plan.id}" class="back">&larr; Plan</a>
 		<span class="title">Edit Plan</span>
 	</div>
 
 	<PlanForm plan={data.plan} repoId={data.repo.id} organization={data.organization} repoName={data.repoName} />
 {:else}
 	<div class="not-found">
-		<a href="/gh/{data.organization}/{data.repoName}/plans" class="back">&larr; Plans</a>
+		<a href="/gh/{data.organization}/{data.repoName}/agents/plans" class="back">&larr; Plans</a>
 		<span class="not-found-text">Plan not found</span>
 	</div>
 {/if}

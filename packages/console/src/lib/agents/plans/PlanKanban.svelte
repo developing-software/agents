@@ -54,7 +54,7 @@
       <div class="column-body">
         {#each items as plan (plan.id)}
           <a
-            href="/gh/{organization}/{repoName}/plans/{plan.id}"
+            href="/gh/{organization}/{repoName}/agents/plans/{plan.id}"
             class="card"
           >
             <div class="card-title">{plan.title}</div>

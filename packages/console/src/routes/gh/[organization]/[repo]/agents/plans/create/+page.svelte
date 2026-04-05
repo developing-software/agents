@@ -6,7 +6,7 @@
 </script>
 
 <div class="header">
-	<a href="/gh/{data.organization}/{data.repoName}/plans" class="back">← Plans</a>
+	<a href="/gh/{data.organization}/{data.repoName}/agents/plans" class="back">← Plans</a>
 	<span class="title">New Plan</span>
 </div>
 

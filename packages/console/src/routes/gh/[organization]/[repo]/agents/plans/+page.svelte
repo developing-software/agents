@@ -51,7 +51,7 @@
       </div>
 
       <button type="button" class="planner-btn" onclick={openPlanner}>Planner</button>
-      <a href="/gh/{data.organization}/{data.repoName}/plans/create" class="new-btn">+ New Plan</a>
+      <a href="/gh/{data.organization}/{data.repoName}/agents/plans/create" class="new-btn">+ New Plan</a>
     </div>
   </div>
 

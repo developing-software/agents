@@ -70,7 +70,7 @@
     icon="plans"
     title={emptyText}
     description="Create a plan to coordinate agent work."
-    href="/gh/{organization}/{repoName}/plans/create"
+    href="/gh/{organization}/{repoName}/agents/plans/create"
     hrefLabel="Create a plan"
   />
 {:else}
@@ -89,7 +89,7 @@
 
         <span class="time">{relativeTime(plan.timeCreated)}</span>
 
-        <a href="/gh/{organization}/{repoName}/plans/{plan.id}" class="detail-link">&rarr;</a>
+        <a href="/gh/{organization}/{repoName}/agents/plans/{plan.id}" class="detail-link">&rarr;</a>
 
         {#if ondispatch}
           {#if dispatched.has(plan.id)}

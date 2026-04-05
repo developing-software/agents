@@ -26,7 +26,7 @@
 		onplancreated?: (plan: PlanSummary) => void;
 	} = $props();
 
-	const basePath = $derived(`/gh/${organization}/${repoName}/plans`);
+	const basePath = $derived(`/gh/${organization}/${repoName}/agents/plans`);
 
 	const chat = $derived.by(() => {
 		const body = mode === 'edit' && plan ? { planId: plan.id } : undefined;
