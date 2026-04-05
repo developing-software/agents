@@ -3,16 +3,39 @@ import { join } from "path";
 import * as core from "@actions/core";
 import type { ExtractorInputs, ExtractorResult } from "../types";
 
+/** Recursively collect rollout-*.jsonl files under a directory. */
+function collectRollouts(dir: string, out: { path: string; mtime: number }[]): void {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      collectRollouts(full, out);
+    } else if (entry.name.startsWith("rollout-") && entry.name.endsWith(".jsonl")) {
+      out.push({ path: full, mtime: statSync(full).mtimeMs });
+    }
+  }
+}
+
 function findLatestRollout(): string | null {
-  const sessionsDir = join(process.env.HOME ?? "~", ".codex", "sessions");
-  if (!existsSync(sessionsDir)) return null;
+  const candidates = [
+    process.env.CODEX_HOME ? join(process.env.CODEX_HOME, "sessions") : null,
+    join(process.env.HOME ?? "~", ".codex", "sessions"),
+  ].filter(Boolean) as string[];
 
-  const files = readdirSync(sessionsDir)
-    .filter((f) => f.startsWith("rollout-") && f.endsWith(".jsonl"))
-    .map((f) => ({ name: f, mtime: statSync(join(sessionsDir, f)).mtimeMs }))
-    .sort((a, b) => b.mtime - a.mtime);
+  for (const sessionsDir of candidates) {
+    if (!existsSync(sessionsDir)) continue;
 
-  return files[0] ? join(sessionsDir, files[0].name) : null;
+    const files: { path: string; mtime: number }[] = [];
+    collectRollouts(sessionsDir, files);
+    files.sort((a, b) => b.mtime - a.mtime);
+
+    if (files[0]) {
+      core.info(`Found Codex rollout: ${files[0].path}`);
+      return files[0].path;
+    }
+  }
+
+  core.info(`Searched for Codex sessions in: ${candidates.join(", ")}`);
+  return null;
 }
 
 export async function extractCodex(inputs: ExtractorInputs): Promise<ExtractorResult> {

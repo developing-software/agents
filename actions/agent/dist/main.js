@@ -32497,12 +32497,34 @@ async function extractClaude(inputs) {
 var core3 = __toESM(require_core(), 1);
 import { copyFileSync, existsSync as existsSync2, readdirSync, readFileSync as readFileSync2, statSync } from "fs";
 import { join } from "path";
+function collectRollouts(dir, out) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      collectRollouts(full, out);
+    } else if (entry.name.startsWith("rollout-") && entry.name.endsWith(".jsonl")) {
+      out.push({ path: full, mtime: statSync(full).mtimeMs });
+    }
+  }
+}
 function findLatestRollout() {
-  const sessionsDir = join(process.env.HOME ?? "~", ".codex", "sessions");
-  if (!existsSync2(sessionsDir))
-    return null;
-  const files = readdirSync(sessionsDir).filter((f) => f.startsWith("rollout-") && f.endsWith(".jsonl")).map((f) => ({ name: f, mtime: statSync(join(sessionsDir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
-  return files[0] ? join(sessionsDir, files[0].name) : null;
+  const candidates = [
+    process.env.CODEX_HOME ? join(process.env.CODEX_HOME, "sessions") : null,
+    join(process.env.HOME ?? "~", ".codex", "sessions")
+  ].filter(Boolean);
+  for (const sessionsDir of candidates) {
+    if (!existsSync2(sessionsDir))
+      continue;
+    const files = [];
+    collectRollouts(sessionsDir, files);
+    files.sort((a, b) => b.mtime - a.mtime);
+    if (files[0]) {
+      core3.info(`Found Codex rollout: ${files[0].path}`);
+      return files[0].path;
+    }
+  }
+  core3.info(`Searched for Codex sessions in: ${candidates.join(", ")}`);
+  return null;
 }
 async function extractCodex(inputs) {
   const result = {
