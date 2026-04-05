@@ -56,10 +56,7 @@ export namespace AgentEvent {
       cost_usd: z.number().nullable().catch(null),
     });
 
-    export const Status = z
-      .enum(["success", "failure", "cancelled"])
-      .nullable()
-      .catch(null);
+    export const Status = z.enum(["success", "failure", "cancelled"]).nullable().catch(null);
 
     export const Data = z.object({
       agent: z
