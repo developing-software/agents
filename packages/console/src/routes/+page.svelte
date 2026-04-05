@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import { getDashboardSummary } from '$lib/events/agents/agents.remote';
+  import { getDashboardSummary } from '$lib/events/agent-completed/agent-completed.remote';
 
   let { data }: PageProps = $props();
 

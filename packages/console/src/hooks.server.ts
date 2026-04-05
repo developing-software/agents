@@ -11,6 +11,7 @@ import { withCacheContext, CacheApiAdapter } from "@agents/core/cache/index";
 const log = Log.create({ namespace: "console.hooks.server" });
 
 const handleAuth: Handle = async ({ event, resolve }) => {
+  if (event.isSubRequest) return resolve(event);
   try {
     const user = await verifyUser(event);
     if (user) {

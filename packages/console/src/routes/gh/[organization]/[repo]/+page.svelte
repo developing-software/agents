@@ -3,8 +3,8 @@
   import { generateToken } from './repo.remote';
   import GitHubLink from '$lib/ui/GitHubLink.svelte';
   import Events from '$lib/events/repository/Feed.svelte';
-  import EventOverview from '$lib/events/agents/Overview.svelte';
-  import EventAgentsOverview from '$lib/events/agents/AgentsOverview.svelte';
+  import AgentSummary from '$lib/events/agent-completed/AgentSummary.svelte';
+  import AgentComparison from '$lib/events/agent-completed/AgentComparison.svelte';
 
   let { data }: PageProps = $props();
 
@@ -27,8 +27,10 @@
   <!-- LEFT: Activity Feed -->
   <!-- ============================================================ -->
   <section class="activity-section">
-    <EventOverview organization={data.organization} repoName={data.repoName} />
-    <EventAgentsOverview organization={data.organization} repoName={data.repoName} />
+    <div class="metrics-grid">
+      <AgentSummary organization={data.organization} repoName={data.repoName} />
+      <AgentComparison organization={data.organization} repoName={data.repoName} />
+    </div>
     <h2 class="section-heading">Activity</h2>
     <Events organization={data.organization} repoName={data.repoName} />
   </section>
@@ -181,6 +183,19 @@
   /* ------------------------------------------------------------------ */
   .activity-section {
     min-width: 0;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  @media (min-width: 1200px) {
+    .metrics-grid {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   /* ------------------------------------------------------------------ */

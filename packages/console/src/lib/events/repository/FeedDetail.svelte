@@ -1,6 +1,5 @@
 <script lang="ts">
-  import ArtifactViewer from '$lib/ui/ArtifactViewer.svelte';
-  import { originBadgeStyle, eventDotColor, formatBytes } from '../helpers';
+  import { originBadgeStyle, eventDotColor } from '../helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
 
   let {
@@ -23,51 +22,6 @@
     onclose: () => void;
   } = $props();
 
-  // ── Artifacts fetch ──────────────────────────────────────────────────
-
-  type Artifact = { name: string; size: number };
-
-  type ArtifactsFetch =
-    | { status: 'loading' }
-    | { status: 'error'; message: string }
-    | { status: 'ok'; items: Artifact[] };
-
-  let artifactsFetch = $state<ArtifactsFetch>({ status: 'loading' });
-
-  $effect(() => {
-    const id = event.id;
-    artifactsFetch = { status: 'loading' };
-    let cancelled = false;
-
-    fetch(`/gh/${organization}/${repoName}/events/${id}/artifacts`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) artifactsFetch = { status: 'ok', items: data as Artifact[] };
-      })
-      .catch((err: unknown) => {
-        if (!cancelled)
-          artifactsFetch = {
-            status: 'error',
-            message: err instanceof Error ? err.message : String(err),
-          };
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  });
-
-  // ── Expanded artifact viewer ─────────────────────────────────────────
-
-  let expandedArtifact = $state<string | null>(null);
-
-  function toggleArtifact(name: string) {
-    expandedArtifact = expandedArtifact === name ? null : name;
-  }
-
   // ── Derived ──────────────────────────────────────────────────────────
 
   const hasData = $derived(Object.keys(event.data).length > 0);
@@ -85,9 +39,6 @@
     }),
   );
 
-  function artifactUrl(name: string): string {
-    return `/gh/${organization}/${repoName}/events/${event.id}/artifacts/${name}`;
-  }
 </script>
 
 <div class="detail-panel">
@@ -125,34 +76,6 @@
     </div>
   {/if}
 
-  <!-- Artifacts -->
-  <div class="section">
-    <span class="section-heading">ARTIFACTS</span>
-    {#if artifactsFetch.status === 'loading'}
-      <span class="loading">loading...</span>
-    {:else if artifactsFetch.status === 'error'}
-      <span class="error">{artifactsFetch.message}</span>
-    {:else if artifactsFetch.items.length === 0}
-      <span class="empty">none</span>
-    {:else}
-      <div class="artifact-list">
-        {#each artifactsFetch.items as artifact (artifact.name)}
-          <button
-            type="button"
-            class="artifact-row"
-            class:artifact-row-active={expandedArtifact === artifact.name}
-            onclick={() => toggleArtifact(artifact.name)}
-          >
-            <span class="artifact-name">{artifact.name}</span>
-            <span class="artifact-size">{formatBytes(artifact.size)}</span>
-          </button>
-          {#if expandedArtifact === artifact.name}
-            <ArtifactViewer name={artifact.name} url={artifactUrl(artifact.name)} />
-          {/if}
-        {/each}
-      </div>
-    {/if}
-  </div>
 </div>
 
 <style>
@@ -277,63 +200,4 @@
     color: var(--color-text);
   }
 
-  /* ── Artifacts ── */
-  .loading {
-    font-size: 11px;
-    color: var(--color-dim);
-    font-style: italic;
-  }
-
-  .error {
-    font-size: 11px;
-    color: var(--color-danger);
-  }
-
-  .empty {
-    font-size: 11px;
-    color: var(--color-dim);
-  }
-
-  .artifact-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .artifact-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 3px 6px;
-    background: var(--color-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-  }
-  .artifact-row:hover {
-    border-color: var(--color-dim);
-  }
-  .artifact-row-active {
-    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
-  }
-
-  .artifact-name {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    color: var(--color-text);
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .artifact-size {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: var(--color-dim);
-    flex-shrink: 0;
-  }
 </style>
