@@ -79,12 +79,10 @@ jobs:
           prefix: claude
           issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./actions/comment/create
-        if: steps.issue.outputs.number != ''
+      - uses: ./actions/comment
         with:
-          issue_number: ${{ steps.issue.outputs.number }}
-        env:
-          DEV_AGENTS_HARNESS: claude-code
+          phase: progress
+          agent: claude-code
 
       - name: Run Claude Code
         id: run-claude
@@ -124,5 +122,7 @@ jobs:
           prefix: claude
           issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./actions/comment/update
-        if: always() && steps.issue.outputs.number != ''
+      - uses: ./actions/comment
+        if: always()
+        with:
+          phase: summary

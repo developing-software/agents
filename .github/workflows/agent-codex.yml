@@ -76,12 +76,10 @@ jobs:
           prefix: codex
           issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./actions/comment/create
-        if: steps.issue.outputs.number != ''
+      - uses: ./actions/comment
         with:
-          issue_number: ${{ steps.issue.outputs.number }}
-        env:
-          DEV_AGENTS_HARNESS: codex
+          phase: progress
+          agent: codex
 
       - name: Run Codex
         id: run-codex
@@ -119,5 +117,7 @@ jobs:
           prefix: codex
           issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./actions/comment/update
-        if: always() && steps.issue.outputs.number != ''
+      - uses: ./actions/comment
+        if: always()
+        with:
+          phase: summary

@@ -22,15 +22,12 @@ async function fetchWorkflowStatus(): Promise<WorkflowStatus> {
   if (!token || !repo || !runId) return { conclusion: null, jobs: [] };
 
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-        },
+    const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
       },
-    );
+    });
     if (!res.ok) return { conclusion: null, jobs: [] };
 
     const data = (await res.json()) as {

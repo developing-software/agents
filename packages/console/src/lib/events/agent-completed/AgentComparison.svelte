@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resource } from 'runed';
   import Section from '../Section.svelte';
   import ComparisonView from './ComparisonView.svelte';
   import { getAgentComparison, getAgentStats, invalidateComparisonCache } from './agent-completed.remote';
@@ -11,29 +12,32 @@
     repoName: string;
   } = $props();
 
-  let retryCount = $state(0);
   let isRefreshing = $state(false);
 
-  const combinedPromise = $derived.by(() => {
-    void retryCount;
-    return Promise.all([
-      getAgentComparison({ organization, repoName }),
-      getAgentStats({ organization, repoName }),
-    ]);
-  });
+  const comparison = resource(
+    [() => organization, () => repoName],
+    async ([organization, repoName]) => {
+      const [comparison, stats] = await Promise.all([
+        getAgentComparison({ organization, repoName }),
+        getAgentStats({ organization, repoName }),
+      ]);
+
+      return { comparison, stats };
+    },
+  );
 
   async function refresh() {
     isRefreshing = true;
     try {
       await invalidateComparisonCache({ organization, repoName });
+      await comparison.refetch();
     } finally {
-      retryCount++;
       isRefreshing = false;
     }
   }
 </script>
 
-{#await combinedPromise}
+{#if comparison.loading && !comparison.current}
   <Section title="Agents" cachedAt={null} loading={true} onrefresh={refresh}>
     <div class="cards">
       {#each [1, 2] as i (i)}
@@ -60,17 +64,30 @@
       {/each}
     </div>
   </Section>
-{:then [comparison, stats]}
-  <Section title="Agents" cachedAt={comparison.cachedAt} loading={isRefreshing} onrefresh={refresh}>
-    <div class="scroll-container">
-      <ComparisonView agents={comparison.data} stats={stats.data} />
-    </div>
-  </Section>
-{:catch}
-  <Section title="Agents" cachedAt={null} loading={false} onrefresh={refresh}>
+{:else if comparison.error}
+  <Section
+    title="Agents"
+    cachedAt={comparison.current?.comparison.cachedAt ?? null}
+    loading={isRefreshing || comparison.loading}
+    onrefresh={refresh}
+  >
     <p class="empty">Failed to load agent data</p>
   </Section>
-{/await}
+{:else}
+  <Section
+    title="Agents"
+    cachedAt={comparison.current?.comparison.cachedAt ?? null}
+    loading={isRefreshing || comparison.loading}
+    onrefresh={refresh}
+  >
+    <div class="scroll-container">
+      <ComparisonView
+        agents={comparison.current?.comparison.data ?? []}
+        stats={comparison.current?.stats.data ?? []}
+      />
+    </div>
+  </Section>
+{/if}
 
 <style>
   .scroll-container {

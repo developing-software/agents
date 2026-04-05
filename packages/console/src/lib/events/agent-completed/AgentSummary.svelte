@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resource } from 'runed';
   import Section from '../Section.svelte';
   import SummaryView from './SummaryView.svelte';
   import { getEventSummary, invalidateSummaryCache } from './agent-completed.remote';
@@ -11,26 +12,25 @@
     repoName: string;
   } = $props();
 
-  let retryCount = $state(0);
   let isRefreshing = $state(false);
 
-  const promise = $derived.by(() => {
-    retryCount;
-    return getEventSummary({ organization, repoName });
-  });
+  const summary = resource(
+    [() => organization, () => repoName],
+    async ([organization, repoName]) => getEventSummary({ organization, repoName }),
+  );
 
   async function refresh() {
     isRefreshing = true;
     try {
       await invalidateSummaryCache({ organization, repoName });
+      await summary.refetch();
     } finally {
-      retryCount++;
       isRefreshing = false;
     }
   }
 </script>
 
-{#await promise}
+{#if summary.loading && !summary.current}
   <Section title="Summary" cachedAt={null} loading={true} onrefresh={refresh}>
     <div class="stat-row">
       {#each [1, 2, 3, 4, 5, 6] as i (i)}
@@ -41,19 +41,29 @@
       {/each}
     </div>
   </Section>
-{:then result}
-  <Section title="Summary" cachedAt={result.cachedAt} loading={isRefreshing} onrefresh={refresh}>
-    {#if result.data}
-      <SummaryView summary={result.data} />
+{:else if summary.error}
+  <Section
+    title="Summary"
+    cachedAt={summary.current?.cachedAt ?? null}
+    loading={isRefreshing || summary.loading}
+    onrefresh={refresh}
+  >
+    <p class="empty">Failed to load summary</p>
+  </Section>
+{:else}
+  <Section
+    title="Summary"
+    cachedAt={summary.current?.cachedAt ?? null}
+    loading={isRefreshing || summary.loading}
+    onrefresh={refresh}
+  >
+    {#if summary.current?.data}
+      <SummaryView summary={summary.current.data} />
     {:else}
       <p class="empty">No data available</p>
     {/if}
   </Section>
-{:catch}
-  <Section title="Summary" cachedAt={null} loading={false} onrefresh={refresh}>
-    <p class="empty">Failed to load summary</p>
-  </Section>
-{/await}
+{/if}
 
 <style>
   .stat-row { display: flex; flex-wrap: wrap; gap: 6px; }

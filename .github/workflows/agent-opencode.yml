@@ -78,12 +78,10 @@ jobs:
           prefix: opencode
           issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./actions/comment/create
-        if: steps.issue.outputs.number != ''
+      - uses: ./actions/comment
         with:
-          issue_number: ${{ steps.issue.outputs.number }}
-        env:
-          DEV_AGENTS_HARNESS: opencode
+          phase: progress
+          agent: opencode
 
       - name: Get OpenCode version
         id: opencode-version
@@ -134,5 +132,7 @@ jobs:
           prefix: opencode
           issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./actions/comment/update
-        if: always() && steps.issue.outputs.number != ''
+      - uses: ./actions/comment
+        if: always()
+        with:
+          phase: summary

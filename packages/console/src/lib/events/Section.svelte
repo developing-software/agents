@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { useInterval } from 'runed';
   import type { Snippet } from 'svelte';
   import { relativeTime } from './helpers';
 
@@ -17,6 +18,13 @@
     onrefresh,
     children,
   }: Props = $props();
+
+  const clock = useInterval(1000);
+
+  const updatedLabel = $derived.by(() => {
+    clock.counter;
+    return cachedAt ? relativeTime(cachedAt) : null;
+  });
 </script>
 
 <section class="section">
@@ -24,8 +32,8 @@
     <h3 class="heading">{title}</h3>
 
     <div class="meta">
-      {#if cachedAt}
-        <span class="updated">Updated {relativeTime(cachedAt)}</span>
+      {#if updatedLabel}
+        <span class="updated">Updated {updatedLabel}</span>
       {/if}
       <button
         type="button"

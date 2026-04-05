@@ -42,6 +42,18 @@ export function extractIssueFromTags(tags: string[]): number | undefined {
   return undefined;
 }
 
+/**
+ * Extract PR number from tags like "gh:pr:99".
+ * Returns undefined if no PR tag found.
+ */
+export function extractPrFromTags(tags: string[]): number | undefined {
+  for (const tag of tags) {
+    const match = tag.match(/^gh:pr:(\d+)$/);
+    if (match) return parseInt(match[1]!, 10);
+  }
+  return undefined;
+}
+
 export function getContext(): GitHubContext {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error("GITHUB_TOKEN not set");
