@@ -202,7 +202,7 @@
     "drizzle-kit": "^1.0.0-beta.19",
     "drizzle-orm": "^1.0.0-beta.19",
     "hono": "^4.11.3",
-    "sst": "4.5.7",
+    "sst": "4.6.11",
     "typescript": "^6",
     "ulid": "^3.0.2",
     "zod": "^4.3.5",
@@ -1048,23 +1048,23 @@
 
     "sprintf-js": ["sprintf-js@1.1.3", "", {}, "sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA=="],
 
-    "sst": ["sst@4.5.7", "", { "dependencies": { "aws4fetch": "1.0.18", "jose": "5.2.3", "openid-client": "5.6.4" }, "optionalDependencies": { "sst-darwin-arm64": "4.5.7", "sst-darwin-x64": "4.5.7", "sst-linux-arm64": "4.5.7", "sst-linux-x64": "4.5.7", "sst-linux-x86": "4.5.7", "sst-win32-arm64": "4.5.7", "sst-win32-x64": "4.5.7", "sst-win32-x86": "4.5.7" }, "bin": { "sst": "bin/sst.mjs" } }, "sha512-EG4q641lY5u67uRqiMvpLiAOjFzMBCzQgKvfCWjklKyZh9JCU0JFiK17st5fPhSi/knFAmAqrHYhXIBiIZHIyA=="],
+    "sst": ["sst@4.6.11", "", { "dependencies": { "aws4fetch": "1.0.18", "jose": "5.2.3", "openid-client": "5.6.4" }, "optionalDependencies": { "sst-darwin-arm64": "4.6.11", "sst-darwin-x64": "4.6.11", "sst-linux-arm64": "4.6.11", "sst-linux-x64": "4.6.11", "sst-linux-x86": "4.6.11", "sst-win32-arm64": "4.6.11", "sst-win32-x64": "4.6.11", "sst-win32-x86": "4.6.11" }, "bin": { "sst": "bin/sst.mjs" } }, "sha512-fepz1Xb8boDegv4mcgvZRmXQ7vObl09cX2e4cKrQiosZD3GeOC1MnMt08yyQcfOv12LcOI77/5+Hki9w2+6qGw=="],
 
-    "sst-darwin-arm64": ["sst-darwin-arm64@4.5.7", "", { "os": "darwin", "cpu": "arm64" }, "sha512-zG25pa1ekvP6ebqCBnTUDjAxal04K5UMOq5jEnTr/vuR+nShZwN6oN5LFPu47vDhtX6KjHW26H2S017TB7nE2A=="],
+    "sst-darwin-arm64": ["sst-darwin-arm64@4.6.11", "", { "os": "darwin", "cpu": "arm64" }, "sha512-FUnvogAL7iQYjcfF9Ne3YT9Ku0a8f3dd+5N/I4FP6PaqHYdHsOvS/tMU2xyokLuiZdbQ8kzh8JYZTCtZfbGe9A=="],
 
-    "sst-darwin-x64": ["sst-darwin-x64@4.5.7", "", { "os": "darwin", "cpu": "x64" }, "sha512-3PuJn1Du9di5F+zGeufZib3w70wsNGk2XNhSNi+4VWUA5WnwhEK1Zk1A7hgRMI6y1gAN7AJ9Mc1mm0rsAt/PPw=="],
+    "sst-darwin-x64": ["sst-darwin-x64@4.6.11", "", { "os": "darwin", "cpu": "x64" }, "sha512-T3wmeYKjsggcHDD9eE17pf4mP5J+u6OlZSIJNSPJaEmx8UiJJMiqWK7o0c0EbmPngTOGDtkceNxLKBhj2TsCeQ=="],
 
-    "sst-linux-arm64": ["sst-linux-arm64@4.5.7", "", { "os": "linux", "cpu": "arm64" }, "sha512-CL2k+DdvVaOOf6TPPfcWsWZ4QIKkk5E9ypBkIBntLo7Zr8KPXbU33mpbji8jcyEOd2EqaMI53u9NnlMAhHdjrQ=="],
+    "sst-linux-arm64": ["sst-linux-arm64@4.6.11", "", { "os": "linux", "cpu": "arm64" }, "sha512-1ACzUFRFIu5bW2ncIm+AtPAEggYoXBSNDMs/cgiWkQ5D2m2MzcYRf99D6cankEXFMxv2qCkXouYo9WfWNlpDvQ=="],
 
-    "sst-linux-x64": ["sst-linux-x64@4.5.7", "", { "os": "linux", "cpu": "x64" }, "sha512-QUSkcolFm7EM2KEaXl8MV7vsNXeOcbbLDX//sIbM+52MXXJarpxZBHSRBRstH0IPw23uWRoaBjUclTiK/5V7wQ=="],
+    "sst-linux-x64": ["sst-linux-x64@4.6.11", "", { "os": "linux", "cpu": "x64" }, "sha512-8pbmkApHWBkw4Wuj7V5XyIOTDYpDK9Vw13nq/4hoxv+C2UDheLix3ribOycAIH2JtdpwAhyMsztFrXO0zclseg=="],
 
-    "sst-linux-x86": ["sst-linux-x86@4.5.7", "", { "os": "linux", "cpu": "none" }, "sha512-SrjIdhElWVIkvOuOqSrB23/uABJLi9Wxrer19JOXVFGXDLieADoCz906+atdQIGxYgR0X/xzSFdHaF6WLGAqDA=="],
+    "sst-linux-x86": ["sst-linux-x86@4.6.11", "", { "os": "linux", "cpu": "none" }, "sha512-vO2RgtsuPy+4ee0RqAtYWvrguH4xPjl7XHsyqYOyt+dzOmCWiP/27AmYTWFt/yLay5leatYma/qqyZwe8avMHg=="],
 
-    "sst-win32-arm64": ["sst-win32-arm64@4.5.7", "", { "os": "win32", "cpu": "arm64" }, "sha512-2yYMftnty5lExOOox0AzBzOaDZ1yMNAdapCuK2znXIsGBUu6NbxKzBiFe0RPdLOkCqBjNt5diWy0sYEfZan52A=="],
+    "sst-win32-arm64": ["sst-win32-arm64@4.6.11", "", { "os": "win32", "cpu": "arm64" }, "sha512-2NulfXFSCOXSLfSYGeHOH27T3pWhsu/GDM6wlya12wSb2taOtXkVIXBnPNxxRIMPIeMweKNTsxeMZSBI2PfTWw=="],
 
-    "sst-win32-x64": ["sst-win32-x64@4.5.7", "", { "os": "win32", "cpu": "x64" }, "sha512-JRnCjG5+RhbaghF0NGoVccxYWIP0ASAF69Rf07uIRjjjoWIRpiqo94bUCilGGk9S6LQaKl7SrV7nwEwuShXMEQ=="],
+    "sst-win32-x64": ["sst-win32-x64@4.6.11", "", { "os": "win32", "cpu": "x64" }, "sha512-yAEKwpPv0qeE1mx6KHvg81uN5ZxCqzfmDansxpiTFvnyRm3+p7mDc2YrP3nXvqO17sbawPKibaJwM4V3C98OXg=="],
 
-    "sst-win32-x86": ["sst-win32-x86@4.5.7", "", { "os": "win32", "cpu": "none" }, "sha512-ksSuRlOPC+DyJp31SGHi2Q8CleR6CmezqYNvVTPOedxUWVD9McKVTtEh6Jnen0m/0CoHAVpa1UopsaUu2XfMgQ=="],
+    "sst-win32-x86": ["sst-win32-x86@4.6.11", "", { "os": "win32", "cpu": "none" }, "sha512-xeRxuI+GdWBEjP9SvO3IdIcSGzhhnDcmsUfMkiHmIJDAXzAOQbrNhoYfPGeFzPPDeCJZSYWF623NSL+OUiCLFQ=="],
 
     "standardwebhooks": ["standardwebhooks@1.0.0", "", { "dependencies": { "@stablelib/base64": "^1.0.0", "fast-sha256": "^1.3.0" } }, "sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg=="],
 

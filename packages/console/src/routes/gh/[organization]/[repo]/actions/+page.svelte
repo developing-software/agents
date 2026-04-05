@@ -3,6 +3,7 @@
   import type { GithubWorkflow } from "@agents/core/github/repo/workflow";
   import { page } from '$app/state';
   import { untrack } from 'svelte';
+  import { useDebounce } from 'runed';
   import { dispatchAction, listWorkflowRuns } from '../repo.remote';
   import EmptyState from '$lib/ui/EmptyState.svelte';
 
@@ -17,6 +18,8 @@
   let errorMsg = $state('');
   let runs = $state<GithubWorkflow.Run.Info[]>([]);
   let runsLoading = $state(false);
+
+  const delayedReload = useDebounce(() => loadRuns(), 2000);
 
   async function selectWorkflow(wf: GithubWorkflow.Info) {
     selectedWorkflow = wf;
@@ -58,7 +61,7 @@
         inputs: Object.keys(inputs).length > 0 ? inputs : undefined,
       });
       status = 'done';
-      setTimeout(loadRuns, 2000);
+      delayedReload();
     } catch (e) {
       errorMsg = e instanceof Error ? e.message : 'Failed to dispatch workflow';
       status = 'error';
@@ -129,29 +132,8 @@
             <button
               onclick={() => selectWorkflow(wf)}
               title={wf.path}
-              class="w-full text-left transition-colors"
-              style="
-                display: block;
-                padding: 6px 10px;
-                font-size: 13px;
-                border-left: 2px solid {selectedWorkflow?.id === wf.id ? 'var(--color-accent)' : 'transparent'};
-                background: {selectedWorkflow?.id === wf.id ? 'var(--color-elevated)' : 'transparent'};
-                color: {selectedWorkflow?.id === wf.id ? 'var(--color-text)' : 'var(--color-muted)'};
-              "
-              onmouseenter={selectedWorkflow?.id !== wf.id
-                ? (e) => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.color = 'var(--color-text)';
-                    el.style.background = 'var(--color-hover)';
-                  }
-                : undefined}
-              onmouseleave={selectedWorkflow?.id !== wf.id
-                ? (e) => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.color = 'var(--color-muted)';
-                    el.style.background = 'transparent';
-                  }
-                : undefined}
+              class="wf-btn w-full text-left transition-colors"
+              class:wf-btn-active={selectedWorkflow?.id === wf.id}
             >
               <span class="block truncate">{wf.name}</span>
             </button>
@@ -195,17 +177,8 @@
           <span class="font-mono text-xs" style="color: var(--color-muted);">Ref:</span>
           <input
             bind:value={ref}
-            class="font-mono text-xs outline-none transition-colors"
-            style="
-              width: 160px;
-              padding: 3px 8px;
-              background: var(--color-elevated);
-              border: 1px solid var(--color-border);
-              border-radius: 3px;
-              color: var(--color-text);
-            "
-            onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
-            onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
+            class="action-input font-mono text-xs outline-none transition-colors"
+            style="width: 160px;"
           />
         </div>
 
@@ -213,10 +186,7 @@
         <div>
           <button
             onclick={() => (inputsOpen = !inputsOpen)}
-            class="flex items-center gap-1 text-xs transition-colors"
-            style="color: var(--color-muted); background: none; border: none; cursor: pointer; padding: 0;"
-            onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')}
-            onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')}
+            class="action-link flex items-center gap-1 text-xs transition-colors"
           >
             <span style="font-size: 10px;">{inputsOpen ? '▾' : '▸'}</span>
             Inputs ({inputPairs.length})
@@ -232,50 +202,26 @@
                     <input
                       bind:value={pair.key}
                       placeholder="key"
-                      class="font-mono text-xs outline-none transition-colors"
-                      style="
-                        width: 120px;
-                        padding: 3px 8px;
-                        background: var(--color-elevated);
-                        border: 1px solid var(--color-border);
-                        border-radius: 3px;
-                        color: var(--color-text);
-                      "
-                      onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
-                      onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
+                      class="action-input font-mono text-xs outline-none transition-colors"
+                      style="width: 120px;"
                     />
                     <input
                       bind:value={pair.value}
                       placeholder="value"
-                      class="font-mono text-xs outline-none transition-colors"
-                      style="
-                        flex: 1;
-                        padding: 3px 8px;
-                        background: var(--color-elevated);
-                        border: 1px solid var(--color-border);
-                        border-radius: 3px;
-                        color: var(--color-text);
-                      "
-                      onfocus={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)')}
-                      onblur={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)')}
+                      class="action-input font-mono text-xs outline-none transition-colors"
+                      style="flex: 1;"
                     />
                     <button
                       onclick={() => removeInput(i)}
-                      class="text-xs transition-colors"
-                      style="color: var(--color-dim); background: none; border: none; cursor: pointer; padding: 0 4px;"
+                      class="remove-btn text-xs transition-colors"
                       aria-label="Remove input"
-                      onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-danger)')}
-                      onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')}
                     >✕</button>
                   </div>
                 {/each}
               {/if}
               <button
                 onclick={addInput}
-                class="mt-1 text-xs transition-colors"
-                style="color: var(--color-accent); background: none; border: none; cursor: pointer; padding: 0;"
-                onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.75')}
-                onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                class="add-btn mt-1 text-xs transition-colors"
               >+ Add</button>
             </div>
           {/if}
@@ -297,10 +243,7 @@
           <span class="text-xs font-medium" style="color: var(--color-text);">Run history</span>
           <button
             onclick={loadRuns}
-            class="font-mono text-xs transition-colors"
-            style="color: var(--color-muted); background: none; border: none; cursor: pointer; padding: 0;"
-            onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')}
-            onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-muted)')}
+            class="action-link font-mono text-xs transition-colors"
           >↻ Refresh</button>
         </div>
 
@@ -315,10 +258,8 @@
           >
             {#each runs as run, idx (run.id)}
               <div
-                class="flex items-center gap-3 px-3"
+                class="run-row flex items-center gap-3 px-3"
                 style="height: 26px; border-top: {idx === 0 ? 'none' : '1px solid var(--color-border)'};"
-                onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--color-hover)')}
-                onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
                 role="listitem"
               >
                 <!-- Status dot -->
@@ -362,10 +303,7 @@
                   href={run.htmlUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="shrink-0 font-mono transition-colors"
-                  style="font-size: 11px; color: var(--color-dim); text-decoration: none;"
-                  onmouseenter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-accent)')}
-                  onmouseleave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-dim)')}
+                  class="run-link shrink-0 font-mono transition-colors"
                 >#{run.id}</a>
               </div>
             {/each}
@@ -375,3 +313,83 @@
     {/if}
   </div>
 </div>
+
+<style>
+  .wf-btn {
+    display: block;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-left: 2px solid transparent;
+    background: transparent;
+    color: var(--color-muted);
+  }
+  .wf-btn:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+  .wf-btn-active {
+    border-left-color: var(--color-accent);
+    background: var(--color-elevated);
+    color: var(--color-text);
+  }
+  .wf-btn-active:hover {
+    background: var(--color-elevated);
+  }
+
+  .action-input {
+    padding: 3px 8px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color: var(--color-text);
+  }
+  .action-input:focus {
+    border-color: var(--color-accent);
+  }
+
+  .action-link {
+    color: var(--color-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  .action-link:hover {
+    color: var(--color-text);
+  }
+
+  .remove-btn {
+    color: var(--color-dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .remove-btn:hover {
+    color: var(--color-danger);
+  }
+
+  .add-btn {
+    color: var(--color-accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  .add-btn:hover {
+    opacity: 0.75;
+  }
+
+  .run-row:hover {
+    background: var(--color-hover);
+  }
+
+  .run-link {
+    font-size: 11px;
+    color: var(--color-dim);
+    text-decoration: none;
+  }
+  .run-link:hover {
+    color: var(--color-accent);
+  }
+</style>

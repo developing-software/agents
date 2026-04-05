@@ -2,6 +2,7 @@
 	import { tick } from 'svelte';
 	import type { Chat } from '@ai-sdk/svelte';
 	import { isToolUIPart, getToolName } from 'ai';
+	import { TextareaAutosize, useMutationObserver } from 'runed';
 	import Markdown from '$lib/ui/Markdown.svelte';
 	import ToolCard from '$lib/ai/components/ToolCard.svelte';
 	import ToolOutput from '$lib/ai/components/ToolOutput.svelte';
@@ -27,6 +28,7 @@
 
 	let inputValue = $state('');
 	let textareaEl: HTMLTextAreaElement | undefined = $state();
+	let messagesArea: HTMLElement | undefined = $state();
 
 	let isActive = $derived(chat.status === 'submitted' || chat.status === 'streaming');
 	let hasMessages = $derived(chat.messages.length > 0);
@@ -67,26 +69,26 @@
 
 	let suggestions = $derived(mode === 'edit' ? editSuggestions : draftSuggestions);
 
-	// Auto-scroll action: scrolls to bottom when content changes
-	function autoscroll(node: HTMLElement) {
-		const observer = new MutationObserver(() => {
-			node.scrollTop = node.scrollHeight;
-		});
-		observer.observe(node, { childList: true, subtree: true, characterData: true });
-		return { destroy: () => observer.disconnect() };
-	}
+	// Auto-scroll when messages area content changes
+	useMutationObserver(
+		() => messagesArea,
+		() => {
+			if (messagesArea) messagesArea.scrollTop = messagesArea.scrollHeight;
+		},
+		{ childList: true, subtree: true, characterData: true },
+	);
 
-	function autoGrow() {
-		if (!textareaEl) return;
-		textareaEl.style.height = 'auto';
-		textareaEl.style.height = Math.min(textareaEl.scrollHeight, 200) + 'px';
-	}
+	// Auto-grow textarea with content
+	new TextareaAutosize({
+		element: () => textareaEl,
+		input: () => inputValue,
+		maxHeight: 200,
+	});
 
 	async function send() {
 		const text = inputValue.trim();
 		if (!text || isActive) return;
 		inputValue = '';
-		if (textareaEl) textareaEl.style.height = 'auto';
 		await chat.sendMessage({ text });
 	}
 
@@ -126,7 +128,7 @@
 </script>
 
 <div class="planner-chat">
-	<div class="messages-area" use:autoscroll>
+	<div class="messages-area" bind:this={messagesArea}>
 		{#if !hasMessages}
 			<div class="empty-chat">
 				{#if mode === 'edit' && plan}
@@ -233,7 +235,6 @@
 				<textarea
 					bind:this={textareaEl}
 					bind:value={inputValue}
-					oninput={autoGrow}
 					onkeydown={handleKeydown}
 					placeholder="Ask the planner agent..."
 					rows={1}

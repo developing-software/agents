@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { AgentCompat } from '@agents/core/agent';
   import type { SvelteSet } from 'svelte/reactivity';
-  import { onDestroy } from 'svelte';
+  import { Debounced, watch } from 'runed';
   import { searchAgentModels } from './dispatch.remote';
 
   type AgentModelInfo = AgentCompat.AgentModelInfo;
@@ -23,7 +23,6 @@
   let searchPromise = $state<Promise<AgentModelInfo[]> | null>(null);
   let allTabLoaded = $state(false);
 
-  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
   let providerFilter = $state<string | null>(null);
 
   let providers = $derived.by(() => {
@@ -87,12 +86,11 @@
     searchPromise = searchAgentModels({ agent, search: query || undefined });
   }
 
-  function handleSearchInput(e: Event) {
-    const value = (e.currentTarget as HTMLInputElement).value;
-    searchText = value;
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => doSearch(value), 300);
-  }
+  const debouncedSearch = new Debounced(() => searchText, 300);
+
+  watch(() => debouncedSearch.current, () => {
+    if (activeTab === 'all') doSearch(debouncedSearch.current);
+  });
 
   function switchTab(tab: 'recommended' | 'all') {
     activeTab = tab;
@@ -108,7 +106,6 @@
     return modelId;
   }
 
-  onDestroy(() => clearTimeout(debounceTimer));
 </script>
 
 <div class="model-selector">
@@ -204,8 +201,7 @@
         type="text"
         class="search-input"
         placeholder="Search {agentLabel} models..."
-        value={searchText}
-        oninput={handleSearchInput}
+        bind:value={searchText}
       />
       <div class="tab-content">
         {#if searchPromise}
