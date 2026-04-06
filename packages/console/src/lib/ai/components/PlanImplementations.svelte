@@ -1,5 +1,6 @@
 <script lang="ts">
   import { listPlanRuns, reviewPR, judgePlan, mergeWinner } from '$lib/ai/judge.remote';
+  import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
 
   let {
     organization,
@@ -335,6 +336,11 @@
                   {/each}
                 </div>
               {/if}
+            {/if}
+
+            <!-- Inline diff -->
+            {#if run.prNumber != null}
+              <PRDiffLoader {organization} {repoName} prNumber={run.prNumber} prUrl={run.prUrl} />
             {/if}
           </div>
         {/each}
