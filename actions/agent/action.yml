@@ -1,0 +1,29 @@
+name: Collect Agent Metrics
+description: Extract token usage, cost, and metadata from any supported agent
+
+inputs:
+  agent:
+    description: "Agent harness name (claude-code | codex | opencode)"
+    required: true
+  execution_file:
+    description: "Path to agent execution/session file"
+    required: false
+  session_id:
+    description: "Session ID (Claude)"
+    required: false
+  final_message:
+    description: "Agent's final message text"
+    required: false
+  model:
+    description: "Model override (auto-detected from agent output if omitted)"
+    required: false
+  provider:
+    description: "Provider for pricing lookup (e.g. anthropic, openai)"
+    required: false
+  status:
+    description: "Agent step outcome (e.g. success, failure, cancelled)"
+    required: false
+
+runs:
+  using: node20
+  main: dist/main.js

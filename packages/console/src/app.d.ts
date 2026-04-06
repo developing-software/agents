@@ -3,7 +3,7 @@
 declare global {
   namespace App {
     interface Platform {
-      env: Env;
+      env: Env & { ANTHROPIC_API_KEY?: string };
       ctx: ExecutionContext;
       caches: CacheStorage;
       cf?: IncomingRequestCfProperties;

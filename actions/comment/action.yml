@@ -1,0 +1,24 @@
+name: Upsert Issue/PR Comment
+description: Post or update a status comment on a GitHub issue or PR using marker-based upsert
+
+inputs:
+  phase:
+    description: "Comment phase: progress (before agent) or summary (after agent)"
+    required: true
+  issue_number:
+    description: "Issue or PR number (auto-resolved from context tags if omitted)"
+    required: false
+  agent:
+    description: "Agent harness name (for progress phase)"
+    required: false
+  model:
+    description: "Model name (for progress phase)"
+    required: false
+  console_url:
+    description: "Console base URL for deep links"
+    required: false
+    default: "https://console.agents.developing.company"
+
+runs:
+  using: node20
+  main: dist/main.js

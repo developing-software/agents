@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
+import { join } from "path";
 import { createClient, createConfig } from "@agents/sdk/client";
 import { DevAgentSdk } from "@agents/sdk";
 
@@ -20,16 +21,37 @@ export interface IssuePayload {
   body: string;
 }
 
-export function readEventPayload(): { issue: IssuePayload } {
+export function readEventPayload(): {
+  issue?: IssuePayload;
+  inputs?: Record<string, string>;
+} {
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!eventPath) throw new Error("GITHUB_EVENT_PATH not set");
-  const payload = JSON.parse(readFileSync(eventPath, "utf8"));
-  if (typeof payload.issue?.number !== "number") {
-    throw new Error(
-      "Event payload missing issue data — this action requires an issue event context",
-    );
+  return JSON.parse(readFileSync(eventPath, "utf8"));
+}
+
+/**
+ * Extract issue number from tags like "gh:issue:42".
+ * Returns undefined if no issue tag found.
+ */
+export function extractIssueFromTags(tags: string[]): number | undefined {
+  for (const tag of tags) {
+    const match = tag.match(/^gh:issue:(\d+)$/);
+    if (match) return parseInt(match[1]!, 10);
   }
-  return payload;
+  return undefined;
+}
+
+/**
+ * Extract PR number from tags like "gh:pr:99".
+ * Returns undefined if no PR tag found.
+ */
+export function extractPrFromTags(tags: string[]): number | undefined {
+  for (const tag of tags) {
+    const match = tag.match(/^gh:pr:(\d+)$/);
+    if (match) return parseInt(match[1]!, 10);
+  }
+  return undefined;
 }
 
 export function getContext(): GitHubContext {
@@ -46,6 +68,13 @@ export function getContext(): GitHubContext {
 }
 
 export function readContextTags(): string[] {
+  // New: read from DEV_AGENTS_TAGS_DIR (flat files, one tag per file)
+  const tagsDir = process.env.DEV_AGENTS_TAGS_DIR;
+  if (tagsDir && existsSync(tagsDir)) {
+    const files = readdirSync(tagsDir);
+    return files.map((file) => readFileSync(join(tagsDir, file), "utf8").trim()).filter(Boolean);
+  }
+  // Legacy fallback: read from flat file
   const contextFile = process.env.AGENTS_CONTEXT_TAGS_FILE;
   if (!contextFile || !existsSync(contextFile)) return [];
   return readFileSync(contextFile, "utf8")

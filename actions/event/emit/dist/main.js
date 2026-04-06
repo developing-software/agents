@@ -19839,12 +19839,83 @@ class DevAgentSdk extends HeyApiClient {
       ...params
     });
   }
+  postGithubDispatch(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "owner" },
+          { in: "body", key: "repo" },
+          { in: "body", key: "agent" },
+          { in: "body", key: "prompt" },
+          { in: "body", key: "issue_number" },
+          { in: "body", key: "tags" },
+          { in: "body", key: "model" },
+          { in: "body", key: "ref" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/github/dispatch",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
+  getModelsPricing(options) {
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing",
+      ...options
+    });
+  }
+  getModelsPricingByModelId(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }] }]);
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing/{modelId}",
+      ...options,
+      ...params
+    });
+  }
+  postModelsCost(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "model" },
+          { in: "body", key: "provider" },
+          { in: "body", key: "tokens" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/cost",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
 }
 // actions/core/src/index.ts
 var core = __toESM(require_core(), 1);
 var exec = __toESM(require_exec(), 1);
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
+import { join } from "path";
 function readContextTags() {
+  const tagsDir = process.env.DEV_AGENTS_TAGS_DIR;
+  if (tagsDir && existsSync(tagsDir)) {
+    const files = readdirSync(tagsDir);
+    return files.map((file) => readFileSync(join(tagsDir, file), "utf8").trim()).filter(Boolean);
+  }
   const contextFile = process.env.AGENTS_CONTEXT_TAGS_FILE;
   if (!contextFile || !existsSync(contextFile))
     return [];
@@ -19867,7 +19938,7 @@ function githubTags() {
   if (repo)
     tags.push(`gh:repo:${repo}`);
   if (runId)
-    tags.push(`gh:run:${runId}`);
+    tags.push(`gh:workflow:${runId}`);
   const prMatch = ref?.match(/^refs\/pull\/(\d+)\//);
   if (prMatch) {
     tags.push(`gh:pr:${prMatch[1]}`);
@@ -19886,15 +19957,15 @@ function readData(raw) {
   return parsed;
 }
 async function run() {
-  const agentsToken = core2.getInput("token");
+  const agentsToken = core2.getInput("token") || process.env.DEV_AGENTS_TOKEN;
   if (!agentsToken) {
     core2.warning("token not set, skipping event emit");
     return;
   }
-  const apiUrl = core2.getInput("url");
+  const apiUrl = core2.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
   const eventIdEnv = core2.getInput("event_id_env") || "EVENT_ID";
   const inheritContext = core2.getInput("inherit_context") !== "false";
-  const parentEventId = core2.getInput("parent_event_id") || (inheritContext ? process.env.AGENTS_WORKFLOW_EVENT_ID : "") || "";
+  const parentEventId = core2.getInput("parent_event_id") || (inheritContext ? process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID : "") || "";
   const origin = core2.getInput("origin");
   const type = core2.getInput("type", { required: true });
   const explicitTags = readTags(core2.getInput("tags"));

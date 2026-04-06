@@ -1,22 +1,51 @@
-name: Codex - Implement Issue
-run-name: "codex/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+name: "Agent → Codex"
+run-name: "agent-codex/${{ github.run_id }}"
 
 on:
-  issues:
-    types: [labeled]
-
-concurrency:
-  group: codex-issue-${{ github.event.issue.number }}
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Tags for event linking, one per line (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
+    secrets:
+      AGENTS_TOKEN:
+        required: true
+      OPENAI_API_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Tags for event linking, one per line (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
 
 jobs:
   implement:
-    if: github.event.label.name == 'codex'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       issues: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,48 +55,69 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: ./actions/agent/workflow
+      - uses: ./actions/event/init
         with:
-          pr_prefix: codex
-          harness: codex
+          type: agent
           token: ${{ secrets.AGENTS_TOKEN }}
+          tags: |
+            harness:codex
+            ${{ inputs.tags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract issue number
+        id: issue
+        run: |
+          ISSUE=$(echo "${{ inputs.tags }}" | grep -oP '^gh:issue:\K\d+$' || true)
+          echo "number=$ISSUE" >> "$GITHUB_OUTPUT"
+
+      - uses: ./actions/git/branch
+        with:
+          prefix: codex
+          issue_number: ${{ steps.issue.outputs.number }}
+
+      - uses: ./actions/comment
+        with:
+          phase: progress
+          agent: codex
 
       - name: Run Codex
         id: run-codex
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          allow-bots: "true"
+          codex-home: /tmp/codex-home
           prompt: |
-            Implement the following GitHub issue in this repository:
+            ${{ inputs.prompt }}
 
-            Title: ${{ github.event.issue.title }}
-
-            ${{ github.event.issue.body }}
-
-            Make the necessary code changes to implement this feature or fix.
-            Follow the existing code style, naming conventions, and patterns in the codebase.
-            Refer to AGENTS.md for project structure and guidelines.
-            Do NOT commit, push, or open a pull request — only modify the files.
-
-      - uses: ./actions/agent/codex
+      - uses: ./actions/agent
         if: always()
         with:
+          agent: codex
           final_message: ${{ steps.run-codex.outputs.final-message }}
-          token: ${{ secrets.AGENTS_TOKEN }}
+          provider: openai
+          status: ${{ steps.run-codex.outcome }}
+        env:
+          CODEX_HOME: /tmp/codex-home
 
-      - uses: ./.github/actions/lint
+      - uses: ./.github/actions/check
+        if: always()
         with:
           install: "false"
-          token: ${{ secrets.AGENTS_TOKEN }}
 
-      - uses: ./.github/actions/typecheck
+      - uses: ./actions/git/commit
+        if: always()
         with:
-          install: "false"
-          token: ${{ secrets.AGENTS_TOKEN }}
+          issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./.github/actions/test
+      - uses: ./actions/git/pr
+        if: always()
         with:
-          install: "false"
-          token: ${{ secrets.AGENTS_TOKEN }}
+          prefix: codex
+          issue_number: ${{ steps.issue.outputs.number }}
+
+      - uses: ./actions/comment
+        if: always()
+        with:
+          phase: summary

@@ -1,14 +1,21 @@
-import type { GitHubWebhook } from "./index";
+import type { EmitterWebhookEventName, EmitterWebhookEvent } from "@octokit/webhooks";
 import { GithubInstallation } from "../installation/index";
 import { User } from "../../user/index";
 import { Log } from "../../util/log";
 import { Event } from "../../events/index";
-import { Tags } from "../../events/types";
+import { Tags } from "../../tag";
 import { Repository } from "../../repository/index";
+
+interface WebhookEmitter {
+  on<E extends EmitterWebhookEventName>(
+    eventName: E,
+    handler: (event: EmitterWebhookEvent<E>) => Promise<void> | void,
+  ): void;
+}
 
 const log = Log.create({ namespace: "github.webhook" });
 
-export function registerHandlers(webhook: typeof GitHubWebhook) {
+export function registerHandlers(webhook: WebhookEmitter) {
   // App install / uninstall
   webhook.on("installation.created", async ({ payload }) => {
     const account = payload.installation.account;
@@ -170,10 +177,7 @@ export function registerHandlers(webhook: typeof GitHubWebhook) {
 
     log.info("push event", { repo: payload.repository.full_name, branch, commitCount });
 
-    const pushTags = [
-      Tags.ghRepo(repo.fullName),
-      Tags.ghBranch(branch),
-    ];
+    const pushTags = [Tags.ghRepo(repo.fullName), Tags.ghBranch(branch)];
 
     const parentEventId = await Event.findParent({
       source: "repository",

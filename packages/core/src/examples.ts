@@ -59,6 +59,21 @@ export namespace Examples {
     uploaded: "2024-01-01T00:00:00.000Z",
   };
 
+  export const Plan = {
+    id: Id("plan"),
+    title: "Refactor event API for batch ingestion",
+    body: "## Scope\nRefactor the event API to support batch ingestion.\n\n## Acceptance Criteria\n- [ ] Batch endpoint accepts array of events",
+    status: "draft" as const,
+    authorType: "human" as const,
+    tags: ["gh:repo:octocat/hello-world", "gh:issue:42"],
+    data: {},
+    source: "repository",
+    sourceId: Id("repository"),
+    createdBy: Id("user"),
+    timeCreated: "2024-01-01T00:00:00.000Z",
+    timeUpdated: "2024-01-01T00:00:00.000Z",
+  };
+
   export const User = {
     id: Id("user"),
     name: "John Doe",

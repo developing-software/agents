@@ -110,3 +110,22 @@ select:focus {
 .dot-pulse {
   animation: blink 1.4s ease-in-out infinite;
 }
+
+/* Section heading with decorative rule */
+.section-heading {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-dim);
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-heading::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--color-border);
+}

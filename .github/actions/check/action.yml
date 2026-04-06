@@ -1,0 +1,55 @@
+name: Run All Checks
+description: Run lint, typecheck, and tests — writes results via event/data
+
+inputs:
+  install:
+    description: Set to 'false' to skip bun setup and install (when caller already ran them)
+    default: "true"
+
+outputs:
+  lint-outcome:
+    description: Lint outcome (success or failure)
+    value: ${{ steps.lint.outputs.outcome }}
+  typecheck-outcome:
+    description: Typecheck outcome (success or failure)
+    value: ${{ steps.typecheck.outputs.outcome }}
+  test-outcome:
+    description: Test outcome (success or failure)
+    value: ${{ steps.test.outputs.outcome }}
+  outcome:
+    description: Overall outcome (success only if all checks pass)
+    value: ${{ steps.result.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - id: lint
+      uses: ./.github/actions/lint
+      if: always()
+      with:
+        install: ${{ inputs.install }}
+
+    - id: typecheck
+      uses: ./.github/actions/typecheck
+      if: always()
+      with:
+        install: ${{ inputs.install }}
+
+    - id: test
+      uses: ./.github/actions/test
+      if: always()
+      with:
+        install: ${{ inputs.install }}
+
+    - name: Compute overall outcome
+      id: result
+      if: always()
+      shell: bash
+      run: |
+        if [ "${{ steps.lint.outputs.outcome }}" = "success" ] \
+          && [ "${{ steps.typecheck.outputs.outcome }}" = "success" ] \
+          && [ "${{ steps.test.outputs.outcome }}" = "success" ]; then
+          echo "outcome=success" >> "$GITHUB_OUTPUT"
+        else
+          echo "outcome=failure" >> "$GITHUB_OUTPUT"
+        fi

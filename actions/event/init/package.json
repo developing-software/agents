@@ -1,0 +1,17 @@
+{
+  "name": "event-init-action",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "bun run build.ts"
+  },
+  "dependencies": {
+    "@actions/core": "catalog:action",
+    "@agents/actions-core": "workspace:*",
+    "@agents/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:action"
+  }
+}

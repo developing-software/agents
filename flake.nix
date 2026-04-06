@@ -61,7 +61,15 @@
             ];
 
           shellHook = ''
-            bun install --frozen-lockfile
+            echo ""
+            echo "===---===---==="
+            echo ""
+            echo "Dev Shell for ${system}"
+            echo ""
+            echo "===---===---==="
+            echo ""
+            echo ""
+            # bun install --frozen-lockfile
           '';
         };
       });

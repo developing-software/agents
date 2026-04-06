@@ -8,7 +8,8 @@
     "./*": [
       "./src/*.ts",
       "./src/*/index.ts"
-    ]
+    ],
+    "./events/agent": "./src/events/agent/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -23,7 +24,6 @@
     "@octokit/webhooks": "^14.2.0",
     "drizzle-orm": "catalog:",
     "postgres": "^3.4.8",
-    "remeda": "^2.33.1",
     "resend": "^6.9.3",
     "ulid": "catalog:",
     "zod": "catalog:"

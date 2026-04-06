@@ -29,6 +29,7 @@
     </a>
 
     <div class="topbar-actions">
+      <a href="/models" class="topbar-link">Models</a>
       {#if data.userID}
         <a href="/logout" class="signout-link">Sign out</a>
       {:else}
@@ -118,6 +119,19 @@
   .topbar-actions {
     display: flex;
     align-items: center;
+  }
+
+  .topbar-link {
+    font-size: 12px;
+    color: var(--color-muted);
+    text-decoration: none;
+    padding: 4px 6px;
+    margin-right: 4px;
+    transition: color 0.1s;
+  }
+
+  .topbar-link:hover {
+    color: var(--color-text);
   }
 
   .signout-link {

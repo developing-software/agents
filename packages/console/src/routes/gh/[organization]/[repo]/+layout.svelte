@@ -14,9 +14,9 @@
   ]);
 
   function isActive(href: string) {
-    return href.includes('/tree')
-      ? page.url.pathname.startsWith(href)
-      : page.url.pathname === href;
+    const base = `/gh/${data.organization}/${data.repoName}`;
+    if (href === base) return page.url.pathname === href;
+    return page.url.pathname.startsWith(href);
   }
 </script>
 
@@ -116,5 +116,11 @@
 
   .content-area {
     padding: 20px 24px;
+  }
+
+  @media (max-width: 600px) {
+    .content-area {
+      padding: 12px 16px;
+    }
   }
 </style>

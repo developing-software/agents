@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file -- kept for planned welcome email
 import { Email } from "./index";
 import { User } from "../user/index";
 

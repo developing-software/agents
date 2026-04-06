@@ -17,6 +17,10 @@ import type {
   GetAppByIdResponses,
   GetAppErrors,
   GetAppResponses,
+  GetModelsPricingByModelIdErrors,
+  GetModelsPricingByModelIdResponses,
+  GetModelsPricingErrors,
+  GetModelsPricingResponses,
   GetProfileErrors,
   GetProfileResponses,
   GetTokenByIdErrors,
@@ -29,6 +33,10 @@ import type {
   PostEventsByIdArtifactsResponses,
   PostEventsErrors,
   PostEventsResponses,
+  PostGithubDispatchErrors,
+  PostGithubDispatchResponses,
+  PostModelsCostErrors,
+  PostModelsCostResponses,
   PostTokenErrors,
   PostTokenResponses,
   PutProfileErrors,
@@ -371,6 +379,164 @@ export class DevAgentSdk extends HeyApiClient {
       url: "/events/{id}/artifacts",
       ...options,
       ...params,
+    });
+  }
+
+  /**
+   * Dispatch agent workflow
+   *
+   * Trigger an agent workflow via GitHub Actions workflow_dispatch. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).
+   */
+  public postGithubDispatch<ThrowOnError extends boolean = false>(
+    parameters: {
+      owner: string;
+      repo: string;
+      agent: "claude" | "opencode" | "codex";
+      prompt?: string;
+      issue_number?: number;
+      tags?: Array<string>;
+      model?: string;
+      ref?: string;
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "body", key: "owner" },
+            { in: "body", key: "repo" },
+            { in: "body", key: "agent" },
+            { in: "body", key: "prompt" },
+            { in: "body", key: "issue_number" },
+            { in: "body", key: "tags" },
+            { in: "body", key: "model" },
+            { in: "body", key: "ref" },
+          ],
+        },
+      ],
+    );
+    return (options?.client ?? this.client).post<
+      PostGithubDispatchResponses,
+      PostGithubDispatchErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/github/dispatch",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    });
+  }
+
+  /**
+   * List all model pricing
+   *
+   * Returns pricing data for all models. Costs are in dollars per 1M tokens.
+   */
+  public getModelsPricing<ThrowOnError extends boolean = false>(
+    options?: Options<never, ThrowOnError>,
+  ) {
+    return (options?.client ?? this.client).get<
+      GetModelsPricingResponses,
+      GetModelsPricingErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing",
+      ...options,
+    });
+  }
+
+  /**
+   * Get pricing for a model
+   *
+   * Looks up pricing for a model ID using exact match, then longest-prefix-match. Costs are in dollars per 1M tokens.
+   */
+  public getModelsPricingByModelId<ThrowOnError extends boolean = false>(
+    parameters: {
+      modelId: string;
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }] }]);
+    return (options?.client ?? this.client).get<
+      GetModelsPricingByModelIdResponses,
+      GetModelsPricingByModelIdErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing/{modelId}",
+      ...options,
+      ...params,
+    });
+  }
+
+  /**
+   * Calculate cost for model usage
+   *
+   * Given a model ID and token counts, resolves pricing via longest-prefix-match and returns the calculated cost in USD.
+   */
+  public postModelsCost<ThrowOnError extends boolean = false>(
+    parameters: {
+      model: string;
+      provider?: string;
+      tokens: {
+        /**
+         * Input tokens
+         */
+        input: number;
+        /**
+         * Output tokens
+         */
+        output: number;
+        /**
+         * Cache read tokens
+         */
+        cacheRead?: number;
+        /**
+         * Cache write tokens
+         */
+        cacheWrite?: number;
+        /**
+         * Reasoning tokens
+         */
+        reasoning?: number;
+      };
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "body", key: "model" },
+            { in: "body", key: "provider" },
+            { in: "body", key: "tokens" },
+          ],
+        },
+      ],
+    );
+    return (options?.client ?? this.client).post<
+      PostModelsCostResponses,
+      PostModelsCostErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/cost",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     });
   }
 }

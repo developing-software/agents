@@ -30,16 +30,16 @@ dist/                 — compiled binaries (Linux, macOS, Windows)
 
 Use Bun exclusively. Never use Node.js APIs, `express`, `dotenv`, `jest`, `webpack`, or `esbuild`.
 
-| Instead of | Use |
-|---|---|
-| `node <file>` / `ts-node` | `bun <file>` |
-| `npm` / `yarn` / `pnpm` | `bun install` / `bun run` / `bunx` |
-| `jest` / `vitest` | `bun test` |
-| `dotenv` | `.env` loads automatically |
-| `node:fs` readFile/writeFile | `Bun.file` |
-| `execa` / child_process | `Bun.$\`cmd\`` |
-| `better-sqlite3` | `bun:sqlite` |
-| `pg` / `postgres.js` | `Bun.sql` |
+| Instead of                   | Use                                |
+| ---------------------------- | ---------------------------------- |
+| `node <file>` / `ts-node`    | `bun <file>`                       |
+| `npm` / `yarn` / `pnpm`      | `bun install` / `bun run` / `bunx` |
+| `jest` / `vitest`            | `bun test`                         |
+| `dotenv`                     | `.env` loads automatically         |
+| `node:fs` readFile/writeFile | `Bun.file`                         |
+| `execa` / child_process      | `Bun.$\`cmd\``                     |
+| `better-sqlite3`             | `bun:sqlite`                       |
+| `pg` / `postgres.js`         | `Bun.sql`                          |
 
 ## Key Patterns
 

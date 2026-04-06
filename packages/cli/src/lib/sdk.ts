@@ -4,7 +4,7 @@ import { createClient as createAuthClient } from "@openauthjs/openauth/client";
 import { type Config, readConfig, writeConfig, AUTH_ISSUER } from "./config";
 import { log } from "./colors";
 
-export function makeSdk(config: Config) {
+function makeSdk(config: Config) {
   return new DevAgentSdk({
     client: createClient({ auth: () => config.access, baseUrl: config.baseUrl }),
   });

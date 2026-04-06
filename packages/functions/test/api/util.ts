@@ -4,75 +4,6 @@ import { User } from "@agents/core/user/index";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
 import { z } from "zod";
-// import { Card } from "@agents/core/card/index";
-// import { Product } from "@agents/core/product/index";
-// import { Address } from "@agents/core/address/index";
-// import { Examples } from "@agents/core/examples";
-// import { Order } from "@agents/core/order/order";
-// import { ProductFilter } from "@agents/core/product/filter";
-// import { Subscription } from "@agents/core/subscription/subscription";
-
-// export const getTestCardID = async () => {
-//   const [card] = await Card.list();
-//   if (card) return card.id;
-//   return await Card.create({ token: "tok_visa" });
-// };
-
-// export const getTestAddressID = async () => {
-//   const [address] = await Address.list();
-//   if (address) return address.id;
-//   return await Address.create(Examples.Address);
-// };
-
-// export const getTestProduct = async (subscription?: boolean) => {
-//   const [product] = await Product.list().then((r) =>
-//     r.filter(
-//       (p) =>
-//         p.variants.length && (subscription || p.subscription !== "required"),
-//     ),
-//   );
-//   return product!;
-// };
-
-// export const getTestProductID = async (subscription?: boolean) => {
-//   const product = await getTestProduct(subscription);
-//   return product.id;
-// };
-
-// export const getTestProductVariantID = async (subscription?: boolean) => {
-//   const product = await getTestProduct(subscription);
-//   return product.variants[0]!.id;
-// };
-
-// export const getTestOrderID = async () => {
-//   const [order] = await Order.list();
-//   if (order) return order.id;
-
-//   const orderID = await Order.create({
-//     variants: {
-//       [await getTestProductVariantID()]: 1,
-//     },
-//     cardID: await getTestCardID(),
-//     addressID: await getTestAddressID(),
-//   });
-
-//   return orderID;
-// };
-
-// export const getTestSubscriptionID = async () => {
-//   const [subscription] = await Subscription.list();
-//   if (subscription) return subscription.id;
-//   const productVariantID = await getTestProductVariantID();
-//   const addressID = await getTestAddressID();
-//   const cardID = await getTestCardID();
-//   return await Subscription.create({
-//     addressID,
-//     cardID,
-//     productVariantID,
-//     quantity: Examples.Subscription.quantity,
-//     schedule: Examples.Subscription.schedule,
-//   });
-// };
 
 /**
  * Setup API test environment with authentication and utility functions
@@ -115,7 +46,6 @@ export function setupApiTest() {
     return app.request(path, {
       headers: {
         authorization: `Bearer ${pat}`,
-        "x-terminal-region": "na",
         ...headers,
       },
     });
@@ -130,7 +60,6 @@ export function setupApiTest() {
       headers: {
         authorization: `Bearer ${pat}`,
         "content-type": "application/json",
-        "x-terminal-region": "na",
         ...headers,
       },
       body: JSON.stringify(body),
@@ -146,7 +75,6 @@ export function setupApiTest() {
       headers: {
         authorization: `Bearer ${pat}`,
         "content-type": "application/json",
-        "x-terminal-region": "na",
         ...headers,
       },
       body: JSON.stringify(body),
@@ -161,7 +89,6 @@ export function setupApiTest() {
       method: "delete",
       headers: {
         authorization: `Bearer ${pat}`,
-        "x-terminal-region": "na",
         ...headers,
       },
     });

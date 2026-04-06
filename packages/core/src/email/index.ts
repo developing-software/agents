@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file -- kept for planned email feature
 import { Resend } from "resend";
 import { Log } from "../util/log";
 

@@ -8,6 +8,8 @@ export const GitHubWebhookSecret = new sst.Secret("GitHubWebhookSecret");
 export const GitHubAppId = new sst.Secret("GitHubAppId");
 export const GitHubAppPrivateKey = new sst.Secret("GitHubAppPrivateKey");
 
+export const AnthropicApiKey = new sst.Secret("AntropicApiKey");
+
 
 export const environment = {
   AUTH_URL: $interpolate`https://auth.agents.developing.company`,
@@ -18,5 +20,6 @@ export const environment = {
   GITHUB_CLIENT_SECRET: GitHubClientSecret.value,
   GITHUB_WEBHOOK_SECRET: GitHubWebhookSecret.value,
   GITHUB_APP_ID: GitHubAppId.value,
-  GITHUB_APP_PRIVATE_KEY: GitHubAppPrivateKey.value
+  GITHUB_APP_PRIVATE_KEY: GitHubAppPrivateKey.value,
+  ANTHROPIC_API_KEY: AnthropicApiKey.value
 };

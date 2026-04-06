@@ -1,0 +1,29 @@
+name: "Issue → Claude"
+
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: claude-issue-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: github.event.label.name == 'claude'
+    uses: ./.github/workflows/agent-claude.yml
+    with:
+      prompt: |
+        Implement the following GitHub issue:
+
+        Title: ${{ github.event.issue.title }}
+
+        ${{ github.event.issue.body }}
+
+        Make the necessary code changes to implement this feature or fix.
+        Follow the existing code style, naming conventions, and patterns in the codebase.
+        Do NOT commit, push, or open a pull request — only modify the files.
+      tags: "gh:issue:${{ github.event.issue.number }}"
+    secrets:
+      AGENTS_TOKEN: ${{ secrets.AGENTS_TOKEN }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

@@ -1,4 +1,4 @@
-import { and, arrayContains, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, arrayContains, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
@@ -9,6 +9,7 @@ import { Examples } from "../examples";
 import { eventTable } from "./event.sql";
 import { OriginType } from "./types";
 import type { R2Bucket } from "@cloudflare/workers-types";
+import { Repository } from "../repository/index";
 
 const log = Log.create({ service: "event" });
 
@@ -62,45 +63,49 @@ export namespace Event {
 
   export type TreeNode = Info & { children: TreeNode[] };
 
-  export const IngestInput = z
-    .object({
-      repositoryId: z.string().optional().meta({
-        description: Common.IdDescription,
-        example: Examples.Repository.id,
-      }),
-      repoFullName: z.string().optional().meta({
-        description: "Full repository name in `owner/repo` format.",
-        example: Examples.Repository.fullName,
-      }),
-      parentEventId: Info.shape.parentEventId.optional().meta({
-        description: "Parent event ID to group related events.",
-        example: null,
-      }),
-      origin: z.enum(OriginType).meta({
-        description: "Origin of the event.",
-        example: Examples.Event.origin,
-      }),
-      type: Info.shape.type,
-      tags: Info.shape.tags.optional(),
-      data: Info.shape.data.optional(),
-    })
-    .refine((value) => Boolean(value.repositoryId || value.repoFullName), {
-      message: "Either `repositoryId` or `repoFullName` is required",
-      path: ["repositoryId"],
-    })
-    .meta({
-      ref: "EventIngestInput",
-      description: "Event payload submitted by external producers.",
-      example: {
-        repoFullName: Examples.Repository.fullName,
-        origin: Examples.Event.origin,
-        type: Examples.Event.type,
-        tags: Examples.Event.tags,
-        data: Examples.Event.data,
-      },
-    });
+  export namespace Source {
+    /** Identifies an event source. Extensible — add new variants as new source types are supported. */
+    export const Ref = z
+      .union([
+        z.object({
+          repositoryId: z.string().meta({
+            description: Common.IdDescription,
+            example: Examples.Repository.id,
+          }),
+        }),
+        z.object({
+          repoFullName: z.string().meta({
+            description: "Full repository name in `owner/repo` format.",
+            example: Examples.Repository.fullName,
+          }),
+        }),
+      ])
+      .meta({
+        description: "Source identifier — provide one of `repositoryId` or `repoFullName`.",
+      });
+    export type Ref = z.infer<typeof Ref>;
 
-  export type IngestInput = z.infer<typeof IngestInput>;
+    export interface Resolved {
+      source: string;
+      sourceId: string;
+      label: string;
+    }
+
+    /** Resolve a SourceRef to a concrete source type and ID. */
+    export async function resolve(input: Ref): Promise<Resolved | null> {
+      if ("repositoryId" in input) {
+        const repo = await Repository.findByID(input.repositoryId);
+        if (repo) return { source: "repository", sourceId: repo.id, label: input.repositoryId };
+      }
+
+      if ("repoFullName" in input) {
+        const repo = await Repository.findByFullName(input.repoFullName);
+        if (repo) return { source: "repository", sourceId: repo.id, label: input.repoFullName };
+      }
+
+      return null;
+    }
+  }
 
   export const create = fn(
     z.object({
@@ -152,16 +157,22 @@ export namespace Event {
   export async function list(opts: {
     source?: string;
     sourceId?: string;
+    sourceIds?: string[];
     tags?: string[];
     type?: string;
     limit?: number;
+    from?: string;
+    to?: string;
   }): Promise<Info[]> {
     return useTransaction(async (tx) => {
       const conditions = [];
       if (opts.source) conditions.push(eq(eventTable.source, opts.source));
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
+      if (opts.sourceIds?.length) conditions.push(inArray(eventTable.sourceId, opts.sourceIds));
       if (opts.tags?.length) conditions.push(arrayContains(eventTable.tags, opts.tags));
       if (opts.type) conditions.push(eq(eventTable.type, opts.type));
+      if (opts.from) conditions.push(gte(eventTable.timeCreated, new Date(opts.from)));
+      if (opts.to) conditions.push(lte(eventTable.timeCreated, new Date(opts.to)));
       let query = tx
         .select()
         .from(eventTable)
@@ -213,6 +224,14 @@ export namespace Event {
       }
     }
 
+    const workflowTag = opts.tags?.find((tag) => tag.startsWith("gh:workflow:"));
+    if (workflowTag) {
+      const parentEventId = await findParent({ tags: [workflowTag] }).catch(() => undefined);
+      if (parentEventId) {
+        return parentEventId;
+      }
+    }
+
     const issueTag = opts.tags?.find((tag) => tag.startsWith("gh:issue:"));
     if (issueTag) {
       const parentEventId = await findParent({ tags: [issueTag] }).catch(() => undefined);
@@ -221,23 +240,16 @@ export namespace Event {
       }
     }
 
-    const runTag = opts.tags?.find((tag) => tag.startsWith("gh:run:"));
-    if (runTag) {
-      const parentEventId = await findParent({ tags: [runTag] }).catch(() => undefined);
-      if (parentEventId) {
-        return parentEventId;
-      }
-    }
-
     return opts.parentEventId;
   }
-
 
   export async function listTree(opts: {
     source?: string;
     sourceId?: string;
     tags?: string[];
     type?: string;
+    from?: string;
+    to?: string;
   }): Promise<TreeNode[]> {
     return useTransaction(async (tx) => {
       const rows = await tx.execute(sql`
@@ -248,6 +260,8 @@ export namespace Event {
             ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
             ${opts.tags?.length ? sql`AND tags @> ${JSON.stringify(opts.tags)}::text[]` : sql``}
             ${opts.type ? sql`AND type = ${opts.type}` : sql``}
+            ${opts.from ? sql`AND time_created >= ${opts.from}::timestamptz` : sql``}
+            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}
           UNION ALL
           SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags FROM ${eventTable} e
           JOIN event_tree et ON e.parent_event_id = et.id

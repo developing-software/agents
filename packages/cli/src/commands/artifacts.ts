@@ -84,9 +84,7 @@ export default {
         }
       } else {
         const name = nameOverride || basename(path);
-        await withSpinner(`Uploading ${name}`, () =>
-          uploadFile(path, name, eventId, token, url),
-        );
+        await withSpinner(`Uploading ${name}`, () => uploadFile(path, name, eventId, token, url));
         log.success(`Uploaded ${name}`);
       }
 

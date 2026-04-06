@@ -4,23 +4,32 @@ import { z } from "zod";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
 import { Event } from "@agents/core/events/index";
-import { Repository } from "@agents/core/repository/index";
 import { Result, validator, ErrorResponses, authRequired } from "../common";
 import { Examples } from "@agents/core/examples";
 
-async function resolveRepository(input: Event.IngestInput) {
-  if (input.repositoryId) {
-    const repository = await Repository.findByID(input.repositoryId);
-    if (repository) return repository;
-  }
-
-  if (input.repoFullName) {
-    const repository = await Repository.findByFullName(input.repoFullName);
-    if (repository) return repository;
-  }
-
-  return null;
-}
+const IngestInput = Event.Source.Ref.and(
+  z.object({
+    parentEventId: Event.Info.shape.parentEventId.optional().meta({
+      description: "Parent event ID to group related events.",
+      example: null,
+    }),
+    origin: Event.Info.shape.origin,
+    type: Event.Info.shape.type,
+    tags: Event.Info.shape.tags.optional(),
+    data: Event.Info.shape.data.optional(),
+  }),
+).meta({
+  ref: "EventIngestInput",
+  description: "Event payload submitted by external producers.",
+  example: {
+    repoFullName: Examples.Repository.fullName,
+    origin: Examples.Event.origin,
+    type: Examples.Event.type,
+    tags: Examples.Event.tags,
+    data: Examples.Event.data,
+  },
+});
+type IngestInput = z.infer<typeof IngestInput>;
 
 export namespace EventApi {
   export const route = new Hono<{ Bindings: { Artifacts: R2Bucket } }>()
@@ -48,21 +57,21 @@ export namespace EventApi {
         },
       }),
       authRequired,
-      validator("json", Event.IngestInput),
+      validator("json", IngestInput),
       async (c) => {
         const body = c.req.valid("json");
-        const repository = await resolveRepository(body);
-        if (!repository) {
+        const resolved = await Event.Source.resolve(body);
+        if (!resolved) {
           throw new VisibleError(
             "not_found",
             ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
-            `Repository ${body.repositoryId ?? body.repoFullName ?? ""} not found`,
+            `Source not found`,
           );
         }
 
         const id = await Event.create({
-          source: "repository",
-          sourceId: repository.id,
+          source: resolved.source,
+          sourceId: resolved.sourceId,
           parentEventId: body.parentEventId ?? undefined,
           origin: body.origin,
           type: body.type,

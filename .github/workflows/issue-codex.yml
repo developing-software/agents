@@ -1,0 +1,30 @@
+name: "Issue → Codex"
+
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: codex-issue-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: github.event.label.name == 'codex'
+    uses: ./.github/workflows/agent-codex.yml
+    with:
+      prompt: |
+        Implement the following GitHub issue in this repository:
+
+        Title: ${{ github.event.issue.title }}
+
+        ${{ github.event.issue.body }}
+
+        Make the necessary code changes to implement this feature or fix.
+        Follow the existing code style, naming conventions, and patterns in the codebase.
+        Refer to AGENTS.md for project structure and guidelines.
+        Do NOT commit, push, or open a pull request — only modify the files.
+      tags: "gh:issue:${{ github.event.issue.number }}"
+    secrets:
+      AGENTS_TOKEN: ${{ secrets.AGENTS_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

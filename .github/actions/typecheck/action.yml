@@ -11,14 +11,6 @@ inputs:
   name:
     description: Check name for the results folder
     default: tsc
-  token:
-    description: Personal access token for emitting events and uploading artifacts to the Agents API
-    required: false
-  url:
-    description: Agents API base URL
-    required: false
-    default: https://api.agents.developing.company/api
-
 outputs:
   typecheck-output:
     description: Typecheck output
@@ -32,10 +24,7 @@ runs:
   steps:
     - id: typecheck-started
       uses: developing-software/agents/actions/event/emit@dev
-      if: inputs.token != ''
       with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
         type: typecheck.started
 
     - name: Setup Bun
@@ -63,27 +52,23 @@ runs:
         } >> $GITHUB_OUTPUT
         exit $exit_code
 
-    - uses: developing-software/agents/actions/agent/result@dev
+    - uses: developing-software/agents/actions/event/data@dev
       if: always()
       with:
-        category: typecheck
-        name: ${{ inputs.name }}
-        outcome: ${{ steps.run-typecheck.outputs.outcome }}
+        key: checks/typecheck/${{ inputs.name }}
+        data: '{"outcome":"${{ steps.run-typecheck.outputs.outcome }}"}'
+        tag: check:typecheck/${{ inputs.name }}:${{ steps.run-typecheck.outputs.outcome }}
         output: ${{ runner.temp }}/typecheck-output.txt
 
     - uses: developing-software/agents/actions/artifact/upload@dev
-      if: failure() && inputs.token != ''
+      if: failure()
       with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
         path: ${{ runner.temp }}/typecheck-output.txt
         name: typecheck-output.txt
 
     - uses: developing-software/agents/actions/event/emit@dev
-      if: always() && inputs.token != ''
+      if: always()
       with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
         parent_event_id: ${{ steps.typecheck-started.outputs.event_id }}
         type: typecheck.completed
         data: >-

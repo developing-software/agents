@@ -39,6 +39,42 @@ export namespace GithubPullRequest {
     return serialize(data);
   }
 
+  export async function getDiff(repo: RepoRef, pullNumber: number): Promise<string> {
+    const octokit = await GitHub.appClient(repo.installationId);
+    const { data } = await octokit.rest.pulls.get({
+      owner: repo.owner,
+      repo: repo.repo,
+      pull_number: pullNumber,
+      mediaType: { format: "diff" },
+    });
+    return data as unknown as string;
+  }
+
+  export async function merge(
+    repo: RepoRef,
+    pullNumber: number,
+    opts?: { method?: "squash" | "merge" | "rebase" },
+  ): Promise<{ merged: boolean; message: string }> {
+    const octokit = await GitHub.appClient(repo.installationId);
+    const { data } = await octokit.rest.pulls.merge({
+      owner: repo.owner,
+      repo: repo.repo,
+      pull_number: pullNumber,
+      merge_method: opts?.method ?? "squash",
+    });
+    return { merged: data.merged, message: data.message };
+  }
+
+  export async function close(repo: RepoRef, pullNumber: number): Promise<void> {
+    const octokit = await GitHub.appClient(repo.installationId);
+    await octokit.rest.pulls.update({
+      owner: repo.owner,
+      repo: repo.repo,
+      pull_number: pullNumber,
+      state: "closed",
+    });
+  }
+
   function serialize(pr: {
     number: number;
     title: string;

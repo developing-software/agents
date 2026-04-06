@@ -1,23 +1,53 @@
-name: OpenCode - Implement Issue
-run-name: "opencode/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+name: "Agent → OpenCode"
+run-name: "agent-opencode/${{ github.run_id }}"
 
 on:
-  issues:
-    types: [labeled]
-
-concurrency:
-  group: opencode-issue-${{ github.event.issue.number }}
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Tags for event linking, one per line (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
+    secrets:
+      AGENTS_TOKEN:
+        required: true
+      OPENAI_API_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Task/instructions for the agent"
+        required: true
+        type: string
+      tags:
+        description: "Tags for event linking, one per line (e.g. gh:issue:42)"
+        required: false
+        type: string
+        default: ""
+      model:
+        description: "Model override"
+        required: false
+        type: string
 
 jobs:
   implement:
-    if: github.event.label.name == 'opencode'
     runs-on: ubuntu-latest
+    env:
+      MODEL: ${{ inputs.model || 'openai/gpt-5.4-pro' }}
     permissions:
       contents: write
       pull-requests: write
       issues: write
-      id-token: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,44 +56,83 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
 
-      - uses: ./actions/agent/workflow
+      - uses: ./actions/event/init
         with:
-          pr_prefix: opencode
-          harness: opencode
+          type: agent
           token: ${{ secrets.AGENTS_TOKEN }}
+          tags: |
+            harness:opencode
+            model:${{ env.MODEL }}
+            ${{ inputs.tags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract issue number
+        id: issue
+        run: |
+          ISSUE=$(echo "${{ inputs.tags }}" | grep -oP '^gh:issue:\K\d+$' || true)
+          echo "number=$ISSUE" >> "$GITHUB_OUTPUT"
+
+      - uses: ./actions/git/branch
+        with:
+          prefix: opencode
+          issue_number: ${{ steps.issue.outputs.number }}
+
+      - uses: ./actions/comment
+        with:
+          phase: progress
+          agent: opencode
+
+      - name: Get OpenCode version
+        id: opencode-version
+        run: |
+          VERSION=$(curl -sf https://api.github.com/repos/anomalyco/opencode/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
+          echo "version=${VERSION:-latest}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache OpenCode
+        id: opencode-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.opencode/bin
+          key: opencode-${{ runner.os }}-${{ runner.arch }}-${{ steps.opencode-version.outputs.version }}
+
+      - name: Install OpenCode
+        if: steps.opencode-cache.outputs.cache-hit != 'true'
+        run: curl -fsSL https://opencode.ai/install | bash
+
+      - name: Add OpenCode to PATH
+        run: echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
       - name: Run OpenCode
         id: run-opencode
-        uses: anomalyco/opencode/github@latest
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: opencode run --agent build --model "${{ env.MODEL }}" "${{ inputs.prompt }}"
+
+      - uses: ./actions/agent
+        if: always()
         with:
-          model: openai/gpt-5.4-pro
-          prompt: |
-            Implement the following GitHub issue in this repository:
+          agent: opencode
+          provider: openai
+          status: ${{ steps.run-opencode.outcome }}
 
-            Title: ${{ github.event.issue.title }}
-
-            ${{ github.event.issue.body }}
-
-            Make the necessary code changes to implement this feature or fix.
-            Follow the existing code style, naming conventions, and patterns in the codebase.
-            Refer to AGENTS.md for project structure and guidelines.
-            Do NOT commit, push, or open a pull request — only modify the files.
-
-      - uses: ./.github/actions/lint
+      - uses: ./.github/actions/check
+        if: always()
         with:
           install: "false"
-          token: ${{ secrets.AGENTS_TOKEN }}
 
-      - uses: ./.github/actions/typecheck
+      - uses: ./actions/git/commit
+        if: always()
         with:
-          install: "false"
-          token: ${{ secrets.AGENTS_TOKEN }}
+          issue_number: ${{ steps.issue.outputs.number }}
 
-      - uses: ./.github/actions/test
+      - uses: ./actions/git/pr
+        if: always()
         with:
-          install: "false"
-          token: ${{ secrets.AGENTS_TOKEN }}
+          prefix: opencode
+          issue_number: ${{ steps.issue.outputs.number }}
+
+      - uses: ./actions/comment
+        if: always()
+        with:
+          phase: summary

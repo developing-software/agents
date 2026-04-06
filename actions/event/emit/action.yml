@@ -3,7 +3,7 @@ description: Emit an event to the Agents API, inheriting workflow context tags b
 
 inputs:
   token:
-    description: Personal access token for posting events to the Agents API
+    description: Personal access token for posting events to the Agents API (falls back to DEV_AGENTS_TOKEN env)
     required: false
   url:
     description: Agents API base URL
@@ -24,7 +24,7 @@ inputs:
     description: Event type
     required: true
   tags:
-    description: Event-local tags (comma or newline separated). These are NOT added to the context and only apply to this event.
+    description: Event-local tags (one per line). These are NOT added to the context and only apply to this event.
     required: false
   data:
     description: JSON object to store as event data

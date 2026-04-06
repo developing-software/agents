@@ -303,62 +303,83 @@
         }
       },
       "EventIngestInput": {
-        "type": "object",
-        "properties": {
-          "repositoryId": {
-            "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
-            "example": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
-            "type": "string"
-          },
-          "repoFullName": {
-            "description": "Full repository name in `owner/repo` format.",
-            "example": "octocat/hello-world",
-            "type": "string"
-          },
-          "parentEventId": {
-            "description": "Parent event ID to group related events.",
-            "example": null,
+        "allOf": [
+          {
             "anyOf": [
               {
-                "type": "string"
+                "type": "object",
+                "properties": {
+                  "repositoryId": {
+                    "type": "string",
+                    "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
+                    "example": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX"
+                  }
+                },
+                "required": ["repositoryId"]
               },
               {
-                "type": "null"
+                "type": "object",
+                "properties": {
+                  "repoFullName": {
+                    "type": "string",
+                    "description": "Full repository name in `owner/repo` format.",
+                    "example": "octocat/hello-world"
+                  }
+                },
+                "required": ["repoFullName"]
               }
-            ]
+            ],
+            "description": "Source identifier — provide one of `repositoryId` or `repoFullName`."
           },
-          "origin": {
-            "type": "string",
-            "enum": ["api", "webhook", "action", "console", "cli", "cron"],
-            "description": "Origin of the event.",
-            "example": "webhook"
-          },
-          "type": {
-            "type": "string",
-            "description": "Event type, e.g. 'github.issues.opened'.",
-            "example": "github.issues.opened"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
-            "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
-          },
-          "data": {
+          {
             "type": "object",
-            "propertyNames": {
-              "type": "string"
+            "properties": {
+              "parentEventId": {
+                "description": "Parent event ID to group related events.",
+                "example": null,
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "origin": {
+                "type": "string",
+                "enum": ["api", "webhook", "action", "console", "cli", "cron"],
+                "description": "What triggered this event.",
+                "example": "webhook"
+              },
+              "type": {
+                "type": "string",
+                "description": "Event type, e.g. 'github.issues.opened'.",
+                "example": "github.issues.opened"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+                "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+              },
+              "data": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {},
+                "description": "Arbitrary event data.",
+                "example": {
+                  "action": "opened"
+                }
+              }
             },
-            "additionalProperties": {},
-            "description": "Arbitrary event data.",
-            "example": {
-              "action": "opened"
-            }
+            "required": ["origin", "type"]
           }
-        },
-        "required": ["origin", "type"],
+        ],
         "description": "Event payload submitted by external producers.",
         "example": {
           "repoFullName": "octocat/hello-world",
@@ -1616,6 +1637,658 @@
             "description": "Unique object identifier.\nThe format and length of IDs may change over time."
           }
         ]
+      }
+    },
+    "/github/dispatch": {
+      "post": {
+        "operationId": "postGithubDispatch",
+        "tags": ["GitHub"],
+        "summary": "Dispatch agent workflow",
+        "description": "Trigger an agent workflow via GitHub Actions workflow_dispatch. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["ok"]
+                }
+              }
+            },
+            "description": "Workflow dispatched successfully."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "string",
+                    "description": "Repository owner",
+                    "example": "my-org"
+                  },
+                  "repo": {
+                    "type": "string",
+                    "description": "Repository name",
+                    "example": "my-repo"
+                  },
+                  "agent": {
+                    "type": "string",
+                    "enum": ["claude", "opencode", "codex"],
+                    "description": "Agent to dispatch"
+                  },
+                  "prompt": {
+                    "description": "Task/instructions for the agent. Required if issue_number is not provided.",
+                    "type": "string"
+                  },
+                  "issue_number": {
+                    "description": "Issue number to implement. Auto-fetches title/body to build prompt and adds gh:issue tag.",
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "tags": {
+                    "description": "Additional tags for event linking (e.g. gh:issue:42)",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "model": {
+                    "description": "Model override",
+                    "type": "string"
+                  },
+                  "ref": {
+                    "default": "dev",
+                    "description": "Git ref to dispatch on",
+                    "type": "string"
+                  }
+                },
+                "required": ["owner", "repo", "agent"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/models/pricing": {
+      "get": {
+        "operationId": "getModelsPricing",
+        "tags": ["Models"],
+        "summary": "List all model pricing",
+        "description": "Returns pricing data for all models. Costs are in dollars per 1M tokens.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "models": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "model": {
+                            "type": "string",
+                            "description": "Resolved model ID",
+                            "example": "claude-sonnet-4-6"
+                          },
+                          "provider": {
+                            "type": "string",
+                            "description": "Provider ID",
+                            "example": "anthropic"
+                          },
+                          "cost": {
+                            "type": "object",
+                            "properties": {
+                              "input": {
+                                "description": "Input cost per 1M tokens (USD)",
+                                "example": 3,
+                                "type": "number"
+                              },
+                              "output": {
+                                "description": "Output cost per 1M tokens (USD)",
+                                "example": 15,
+                                "type": "number"
+                              },
+                              "cache_read": {
+                                "description": "Cache read cost per 1M tokens (USD)",
+                                "example": 0.3,
+                                "type": "number"
+                              },
+                              "cache_write": {
+                                "description": "Cache write cost per 1M tokens (USD)",
+                                "example": 3.75,
+                                "type": "number"
+                              },
+                              "reasoning": {
+                                "description": "Reasoning token cost per 1M tokens (USD)",
+                                "type": "number"
+                              },
+                              "input_audio": {
+                                "description": "Audio input cost per 1M tokens (USD)",
+                                "type": "number"
+                              },
+                              "output_audio": {
+                                "description": "Audio output cost per 1M tokens (USD)",
+                                "type": "number"
+                              },
+                              "context_over_200k": {
+                                "description": "Tiered pricing for contexts over 200k tokens",
+                                "type": "object",
+                                "properties": {
+                                  "input": {
+                                    "type": "number"
+                                  },
+                                  "output": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            },
+                            "description": "Model pricing in USD per 1M tokens"
+                          }
+                        },
+                        "required": ["model", "provider", "cost"],
+                        "description": "Pricing record for a model"
+                      }
+                    }
+                  },
+                  "required": ["models"]
+                }
+              }
+            },
+            "description": "All model pricing"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "rate_limit",
+                  "code": "too_many_requests",
+                  "message": "Rate limit exceeded"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/models/pricing/{modelId}": {
+      "get": {
+        "operationId": "getModelsPricingByModelId",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "modelId",
+            "schema": {
+              "type": "string",
+              "example": "claude-sonnet-4-6"
+            },
+            "required": true,
+            "description": "Model ID to look up (supports longest-prefix-match)"
+          }
+        ],
+        "tags": ["Models"],
+        "summary": "Get pricing for a model",
+        "description": "Looks up pricing for a model ID using exact match, then longest-prefix-match. Costs are in dollars per 1M tokens.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pricing": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "model": {
+                              "type": "string",
+                              "description": "Resolved model ID",
+                              "example": "claude-sonnet-4-6"
+                            },
+                            "provider": {
+                              "type": "string",
+                              "description": "Provider ID",
+                              "example": "anthropic"
+                            },
+                            "cost": {
+                              "type": "object",
+                              "properties": {
+                                "input": {
+                                  "description": "Input cost per 1M tokens (USD)",
+                                  "example": 3,
+                                  "type": "number"
+                                },
+                                "output": {
+                                  "description": "Output cost per 1M tokens (USD)",
+                                  "example": 15,
+                                  "type": "number"
+                                },
+                                "cache_read": {
+                                  "description": "Cache read cost per 1M tokens (USD)",
+                                  "example": 0.3,
+                                  "type": "number"
+                                },
+                                "cache_write": {
+                                  "description": "Cache write cost per 1M tokens (USD)",
+                                  "example": 3.75,
+                                  "type": "number"
+                                },
+                                "reasoning": {
+                                  "description": "Reasoning token cost per 1M tokens (USD)",
+                                  "type": "number"
+                                },
+                                "input_audio": {
+                                  "description": "Audio input cost per 1M tokens (USD)",
+                                  "type": "number"
+                                },
+                                "output_audio": {
+                                  "description": "Audio output cost per 1M tokens (USD)",
+                                  "type": "number"
+                                },
+                                "context_over_200k": {
+                                  "description": "Tiered pricing for contexts over 200k tokens",
+                                  "type": "object",
+                                  "properties": {
+                                    "input": {
+                                      "type": "number"
+                                    },
+                                    "output": {
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              },
+                              "description": "Model pricing in USD per 1M tokens"
+                            }
+                          },
+                          "required": ["model", "provider", "cost"],
+                          "description": "Pricing record for a model"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["pricing"]
+                }
+              }
+            },
+            "description": "Model pricing (null if not found)"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "rate_limit",
+                  "code": "too_many_requests",
+                  "message": "Rate limit exceeded"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/models/cost": {
+      "post": {
+        "operationId": "postModelsCost",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "Resolved model ID",
+                    "example": "claude-sonnet-4-6"
+                  },
+                  "provider": {
+                    "description": "Provider ID to filter pricing lookup (e.g. anthropic, openai)",
+                    "example": "anthropic",
+                    "type": "string"
+                  },
+                  "tokens": {
+                    "type": "object",
+                    "properties": {
+                      "input": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Input tokens",
+                        "example": 50000
+                      },
+                      "output": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Output tokens",
+                        "example": 5000
+                      },
+                      "cacheRead": {
+                        "description": "Cache read tokens",
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "cacheWrite": {
+                        "description": "Cache write tokens",
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "reasoning": {
+                        "description": "Reasoning tokens",
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": ["input", "output"],
+                    "description": "Token counts from model usage"
+                  }
+                },
+                "required": ["model", "tokens"]
+              }
+            }
+          }
+        },
+        "tags": ["Models"],
+        "summary": "Calculate cost for model usage",
+        "description": "Given a model ID and token counts, resolves pricing via longest-prefix-match and returns the calculated cost in USD.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pricing": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "model": {
+                              "type": "string",
+                              "description": "Resolved model ID",
+                              "example": "claude-sonnet-4-6"
+                            },
+                            "provider": {
+                              "type": "string",
+                              "description": "Provider ID",
+                              "example": "anthropic"
+                            },
+                            "cost": {
+                              "type": "object",
+                              "properties": {
+                                "input": {
+                                  "description": "Input cost per 1M tokens (USD)",
+                                  "example": 3,
+                                  "type": "number"
+                                },
+                                "output": {
+                                  "description": "Output cost per 1M tokens (USD)",
+                                  "example": 15,
+                                  "type": "number"
+                                },
+                                "cache_read": {
+                                  "description": "Cache read cost per 1M tokens (USD)",
+                                  "example": 0.3,
+                                  "type": "number"
+                                },
+                                "cache_write": {
+                                  "description": "Cache write cost per 1M tokens (USD)",
+                                  "example": 3.75,
+                                  "type": "number"
+                                },
+                                "reasoning": {
+                                  "description": "Reasoning token cost per 1M tokens (USD)",
+                                  "type": "number"
+                                },
+                                "input_audio": {
+                                  "description": "Audio input cost per 1M tokens (USD)",
+                                  "type": "number"
+                                },
+                                "output_audio": {
+                                  "description": "Audio output cost per 1M tokens (USD)",
+                                  "type": "number"
+                                },
+                                "context_over_200k": {
+                                  "description": "Tiered pricing for contexts over 200k tokens",
+                                  "type": "object",
+                                  "properties": {
+                                    "input": {
+                                      "type": "number"
+                                    },
+                                    "output": {
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              },
+                              "description": "Model pricing in USD per 1M tokens"
+                            }
+                          },
+                          "required": ["model", "provider", "cost"],
+                          "description": "Pricing record for a model"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "cost_usd": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Total cost in USD",
+                      "example": 0.225
+                    }
+                  },
+                  "required": ["pricing", "cost_usd"]
+                }
+              }
+            },
+            "description": "Calculated cost"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "rate_limit",
+                  "code": "too_many_requests",
+                  "message": "Rate limit exceeded"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        }
       }
     }
   }

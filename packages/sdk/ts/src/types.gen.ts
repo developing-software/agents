@@ -157,22 +157,27 @@ export type Event = {
 /**
  * Event payload submitted by external producers.
  */
-export type EventIngestInput = {
-  /**
-   * Unique object identifier.
-   * The format and length of IDs may change over time.
-   */
-  repositoryId?: string;
-  /**
-   * Full repository name in `owner/repo` format.
-   */
-  repoFullName?: string;
+export type EventIngestInput = (
+  | {
+      /**
+       * Unique object identifier.
+       * The format and length of IDs may change over time.
+       */
+      repositoryId: string;
+    }
+  | {
+      /**
+       * Full repository name in `owner/repo` format.
+       */
+      repoFullName: string;
+    }
+) & {
   /**
    * Parent event ID to group related events.
    */
   parentEventId?: string | null;
   /**
-   * Origin of the event.
+   * What triggered this event.
    */
   origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
   /**
@@ -714,3 +719,375 @@ export type PostEventsByIdArtifactsResponses = {
 
 export type PostEventsByIdArtifactsResponse =
   PostEventsByIdArtifactsResponses[keyof PostEventsByIdArtifactsResponses];
+
+export type PostGithubDispatchData = {
+  body: {
+    /**
+     * Repository owner
+     */
+    owner: string;
+    /**
+     * Repository name
+     */
+    repo: string;
+    /**
+     * Agent to dispatch
+     */
+    agent: "claude" | "opencode" | "codex";
+    /**
+     * Task/instructions for the agent. Required if issue_number is not provided.
+     */
+    prompt?: string;
+    /**
+     * Issue number to implement. Auto-fetches title/body to build prompt and adds gh:issue tag.
+     */
+    issue_number?: number;
+    /**
+     * Additional tags for event linking (e.g. gh:issue:42)
+     */
+    tags?: Array<string>;
+    /**
+     * Model override
+     */
+    model?: string;
+    /**
+     * Git ref to dispatch on
+     */
+    ref?: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/github/dispatch";
+};
+
+export type PostGithubDispatchErrors = {
+  /**
+   * Bad Request
+   */
+  400: ErrorResponse;
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Not Found
+   */
+  404: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type PostGithubDispatchError = PostGithubDispatchErrors[keyof PostGithubDispatchErrors];
+
+export type PostGithubDispatchResponses = {
+  /**
+   * Workflow dispatched successfully.
+   */
+  200: {
+    ok: boolean;
+  };
+};
+
+export type PostGithubDispatchResponse =
+  PostGithubDispatchResponses[keyof PostGithubDispatchResponses];
+
+export type GetModelsPricingData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/models/pricing";
+};
+
+export type GetModelsPricingErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Too Many Requests
+   */
+  429: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type GetModelsPricingError = GetModelsPricingErrors[keyof GetModelsPricingErrors];
+
+export type GetModelsPricingResponses = {
+  /**
+   * All model pricing
+   */
+  200: {
+    models: {
+      [key: string]: {
+        /**
+         * Resolved model ID
+         */
+        model: string;
+        /**
+         * Provider ID
+         */
+        provider: string;
+        /**
+         * Model pricing in USD per 1M tokens
+         */
+        cost: {
+          /**
+           * Input cost per 1M tokens (USD)
+           */
+          input?: number;
+          /**
+           * Output cost per 1M tokens (USD)
+           */
+          output?: number;
+          /**
+           * Cache read cost per 1M tokens (USD)
+           */
+          cache_read?: number;
+          /**
+           * Cache write cost per 1M tokens (USD)
+           */
+          cache_write?: number;
+          /**
+           * Reasoning token cost per 1M tokens (USD)
+           */
+          reasoning?: number;
+          /**
+           * Audio input cost per 1M tokens (USD)
+           */
+          input_audio?: number;
+          /**
+           * Audio output cost per 1M tokens (USD)
+           */
+          output_audio?: number;
+          /**
+           * Tiered pricing for contexts over 200k tokens
+           */
+          context_over_200k?: {
+            input?: number;
+            output?: number;
+          };
+        };
+      };
+    };
+  };
+};
+
+export type GetModelsPricingResponse = GetModelsPricingResponses[keyof GetModelsPricingResponses];
+
+export type GetModelsPricingByModelIdData = {
+  body?: never;
+  path: {
+    /**
+     * Model ID to look up (supports longest-prefix-match)
+     */
+    modelId: string;
+  };
+  query?: never;
+  url: "/models/pricing/{modelId}";
+};
+
+export type GetModelsPricingByModelIdErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Too Many Requests
+   */
+  429: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type GetModelsPricingByModelIdError =
+  GetModelsPricingByModelIdErrors[keyof GetModelsPricingByModelIdErrors];
+
+export type GetModelsPricingByModelIdResponses = {
+  /**
+   * Model pricing (null if not found)
+   */
+  200: {
+    pricing: {
+      /**
+       * Resolved model ID
+       */
+      model: string;
+      /**
+       * Provider ID
+       */
+      provider: string;
+      /**
+       * Model pricing in USD per 1M tokens
+       */
+      cost: {
+        /**
+         * Input cost per 1M tokens (USD)
+         */
+        input?: number;
+        /**
+         * Output cost per 1M tokens (USD)
+         */
+        output?: number;
+        /**
+         * Cache read cost per 1M tokens (USD)
+         */
+        cache_read?: number;
+        /**
+         * Cache write cost per 1M tokens (USD)
+         */
+        cache_write?: number;
+        /**
+         * Reasoning token cost per 1M tokens (USD)
+         */
+        reasoning?: number;
+        /**
+         * Audio input cost per 1M tokens (USD)
+         */
+        input_audio?: number;
+        /**
+         * Audio output cost per 1M tokens (USD)
+         */
+        output_audio?: number;
+        /**
+         * Tiered pricing for contexts over 200k tokens
+         */
+        context_over_200k?: {
+          input?: number;
+          output?: number;
+        };
+      };
+    } | null;
+  };
+};
+
+export type GetModelsPricingByModelIdResponse =
+  GetModelsPricingByModelIdResponses[keyof GetModelsPricingByModelIdResponses];
+
+export type PostModelsCostData = {
+  body: {
+    /**
+     * Resolved model ID
+     */
+    model: string;
+    /**
+     * Provider ID to filter pricing lookup (e.g. anthropic, openai)
+     */
+    provider?: string;
+    /**
+     * Token counts from model usage
+     */
+    tokens: {
+      /**
+       * Input tokens
+       */
+      input: number;
+      /**
+       * Output tokens
+       */
+      output: number;
+      /**
+       * Cache read tokens
+       */
+      cacheRead?: number;
+      /**
+       * Cache write tokens
+       */
+      cacheWrite?: number;
+      /**
+       * Reasoning tokens
+       */
+      reasoning?: number;
+    };
+  };
+  path?: never;
+  query?: never;
+  url: "/models/cost";
+};
+
+export type PostModelsCostErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Too Many Requests
+   */
+  429: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type PostModelsCostError = PostModelsCostErrors[keyof PostModelsCostErrors];
+
+export type PostModelsCostResponses = {
+  /**
+   * Calculated cost
+   */
+  200: {
+    pricing: {
+      /**
+       * Resolved model ID
+       */
+      model: string;
+      /**
+       * Provider ID
+       */
+      provider: string;
+      /**
+       * Model pricing in USD per 1M tokens
+       */
+      cost: {
+        /**
+         * Input cost per 1M tokens (USD)
+         */
+        input?: number;
+        /**
+         * Output cost per 1M tokens (USD)
+         */
+        output?: number;
+        /**
+         * Cache read cost per 1M tokens (USD)
+         */
+        cache_read?: number;
+        /**
+         * Cache write cost per 1M tokens (USD)
+         */
+        cache_write?: number;
+        /**
+         * Reasoning token cost per 1M tokens (USD)
+         */
+        reasoning?: number;
+        /**
+         * Audio input cost per 1M tokens (USD)
+         */
+        input_audio?: number;
+        /**
+         * Audio output cost per 1M tokens (USD)
+         */
+        output_audio?: number;
+        /**
+         * Tiered pricing for contexts over 200k tokens
+         */
+        context_over_200k?: {
+          input?: number;
+          output?: number;
+        };
+      };
+    } | null;
+    /**
+     * Total cost in USD
+     */
+    cost_usd: number | null;
+  };
+};
+
+export type PostModelsCostResponse = PostModelsCostResponses[keyof PostModelsCostResponses];

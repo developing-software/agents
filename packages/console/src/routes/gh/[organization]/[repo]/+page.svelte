@@ -1,10 +1,9 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { generateToken } from './repo.remote';
-  import GitHubLink from '$lib/GitHubLink.svelte';
-  import Events from '$lib/events/Events.svelte';
-  import EventOverview from '$lib/events/EventOverview.svelte';
-  import EventAgentsOverview from '$lib/events/EventAgentsOverview.svelte';
+  import GitHubLink from '$lib/ui/GitHubLink.svelte';
+  import Events from '$lib/events/repository/Feed.svelte';
+
 
   let { data }: PageProps = $props();
 
@@ -27,8 +26,6 @@
   <!-- LEFT: Activity Feed -->
   <!-- ============================================================ -->
   <section class="activity-section">
-    <EventOverview organization={data.organization} repoName={data.repoName} />
-    <EventAgentsOverview organization={data.organization} repoName={data.repoName} />
     <h2 class="section-heading">Activity</h2>
     <Events organization={data.organization} repoName={data.repoName} />
   </section>
@@ -46,7 +43,7 @@
       </div>
 
       {#if data.issues.length === 0}
-        <p class="empty-text">No issues synced yet.</p>
+        <p class="empty-text">No issues synced yet. They will appear after syncing from GitHub.</p>
       {:else}
         <ul class="item-list">
           {#each data.issues.slice(0, 5) as issue (issue.number)}
@@ -81,7 +78,7 @@
       </div>
 
       {#if data.pulls.length === 0}
-        <p class="empty-text">No pull requests synced yet.</p>
+        <p class="empty-text">No pull requests synced yet. They will appear after syncing from GitHub.</p>
       {:else}
         <ul class="item-list">
           {#each data.pulls.slice(0, 5) as pr (pr.number)}
@@ -148,6 +145,12 @@
     align-items: start;
   }
 
+  @media (max-width: 900px) {
+    .page-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* ------------------------------------------------------------------ */
   /* Section headings */
   /* ------------------------------------------------------------------ */
@@ -159,6 +162,15 @@
     letter-spacing: 0.07em;
     color: var(--color-dim);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   .empty-text {

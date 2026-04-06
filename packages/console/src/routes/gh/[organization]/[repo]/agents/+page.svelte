@@ -1,14 +1,21 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import { listAgentRuns } from '$lib/events/events.remote';
+  import { listAgentRuns } from '$lib/events/agent-completed/agent-completed.remote';
+  import EmptyState from '$lib/ui/EmptyState.svelte';
   import {
     relativeTime,
     originBadgeStyle,
     issueRef,
     prRef,
     branchTag,
-    runRef,
-  } from '$lib/events/event-helpers';
+    workflowRef,
+    capitalize,
+    formatCost,
+    formatDuration,
+    formatTokensCompact,
+  } from '$lib/events/helpers';
+  import AgentSummary from '$lib/events/agent-completed/AgentSummary.svelte';
+  import AgentComparison from '$lib/events/agent-completed/AgentComparison.svelte';
 
   let { data }: PageProps = $props();
 
@@ -28,40 +35,27 @@
     expandedId = expandedId === id ? null : id;
   }
 
-  function capitalize(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
+  function runStatus(
+    checks: Array<{ outcome: string }>,
+    conclusion: string | null,
+  ): 'pass' | 'fail' | 'cancelled' | 'none' {
+    if (conclusion === 'cancelled') return 'cancelled';
+    if (conclusion === 'failure') return 'fail';
+    if (checks.length > 0 && !checks.every((c) => c.outcome === 'success')) return 'fail';
+    if (checks.length > 0 || conclusion === 'success') return 'pass';
+    return 'none';
   }
 
-  function formatTokensCompact(n: number): string {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-    return String(n);
-  }
-
-  function formatDuration(ms: number): string {
-    if (ms < 1000) return `${ms}ms`;
-    const secs = ms / 1000;
-    if (secs < 60) return `${secs.toFixed(1)}s`;
-    const mins = Math.floor(secs / 60);
-    const remSecs = Math.round(secs % 60);
-    return `${mins}m ${remSecs}s`;
-  }
-
-  function formatCost(v: number): string {
-    return `$${v.toFixed(2)}`;
-  }
-
-  function checkStatus(checks: Array<{ category: string; name: string; outcome: string }>): 'pass' | 'fail' | 'none' {
-    if (checks.length === 0) return 'none';
-    return checks.every((c) => c.outcome === 'success') ? 'pass' : 'fail';
-  }
-
-  function statusDotColor(status: 'pass' | 'fail' | 'none'): string {
+  function statusDotColor(status: 'pass' | 'fail' | 'cancelled' | 'none'): string {
     if (status === 'pass') return 'var(--color-success)';
     if (status === 'fail') return 'var(--color-danger)';
+    if (status === 'cancelled') return 'var(--color-warning)';
     return 'var(--color-dim)';
   }
 </script>
+
+<AgentSummary organization={data.organization} repoName={data.repoName} />
+<AgentComparison organization={data.organization} repoName={data.repoName} />
 
 <h2 class="section-heading">Agent Runs</h2>
 
@@ -82,15 +76,15 @@
   </div>
 {:then runs}
   {#if runs.length === 0}
-    <p class="empty">No agent runs recorded yet.</p>
+    <EmptyState icon="agents" title="No agent runs recorded" description="Runs will appear here when agents are triggered via GitHub Actions or CLI." />
   {:else}
     <div class="runs-table">
       {#each runs as run (run.id)}
-        {@const status = checkStatus(run.checks)}
+        {@const status = runStatus(run.checks, run.conclusion)}
         {@const issue = issueRef(run.tags)}
         {@const pr = prRef(run.tags)}
         {@const branch = branchTag(run.tags)}
-        {@const ghRun = runRef(run.tags)}
+        {@const ghWorkflow = workflowRef(run.tags)}
         {@const isExpanded = expandedId === run.id}
 
         <div class="run-row-wrap" class:run-row-expanded={isExpanded}>
@@ -108,25 +102,34 @@
             {/if}
 
             {#if run.cost_usd !== null}
-              <span class="cost">{formatCost(run.cost_usd)}</span>
+              {@const estimated = run.pricing_heuristic !== null && run.pricing_heuristic !== 'agent-reported'}
+              <span
+                class="cost"
+                class:cost-estimated={estimated}
+                title={estimated ? 'Estimated from model pricing' : 'Agent-reported cost'}
+              >{#if estimated}~{/if}{formatCost(run.cost_usd)}</span>
             {/if}
 
             {#if run.durationMs !== null}
               <span class="duration">{formatDuration(run.durationMs)}</span>
             {/if}
 
-            {#if run.input_tokens !== null || run.output_tokens !== null}
+            {#if run.input_tokens !== null || run.output_tokens !== null || run.reasoning_tokens !== null}
               <span class="tokens">
                 {#if run.input_tokens !== null}{formatTokensCompact(run.input_tokens)} in{/if}
-                {#if run.input_tokens !== null && run.output_tokens !== null}
+                {#if run.input_tokens !== null && (run.output_tokens !== null || run.reasoning_tokens !== null)}
                   <span class="token-sep">/</span>
                 {/if}
                 {#if run.output_tokens !== null}{formatTokensCompact(run.output_tokens)} out{/if}
+                {#if run.reasoning_tokens !== null}
+                  <span class="token-sep">/</span>
+                  {formatTokensCompact(run.reasoning_tokens)} reasoning
+                {/if}
               </span>
             {/if}
 
-            {#if run.num_turns !== null}
-              <span class="turns">{run.num_turns} turns</span>
+            {#if run.turns !== null}
+              <span class="turns">{run.turns} turns</span>
             {/if}
 
             <span class="badge" style={originBadgeStyle(run.origin)}>{run.origin}</span>
@@ -189,24 +192,87 @@
                       <span class="token-val">{run.output_tokens.toLocaleString()}</span>
                     </div>
                   {/if}
-                  {#if run.cache_read_input_tokens !== null}
+                  {#if run.reasoning_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Reasoning</span>
+                      <span class="token-val">{run.reasoning_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                  {#if run.cache_read_tokens !== null}
                     <div class="token-row">
                       <span class="token-key">Cache read</span>
-                      <span class="token-val">{run.cache_read_input_tokens.toLocaleString()}</span>
+                      <span class="token-val">{run.cache_read_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                  {#if run.cache_creation_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Cache write</span>
+                      <span class="token-val">{run.cache_creation_tokens.toLocaleString()}</span>
                     </div>
                   {/if}
                 </div>
               </div>
 
-              {#if branch || ghRun !== null}
+              {#if run.provider || run.pricing_heuristic}
+                <div class="detail-section">
+                  <span class="detail-label">Pricing</span>
+                  <div class="pricing-info">
+                    {#if run.provider}
+                      <div class="pricing-row">
+                        <span class="pricing-key">Provider</span>
+                        <span class="pricing-val">{run.provider}</span>
+                      </div>
+                    {/if}
+                    {#if run.pricing_heuristic}
+                      {@const isReported = run.pricing_heuristic === 'agent-reported'}
+                      <div class="pricing-row">
+                        <span class="pricing-key">Cost source</span>
+                        <span class="pricing-val">
+                          <span class="heuristic-dot" style="background:{isReported ? 'var(--color-success)' : 'var(--color-warning)'};"></span>
+                          {isReported ? 'agent-reported' : run.pricing_heuristic === 'models-dev' ? 'estimated (model pricing)' : run.pricing_heuristic}
+                        </span>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/if}
+
+              {#if run.conclusion || run.agentStatus || branch || ghWorkflow !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
                 <div class="detail-section">
                   <span class="detail-label">Context</span>
                   <div class="context-items">
+                    {#if run.conclusion}
+                      <span
+                        class="context-status"
+                        class:status-success={run.conclusion === 'success'}
+                        class:status-failure={run.conclusion === 'failure'}
+                        class:status-cancelled={run.conclusion === 'cancelled'}
+                      >workflow: {run.conclusion}</span>
+                    {/if}
+                    {#if run.agentStatus}
+                      <span
+                        class="context-status"
+                        class:status-success={run.agentStatus === 'success'}
+                        class:status-failure={run.agentStatus === 'failure'}
+                        class:status-cancelled={run.agentStatus === 'cancelled'}
+                      >agent: {run.agentStatus}</span>
+                    {/if}
                     {#if branch}
                       <span class="context-branch">&#x2387; {branch}</span>
                     {/if}
-                    {#if ghRun !== null}
-                      <span class="context-dim">run #{ghRun}</span>
+                    {#if ghWorkflow !== null}
+                      <span class="context-dim">workflow #{ghWorkflow}</span>
+                    {/if}
+                    {#if run.linesAdded !== null || run.linesRemoved !== null}
+                      <span class="context-lines">
+                        {#if run.linesAdded !== null}<span class="lines-added">+{run.linesAdded}</span>{/if}{#if run.linesAdded !== null && run.linesRemoved !== null} / {/if}{#if run.linesRemoved !== null}<span class="lines-removed">-{run.linesRemoved}</span>{/if}
+                      </span>
+                    {/if}
+                    {#if run.prUrl !== null}
+                      <a href={run.prUrl} class="context-link" target="_blank" rel="noopener">PR</a>
+                    {/if}
+                    {#if run.runUrl !== null}
+                      <a href={run.runUrl} class="context-link" target="_blank" rel="noopener">GH Run</a>
                     {/if}
                   </div>
                 </div>
@@ -222,6 +288,7 @@
                   </div>
                 </div>
               {/if}
+
             </div>
           {/if}
         </div>
@@ -247,6 +314,15 @@
     letter-spacing: 0.07em;
     color: var(--color-dim);
     margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   /* ------------------------------------------------------------------ */
@@ -337,6 +413,10 @@
     color: var(--color-accent);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
+  }
+
+  .cost-estimated {
+    color: var(--color-warning);
   }
 
   /* ------------------------------------------------------------------ */
@@ -535,6 +615,45 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Pricing detail                                                      */
+  /* ------------------------------------------------------------------ */
+  .pricing-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pricing-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pricing-key {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-muted);
+    width: 72px;
+    flex-shrink: 0;
+  }
+
+  .pricing-val {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .heuristic-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Context detail                                                      */
   /* ------------------------------------------------------------------ */
   .context-items {
@@ -554,6 +673,40 @@
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     color: var(--color-dim);
+  }
+
+  .context-status {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+  }
+
+  .status-success { color: var(--color-success); }
+  .status-failure { color: var(--color-danger); }
+  .status-cancelled { color: var(--color-warning); }
+
+  .context-lines {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lines-added {
+    color: var(--color-success);
+  }
+
+  .lines-removed {
+    color: var(--color-danger);
+  }
+
+  .context-link {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .context-link:hover {
+    text-decoration: underline;
   }
 
   /* ------------------------------------------------------------------ */
@@ -636,4 +789,5 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
   }
+
 </style>

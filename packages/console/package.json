@@ -17,7 +17,12 @@
     "@agents/core": "workspace:*",
     "@agents/functions": "workspace:*",
     "@agents/sdk": "workspace:*",
+    "@ai-sdk/anthropic": "^3.0.64",
+    "@ai-sdk/svelte": "^4.0.142",
     "@openauthjs/openauth": "^0.4.3",
+    "ai": "^6.0.142",
+    "marked": "^17.0.5",
+    "runed": "^0.37.1",
     "sst": "catalog:",
     "zod": "catalog:"
   },
