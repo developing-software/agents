@@ -2,6 +2,7 @@ import { join } from "path";
 import { mkdirSync, writeFileSync } from "fs";
 import * as core from "@actions/core";
 import { createApiClient, uniqueTags } from "@agents/actions-core";
+import { createID } from "@agents/core/util/id";
 
 function slugify(tag: string): string {
   // Extract the key portion (everything before the last :value segment for known patterns)
@@ -122,6 +123,7 @@ async function run() {
       const sdk = createApiClient(agentsToken, apiUrl);
       const { data } = await sdk.postEvents({
         eventIngestInput: {
+          id: createID("event"),
           repoFullName: repository,
           origin: "action",
           type: `${eventType}.started`,

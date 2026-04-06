@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import * as core from "@actions/core";
+import { createFetchWithRetry } from "@agents/actions-core";
 import type { ExtractorResult, AgentPricing } from "./types";
 
 export async function writeResults(
@@ -75,7 +76,7 @@ export async function uploadArtifact(result: ExtractorResult): Promise<void> {
     form.append("name", name);
     form.append("file", new Blob([readFileSync(result.artifactPath)], { type: contentType }), name);
 
-    const res = await fetch(`${apiUrl}/events/${eventId}/artifacts`, {
+    const res = await createFetchWithRetry(120_000)(`${apiUrl}/events/${eventId}/artifacts`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: form,

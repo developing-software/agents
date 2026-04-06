@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "sst.config.ts",
+    "scripts/*.ts",
+    "packages/functions/src/index.ts",
+    "packages/functions/scripts/**/*.ts",
+    "packages/cli/src/cli.ts",
+    "packages/workers/src/**/*.ts",
+    "packages/core/src/events/agent/index.ts",
+    "packages/console/src/hooks.server.ts",
+    "actions/core/src/index.ts",
+    "actions/agent/src/main.ts",
+    "actions/comment/src/main.ts",
+    "actions/event/emit/src/main.ts",
+    "actions/event/init/src/setup.ts",
+    "actions/event/init/src/teardown.ts",
+    "actions/artifact/upload/src/main.ts",
+    "**/build.ts",
+    "**/*.test.ts",
+    "**/test/**/*.ts",
+    "**/tests/**/*.ts",
+    "**/__tests__/**/*.ts"
+  ],
+  "ignorePatterns": [
+    "packages/sdk/ts/**",
+    "packages/sdk/openapi.json",
+    "**/dist/**",
+    "dist/**",
+    "**/.svelte-kit/**",
+    "packages/core/migrations/**",
+    "**/sst-env.d.ts",
+    "packages/console/worker-configuration.d.ts",
+    "infra/**"
+  ],
+  "dynamicallyLoaded": [
+    "packages/console/src/routes/**/+*.{ts,js,svelte}",
+    "packages/console/src/routes/**/*.svelte"
+  ],
+  "publicPackages": ["@agents/sdk"],
+  "ignoreExports": [
+    { "file": "packages/core/src/util/**", "exports": ["*"] },
+    { "file": "packages/cli/src/lib/**", "exports": ["*"] },
+    { "file": "packages/console/src/lib/ui/tag/tag-helpers.ts", "exports": ["*"] }
+  ],
+  "duplicates": {
+    "ignore": ["packages/sdk/ts/**", "infra/**"]
+  },
+  "health": {
+    "ignore": ["infra/**", "**/dist/**", "packages/sdk/ts/**", "packages/core/migrations/**"]
+  },
+  "workspaces": {
+    "packages": ["packages/*", "packages/sdk/ts", "actions/*", "actions/*/*", "scripts"]
+  },
+  "rules": {}
+}

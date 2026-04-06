@@ -33519,14 +33519,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -33547,14 +33540,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "redirectURI" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -33641,20 +33627,16 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postGithubDispatch(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "owner" },
-          { in: "body", key: "repo" },
-          { in: "body", key: "agent" },
-          { in: "body", key: "prompt" },
-          { in: "body", key: "issue_number" },
-          { in: "body", key: "tags" },
-          { in: "body", key: "model" },
-          { in: "body", key: "ref" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "owner" },
+      { in: "body", key: "repo" },
+      { in: "body", key: "agent" },
+      { in: "body", key: "prompt" },
+      { in: "body", key: "issue_number" },
+      { in: "body", key: "tags" },
+      { in: "body", key: "model" },
+      { in: "body", key: "ref" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/github/dispatch",
@@ -33684,15 +33666,11 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postModelsCost(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "model" },
-          { in: "body", key: "provider" },
-          { in: "body", key: "tokens" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "model" },
+      { in: "body", key: "provider" },
+      { in: "body", key: "tokens" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/cost",
@@ -33705,6 +33683,32 @@ class DevAgentSdk extends HeyApiClient {
       }
     });
   }
+}
+// packages/sdk/ts/fetch.ts
+var DEFAULT_TIMEOUT_MS = 1e4;
+var RETRY_DELAY_MS = 2000;
+function createFetchWithRetry(timeoutMs = DEFAULT_TIMEOUT_MS) {
+  return async (input, init) => {
+    const applyTimeout = (req, reqInit) => {
+      const timeout = AbortSignal.timeout(timeoutMs);
+      if (req instanceof Request) {
+        const signal2 = req.signal ? AbortSignal.any([req.signal, timeout]) : timeout;
+        return [new Request(req, { signal: signal2 }), undefined];
+      }
+      const existing = reqInit?.signal;
+      const signal = existing ? AbortSignal.any([existing, timeout]) : timeout;
+      return [req, { ...reqInit, signal }];
+    };
+    const backup = input instanceof Request ? input.clone() : undefined;
+    try {
+      const [req, opts] = applyTimeout(input, init);
+      return await fetch(req, opts);
+    } catch {
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      const [req, opts] = applyTimeout(backup ?? input, init);
+      return fetch(req, opts);
+    }
+  };
 }
 // actions/core/src/index.ts
 async function execWithOutput(cmd, args) {
@@ -33721,7 +33725,8 @@ function createApiClient(token, baseUrl) {
   return new DevAgentSdk({
     client: createClient(createConfig({
       baseUrl,
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      fetch: createFetchWithRetry()
     }))
   });
 }
@@ -33918,7 +33923,7 @@ async function uploadArtifact(result) {
     const form = new FormData;
     form.append("name", name);
     form.append("file", new Blob([readFileSync4(result.artifactPath)], { type: contentType }), name);
-    const res = await fetch(`${apiUrl}/events/${eventId}/artifacts`, {
+    const res = await createFetchWithRetry()(`${apiUrl}/events/${eventId}/artifacts`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: form

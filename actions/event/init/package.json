@@ -9,6 +9,7 @@
   "dependencies": {
     "@actions/core": "catalog:action",
     "@agents/actions-core": "workspace:*",
+    "@agents/core": "workspace:*",
     "@agents/sdk": "workspace:*"
   },
   "devDependencies": {

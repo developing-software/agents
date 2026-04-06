@@ -1,7 +1,13 @@
 import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import * as core from "@actions/core";
-import { createApiClient, readContextTags, uniqueTags } from "@agents/actions-core";
+import {
+  createApiClient,
+  createFetchWithRetry,
+  readContextTags,
+  uniqueTags,
+} from "@agents/actions-core";
+import { createID } from "@agents/core/util/id";
 
 interface WorkflowStatus {
   conclusion: string | null;
@@ -22,12 +28,15 @@ async function fetchWorkflowStatus(): Promise<WorkflowStatus> {
   if (!token || !repo || !runId) return { conclusion: null, jobs: [] };
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
+    const res = await createFetchWithRetry()(
+      `https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+        },
       },
-    });
+    );
     if (!res.ok) return { conclusion: null, jobs: [] };
 
     const data = (await res.json()) as {
@@ -150,6 +159,7 @@ async function run() {
       const sdk = createApiClient(agentsToken, apiUrl);
       await sdk.postEvents({
         eventIngestInput: {
+          id: createID("event"),
           repoFullName: repository,
           parentEventId: startEventId || null,
           origin: "action",

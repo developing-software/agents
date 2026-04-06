@@ -334,6 +334,11 @@
           {
             "type": "object",
             "properties": {
+              "id": {
+                "description": "Client-generated event ID for idempotent creation. If omitted, the server generates one.",
+                "example": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                "type": "string"
+              },
               "parentEventId": {
                 "description": "Parent event ID to group related events.",
                 "example": null,

@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { createClient, createConfig } from "@agents/sdk/client";
 import { DevAgentSdk } from "@agents/sdk";
+import { createFetchWithRetry } from "@agents/sdk/fetch";
 
 export interface GitHubContext {
   token: string;
@@ -105,12 +106,15 @@ export async function execWithOutput(cmd: string, args: string[]): Promise<strin
   return output.trim();
 }
 
+export { createFetchWithRetry } from "@agents/sdk/fetch";
+
 export function createApiClient(token: string, baseUrl: string): DevAgentSdk {
   return new DevAgentSdk({
     client: createClient(
       createConfig({
         baseUrl,
         headers: { Authorization: `Bearer ${token}` },
+        fetch: createFetchWithRetry(),
       }),
     ),
   });

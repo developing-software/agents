@@ -173,6 +173,10 @@ export type EventIngestInput = (
     }
 ) & {
   /**
+   * Client-generated event ID for idempotent creation. If omitted, the server generates one.
+   */
+  id?: string;
+  /**
    * Parent event ID to group related events.
    */
   parentEventId?: string | null;

@@ -335,44 +335,44 @@ var require_tunnel = __commonJS((exports) => {
     return agent;
   }
   function TunnelingAgent(options) {
-    var self = this;
-    self.options = options || {};
-    self.proxyOptions = self.options.proxy || {};
-    self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
-    self.requests = [];
-    self.sockets = [];
-    self.on("free", function onFree(socket, host, port, localAddress) {
+    var self2 = this;
+    self2.options = options || {};
+    self2.proxyOptions = self2.options.proxy || {};
+    self2.maxSockets = self2.options.maxSockets || http.Agent.defaultMaxSockets;
+    self2.requests = [];
+    self2.sockets = [];
+    self2.on("free", function onFree(socket, host, port, localAddress) {
       var options2 = toOptions(host, port, localAddress);
-      for (var i = 0, len = self.requests.length;i < len; ++i) {
-        var pending = self.requests[i];
+      for (var i = 0, len = self2.requests.length;i < len; ++i) {
+        var pending = self2.requests[i];
         if (pending.host === options2.host && pending.port === options2.port) {
-          self.requests.splice(i, 1);
+          self2.requests.splice(i, 1);
           pending.request.onSocket(socket);
           return;
         }
       }
       socket.destroy();
-      self.removeSocket(socket);
+      self2.removeSocket(socket);
     });
   }
   util.inherits(TunnelingAgent, events.EventEmitter);
   TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
-    var self = this;
-    var options = mergeOptions({ request: req }, self.options, toOptions(host, port, localAddress));
-    if (self.sockets.length >= this.maxSockets) {
-      self.requests.push(options);
+    var self2 = this;
+    var options = mergeOptions({ request: req }, self2.options, toOptions(host, port, localAddress));
+    if (self2.sockets.length >= this.maxSockets) {
+      self2.requests.push(options);
       return;
     }
-    self.createSocket(options, function(socket) {
+    self2.createSocket(options, function(socket) {
       socket.on("free", onFree);
       socket.on("close", onCloseOrRemove);
       socket.on("agentRemove", onCloseOrRemove);
       req.onSocket(socket);
       function onFree() {
-        self.emit("free", socket, options);
+        self2.emit("free", socket, options);
       }
       function onCloseOrRemove(err) {
-        self.removeSocket(socket);
+        self2.removeSocket(socket);
         socket.removeListener("free", onFree);
         socket.removeListener("close", onCloseOrRemove);
         socket.removeListener("agentRemove", onCloseOrRemove);
@@ -380,10 +380,10 @@ var require_tunnel = __commonJS((exports) => {
     });
   };
   TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
-    var self = this;
+    var self2 = this;
     var placeholder = {};
-    self.sockets.push(placeholder);
-    var connectOptions = mergeOptions({}, self.proxyOptions, {
+    self2.sockets.push(placeholder);
+    var connectOptions = mergeOptions({}, self2.proxyOptions, {
       method: "CONNECT",
       path: options.host + ":" + options.port,
       agent: false,
@@ -399,7 +399,7 @@ var require_tunnel = __commonJS((exports) => {
       connectOptions.headers["Proxy-Authorization"] = "Basic " + new Buffer(connectOptions.proxyAuth).toString("base64");
     }
     debug("making CONNECT request");
-    var connectReq = self.request(connectOptions);
+    var connectReq = self2.request(connectOptions);
     connectReq.useChunkedEncodingByDefault = false;
     connectReq.once("response", onResponse);
     connectReq.once("upgrade", onUpgrade);
@@ -423,7 +423,7 @@ var require_tunnel = __commonJS((exports) => {
         var error = new Error("tunneling socket could not be established, " + "statusCode=" + res.statusCode);
         error.code = "ECONNRESET";
         options.request.emit("error", error);
-        self.removeSocket(placeholder);
+        self2.removeSocket(placeholder);
         return;
       }
       if (head.length > 0) {
@@ -432,11 +432,11 @@ var require_tunnel = __commonJS((exports) => {
         var error = new Error("got illegal response body from proxy");
         error.code = "ECONNRESET";
         options.request.emit("error", error);
-        self.removeSocket(placeholder);
+        self2.removeSocket(placeholder);
         return;
       }
       debug("tunneling connection has established");
-      self.sockets[self.sockets.indexOf(placeholder)] = socket;
+      self2.sockets[self2.sockets.indexOf(placeholder)] = socket;
       return cb(socket);
     }
     function onError(cause) {
@@ -446,7 +446,7 @@ var require_tunnel = __commonJS((exports) => {
       var error = new Error("tunneling socket could not be established, " + "cause=" + cause.message);
       error.code = "ECONNRESET";
       options.request.emit("error", error);
-      self.removeSocket(placeholder);
+      self2.removeSocket(placeholder);
     }
   };
   TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
@@ -463,15 +463,15 @@ var require_tunnel = __commonJS((exports) => {
     }
   };
   function createSecureSocket(options, cb) {
-    var self = this;
-    TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
+    var self2 = this;
+    TunnelingAgent.prototype.createSocket.call(self2, options, function(socket) {
       var hostHeader = options.request.getHeader("host");
-      var tlsOptions = mergeOptions({}, self.options, {
+      var tlsOptions = mergeOptions({}, self2.options, {
         socket,
         servername: hostHeader ? hostHeader.replace(/:.*$/, "") : options.host
       });
       var secureSocket = tls.connect(0, tlsOptions);
-      self.sockets[self.sockets.indexOf(socket)] = secureSocket;
+      self2.sockets[self2.sockets.indexOf(socket)] = secureSocket;
       cb(secureSocket);
     });
   }
@@ -1548,7 +1548,7 @@ var require_HeaderParser = __commonJS((exports, module) => {
   function HeaderParser(cfg) {
     EventEmitter.call(this);
     cfg = cfg || {};
-    const self = this;
+    const self2 = this;
     this.nread = 0;
     this.maxed = false;
     this.npairs = 0;
@@ -1559,18 +1559,18 @@ var require_HeaderParser = __commonJS((exports, module) => {
     this.finished = false;
     this.ss = new StreamSearch(B_DCRLF);
     this.ss.on("info", function(isMatch, data, start, end) {
-      if (data && !self.maxed) {
-        if (self.nread + end - start >= self.maxHeaderSize) {
-          end = self.maxHeaderSize - self.nread + start;
-          self.nread = self.maxHeaderSize;
-          self.maxed = true;
+      if (data && !self2.maxed) {
+        if (self2.nread + end - start >= self2.maxHeaderSize) {
+          end = self2.maxHeaderSize - self2.nread + start;
+          self2.nread = self2.maxHeaderSize;
+          self2.maxed = true;
         } else {
-          self.nread += end - start;
+          self2.nread += end - start;
         }
-        self.buffer += data.toString("binary", start, end);
+        self2.buffer += data.toString("binary", start, end);
       }
       if (isMatch) {
-        self._finish();
+        self2._finish();
       }
     });
   }
@@ -1672,34 +1672,34 @@ var require_Dicer = __commonJS((exports, module) => {
     this._ignoreData = false;
     this._partOpts = { highWaterMark: cfg.partHwm };
     this._pause = false;
-    const self = this;
+    const self2 = this;
     this._hparser = new HeaderParser(cfg);
     this._hparser.on("header", function(header) {
-      self._inHeader = false;
-      self._part.emit("header", header);
+      self2._inHeader = false;
+      self2._part.emit("header", header);
     });
   }
   inherits(Dicer, WritableStream);
   Dicer.prototype.emit = function(ev) {
     if (ev === "finish" && !this._realFinish) {
       if (!this._finished) {
-        const self = this;
+        const self2 = this;
         process.nextTick(function() {
-          self.emit("error", new Error("Unexpected end of multipart data"));
-          if (self._part && !self._ignoreData) {
-            const type = self._isPreamble ? "Preamble" : "Part";
-            self._part.emit("error", new Error(type + " terminated early due to unexpected end of multipart data"));
-            self._part.push(null);
+          self2.emit("error", new Error("Unexpected end of multipart data"));
+          if (self2._part && !self2._ignoreData) {
+            const type = self2._isPreamble ? "Preamble" : "Part";
+            self2._part.emit("error", new Error(type + " terminated early due to unexpected end of multipart data"));
+            self2._part.push(null);
             process.nextTick(function() {
-              self._realFinish = true;
-              self.emit("finish");
-              self._realFinish = false;
+              self2._realFinish = true;
+              self2.emit("finish");
+              self2._realFinish = false;
             });
             return;
           }
-          self._realFinish = true;
-          self.emit("finish");
-          self._realFinish = false;
+          self2._realFinish = true;
+          self2.emit("finish");
+          self2._realFinish = false;
         });
       }
     } else {
@@ -1743,11 +1743,11 @@ var require_Dicer = __commonJS((exports, module) => {
     this._hparser = undefined;
   };
   Dicer.prototype.setBoundary = function(boundary) {
-    const self = this;
+    const self2 = this;
     this._bparser = new StreamSearch(`\r
 --` + boundary);
     this._bparser.on("info", function(isMatch, data, start, end) {
-      self._oninfo(isMatch, data, start, end);
+      self2._oninfo(isMatch, data, start, end);
     });
   };
   Dicer.prototype._ignore = function() {
@@ -1759,7 +1759,7 @@ var require_Dicer = __commonJS((exports, module) => {
   };
   Dicer.prototype._oninfo = function(isMatch, data, start, end) {
     let buf;
-    const self = this;
+    const self2 = this;
     let i = 0;
     let r;
     let shouldWriteMore = true;
@@ -1782,10 +1782,10 @@ var require_Dicer = __commonJS((exports, module) => {
         }
         this.reset();
         this._finished = true;
-        if (self._parts === 0) {
-          self._realFinish = true;
-          self.emit("finish");
-          self._realFinish = false;
+        if (self2._parts === 0) {
+          self2._realFinish = true;
+          self2.emit("finish");
+          self2._realFinish = false;
         }
       }
       if (this._dashes) {
@@ -1798,7 +1798,7 @@ var require_Dicer = __commonJS((exports, module) => {
     if (!this._part) {
       this._part = new PartStream(this._partOpts);
       this._part._read = function(n) {
-        self._unpause();
+        self2._unpause();
       };
       if (this._isPreamble && this.listenerCount("preamble") !== 0) {
         this.emit("preamble", this._part);
@@ -1838,13 +1838,13 @@ var require_Dicer = __commonJS((exports, module) => {
         if (start !== end) {
           ++this._parts;
           this._part.on("end", function() {
-            if (--self._parts === 0) {
-              if (self._finished) {
-                self._realFinish = true;
-                self.emit("finish");
-                self._realFinish = false;
+            if (--self2._parts === 0) {
+              if (self2._finished) {
+                self2._realFinish = true;
+                self2.emit("finish");
+                self2._realFinish = false;
               } else {
-                self._unpause();
+                self2._unpause();
               }
             }
           });
@@ -2600,7 +2600,7 @@ var require_multipart = __commonJS((exports, module) => {
   function Multipart(boy, cfg) {
     let i;
     let len;
-    const self = this;
+    const self2 = this;
     let boundary;
     const limits = cfg.limits;
     const isPartAFile = cfg.isPartAFile || ((fieldName, contentType, fileName) => contentType === "application/octet-stream" || fileName !== undefined);
@@ -2617,7 +2617,7 @@ var require_multipart = __commonJS((exports, module) => {
     function checkFinished() {
       if (nends === 0 && finished && !boy._done) {
         finished = false;
-        self.end();
+        self2.end();
       }
     }
     if (typeof boundary !== "string") {
@@ -2650,16 +2650,16 @@ var require_multipart = __commonJS((exports, module) => {
     };
     this.parser = new Dicer(parserCfg);
     this.parser.on("drain", function() {
-      self._needDrain = false;
-      if (self._cb && !self._pause) {
-        const cb = self._cb;
-        self._cb = undefined;
+      self2._needDrain = false;
+      if (self2._cb && !self2._pause) {
+        const cb = self2._cb;
+        self2._cb = undefined;
         cb();
       }
     }).on("part", function onPart(part) {
-      if (++self._nparts > partsLimit) {
-        self.parser.removeListener("part", onPart);
-        self.parser.on("part", skipPart);
+      if (++self2._nparts > partsLimit) {
+        self2.parser.removeListener("part", onPart);
+        self2.parser.on("part", skipPart);
         boy.hitPartsLimit = true;
         boy.emit("partsLimit");
         return skipPart(part);
@@ -2729,7 +2729,7 @@ var require_multipart = __commonJS((exports, module) => {
           }
           ++nfiles;
           if (boy.listenerCount("file") === 0) {
-            self.parser._ignore();
+            self2.parser._ignore();
             return;
           }
           ++nends;
@@ -2737,22 +2737,22 @@ var require_multipart = __commonJS((exports, module) => {
           curFile = file;
           file.on("end", function() {
             --nends;
-            self._pause = false;
+            self2._pause = false;
             checkFinished();
-            if (self._cb && !self._needDrain) {
-              const cb = self._cb;
-              self._cb = undefined;
+            if (self2._cb && !self2._needDrain) {
+              const cb = self2._cb;
+              self2._cb = undefined;
               cb();
             }
           });
           file._read = function(n) {
-            if (!self._pause) {
+            if (!self2._pause) {
               return;
             }
-            self._pause = false;
-            if (self._cb && !self._needDrain) {
-              const cb = self._cb;
-              self._cb = undefined;
+            self2._pause = false;
+            if (self2._cb && !self2._needDrain) {
+              const cb = self2._cb;
+              self2._cb = undefined;
               cb();
             }
           };
@@ -2769,7 +2769,7 @@ var require_multipart = __commonJS((exports, module) => {
               file.emit("limit");
               return;
             } else if (!file.push(data)) {
-              self._pause = true;
+              self2._pause = true;
             }
             file.bytesRead = nsize;
           };
@@ -2835,13 +2835,13 @@ var require_multipart = __commonJS((exports, module) => {
     }
   };
   Multipart.prototype.end = function() {
-    const self = this;
-    if (self.parser.writable) {
-      self.parser.end();
-    } else if (!self._boy._done) {
+    const self2 = this;
+    if (self2.parser.writable) {
+      self2.parser.end();
+    } else if (!self2._boy._done) {
       process.nextTick(function() {
-        self._boy._done = true;
-        self._boy.emit("finish");
+        self2._boy._done = true;
+        self2._boy.emit("finish");
       });
     }
   };
@@ -9084,11 +9084,11 @@ var require_readable = __commonJS((exports, module) => {
       });
     }
   };
-  function isLocked(self) {
-    return self[kBody] && self[kBody].locked === true || self[kConsume];
+  function isLocked(self2) {
+    return self2[kBody] && self2[kBody].locked === true || self2[kConsume];
   }
-  function isUnusable(self) {
-    return util.isDisturbed(self) || isLocked(self);
+  function isUnusable(self2) {
+    return util.isDisturbed(self2) || isLocked(self2);
   }
   async function consume(stream, type) {
     if (isUnusable(stream)) {
@@ -9226,40 +9226,40 @@ var require_abort_signal = __commonJS((exports, module) => {
   var { RequestAbortedError } = require_errors();
   var kListener = Symbol("kListener");
   var kSignal = Symbol("kSignal");
-  function abort(self) {
-    if (self.abort) {
-      self.abort();
+  function abort(self2) {
+    if (self2.abort) {
+      self2.abort();
     } else {
-      self.onError(new RequestAbortedError);
+      self2.onError(new RequestAbortedError);
     }
   }
-  function addSignal(self, signal) {
-    self[kSignal] = null;
-    self[kListener] = null;
+  function addSignal(self2, signal) {
+    self2[kSignal] = null;
+    self2[kListener] = null;
     if (!signal) {
       return;
     }
     if (signal.aborted) {
-      abort(self);
+      abort(self2);
       return;
     }
-    self[kSignal] = signal;
-    self[kListener] = () => {
-      abort(self);
+    self2[kSignal] = signal;
+    self2[kListener] = () => {
+      abort(self2);
     };
-    addAbortListener(self[kSignal], self[kListener]);
+    addAbortListener(self2[kSignal], self2[kListener]);
   }
-  function removeSignal(self) {
-    if (!self[kSignal]) {
+  function removeSignal(self2) {
+    if (!self2[kSignal]) {
       return;
     }
-    if ("removeEventListener" in self[kSignal]) {
-      self[kSignal].removeEventListener("abort", self[kListener]);
+    if ("removeEventListener" in self2[kSignal]) {
+      self2[kSignal].removeEventListener("abort", self2[kListener]);
     } else {
-      self[kSignal].removeListener("abort", self[kListener]);
+      self2[kSignal].removeListener("abort", self2[kListener]);
     }
-    self[kSignal] = null;
-    self[kListener] = null;
+    self2[kSignal] = null;
+    self2[kListener] = null;
   }
   module.exports = {
     addSignal,
@@ -11920,22 +11920,22 @@ var require_request2 = __commonJS((exports, module) => {
         signal = input[kSignal];
       }
       const origin = this[kRealm].settingsObject.origin;
-      let window = "client";
+      let window2 = "client";
       if (request.window?.constructor?.name === "EnvironmentSettingsObject" && sameOrigin(request.window, origin)) {
-        window = request.window;
+        window2 = request.window;
       }
       if (init.window != null) {
-        throw new TypeError(`'window' option '${window}' must be null`);
+        throw new TypeError(`'window' option '${window2}' must be null`);
       }
       if ("window" in init) {
-        window = "no-window";
+        window2 = "no-window";
       }
       request = makeRequest({
         method: request.method,
         headersList: request.headersList,
         unsafeRequest: request.unsafeRequest,
         client: this[kRealm].settingsObject,
-        window,
+        window: window2,
         priority: request.priority,
         origin: request.origin,
         referrer: request.referrer,
@@ -19726,14 +19726,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -19754,14 +19747,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "redirectURI" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -19848,20 +19834,16 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postGithubDispatch(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "owner" },
-          { in: "body", key: "repo" },
-          { in: "body", key: "agent" },
-          { in: "body", key: "prompt" },
-          { in: "body", key: "issue_number" },
-          { in: "body", key: "tags" },
-          { in: "body", key: "model" },
-          { in: "body", key: "ref" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "owner" },
+      { in: "body", key: "repo" },
+      { in: "body", key: "agent" },
+      { in: "body", key: "prompt" },
+      { in: "body", key: "issue_number" },
+      { in: "body", key: "tags" },
+      { in: "body", key: "model" },
+      { in: "body", key: "ref" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/github/dispatch",
@@ -19891,15 +19873,11 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postModelsCost(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "model" },
-          { in: "body", key: "provider" },
-          { in: "body", key: "tokens" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "model" },
+      { in: "body", key: "provider" },
+      { in: "body", key: "tokens" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/cost",
@@ -19912,6 +19890,32 @@ class DevAgentSdk extends HeyApiClient {
       }
     });
   }
+}
+// packages/sdk/ts/fetch.ts
+var DEFAULT_TIMEOUT_MS = 1e4;
+var RETRY_DELAY_MS = 2000;
+function createFetchWithRetry(timeoutMs = DEFAULT_TIMEOUT_MS) {
+  return async (input, init) => {
+    const applyTimeout = (req, reqInit) => {
+      const timeout = AbortSignal.timeout(timeoutMs);
+      if (req instanceof Request) {
+        const signal2 = req.signal ? AbortSignal.any([req.signal, timeout]) : timeout;
+        return [new Request(req, { signal: signal2 }), undefined];
+      }
+      const existing = reqInit?.signal;
+      const signal = existing ? AbortSignal.any([existing, timeout]) : timeout;
+      return [req, { ...reqInit, signal }];
+    };
+    const backup = input instanceof Request ? input.clone() : undefined;
+    try {
+      const [req, opts] = applyTimeout(input, init);
+      return await fetch(req, opts);
+    } catch {
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      const [req, opts] = applyTimeout(backup ?? input, init);
+      return fetch(req, opts);
+    }
+  };
 }
 // actions/core/src/index.ts
 function readContextTags() {
@@ -19933,9 +19937,124 @@ function createApiClient(token, baseUrl) {
   return new DevAgentSdk({
     client: createClient(createConfig({
       baseUrl,
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      fetch: createFetchWithRetry()
     }))
   });
+}
+
+// node_modules/.bun/ulid@3.0.2/node_modules/ulid/dist/node/index.js
+import crypto from "node:crypto";
+var ENCODING = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+var ENCODING_LEN = 32;
+var RANDOM_LEN = 16;
+var TIME_LEN = 10;
+var TIME_MAX = 281474976710655;
+var ULIDErrorCode;
+(function(ULIDErrorCode2) {
+  ULIDErrorCode2["Base32IncorrectEncoding"] = "B32_ENC_INVALID";
+  ULIDErrorCode2["DecodeTimeInvalidCharacter"] = "DEC_TIME_CHAR";
+  ULIDErrorCode2["DecodeTimeValueMalformed"] = "DEC_TIME_MALFORMED";
+  ULIDErrorCode2["EncodeTimeNegative"] = "ENC_TIME_NEG";
+  ULIDErrorCode2["EncodeTimeSizeExceeded"] = "ENC_TIME_SIZE_EXCEED";
+  ULIDErrorCode2["EncodeTimeValueMalformed"] = "ENC_TIME_MALFORMED";
+  ULIDErrorCode2["PRNGDetectFailure"] = "PRNG_DETECT";
+  ULIDErrorCode2["ULIDInvalid"] = "ULID_INVALID";
+  ULIDErrorCode2["Unexpected"] = "UNEXPECTED";
+  ULIDErrorCode2["UUIDInvalid"] = "UUID_INVALID";
+})(ULIDErrorCode || (ULIDErrorCode = {}));
+
+class ULIDError extends Error {
+  constructor(errorCode, message) {
+    super(`${message} (${errorCode})`);
+    this.name = "ULIDError";
+    this.code = errorCode;
+  }
+}
+function randomChar(prng) {
+  const randomPosition = Math.floor(prng() * ENCODING_LEN) % ENCODING_LEN;
+  return ENCODING.charAt(randomPosition);
+}
+function detectPRNG(root) {
+  const rootLookup = detectRoot();
+  const globalCrypto = rootLookup && (rootLookup.crypto || rootLookup.msCrypto) || (typeof crypto !== "undefined" ? crypto : null);
+  if (typeof globalCrypto?.getRandomValues === "function") {
+    return () => {
+      const buffer = new Uint8Array(1);
+      globalCrypto.getRandomValues(buffer);
+      return buffer[0] / 256;
+    };
+  } else if (typeof globalCrypto?.randomBytes === "function") {
+    return () => globalCrypto.randomBytes(1).readUInt8() / 256;
+  } else if (crypto?.randomBytes) {
+    return () => crypto.randomBytes(1).readUInt8() / 256;
+  }
+  throw new ULIDError(ULIDErrorCode.PRNGDetectFailure, "Failed to find a reliable PRNG");
+}
+function detectRoot() {
+  if (inWebWorker())
+    return self;
+  if (typeof window !== "undefined") {
+    return window;
+  }
+  if (typeof global !== "undefined") {
+    return global;
+  }
+  if (typeof globalThis !== "undefined") {
+    return globalThis;
+  }
+  return null;
+}
+function encodeRandom(len, prng) {
+  let str = "";
+  for (;len > 0; len--) {
+    str = randomChar(prng) + str;
+  }
+  return str;
+}
+function encodeTime(now, len = TIME_LEN) {
+  if (isNaN(now)) {
+    throw new ULIDError(ULIDErrorCode.EncodeTimeValueMalformed, `Time must be a number: ${now}`);
+  } else if (now > TIME_MAX) {
+    throw new ULIDError(ULIDErrorCode.EncodeTimeSizeExceeded, `Cannot encode a time larger than ${TIME_MAX}: ${now}`);
+  } else if (now < 0) {
+    throw new ULIDError(ULIDErrorCode.EncodeTimeNegative, `Time must be positive: ${now}`);
+  } else if (Number.isInteger(now) === false) {
+    throw new ULIDError(ULIDErrorCode.EncodeTimeValueMalformed, `Time must be an integer: ${now}`);
+  }
+  let mod, str = "";
+  for (let currentLen = len;currentLen > 0; currentLen--) {
+    mod = now % ENCODING_LEN;
+    str = ENCODING.charAt(mod) + str;
+    now = (now - mod) / ENCODING_LEN;
+  }
+  return str;
+}
+function inWebWorker() {
+  return typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+}
+function ulid(seedTime, prng) {
+  const currentPRNG = prng || detectPRNG();
+  const seed = !seedTime || isNaN(seedTime) ? Date.now() : seedTime;
+  return encodeTime(seed, TIME_LEN) + encodeRandom(RANDOM_LEN, currentPRNG);
+}
+
+// packages/core/src/util/id.ts
+var prefixes = {
+  user: "usr",
+  event: "evt",
+  plan: "pln",
+  apiPersonal: "pat",
+  apiClient: "app",
+  apiSecret: "sec",
+  link: "lnk",
+  repository: "rep",
+  githubInstallation: "gin",
+  githubRepo: "grp",
+  githubEvent: "gev"
+};
+function createID(prefix) {
+  return [prefixes[prefix], ulid()].join("_");
 }
 
 // actions/event/init/src/teardown.ts
@@ -19947,7 +20066,7 @@ async function fetchWorkflowStatus() {
   if (!token || !repo || !runId)
     return { conclusion: null, jobs: [] };
   try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`, {
+    const res = await createFetchWithRetry()(`https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/vnd.github+json"
@@ -20033,6 +20152,7 @@ async function run() {
       const sdk = createApiClient(agentsToken, apiUrl);
       await sdk.postEvents({
         eventIngestInput: {
+          id: createID("event"),
           repoFullName: repository,
           parentEventId: startEventId || null,
           origin: "action",

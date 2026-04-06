@@ -109,6 +109,7 @@ export namespace Event {
 
   export const create = fn(
     z.object({
+      id: z.string().optional(),
       type: z.string(),
       origin: z.enum(OriginType),
       source: z.string().optional(),
@@ -119,7 +120,7 @@ export namespace Event {
     }),
     async (input) => {
       return createTransaction(async (tx) => {
-        const id = createID("event");
+        const id = input.id ?? createID("event");
         const parentEventId = await inferParentEventId(input);
         log.info("create", {
           id,
@@ -128,16 +129,19 @@ export namespace Event {
           sourceId: input.sourceId,
           parentEventId,
         });
-        await tx.insert(eventTable).values({
-          id,
-          type: input.type,
-          origin: input.origin,
-          source: input.source,
-          sourceId: input.sourceId,
-          parentEventId,
-          tags: input.tags ?? [],
-          data: input.data ?? {},
-        });
+        await tx
+          .insert(eventTable)
+          .values({
+            id,
+            type: input.type,
+            origin: input.origin,
+            source: input.source,
+            sourceId: input.sourceId,
+            parentEventId,
+            tags: input.tags ?? [],
+            data: input.data ?? {},
+          })
+          .onConflictDoNothing();
         return id;
       });
     },

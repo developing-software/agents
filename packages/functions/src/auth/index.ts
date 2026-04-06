@@ -1,7 +1,7 @@
 import { issuer } from "@openauthjs/openauth/issuer";
 import { GithubProvider } from "@openauthjs/openauth/provider/github";
-import { CodeProvider, } from "@openauthjs/openauth/provider/code";
-import { CodeUI } from "@openauthjs/openauth/ui/code"
+import { CodeProvider } from "@openauthjs/openauth/provider/code";
+import { CodeUI } from "@openauthjs/openauth/ui/code";
 import { subjects } from "./subject";
 import { THEME_OPENAUTH } from "@openauthjs/openauth/ui/theme";
 import { User } from "@agents/core/user/index";
@@ -11,7 +11,6 @@ import { logger } from "hono/logger";
 import type { StorageAdapter } from "@openauthjs/openauth/storage/storage";
 import { MemoryStorage } from "@openauthjs/openauth/storage/memory";
 import { Template } from "@agents/core/email/template";
-
 
 export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
   return issuer({
@@ -27,12 +26,14 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
         clientSecret: process.env.GITHUB_CLIENT_SECRET!,
         scopes: ["user:email", "read:user", "user"],
       }),
-      code: CodeProvider(CodeUI({
-        sendCode: async (claims, code) => {
-          if (!claims.email) return;
-          await Template.sendLoginCode(claims.email!, code);
-        },
-      })),
+      code: CodeProvider(
+        CodeUI({
+          sendCode: async (claims, code) => {
+            if (!claims.email) return;
+            await Template.sendLoginCode(claims.email!, code);
+          },
+        }),
+      ),
     },
     allow: async (input, _req) => {
       if (process.env.SST_DEV) return true;

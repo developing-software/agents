@@ -33,6 +33,7 @@
       "name": "artifact-upload-action",
       "dependencies": {
         "@actions/core": "catalog:action",
+        "@agents/actions-core": "workspace:*",
       },
       "devDependencies": {
         "@types/node": "catalog:action",
@@ -65,6 +66,7 @@
       "dependencies": {
         "@actions/core": "catalog:action",
         "@agents/actions-core": "workspace:*",
+        "@agents/core": "workspace:*",
         "@agents/sdk": "workspace:*",
       },
       "devDependencies": {
@@ -76,6 +78,7 @@
       "dependencies": {
         "@actions/core": "catalog:action",
         "@agents/actions-core": "workspace:*",
+        "@agents/core": "workspace:*",
         "@agents/sdk": "workspace:*",
       },
       "devDependencies": {

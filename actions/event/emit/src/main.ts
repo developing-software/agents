@@ -1,7 +1,6 @@
 import * as core from "@actions/core";
-import { createClient, createConfig } from "@agents/sdk/client";
-import { DevAgentSdk } from "@agents/sdk";
-import { readContextTags } from "@agents/actions-core";
+import { createApiClient, readContextTags } from "@agents/actions-core";
+import { createID } from "@agents/core/util/id";
 
 function readTags(raw: string) {
   return [
@@ -79,17 +78,11 @@ async function run() {
     throw new Error("GITHUB_REPOSITORY is not set");
   }
 
-  const sdk = new DevAgentSdk({
-    client: createClient(
-      createConfig({
-        baseUrl: apiUrl,
-        headers: { Authorization: `Bearer ${agentsToken}` },
-      }),
-    ),
-  });
+  const sdk = createApiClient(agentsToken, apiUrl);
 
   const { data: event, error } = await sdk.postEvents({
     eventIngestInput: {
+      id: createID("event"),
       repoFullName,
       parentEventId: parentEventId || undefined,
       origin,
