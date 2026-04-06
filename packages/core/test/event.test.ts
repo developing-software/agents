@@ -85,6 +85,66 @@ describe("event", () => {
     expect(child?.parentEventId).toBe(rootId);
   });
 
+  it("does not infer agent.started as parent of another agent.started", async () => {
+    const sourceId = testSourceId();
+    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(16)];
+
+    const firstAgentId = await Event.create({
+      type: "agent.started",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+
+    const secondAgentId = await Event.create({
+      type: "agent.started",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+
+    const first = await Event.fromID(firstAgentId);
+    const second = await Event.fromID(secondAgentId);
+    expect(first?.parentEventId).toBeNull();
+    expect(second?.parentEventId).toBeNull();
+  });
+
+  it("agent.started parents under github.issues.opened, not under another agent.started", async () => {
+    const sourceId = testSourceId();
+    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(16)];
+
+    const issueEventId = await Event.create({
+      type: "github.issues.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+
+    const firstAgentId = await Event.create({
+      type: "agent.started",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+
+    const secondAgentId = await Event.create({
+      type: "agent.started",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+
+    const first = await Event.fromID(firstAgentId);
+    const second = await Event.fromID(secondAgentId);
+    expect(first?.parentEventId).toBe(issueEventId);
+    expect(second?.parentEventId).toBe(issueEventId);
+  });
+
   it("prefers PR parent inference over issue parent inference", async () => {
     const sourceId = testSourceId();
     const repoTag = Tags.ghRepo("octocat/hello-world");
