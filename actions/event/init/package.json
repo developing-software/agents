@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@actions/core": "catalog:action",
-    "@actions/exec": "catalog:action",
     "@agents/actions-core": "workspace:*",
     "@agents/sdk": "workspace:*"
   },

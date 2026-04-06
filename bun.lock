@@ -21,7 +21,6 @@
       "name": "agent-collect-action",
       "dependencies": {
         "@actions/core": "catalog:action",
-        "@actions/exec": "catalog:action",
         "@agents/actions-core": "workspace:*",
         "@agents/core": "workspace:*",
         "@agents/sdk": "workspace:*",
@@ -76,7 +75,6 @@
       "name": "event-init-action",
       "dependencies": {
         "@actions/core": "catalog:action",
-        "@actions/exec": "catalog:action",
         "@agents/actions-core": "workspace:*",
         "@agents/sdk": "workspace:*",
       },
@@ -94,7 +92,6 @@
         "@agents/functions": "workspace:*",
         "@agents/sdk": "workspace:*",
         "@openauthjs/openauth": "^0.4.3",
-        "hono": "catalog:",
       },
       "devDependencies": {
         "@types/bun": "catalog:",
@@ -142,7 +139,6 @@
         "@octokit/webhooks": "^14.2.0",
         "drizzle-orm": "catalog:",
         "postgres": "^3.4.8",
-        "remeda": "^2.33.1",
         "resend": "^6.9.3",
         "ulid": "catalog:",
         "zod": "catalog:",
@@ -160,7 +156,6 @@
       "version": "1.0.0",
       "dependencies": {
         "@agents/core": "workspace:*",
-        "@hono/standard-validator": "^0.2.1",
         "@openauthjs/openauth": "^0.4.3",
         "hono": "catalog:",
         "hono-openapi": "^1.1.2",
@@ -1028,8 +1023,6 @@
     "readdirp": ["readdirp@4.1.2", "", {}, "sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg=="],
 
     "regexparam": ["regexparam@3.0.0", "", {}, "sha512-RSYAtP31mvYLkAHrOlh25pCNQ5hWnT106VukGaaFfuJrZFkGRX5GhUAdPqpSDXxOhA2c4akmRuplv1mRqnBn6Q=="],
-
-    "remeda": ["remeda@2.33.6", "", {}, "sha512-tazDGH7s75kUPGBKLvhgBEHMgW+TdDFhjUAMdQj57IoWz6HsGa5D2RX5yDUz6IIqiRRvZiaEHzCzWdTeixc/Kg=="],
 
     "resend": ["resend@6.9.4", "", { "dependencies": { "postal-mime": "2.7.3", "svix": "1.86.0" }, "peerDependencies": { "@react-email/render": "*" }, "optionalPeers": ["@react-email/render"] }, "sha512-/M3dsJzu5OgozqVsA4Psd/1L7EdePgOIIxClas453GOQYFG3VHc2ZyCHZFlvqsc9aZCCd2BJRRqZgWC8D9c7/g=="],
 

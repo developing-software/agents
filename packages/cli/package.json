@@ -24,8 +24,7 @@
     "@agents/core": "workspace:*",
     "@agents/functions": "workspace:*",
     "@agents/sdk": "workspace:*",
-    "@openauthjs/openauth": "^0.4.3",
-    "hono": "catalog:"
+    "@openauthjs/openauth": "^0.4.3"
   },
   "devDependencies": {
     "@types/bun": "catalog:"

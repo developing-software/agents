@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@agents/core": "workspace:*",
-    "@hono/standard-validator": "^0.2.1",
     "@openauthjs/openauth": "^0.4.3",
     "hono": "catalog:",
     "hono-openapi": "^1.1.2",
