@@ -56,6 +56,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       return false;
     },
     success: async (ctx, value, _req) => {
+      if (value.provider === "code") throw new Error("code provider is not supported yet");
       try {
         const octokit = GitHub.fromToken(value.tokenset.access);
         const [{ data: emails }, { data: profile }] = await Promise.all([
