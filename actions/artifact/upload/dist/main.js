@@ -19724,7 +19724,14 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "name" },
+          { in: "body", key: "email" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -19745,7 +19752,14 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "name" },
+          { in: "body", key: "redirectURI" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -19832,16 +19846,20 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postGithubDispatch(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [
-      { in: "body", key: "owner" },
-      { in: "body", key: "repo" },
-      { in: "body", key: "agent" },
-      { in: "body", key: "prompt" },
-      { in: "body", key: "issue_number" },
-      { in: "body", key: "tags" },
-      { in: "body", key: "model" },
-      { in: "body", key: "ref" }
-    ] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "owner" },
+          { in: "body", key: "repo" },
+          { in: "body", key: "agent" },
+          { in: "body", key: "prompt" },
+          { in: "body", key: "issue_number" },
+          { in: "body", key: "tags" },
+          { in: "body", key: "model" },
+          { in: "body", key: "ref" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/github/dispatch",
@@ -19871,11 +19889,15 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postModelsCost(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [
-      { in: "body", key: "model" },
-      { in: "body", key: "provider" },
-      { in: "body", key: "tokens" }
-    ] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "model" },
+          { in: "body", key: "provider" },
+          { in: "body", key: "tokens" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/cost",
@@ -19924,7 +19946,7 @@ async function uploadFile(filePath, name) {
   const form = new FormData;
   form.append("name", name);
   form.append("file", new Blob([readFileSync(filePath)], { type: contentType }), name);
-  const res = await createFetchWithRetry()(`${apiUrl}/events/${eventId}/artifacts`, {
+  const res = await createFetchWithRetry(120000)(`${apiUrl}/events/${eventId}/artifacts`, {
     method: "POST",
     headers: { Authorization: `Bearer ${agentsToken}` },
     body: form
