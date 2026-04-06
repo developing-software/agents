@@ -2,7 +2,7 @@
 
 const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
-export class Spinner {
+class Spinner {
   private message: string;
   private frameIndex = 0;
   private intervalId: Timer | null = null;
