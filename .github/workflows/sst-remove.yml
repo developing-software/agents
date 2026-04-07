@@ -44,8 +44,25 @@ jobs:
           tags: |
             env:${{ env.STAGE }}
             tool:sst
+            gh:branch:${{ github.event.pull_request.head.ref }}
+            gh:base:${{ github.event.pull_request.base.ref }}
           data: >-
             {"stage":"${{ env.STAGE }}","tool":"sst"}
+
+      - name: Attach PR data
+        uses: developing-software/agents/actions/event/data@dev
+        with:
+          key: pr
+          data: |
+            {
+              "number": ${{ github.event.pull_request.number }},
+              "title": ${{ toJSON(github.event.pull_request.title) }},
+              "author": "${{ github.event.pull_request.user.login }}",
+              "headRef": "${{ github.event.pull_request.head.ref }}",
+              "baseRef": "${{ github.event.pull_request.base.ref }}",
+              "headSha": "${{ github.event.pull_request.head.sha }}",
+              "url": "${{ github.event.pull_request.html_url }}"
+            }
 
       - name: Remove
         id: remove

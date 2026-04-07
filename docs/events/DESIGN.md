@@ -70,6 +70,19 @@ Typed schema: `ChecksEvent.Completed.Data` in `packages/core/src/events/checks/i
 | `audit.started`   | action | Audit workflow begins   |
 | `audit.completed` | action | Audit workflow finishes |
 
+### Deployments
+
+| Type                      | Origin | Description                                              |
+| ------------------------- | ------ | -------------------------------------------------------- |
+| `deploy.started`          | action | Deploy workflow begins (SST, Terraform, etc.)            |
+| `deploy.completed`        | action | Deploy workflow finishes; emits outputs and PR metadata  |
+| `deploy.remove.started`   | action | Teardown workflow begins                                 |
+| `deploy.remove.completed` | action | Teardown finishes                                        |
+
+Standard tags: `env:<stage>`, `tool:<name>` (e.g. `sst`), `gh:branch:<head>` and `gh:base:<base>` on PR runs, plus all auto-injected `gh:*` tags from `event/init`.
+
+Typed schema: `DeployEvent.Completed.Data` in `packages/core/src/events/deploy/index.ts`.
+
 ## Event Chains
 
 Events form trees via `parentEventId`. A typical agent run chain:
@@ -216,3 +229,40 @@ data: {
   reasoning: string,
 }
 ```
+
+### deploy.started
+
+```ts
+data: {
+  runUrl: string,
+  trigger: string,
+  stage: string,
+  tool: string,
+}
+```
+
+### deploy.completed
+
+```ts
+data: {
+  stage: string,
+  tool: string,                    // "sst", "terraform", …
+  outputs: Record<string, string>, // keys come from infra (api, auth, console, …)
+  pr?: {                           // present only on pull_request runs
+    number: number,
+    title: string,
+    author: string,
+    headRef: string,
+    baseRef: string,
+    headSha: string,
+    url: string,
+  },
+  workflow: { durationMs, runUrl, trigger, conclusion, jobs },
+}
+```
+
+A PR comment with marker `<!-- deploy:<tool> -->` is upserted with a table of `outputs`. On `deploy.remove.completed`, the same comment is deleted.
+
+### deploy.remove.started / deploy.remove.completed
+
+Same shape as `deploy.*`, except `outputs` is omitted (no URLs post-teardown).

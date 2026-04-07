@@ -40,6 +40,7 @@ export function eventDotColor(type: string): string {
   if (type.startsWith("checks.")) return "var(--color-success)";
   if (type.startsWith("tests.")) return "var(--color-success)";
   if (type.startsWith("lint.")) return "var(--color-merged)";
+  if (type.startsWith("deploy.")) return "var(--color-merged)";
   if (type.startsWith("github.issues.")) return "var(--color-success)";
   if (type.startsWith("github.pull_request.")) return "var(--color-merged)";
   if (type === "github.push") return "var(--color-dim)";
@@ -86,6 +87,7 @@ export {
   issueRef,
   prRef,
   triggerTag,
+  toolTag,
 } from "$lib/ui/tag/tag-helpers";
 
 export function formatBytes(bytes: number): string {

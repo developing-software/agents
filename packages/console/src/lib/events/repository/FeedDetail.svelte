@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { originBadgeStyle, eventDotColor } from '../helpers';
+  import { originBadgeStyle, eventDotColor, formatDuration } from '../helpers';
+  import { DeployEvent } from '@agents/core/events/deploy/index';
   import TagList from '$lib/ui/tag/TagList.svelte';
 
   let {
@@ -66,6 +67,76 @@
       <span class="section-heading">TAGS</span>
       <TagList tags={event.tags} />
     </div>
+  {/if}
+
+  <!-- Deploy details -->
+  {#if event.type.startsWith('deploy.')}
+    {@const dep = DeployEvent.Completed.parse(event.data)}
+    {@const isStarted = event.type.endsWith('.started')}
+    {@const conclusion = isStarted ? 'in progress' : (dep.workflow.conclusion ?? 'unknown')}
+    {@const conclusionColor = conclusion === 'success'
+      ? 'var(--color-success)'
+      : conclusion === 'failure'
+      ? 'var(--color-danger)'
+      : 'var(--color-dim)'}
+    <div class="section">
+      <span class="section-heading">DEPLOY</span>
+      <div class="info-grid">
+        {#if dep.stage}
+          <span class="info-label">Stage</span>
+          <span class="info-value mono">{dep.stage}</span>
+        {/if}
+        {#if dep.tool}
+          <span class="info-label">Tool</span>
+          <span class="info-value mono">{dep.tool}</span>
+        {/if}
+        <span class="info-label">Status</span>
+        <span class="info-value mono" style="color:{conclusionColor};">{conclusion}</span>
+        {#if !isStarted && dep.workflow.durationMs > 0}
+          <span class="info-label">Duration</span>
+          <span class="info-value mono">{formatDuration(dep.workflow.durationMs)}</span>
+        {/if}
+      </div>
+    </div>
+
+    {#if !isStarted && Object.keys(dep.outputs).length > 0}
+      <div class="section">
+        <span class="section-heading">OUTPUTS</span>
+        <div class="deploy-outputs">
+          {#each Object.entries(dep.outputs) as [k, v] (k)}
+            {@const url = /^https?:\/\//.test(v) ? v : `https://${v}`}
+            <div class="deploy-output-row">
+              <span class="deploy-output-key mono">{k}</span>
+              <a class="deploy-output-link mono" href={url} target="_blank" rel="noopener">{url}</a>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+    {#if dep.pr}
+      <div class="section">
+        <span class="section-heading">PULL REQUEST</span>
+        <div class="info-grid">
+          <span class="info-label">PR</span>
+          <span class="info-value">
+            <a class="deploy-pr-link" href={dep.pr.url} target="_blank" rel="noopener">#{dep.pr.number} — {dep.pr.title}</a>
+          </span>
+          {#if dep.pr.author}
+            <span class="info-label">Author</span>
+            <span class="info-value mono">@{dep.pr.author}</span>
+          {/if}
+          {#if dep.pr.headRef}
+            <span class="info-label">Refs</span>
+            <span class="info-value mono">{dep.pr.headRef} → {dep.pr.baseRef}</span>
+          {/if}
+          <span class="info-label">Console</span>
+          <span class="info-value">
+            <a class="deploy-pr-link" href="/gh/{organization}/{repoName}/pulls/{dep.pr.number}">View in console</a>
+          </span>
+        </div>
+      </div>
+    {/if}
   {/if}
 
   <!-- Data -->
@@ -199,5 +270,13 @@
     word-break: break-word;
     color: var(--color-text);
   }
+
+  .deploy-outputs { display: flex; flex-direction: column; gap: 4px; }
+  .deploy-output-row { display: flex; gap: 8px; align-items: baseline; font-size: 11px; }
+  .deploy-output-key { color: var(--color-dim); flex-shrink: 0; }
+  .deploy-output-link { color: var(--color-merged); text-decoration: none; word-break: break-all; }
+  .deploy-output-link:hover { text-decoration: underline; }
+  .deploy-pr-link { color: var(--color-merged); text-decoration: none; }
+  .deploy-pr-link:hover { text-decoration: underline; }
 
 </style>

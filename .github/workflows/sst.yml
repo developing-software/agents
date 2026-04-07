@@ -60,8 +60,26 @@ jobs:
           tags: |
             env:${{ env.STAGE }}
             tool:sst
+            ${{ github.event_name == 'pull_request' && format('gh:branch:{0}', github.event.pull_request.head.ref) || '' }}
+            ${{ github.event_name == 'pull_request' && format('gh:base:{0}', github.event.pull_request.base.ref) || '' }}
           data: >-
             {"stage":"${{ env.STAGE }}","tool":"sst"}
+
+      - name: Attach PR data
+        if: github.event_name == 'pull_request'
+        uses: developing-software/agents/actions/event/data@dev
+        with:
+          key: pr
+          data: |
+            {
+              "number": ${{ github.event.pull_request.number }},
+              "title": ${{ toJSON(github.event.pull_request.title) }},
+              "author": "${{ github.event.pull_request.user.login }}",
+              "headRef": "${{ github.event.pull_request.head.ref }}",
+              "baseRef": "${{ github.event.pull_request.base.ref }}",
+              "headSha": "${{ github.event.pull_request.head.sha }}",
+              "url": "${{ github.event.pull_request.html_url }}"
+            }
 
       - name: build console
         run: bun run build
