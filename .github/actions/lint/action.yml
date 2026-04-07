@@ -18,6 +18,9 @@ outputs:
   outcome:
     description: Lint outcome (success or failure)
     value: ${{ steps.run-lint.outputs.outcome }}
+  summary:
+    description: One-line summary of the lint results
+    value: ${{ steps.run-lint.outputs.summary }}
 
 runs:
   using: composite

@@ -10,12 +10,21 @@ outputs:
   health-outcome:
     description: Health check outcome
     value: ${{ steps.health.outputs.outcome }}
+  health-summary:
+    description: Health check summary
+    value: ${{ steps.health.outputs.summary }}
   dead-code-outcome:
     description: Dead code check outcome
     value: ${{ steps.dead-code.outputs.outcome }}
+  dead-code-summary:
+    description: Dead code check summary
+    value: ${{ steps.dead-code.outputs.summary }}
   dupes-outcome:
     description: Dupes check outcome
     value: ${{ steps.dupes.outputs.outcome }}
+  dupes-summary:
+    description: Dupes check summary
+    value: ${{ steps.dupes.outputs.summary }}
   outcome:
     description: Overall outcome (success only if all fallow checks pass)
     value: ${{ steps.result.outputs.outcome }}

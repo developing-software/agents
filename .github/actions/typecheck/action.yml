@@ -18,6 +18,9 @@ outputs:
   outcome:
     description: Typecheck outcome (success or failure)
     value: ${{ steps.run-typecheck.outputs.outcome }}
+  summary:
+    description: One-line summary of the typecheck results
+    value: ${{ steps.run-typecheck.outputs.summary }}
 
 runs:
   using: composite

@@ -21,6 +21,9 @@ outputs:
   outcome:
     description: Test outcome (success or failure)
     value: ${{ steps.run-tests.outputs.outcome }}
+  summary:
+    description: One-line summary of the test results
+    value: ${{ steps.run-tests.outputs.summary }}
 
 runs:
   using: composite
