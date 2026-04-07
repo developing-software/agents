@@ -19,7 +19,7 @@
 
   let expanded = $state(false);
   let content: string | null = $state(null);
-  let contentType: string | null = $state(null);
+  let fetchError: string | null = $state(null);
   let loading = $state(false);
   let fetched = $state(false);
   let view = $state<'report' | 'json'>('report');
@@ -39,14 +39,17 @@
     expanded = !expanded;
     if (expanded && !fetched) {
       loading = true;
+      fetchError = null;
       try {
         const res = await fetch(artifactUrl);
         if (res.ok) {
-          content = await res.text();
-          contentType = res.headers.get('content-type');
+          const text = await res.text();
+          content = text || null;
+        } else {
+          fetchError = `${res.status} ${res.statusText}`;
         }
-      } catch {
-        // leave content null
+      } catch (err) {
+        fetchError = String(err);
       } finally {
         loading = false;
         fetched = true;
@@ -72,8 +75,10 @@
   {#if expanded}
     <div class="body">
       {#if loading}
-        <span class="placeholder">Loading...</span>
-      {:else if content === null}
+        <span class="placeholder">Loading artifact...</span>
+      {:else if fetchError}
+        <span class="placeholder">Failed to load artifact ({fetchError})</span>
+      {:else if !content}
         <span class="placeholder">No artifact available</span>
       {:else}
         <div class="tabs">

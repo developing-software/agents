@@ -4,11 +4,10 @@
   import { goto } from '$app/navigation';
   import CheckCard from '$lib/events/health/CheckCard.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
+  import BranchSelect from '$lib/ui/BranchSelect.svelte';
   import { relativeTime } from '$lib/events/helpers';
 
   let { data }: PageProps = $props();
-
-  let branchInput = $derived(data.branch);
 
   const groupedChecks = $derived.by(() => {
     const groups: Record<string, typeof data.checks> = {};
@@ -25,13 +24,8 @@
     return `/gh/${page.params.organization}/${page.params.repo}/health/artifact?branch=${encodeURIComponent(data.branch)}&category=${encodeURIComponent(category)}&name=${encodeURIComponent(name)}`;
   }
 
-  function onBranchKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      const value = branchInput.trim();
-      if (value) {
-        goto(`?branch=${encodeURIComponent(value)}`);
-      }
-    }
+  function onBranchChange(branch: string) {
+    goto(`?branch=${encodeURIComponent(branch)}`);
   }
 </script>
 
@@ -43,12 +37,11 @@
         <span class="last-run">Last run: {relativeTime(data.timeCreated)}</span>
       {/if}
     </div>
-    <input
-      class="branch-input"
-      type="text"
-      bind:value={branchInput}
-      onkeydown={onBranchKeydown}
-      placeholder="branch"
+    <BranchSelect
+      organization={page.params.organization}
+      repoName={page.params.repo}
+      value={data.branch}
+      onchange={onBranchChange}
     />
   </div>
 
@@ -108,22 +101,6 @@
   .last-run {
     font-size: 12px;
     color: var(--color-muted);
-  }
-
-  .branch-input {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 12px;
-    padding: 3px 8px;
-    background: var(--color-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    color: var(--color-text);
-    outline: none;
-    transition: border-color 0.1s;
-  }
-
-  .branch-input:focus {
-    border-color: var(--color-accent);
   }
 
   .checks-list {

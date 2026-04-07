@@ -1,6 +1,7 @@
 <script lang="ts">
   import Drawer from '$lib/ui/Drawer.svelte';
-  import { previewPrompt, dispatchPlan, listBranches, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
+  import { previewPrompt, dispatchPlan, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
+  import BranchSelect from '$lib/ui/BranchSelect.svelte';
   import { statusDotColor, statusBadgeStyle } from '$lib/agents/plans/plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import ModelSelector from './ModelSelector.svelte';
@@ -37,7 +38,6 @@
 
   let selectedModels = new SvelteSet<string>();
   let ref = $state('dev');
-  const branchesPromise = listBranches({ organization, repoName });
   let promptPreview = $state<string | null>(null);
   let promptExpanded = $state(false);
   let loadingPreview = $state(false);
@@ -196,21 +196,7 @@
         <div class="section-label">Configuration</div>
         <div class="config-grid">
           <label class="config-label" for="ref-input">Branch</label>
-          {#await branchesPromise}
-            <span class="config-loading">Loading...</span>
-          {:then branches}
-            {#if branches.length > 0}
-              <select id="ref-input" class="config-select" bind:value={ref}>
-                {#each branches as branch (branch.name)}
-                  <option value={branch.name}>{branch.name}</option>
-                {/each}
-              </select>
-            {:else}
-              <input id="ref-input" type="text" class="config-input" bind:value={ref} placeholder="dev" />
-            {/if}
-          {:catch}
-            <input id="ref-input" type="text" class="config-input" bind:value={ref} placeholder="dev" />
-          {/await}
+          <BranchSelect {organization} {repoName} bind:value={ref} />
         </div>
 
       </section>
