@@ -13,10 +13,12 @@
     branchTag,
     workflowRef,
     triggerTag,
+    toolTag,
     otherTags,
     extractMetrics,
     formatMetricValue,
   } from '../helpers';
+  import { DeployEvent } from '@agents/core/events/deploy/index';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
 
   type EventItem = {
@@ -108,9 +110,10 @@
           {@const branch = branchTag(e.tags)}
           {@const workflow = workflowRef(e.tags)}
           {@const trigger = triggerTag(e.tags)}
+          {@const tool = toolTag(e.tags)}
           {@const other = otherTags(e.tags)}
           {@const mets = extractMetrics(e.data)}
-          {@const hasMeta = mets || env || svc || branch || workflow !== null || trigger || other.length > 0}
+          {@const hasMeta = mets || env || svc || tool || branch || workflow !== null || trigger || other.length > 0}
           <div
             class="event-item"
             class:event-item-child={child}
@@ -138,6 +141,9 @@
                 {/if}
                 {#if svc}
                   <span class="meta-tag">{svc}</span>
+                {/if}
+                {#if tool}
+                  <span class="meta-tag">{tool}</span>
                 {/if}
                 {#if branch}
                   <span class="meta-branch">⎇ {branch}</span>
@@ -169,6 +175,19 @@
                   <TagPill {tag} />
                 {/each}
               </div>
+            {/if}
+            {#if e.type === 'deploy.completed'}
+              {@const dep = DeployEvent.Completed.parse(e.data)}
+              {#if Object.keys(dep.outputs).length > 0}
+                <div class="deploy-urls">
+                  {#each Object.entries(dep.outputs) as [k, v] (k)}
+                    {@const url = /^https?:\/\//.test(v) ? v : `https://${v}`}
+                    <a class="deploy-url" href={url} target="_blank" rel="noopener" onclick={(ev) => ev.stopPropagation()}>{k} ↗</a>
+                  {/each}
+                </div>
+              {/if}
+            {:else if e.type === 'deploy.started'}
+              <div class="deploy-pending">deploying…</div>
             {/if}
           </div>
           {#if selectedEventId === e.id}
@@ -264,6 +283,26 @@
   .meta-metric-name { color: var(--color-muted); }
   .meta-metric-sep { color: var(--color-dim); }
   .meta-metric-val { color: var(--color-accent); }
+
+  .deploy-urls { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 0 4px 13px; }
+  .deploy-url {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-merged) 10%, transparent);
+    color: var(--color-merged);
+    border: 1px solid color-mix(in srgb, var(--color-merged) 25%, transparent);
+    text-decoration: none;
+    line-height: 1.6;
+  }
+  .deploy-url:hover { background: color-mix(in srgb, var(--color-merged) 18%, transparent); }
+  .deploy-pending {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+    padding: 0 0 4px 13px;
+  }
 
 
   .children { border-left: 1px solid var(--color-border); margin-left: 2px; }

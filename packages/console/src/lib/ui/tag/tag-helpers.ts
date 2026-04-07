@@ -9,6 +9,7 @@ const KNOWN_PREFIXES = [
   "type:",
   "harness:",
   "model:",
+  "tool:",
 ];
 
 /** Style string for a tag pill based on its prefix category */
@@ -27,6 +28,8 @@ export function tagCategoryStyle(tag: string): string {
     return "background: color-mix(in srgb, var(--color-muted) 10%, transparent); color: var(--color-muted); border-color: color-mix(in srgb, var(--color-muted) 25%, transparent);";
   if (tag.startsWith("model:"))
     return "background: color-mix(in srgb, var(--color-merged) 8%, transparent); color: var(--color-merged); border-color: color-mix(in srgb, var(--color-merged) 20%, transparent);";
+  if (tag.startsWith("tool:"))
+    return "background: color-mix(in srgb, var(--color-warning) 10%, transparent); color: var(--color-warning); border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);";
   if (tag.startsWith("gh:"))
     return "background: var(--color-elevated); color: var(--color-muted); border-color: var(--color-border);";
   return "background: var(--color-elevated); color: var(--color-dim); border-color: var(--color-border);";
@@ -63,3 +66,4 @@ export const harnessTag = (tags: string[]) => extractTag(tags, "harness:");
 export const scopeTag = (tags: string[]) => extractTag(tags, "scope:");
 export const modelTag = (tags: string[]) => extractTag(tags, "model:");
 export const triggerTag = (tags: string[]) => extractTag(tags, "gh:trigger:");
+export const toolTag = (tags: string[]) => extractTag(tags, "tool:");

@@ -10,6 +10,7 @@
     branchTag,
     workflowRef,
     triggerTag,
+    toolTag,
     otherTags,
   } from '../helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
@@ -87,11 +88,12 @@
     {#snippet renderNode(node: TreeNode, depth: number)}
       {@const env = envTag(node.tags)}
       {@const svc = serviceTag(node.tags)}
+      {@const tool = toolTag(node.tags)}
       {@const branch = branchTag(node.tags)}
       {@const workflow = workflowRef(node.tags)}
       {@const trigger = triggerTag(node.tags)}
       {@const other = otherTags(node.tags)}
-      {@const hasMeta = env || svc || branch || workflow !== null || trigger || other.length > 0}
+      {@const hasMeta = env || svc || tool || branch || workflow !== null || trigger || other.length > 0}
       <div class="node" style="padding-left: {depth * 16}px;">
         <button
           type="button"
@@ -114,6 +116,9 @@
             {/if}
             {#if svc}
               <span class="meta-tag">{svc}</span>
+            {/if}
+            {#if tool}
+              <span class="meta-tag">{tool}</span>
             {/if}
             {#if branch}
               <span class="meta-branch">&#x238B; {branch}</span>
