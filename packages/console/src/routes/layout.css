@@ -34,6 +34,14 @@
   --color-warning-dim: #c98e421f;
 }
 
+:root {
+  --console-topbar-height: 36px;
+  --console-sidebar-collapsed-width: 48px;
+  --console-sidebar-expanded-width: 220px;
+  --console-sidebar-transition: 0.2s ease;
+  --console-sidebar-backdrop: color-mix(in srgb, var(--color-bg) 78%, transparent);
+}
+
 html {
   font-family: var(--font-sans);
   background: var(--color-bg);
@@ -128,4 +136,346 @@ select:focus {
   content: "";
   flex: 1;
   border-top: 1px solid var(--color-border);
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100dvh;
+  background: var(--color-bg);
+}
+
+.app-topbar {
+  position: relative;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--console-topbar-height);
+  flex-shrink: 0;
+  padding: 0 10px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-topbar-start {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.app-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.app-topbar-favicon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.app-topbar-name {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.app-topbar-actions {
+  display: flex;
+  align-items: center;
+}
+
+.app-topbar-link,
+.app-signout-link {
+  font-size: 12px;
+  color: var(--color-muted);
+  text-decoration: none;
+  padding: 4px 6px;
+  transition: color 0.1s;
+}
+
+.app-topbar-link {
+  margin-right: 4px;
+}
+
+.app-topbar-link:hover,
+.app-signout-link:hover {
+  color: var(--color-text);
+}
+
+.app-signin-btn,
+.app-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--color-text);
+  text-decoration: none;
+  border: 1px solid var(--color-border-bright);
+  border-radius: 4px;
+  background: var(--color-surface);
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.app-signin-btn {
+  padding: 3px 8px;
+}
+
+.app-sidebar-toggle {
+  display: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.app-signin-btn:hover,
+.app-sidebar-toggle:hover {
+  background: var(--color-hover);
+}
+
+.app-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.app-sidebar-backdrop {
+  position: fixed;
+  inset: var(--console-topbar-height) 0 0;
+  z-index: 20;
+  border: 0;
+  padding: 0;
+  background: var(--console-sidebar-backdrop);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--console-sidebar-transition);
+}
+
+.app-sidebar-backdrop-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.app-sidebar {
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  height: calc(100vh - var(--console-topbar-height));
+  height: calc(100dvh - var(--console-topbar-height));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 8px;
+}
+
+.app-org-group {
+  margin-bottom: 4px;
+}
+
+.app-org-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--color-dim);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+
+.app-org-header:hover {
+  color: var(--color-muted);
+}
+
+.app-org-badge {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-bright);
+  border-radius: 999px;
+  background: var(--color-elevated);
+  color: var(--color-text);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.app-org-header-text,
+.app-repo-link-text,
+.app-sidebar-pin-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  transition: opacity var(--console-sidebar-transition), max-width var(--console-sidebar-transition);
+}
+
+.app-repo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app-repo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  padding: 4px 12px 4px 20px;
+  border-left: 2px solid transparent;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.app-repo-link:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.app-repo-link-active {
+  background: var(--color-elevated);
+  border-left-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.app-repo-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-border-bright);
+  transition: background 0.1s;
+}
+
+.app-repo-dot-active {
+  background: var(--color-accent);
+}
+
+.app-sidebar-pin-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.app-sidebar-pin-toggle:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.app-sidebar-pin-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+}
+
+.app-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .app-sidebar {
+    position: relative;
+    z-index: 1;
+    width: var(--console-sidebar-collapsed-width);
+    flex-shrink: 0;
+    transition: width var(--console-sidebar-transition);
+  }
+
+  .app-sidebar:hover,
+  .app-sidebar-pinned {
+    width: var(--console-sidebar-expanded-width);
+  }
+
+  .app-sidebar:not(:hover):not(.app-sidebar-pinned) .app-org-header,
+  .app-sidebar:not(:hover):not(.app-sidebar-pinned) .app-sidebar-pin-toggle,
+  .app-sidebar:not(:hover):not(.app-sidebar-pinned) .app-repo-link {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .app-sidebar:not(:hover):not(.app-sidebar-pinned) .app-org-header-text,
+  .app-sidebar:not(:hover):not(.app-sidebar-pinned) .app-repo-link-text,
+  .app-sidebar:not(:hover):not(.app-sidebar-pinned) .app-sidebar-pin-label {
+    opacity: 0;
+    max-width: 0;
+  }
+
+  .app-sidebar:not(:hover):not(.app-sidebar-pinned) .app-repo-link-active {
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border-left-color: transparent;
+  }
+
+  .app-sidebar-backdrop {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .app-sidebar-toggle {
+    display: inline-flex;
+  }
+
+  .app-sidebar {
+    position: fixed;
+    top: var(--console-topbar-height);
+    left: 0;
+    z-index: 30;
+    width: var(--console-sidebar-expanded-width);
+    max-width: calc(100vw - 48px);
+    transform: translateX(-100%);
+    transition: transform var(--console-sidebar-transition);
+  }
+
+  .app-sidebar-mobile-open {
+    transform: translateX(0);
+  }
+
+  .app-sidebar-pin-toggle {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar,
+  .app-sidebar-backdrop,
+  .app-org-header-text,
+  .app-repo-link-text,
+  .app-sidebar-pin-label {
+    transition: none;
+  }
 }
