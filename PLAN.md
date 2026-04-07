@@ -1,8 +1,8 @@
 # Plan — Dev Agents
 
-## Current State (2026-04-03)
+## Current State (2026-04-06)
 
-The full lifecycle works end-to-end: issues are triaged via AI planner chat, plans are drafted/approved in the console, multiple agents are dispatched in parallel, competing PRs are reviewed and judged by an LLM, and the winner is merged while losers are auto-closed.
+The full lifecycle works end-to-end: issues are triaged via AI planner chat, plans are drafted/approved in the console, multiple agents are dispatched in parallel, competing PRs are reviewed and judged by an LLM, and the winner is merged while losers are auto-closed. Agent runs collect normalized metrics with cost attribution via models.dev pricing, and per-branch check artifacts (lint, typecheck, tests, fallow) are browsable through a Health tab.
 
 ```
   WORKING FLOW:
@@ -18,10 +18,16 @@ The full lifecycle works end-to-end: issues are triaged via AI planner chat, pla
 
 ### What's Done
 
-- **Construction pipeline:** Issue label triggers agent dispatch (Claude, Codex, OpenCode), branch creation, PR generation, metric collection, artifact upload
-- **Platform / observability:** Console (repo browser, issues, PRs, agent config, events), API (event ingestion, artifacts, webhooks), core (actor system, event store, agent discovery)
+- **Construction pipeline:** Issue label triggers agent dispatch (Claude, Codex, OpenCode), branch creation, PR generation, artifact upload, idempotent event emission with retries
+- **Unified agent action:** Single TypeScript action with pluggable extractors (Claude JSON, Codex JSONL, OpenCode session) replacing the old per-agent shell scripts — graceful degradation, status normalization, shared types with core
+- **Pricing & cost attribution:** `Models` namespace in core with longest-prefix-match pricing, `calculateCost()`, SDK exposure (`GET /models/pricing`, `POST /models/cost`), cost backfilled into `agent.completed` events
+- **Shared event schema:** `AgentEvent` namespace in `packages/core/src/events/agent/` with Zod schemas (`.catch()` defaults, never throws), `resolveAgent()` alias map, single `parse()` consumed by both action and console
+- **PR cost comments:** `actions/comment/` unified action upserts a cost/check summary on PRs via HTML marker, with run history, token breakdown, and check results
+- **Branch-scoped check artifacts + Health tab:** Enriched `{ outcome, summary }` check data, R2 branch namespace with `artifact:branch` tag routing, fallow checks (health, dead-code, dupes), Health tab page in console
+- **Platform / observability:** Console (repo browser, issues, PRs, agent config, events, health), API (event ingestion, artifacts, webhooks, models pricing), core (actor system, event store, agent discovery)
 - **Plan system:** Full CRUD, status lifecycle, tags-based linking, prompt generation, console pages (list, kanban, detail, create/edit), dispatch drawer, AI planner chat
-- **Multi-agent evaluation:** Multi-dispatch, comparison view (`PlanImplementations.svelte`), single-implementation LLM review (`reviewPR`), multi-implementation LLM judge (`judgePlan`), merge winner with auto-close losers (`mergeWinner`)
+- **Multi-agent evaluation:** Multi-dispatch, comparison view, single-implementation LLM review, multi-implementation LLM judge, merge winner with auto-close losers
+- **Runed migration (partial):** `Debounced` in ModelSelector, `TextareaAutosize` + `useMutationObserver` in PlannerChat, `useDebounce` in actions page, hover styles moved to CSS
 
 ---
 
@@ -74,32 +80,32 @@ When all dispatched agents finish (all `agent.completed` events received), the p
 - Home dashboard (cross-repo metrics) for logged-in users
 - Logged-out users get a minimal login page (replace current landing)
 
-### 5. README Alignment — Actions Structure
+### 5. Typed Events Beyond `agent.completed`
 
-The README monorepo structure lists actions that don't exist (`agent/workflow`, `agent/result`) and is missing ones that do. The actual actions layout:
+**Priority:** Medium — follows the `AgentEvent.Data` pattern now established
 
-```
-actions/
-  core/           Shared action utilities
-  agent/
-    claude/       Claude Code agent harness
-    codex/        Codex agent harness
-    opencode/     OpenCode agent harness
-  git/
-    branch/       Branch creation
-    commit/       Commit with metadata
-    pr/           Pull request creation
-  event/
-    emit/         Post events to the Agents API
-    init/         Initialize event context
-    data/         Attach data to events
-    tag/          Tag management for events
-  comment/
-    create/       Create GitHub comments
-    update/       Update GitHub comments
-  artifact/
-    upload/       Upload artifacts to R2 storage
-```
+The `AgentEvent` schema is the first typed event; other event types still flow through as untyped `Record<string, unknown>`. Extend the same convention to the rest.
+
+**What's needed:**
+
+- `packages/core/src/events/ci/` — `CiEvent.Data` (check outcomes, durations, run URL)
+- `packages/core/src/events/plan/` — `PlanEvent.Data` (evaluated, reviewed, merged)
+- `packages/core/src/events/github/` — `GithubEvent.Data` (pull_request, issue lifecycle)
+- Update console `*.remote.ts` consumers to use typed `parse()` instead of manual casts
+
+### 6. Finish Runed Migration
+
+**Priority:** Low — 4/5 completed, only Drawer remains
+
+- `packages/console/src/lib/ui/Drawer.svelte` — replace overlay `onclick={close}` with `onClickOutside` from runed (gated on `open` via `$effect`). Keep overlay as non-interactive backdrop if visual contrast is still needed.
+
+### 7. Observability Polish
+
+**Priority:** Low — quality-of-life improvements to existing screens
+
+- Show pricing heuristic (`"models-dev"` vs `"agent-reported"`) as a badge on cost columns so reviewers know where the number came from
+- Surface workflow trigger (issue label, manual dispatch, plan re-run) on the event viewer
+- Link `agent.completed` rows back to their plan and to the GitHub run URL in a single column
 
 ---
 
@@ -111,6 +117,9 @@ actions/
 - Agent runs are events (`agent.started`, `agent.completed`), linked to plans via `plan:{planId}` tag
 - No separate join tables — tags handle all relationships
 - LLM judge runs from the console (server-side via `judge.remote.ts`), results stored as events (`github.pull_request.reviewed`, `plan.evaluated`)
+- Typed event data lives in `packages/core/src/events/{type}/index.ts` as `{Type}Event.Data` (Zod, `.catch()` defaults, never throws, single `parse()`)
+- Check artifacts use a dedicated R2 branch namespace routed via the `artifact:branch` tag — no new upload action
+- Check data on events is `{ outcome, summary }` only; rich output lives in the artifact JSON
 
 ---
 
@@ -133,11 +142,18 @@ actions/
   +---------------------------------------------+
                     |
                     v
-  Then: Metrics + Observability
+  Then: Metrics + Typed Events
   +---------------------------------------------+
   |  7. Metric components ($lib/metrics/)       |
   |  8. Repo overview with time range + funnel  |
   |  9. Home dashboard (cross-repo metrics)     |
-  | 10. Logged-out minimal login page           |
+  | 10. CiEvent / PlanEvent / GithubEvent.Data  |
+  +---------------------------------------------+
+                    |
+                    v
+  Cleanup
+  +---------------------------------------------+
+  | 11. Runed: Drawer onClickOutside            |
+  | 12. Observability polish (badges, links)    |
   +---------------------------------------------+
 ```
