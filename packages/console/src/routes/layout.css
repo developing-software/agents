@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 @theme {
+  --sidebar-collapsed-width: 48px;
+  --sidebar-expanded-width: 220px;
+  --sidebar-rail-transition: 180ms ease;
+  --sidebar-drawer-transition: 200ms ease;
+
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
