@@ -25,7 +25,7 @@
   let view = $state<'report' | 'json'>('report');
 
   const parsedJson = $derived.by(() => {
-    if (!content || contentType !== 'application/json') return null;
+    if (!content) return null;
     try {
       return JSON.parse(content);
     } catch {
@@ -33,7 +33,7 @@
     }
   });
 
-  const formattedJson = $derived(parsedJson ? JSON.stringify(parsedJson, null, 2) : null);
+  const formattedJson = $derived(parsedJson ? JSON.stringify(parsedJson, null, 2) : content);
 
   async function toggle() {
     expanded = !expanded;
@@ -75,7 +75,7 @@
         <span class="placeholder">Loading...</span>
       {:else if content === null}
         <span class="placeholder">No artifact available</span>
-      {:else if parsedJson}
+      {:else}
         <div class="tabs">
           <button
             type="button"
@@ -91,12 +91,14 @@
           >JSON</button>
         </div>
         {#if view === 'report'}
-          <FallowReport data={parsedJson} />
+          {#if parsedJson}
+            <FallowReport data={parsedJson} />
+          {:else}
+            <pre class="content-pre">{content}</pre>
+          {/if}
         {:else}
           <pre class="content-pre">{formattedJson}</pre>
         {/if}
-      {:else}
-        <pre class="content-pre">{content}</pre>
       {/if}
     </div>
   {/if}

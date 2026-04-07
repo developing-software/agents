@@ -60,9 +60,9 @@
           </div>
           {#if Array.isArray(group.instances)}
             <div class="instance-list">
-              {#each group.instances as inst, j (inst.path ? `${inst.path}:${inst.start_line}` : j)}
+              {#each group.instances as inst, j (inst.file ? `${inst.file}:${inst.start_line}` : j)}
                 <span class="filepath">
-                  {inst.path ?? '—'}{#if inst.start_line != null && inst.end_line != null}:{inst.start_line}-{inst.end_line}{/if}
+                  {inst.file ?? '—'}{#if inst.start_line != null && inst.end_line != null}:{inst.start_line}-{inst.end_line}{/if}
                 </span>
               {/each}
             </div>
