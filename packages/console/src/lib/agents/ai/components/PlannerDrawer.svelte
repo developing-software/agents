@@ -45,7 +45,7 @@
 	} = $props();
 
 	const basePath = $derived(`/gh/${organization}/${repoName}/agents/plans`);
-
+// TODO: remove derived by and have a pure chat insteace, (add a reactive transport? & have the plan as a separate variable || have a separate state class with inner chat state)
 	const chat = $derived.by(() => {
 		const body = mode === 'edit' && plan ? { planId: plan.id } : undefined;
 		return new Chat({
