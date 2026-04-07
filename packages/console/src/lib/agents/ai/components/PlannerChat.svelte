@@ -33,6 +33,13 @@
 	let isActive = $derived(chat.status === 'submitted' || chat.status === 'streaming');
 	let hasMessages = $derived(chat.messages.length > 0);
 
+	type AskQuestion = {
+		header: string;
+		question: string;
+		multiSelect?: boolean;
+		options?: string[];
+	};
+
 	// Find a pending askUser tool that needs user response
 	let pendingAsk = $derived.by(() => {
 		for (const message of chat.messages) {
@@ -42,11 +49,10 @@
 					getToolName(part) === 'askUser' &&
 					part.state === 'input-available'
 				) {
-					const input = part.input as { question: string; options?: string[]; context?: string };
+					const input = part.input as { questions: AskQuestion[]; context?: string };
 					return {
 						toolCallId: part.toolCallId,
-						question: input.question,
-						options: input.options,
+						questions: input.questions,
 						context: input.context,
 					};
 				}
@@ -118,6 +124,16 @@
 		chat.addToolOutput({ tool: 'askUser', toolCallId, output: answer });
 	}
 
+	function parseAskAnswers(output: string): Record<string, string> {
+		try {
+			const parsed = JSON.parse(output);
+			if (parsed && typeof parsed === 'object') return parsed as Record<string, string>;
+		} catch {
+			// fall through
+		}
+		return {};
+	}
+
 	function handleApprove(id: string, reason?: string) {
 		chat.addToolApprovalResponse({ id, approved: true, reason });
 	}
@@ -157,20 +173,31 @@
 							{@const toolName = getToolName(part)}
 							{#if toolName === 'askUser' && part.state === 'input-available'}
 								<!-- Read-only inline display — interactive controls are in the input area -->
-								{@const input = part.input as { question: string; context?: string }}
+								{@const input = part.input as { questions: AskQuestion[]; context?: string }}
 								<div class="ask-pending">
-									<div class="ask-pending-question">{input.question}</div>
 									{#if input.context}
 										<div class="ask-pending-context">
 											<Markdown source={'```\n' + input.context + '\n```'} />
 										</div>
 									{/if}
+									{#each input.questions as q, qi (qi)}
+										<div class="ask-pending-q">
+											<span class="ask-pending-header">{q.header}</span>
+											<span class="ask-pending-question">{q.question}</span>
+										</div>
+									{/each}
 									<div class="ask-pending-hint">Awaiting your response below...</div>
 								</div>
 							{:else if toolName === 'askUser' && part.state === 'output-available'}
+								{@const askInput = part.input as { questions: AskQuestion[] }}
+								{@const answers = parseAskAnswers(part.output as string)}
 								<div class="ask-answered">
-									<span class="ask-answered-label">Answered:</span>
-									{part.output}
+									{#each askInput.questions as q, qi (qi)}
+										<div class="ask-answered-row">
+											<span class="ask-answered-label">{q.header}</span>
+											<span class="ask-answered-value">{answers[q.header] ?? ''}</span>
+										</div>
+									{/each}
 								</div>
 							{:else if (toolName === 'createPlan' || toolName === 'updatePlan') && part.state === 'approval-requested'}
 								<ToolApproval
@@ -213,12 +240,13 @@
 	</div>
 
 	{#if pendingAsk}
-		<AskUserInput
-			question={pendingAsk.question}
-			options={pendingAsk.options}
-			context={pendingAsk.context}
-			onrespond={(answer) => handleAskUserResponse(pendingAsk.toolCallId, answer)}
-		/>
+		{#key pendingAsk.toolCallId}
+			<AskUserInput
+				questions={pendingAsk.questions}
+				context={pendingAsk.context}
+				onrespond={(answer) => handleAskUserResponse(pendingAsk.toolCallId, answer)}
+			/>
+		{/key}
 	{:else}
 		<div class="input-area">
 			{#if !hasMessages}
@@ -358,15 +386,35 @@
 		border-radius: 4px;
 	}
 
+	.ask-pending-q {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin-bottom: 6px;
+	}
+
+	.ask-pending-header {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 10px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-accent);
+		align-self: flex-start;
+		padding: 1px 6px;
+		border-radius: 3px;
+		background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+	}
+
 	.ask-pending-question {
 		font-size: 13px;
 		color: var(--color-text);
 		font-weight: 500;
-		margin-bottom: 4px;
 	}
 
 	.ask-pending-context {
-		margin-bottom: 4px;
+		margin-bottom: 6px;
 		font-size: 12px;
 	}
 
@@ -395,13 +443,31 @@
 		border-radius: 4px;
 		font-size: 12px;
 		color: var(--color-muted);
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.ask-answered-row {
+		display: flex;
+		gap: 8px;
+		align-items: baseline;
 	}
 
 	.ask-answered-label {
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 10px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		color: var(--color-dim);
-		margin-right: 6px;
+		flex-shrink: 0;
+	}
+
+	.ask-answered-value {
+		color: var(--color-text);
+		white-space: pre-wrap;
+		flex: 1;
 	}
 
 	.approval-denied-text {

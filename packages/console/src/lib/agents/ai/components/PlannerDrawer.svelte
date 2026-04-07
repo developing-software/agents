@@ -1,8 +1,26 @@
 <script lang="ts">
 	import { Chat } from '@ai-sdk/svelte';
-	import { DefaultChatTransport, isToolUIPart, getToolName, lastAssistantMessageIsCompleteWithApprovalResponses } from 'ai';
+	import {
+		DefaultChatTransport,
+		isToolUIPart,
+		getToolName,
+		lastAssistantMessageIsCompleteWithApprovalResponses,
+		lastAssistantMessageIsCompleteWithToolCalls,
+		type UIMessage,
+	} from 'ai';
 	import Drawer from '$lib/ui/Drawer.svelte';
 	import PlannerChat from './PlannerChat.svelte';
+
+	// Auto-send the next request whenever the agent is waiting on us:
+	// either after an approval response (createPlan/updatePlan) or after
+	// a client-side tool output (askUser). This avoids forcing the user
+	// to send an extra message just to resume generation.
+	function shouldAutoSend({ messages }: { messages: UIMessage[] }) {
+		return (
+			lastAssistantMessageIsCompleteWithApprovalResponses({ messages }) ||
+			lastAssistantMessageIsCompleteWithToolCalls({ messages })
+		);
+	}
 
 	type PlanSummary = {
 		id: string;
@@ -35,7 +53,7 @@
 				api: `${basePath}/planner`,
 				body,
 			}),
-			sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+			sendAutomaticallyWhen: shouldAutoSend,
 			onFinish({ message }) {
 				if (mode !== 'draft') return;
 				for (const part of message.parts) {
