@@ -21,6 +21,12 @@
       timeUpdated: string;
     };
   } = $props();
+
+  const COLLAPSED_HEIGHT = 480;
+
+  let contentHeight = $state(0);
+  let expanded = $state(false);
+  const overflows = $derived(contentHeight > COLLAPSED_HEIGHT + 4);
 </script>
 
 <div class="meta">
@@ -40,8 +46,25 @@
   </div>
 {/if}
 
-<div class="body">
-  <Markdown source={plan.body} />
+<div class="body-wrap">
+  <div
+    class="body"
+    class:body-collapsed={!expanded && overflows}
+    style:max-height={!expanded && overflows ? `${COLLAPSED_HEIGHT}px` : null}
+  >
+    <div class="body-inner" bind:offsetHeight={contentHeight}>
+      <Markdown source={plan.body} />
+    </div>
+  </div>
+  {#if overflows}
+    <button
+      type="button"
+      class="toggle-btn"
+      onclick={() => { expanded = !expanded; }}
+    >
+      {expanded ? 'view less' : 'view more'}
+    </button>
+  {/if}
 </div>
 
 <style>
@@ -77,10 +100,41 @@
     margin-bottom: 16px;
   }
 
+  .body-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .body {
     padding: 12px 16px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .body-collapsed {
+    -webkit-mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 80px), transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 80px), transparent 100%);
+  }
+
+  .toggle-btn {
+    align-self: center;
+    margin-top: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 4px 14px;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    color: var(--color-accent);
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .toggle-btn:hover {
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    border-color: var(--color-accent);
   }
 </style>
