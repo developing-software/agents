@@ -37,6 +37,7 @@ export function capitalize(s: string): string {
 
 export function eventDotColor(type: string): string {
   if (type.startsWith("agent.")) return "var(--color-accent)";
+  if (type.startsWith("checks.")) return "var(--color-success)";
   if (type.startsWith("tests.")) return "var(--color-success)";
   if (type.startsWith("lint.")) return "var(--color-merged)";
   if (type.startsWith("github.issues.")) return "var(--color-success)";
@@ -104,13 +105,19 @@ export function formatMetricValue(name: string, value: number): string {
 }
 
 export function flattenChecks(
-  raw: Record<string, Record<string, { outcome: string }>> | undefined,
-): Array<{ category: string; name: string; outcome: string }> {
+  raw: Record<string, Record<string, { outcome: string; summary?: string | null }>> | undefined,
+): Array<{ category: string; name: string; outcome: string; summary: string | null }> {
   if (!raw) return [];
-  const result: Array<{ category: string; name: string; outcome: string }> = [];
+  const result: Array<{ category: string; name: string; outcome: string; summary: string | null }> =
+    [];
   for (const [category, names] of Object.entries(raw)) {
     for (const [name, checkData] of Object.entries(names)) {
-      result.push({ category, name, outcome: checkData.outcome });
+      result.push({
+        category,
+        name,
+        outcome: checkData.outcome,
+        summary: checkData.summary ?? null,
+      });
     }
   }
   return result;

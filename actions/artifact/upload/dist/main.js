@@ -5458,7 +5458,7 @@ var require_request = __commonJS((exports, module) => {
     channels.error = { hasSubscribers: false };
   }
 
-  class Request {
+  class Request2 {
     constructor(origin, {
       path,
       method,
@@ -5691,12 +5691,12 @@ var require_request = __commonJS((exports, module) => {
       return this;
     }
     static [kHTTP1BuildRequest](origin, opts, handler) {
-      return new Request(origin, opts, handler);
+      return new Request2(origin, opts, handler);
     }
     static [kHTTP2BuildRequest](origin, opts, handler) {
       const headers = opts.headers;
       opts = { ...opts, headers: null };
-      const request = new Request(origin, opts, handler);
+      const request = new Request2(origin, opts, handler);
       request.headers = {};
       if (Array.isArray(headers)) {
         if (headers.length % 2 !== 0) {
@@ -5802,7 +5802,7 @@ var require_request = __commonJS((exports, module) => {
       }
     }
   }
-  module.exports = Request;
+  module.exports = Request2;
 });
 
 // node_modules/.bun/undici@5.29.0/node_modules/undici/lib/dispatcher.js
@@ -6647,7 +6647,7 @@ var require_client = __commonJS((exports, module) => {
   var { pipeline } = __require("stream");
   var util = require_util();
   var timers = require_timers();
-  var Request = require_request();
+  var Request2 = require_request();
   var DispatcherBase = require_dispatcher_base();
   var {
     RequestContentLengthMismatchError,
@@ -6917,7 +6917,7 @@ var require_client = __commonJS((exports, module) => {
     }
     [kDispatch](opts, handler) {
       const origin = opts.origin || this[kUrl].origin;
-      const request = this[kHTTPConnVersion] === "h2" ? Request[kHTTP2BuildRequest](origin, opts, handler) : Request[kHTTP1BuildRequest](origin, opts, handler);
+      const request = this[kHTTPConnVersion] === "h2" ? Request2[kHTTP2BuildRequest](origin, opts, handler) : Request2[kHTTP1BuildRequest](origin, opts, handler);
       this[kQueue].push(request);
       if (this[kResuming]) {} else if (util.bodyLength(request.body) == null && util.isIterable(request.body)) {
         this[kResuming] = 1;
@@ -7861,7 +7861,7 @@ upgrade: ${upgrade}\r
     const { body, method, path, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
     let headers;
     if (typeof reqHeaders === "string")
-      headers = Request[kHTTP2CopyHeaders](reqHeaders.trim());
+      headers = Request2[kHTTP2CopyHeaders](reqHeaders.trim());
     else
       headers = reqHeaders;
     if (upgrade) {
@@ -11293,7 +11293,7 @@ var require_headers = __commonJS((exports, module) => {
     }
   }
 
-  class Headers {
+  class Headers2 {
     constructor(init = undefined) {
       if (init === kConstruct) {
         return;
@@ -11306,14 +11306,14 @@ var require_headers = __commonJS((exports, module) => {
       }
     }
     append(name, value) {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       webidl.argumentLengthCheck(arguments, 2, { header: "Headers.append" });
       name = webidl.converters.ByteString(name);
       value = webidl.converters.ByteString(value);
       return appendHeader(this, name, value);
     }
     delete(name) {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       webidl.argumentLengthCheck(arguments, 1, { header: "Headers.delete" });
       name = webidl.converters.ByteString(name);
       if (!isValidHeaderName(name)) {
@@ -11332,7 +11332,7 @@ var require_headers = __commonJS((exports, module) => {
       this[kHeadersList].delete(name);
     }
     get(name) {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       webidl.argumentLengthCheck(arguments, 1, { header: "Headers.get" });
       name = webidl.converters.ByteString(name);
       if (!isValidHeaderName(name)) {
@@ -11345,7 +11345,7 @@ var require_headers = __commonJS((exports, module) => {
       return this[kHeadersList].get(name);
     }
     has(name) {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       webidl.argumentLengthCheck(arguments, 1, { header: "Headers.has" });
       name = webidl.converters.ByteString(name);
       if (!isValidHeaderName(name)) {
@@ -11358,7 +11358,7 @@ var require_headers = __commonJS((exports, module) => {
       return this[kHeadersList].contains(name);
     }
     set(name, value) {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       webidl.argumentLengthCheck(arguments, 2, { header: "Headers.set" });
       name = webidl.converters.ByteString(name);
       value = webidl.converters.ByteString(value);
@@ -11382,7 +11382,7 @@ var require_headers = __commonJS((exports, module) => {
       this[kHeadersList].set(name, value);
     }
     getSetCookie() {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       const list = this[kHeadersList].cookies;
       if (list) {
         return [...list];
@@ -11411,7 +11411,7 @@ var require_headers = __commonJS((exports, module) => {
       return headers;
     }
     keys() {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       if (this[kGuard] === "immutable") {
         const value = this[kHeadersSortedMap];
         return makeIterator(() => value, "Headers", "key");
@@ -11419,7 +11419,7 @@ var require_headers = __commonJS((exports, module) => {
       return makeIterator(() => [...this[kHeadersSortedMap].values()], "Headers", "key");
     }
     values() {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       if (this[kGuard] === "immutable") {
         const value = this[kHeadersSortedMap];
         return makeIterator(() => value, "Headers", "value");
@@ -11427,7 +11427,7 @@ var require_headers = __commonJS((exports, module) => {
       return makeIterator(() => [...this[kHeadersSortedMap].values()], "Headers", "value");
     }
     entries() {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       if (this[kGuard] === "immutable") {
         const value = this[kHeadersSortedMap];
         return makeIterator(() => value, "Headers", "key+value");
@@ -11435,7 +11435,7 @@ var require_headers = __commonJS((exports, module) => {
       return makeIterator(() => [...this[kHeadersSortedMap].values()], "Headers", "key+value");
     }
     forEach(callbackFn, thisArg = globalThis) {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       webidl.argumentLengthCheck(arguments, 1, { header: "Headers.forEach" });
       if (typeof callbackFn !== "function") {
         throw new TypeError("Failed to execute 'forEach' on 'Headers': parameter 1 is not of type 'Function'.");
@@ -11445,12 +11445,12 @@ var require_headers = __commonJS((exports, module) => {
       }
     }
     [Symbol.for("nodejs.util.inspect.custom")]() {
-      webidl.brandCheck(this, Headers);
+      webidl.brandCheck(this, Headers2);
       return this[kHeadersList];
     }
   }
-  Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
-  Object.defineProperties(Headers.prototype, {
+  Headers2.prototype[Symbol.iterator] = Headers2.prototype.entries;
+  Object.defineProperties(Headers2.prototype, {
     append: kEnumerableProperty,
     delete: kEnumerableProperty,
     get: kEnumerableProperty,
@@ -11485,14 +11485,14 @@ var require_headers = __commonJS((exports, module) => {
   };
   module.exports = {
     fill,
-    Headers,
+    Headers: Headers2,
     HeadersList
   };
 });
 
 // node_modules/.bun/undici@5.29.0/node_modules/undici/lib/fetch/response.js
 var require_response = __commonJS((exports, module) => {
-  var { Headers, HeadersList, fill } = require_headers();
+  var { Headers: Headers2, HeadersList, fill } = require_headers();
   var { extractBody, cloneBody, mixinBody } = require_body();
   var util = require_util();
   var { kEnumerableProperty } = util;
@@ -11579,7 +11579,7 @@ var require_response = __commonJS((exports, module) => {
       init = webidl.converters.ResponseInit(init);
       this[kRealm] = { settingsObject: {} };
       this[kState] = makeResponse({});
-      this[kHeaders] = new Headers(kConstruct);
+      this[kHeaders] = new Headers2(kConstruct);
       this[kHeaders][kGuard] = "response";
       this[kHeaders][kHeadersList] = this[kState].headersList;
       this[kHeaders][kRealm] = this[kRealm];
@@ -11847,7 +11847,7 @@ var require_response = __commonJS((exports, module) => {
 // node_modules/.bun/undici@5.29.0/node_modules/undici/lib/fetch/request.js
 var require_request2 = __commonJS((exports, module) => {
   var { extractBody, mixinBody, cloneBody } = require_body();
-  var { Headers, fill: fillHeaders, HeadersList } = require_headers();
+  var { Headers: Headers2, fill: fillHeaders, HeadersList } = require_headers();
   var { FinalizationRegistry } = require_dispatcher_weakref()();
   var util = require_util();
   var {
@@ -11881,7 +11881,7 @@ var require_request2 = __commonJS((exports, module) => {
     signal.removeEventListener("abort", abort);
   });
 
-  class Request {
+  class Request2 {
     constructor(input, init = {}) {
       if (input === kConstruct) {
         return;
@@ -11915,7 +11915,7 @@ var require_request2 = __commonJS((exports, module) => {
         request = makeRequest({ urlList: [parsedURL] });
         fallbackMode = "cors";
       } else {
-        assert(input instanceof Request);
+        assert(input instanceof Request2);
         request = input[kState];
         signal = input[kSignal];
       }
@@ -12061,7 +12061,7 @@ var require_request2 = __commonJS((exports, module) => {
           requestFinalizer.register(ac, { signal, abort });
         }
       }
-      this[kHeaders] = new Headers(kConstruct);
+      this[kHeaders] = new Headers2(kConstruct);
       this[kHeaders][kHeadersList] = request.headersList;
       this[kHeaders][kGuard] = "request";
       this[kHeaders][kRealm] = this[kRealm];
@@ -12084,7 +12084,7 @@ var require_request2 = __commonJS((exports, module) => {
           fillHeaders(this[kHeaders], headers);
         }
       }
-      const inputBody = input instanceof Request ? input[kState].body : null;
+      const inputBody = input instanceof Request2 ? input[kState].body : null;
       if ((init.body != null || inputBody != null) && (request.method === "GET" || request.method === "HEAD")) {
         throw new TypeError("Request with GET/HEAD method cannot have body.");
       }
@@ -12125,23 +12125,23 @@ var require_request2 = __commonJS((exports, module) => {
       this[kState].body = finalBody;
     }
     get method() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].method;
     }
     get url() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return URLSerializer(this[kState].url);
     }
     get headers() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kHeaders];
     }
     get destination() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].destination;
     }
     get referrer() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       if (this[kState].referrer === "no-referrer") {
         return "";
       }
@@ -12151,66 +12151,66 @@ var require_request2 = __commonJS((exports, module) => {
       return this[kState].referrer.toString();
     }
     get referrerPolicy() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].referrerPolicy;
     }
     get mode() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].mode;
     }
     get credentials() {
       return this[kState].credentials;
     }
     get cache() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].cache;
     }
     get redirect() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].redirect;
     }
     get integrity() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].integrity;
     }
     get keepalive() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].keepalive;
     }
     get isReloadNavigation() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].reloadNavigation;
     }
     get isHistoryNavigation() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].historyNavigation;
     }
     get signal() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kSignal];
     }
     get body() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return this[kState].body ? this[kState].body.stream : null;
     }
     get bodyUsed() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return !!this[kState].body && util.isDisturbed(this[kState].body.stream);
     }
     get duplex() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       return "half";
     }
     clone() {
-      webidl.brandCheck(this, Request);
+      webidl.brandCheck(this, Request2);
       if (this.bodyUsed || this.body?.locked) {
         throw new TypeError("unusable");
       }
       const clonedRequest = cloneRequest(this[kState]);
-      const clonedRequestObject = new Request(kConstruct);
+      const clonedRequestObject = new Request2(kConstruct);
       clonedRequestObject[kState] = clonedRequest;
       clonedRequestObject[kRealm] = this[kRealm];
-      clonedRequestObject[kHeaders] = new Headers(kConstruct);
+      clonedRequestObject[kHeaders] = new Headers2(kConstruct);
       clonedRequestObject[kHeaders][kHeadersList] = clonedRequest.headersList;
       clonedRequestObject[kHeaders][kGuard] = this[kHeaders][kGuard];
       clonedRequestObject[kHeaders][kRealm] = this[kHeaders][kRealm];
@@ -12226,7 +12226,7 @@ var require_request2 = __commonJS((exports, module) => {
       return clonedRequestObject;
     }
   }
-  mixinBody(Request);
+  mixinBody(Request2);
   function makeRequest(init) {
     const request = {
       method: "GET",
@@ -12277,7 +12277,7 @@ var require_request2 = __commonJS((exports, module) => {
     }
     return newRequest;
   }
-  Object.defineProperties(Request.prototype, {
+  Object.defineProperties(Request2.prototype, {
     method: kEnumerableProperty,
     url: kEnumerableProperty,
     headers: kEnumerableProperty,
@@ -12303,12 +12303,12 @@ var require_request2 = __commonJS((exports, module) => {
       configurable: true
     }
   });
-  webidl.converters.Request = webidl.interfaceConverter(Request);
+  webidl.converters.Request = webidl.interfaceConverter(Request2);
   webidl.converters.RequestInfo = function(V) {
     if (typeof V === "string") {
       return webidl.converters.USVString(V);
     }
-    if (V instanceof Request) {
+    if (V instanceof Request2) {
       return webidl.converters.Request(V);
     }
     return webidl.converters.USVString(V);
@@ -12378,7 +12378,7 @@ var require_request2 = __commonJS((exports, module) => {
       allowedValues: requestDuplex
     }
   ]);
-  module.exports = { Request, makeRequest };
+  module.exports = { Request: Request2, makeRequest };
 });
 
 // node_modules/.bun/undici@5.29.0/node_modules/undici/lib/fetch/index.js
@@ -12390,8 +12390,8 @@ var require_fetch = __commonJS((exports, module) => {
     filterResponse,
     makeResponse
   } = require_response();
-  var { Headers } = require_headers();
-  var { Request, makeRequest } = require_request2();
+  var { Headers: Headers2 } = require_headers();
+  var { Request: Request2, makeRequest } = require_request2();
   var zlib = __require("zlib");
   var {
     bytesMatch,
@@ -12482,7 +12482,7 @@ var require_fetch = __commonJS((exports, module) => {
     const p = createDeferredPromise();
     let requestObject;
     try {
-      requestObject = new Request(input, init);
+      requestObject = new Request2(input, init);
     } catch (e) {
       p.reject(e);
       return p.promise;
@@ -13237,7 +13237,7 @@ var require_fetch = __commonJS((exports, module) => {
           }
           let codings = [];
           let location = "";
-          const headers = new Headers;
+          const headers = new Headers2;
           if (Array.isArray(headersList)) {
             for (let n = 0;n < headersList.length; n += 2) {
               const key = headersList[n + 0].toString("latin1");
@@ -13316,7 +13316,7 @@ var require_fetch = __commonJS((exports, module) => {
           if (status !== 101) {
             return;
           }
-          const headers = new Headers;
+          const headers = new Headers2;
           for (let n = 0;n < headersList.length; n += 2) {
             const key = headersList[n + 0].toString("latin1");
             const val = headersList[n + 1].toString("latin1");
@@ -13717,7 +13717,7 @@ var require_util4 = __commonJS((exports, module) => {
   var { serializeAMimeType, parseMIMEType } = require_dataURL();
   var { types } = __require("util");
   var { StringDecoder } = __require("string_decoder");
-  var { btoa } = __require("buffer");
+  var { btoa: btoa2 } = __require("buffer");
   var staticPropertyDescriptors = {
     enumerable: true,
     writable: false,
@@ -13809,9 +13809,9 @@ var require_util4 = __commonJS((exports, module) => {
         dataURL += ";base64,";
         const decoder = new StringDecoder("latin1");
         for (const chunk of bytes) {
-          dataURL += btoa(decoder.write(chunk));
+          dataURL += btoa2(decoder.write(chunk));
         }
-        dataURL += btoa(decoder.end());
+        dataURL += btoa2(decoder.end());
         return dataURL;
       }
       case "Text": {
@@ -14158,7 +14158,7 @@ var require_cache = __commonJS((exports, module) => {
   var { kHeadersList } = require_symbols();
   var { webidl } = require_webidl();
   var { Response, cloneResponse } = require_response();
-  var { Request } = require_request2();
+  var { Request: Request2 } = require_request2();
   var { kState, kHeaders, kGuard, kRealm } = require_symbols2();
   var { fetching } = require_fetch();
   var { urlIsHttpHttpsScheme, createDeferredPromise, readAllBytes } = require_util2();
@@ -14191,13 +14191,13 @@ var require_cache = __commonJS((exports, module) => {
       options = webidl.converters.CacheQueryOptions(options);
       let r = null;
       if (request !== undefined) {
-        if (request instanceof Request) {
+        if (request instanceof Request2) {
           r = request[kState];
           if (r.method !== "GET" && !options.ignoreMethod) {
             return [];
           }
         } else if (typeof request === "string") {
-          r = new Request(request)[kState];
+          r = new Request2(request)[kState];
         }
       }
       const responses = [];
@@ -14251,7 +14251,7 @@ var require_cache = __commonJS((exports, module) => {
       }
       const fetchControllers = [];
       for (const request of requests) {
-        const r = new Request(request)[kState];
+        const r = new Request2(request)[kState];
         if (!urlIsHttpHttpsScheme(r.url)) {
           throw webidl.errors.exception({
             header: "Cache.addAll",
@@ -14332,10 +14332,10 @@ var require_cache = __commonJS((exports, module) => {
       request = webidl.converters.RequestInfo(request);
       response = webidl.converters.Response(response);
       let innerRequest = null;
-      if (request instanceof Request) {
+      if (request instanceof Request2) {
         innerRequest = request[kState];
       } else {
-        innerRequest = new Request(request)[kState];
+        innerRequest = new Request2(request)[kState];
       }
       if (!urlIsHttpHttpsScheme(innerRequest.url) || innerRequest.method !== "GET") {
         throw webidl.errors.exception({
@@ -14409,14 +14409,14 @@ var require_cache = __commonJS((exports, module) => {
       request = webidl.converters.RequestInfo(request);
       options = webidl.converters.CacheQueryOptions(options);
       let r = null;
-      if (request instanceof Request) {
+      if (request instanceof Request2) {
         r = request[kState];
         if (r.method !== "GET" && !options.ignoreMethod) {
           return false;
         }
       } else {
         assert(typeof request === "string");
-        r = new Request(request)[kState];
+        r = new Request2(request)[kState];
       }
       const operations = [];
       const operation = {
@@ -14449,13 +14449,13 @@ var require_cache = __commonJS((exports, module) => {
       options = webidl.converters.CacheQueryOptions(options);
       let r = null;
       if (request !== undefined) {
-        if (request instanceof Request) {
+        if (request instanceof Request2) {
           r = request[kState];
           if (r.method !== "GET" && !options.ignoreMethod) {
             return [];
           }
         } else if (typeof request === "string") {
-          r = new Request(request)[kState];
+          r = new Request2(request)[kState];
         }
       }
       const promise = createDeferredPromise();
@@ -14473,7 +14473,7 @@ var require_cache = __commonJS((exports, module) => {
       queueMicrotask(() => {
         const requestList = [];
         for (const request2 of requests) {
-          const requestObject = new Request("https://a");
+          const requestObject = new Request2("https://a");
           requestObject[kState] = request2;
           requestObject[kHeaders][kHeadersList] = request2.headersList;
           requestObject[kHeaders][kGuard] = "immutable";
@@ -15006,10 +15006,10 @@ var require_cookies = __commonJS((exports, module) => {
   var { parseSetCookie } = require_parse();
   var { stringify } = require_util6();
   var { webidl } = require_webidl();
-  var { Headers } = require_headers();
+  var { Headers: Headers2 } = require_headers();
   function getCookies(headers) {
     webidl.argumentLengthCheck(arguments, 1, { header: "getCookies" });
-    webidl.brandCheck(headers, Headers, { strict: false });
+    webidl.brandCheck(headers, Headers2, { strict: false });
     const cookie = headers.get("cookie");
     const out = {};
     if (!cookie) {
@@ -15023,7 +15023,7 @@ var require_cookies = __commonJS((exports, module) => {
   }
   function deleteCookie(headers, name, attributes) {
     webidl.argumentLengthCheck(arguments, 2, { header: "deleteCookie" });
-    webidl.brandCheck(headers, Headers, { strict: false });
+    webidl.brandCheck(headers, Headers2, { strict: false });
     name = webidl.converters.DOMString(name);
     attributes = webidl.converters.DeleteCookieAttributes(attributes);
     setCookie(headers, {
@@ -15035,7 +15035,7 @@ var require_cookies = __commonJS((exports, module) => {
   }
   function getSetCookies(headers) {
     webidl.argumentLengthCheck(arguments, 1, { header: "getSetCookies" });
-    webidl.brandCheck(headers, Headers, { strict: false });
+    webidl.brandCheck(headers, Headers2, { strict: false });
     const cookies = headers.getSetCookie();
     if (!cookies) {
       return [];
@@ -15044,7 +15044,7 @@ var require_cookies = __commonJS((exports, module) => {
   }
   function setCookie(headers, cookie) {
     webidl.argumentLengthCheck(arguments, 2, { header: "setCookie" });
-    webidl.brandCheck(headers, Headers, { strict: false });
+    webidl.brandCheck(headers, Headers2, { strict: false });
     cookie = webidl.converters.Cookie(cookie);
     const str = stringify(cookie);
     if (str) {
@@ -15518,7 +15518,7 @@ var require_connection = __commonJS((exports, module) => {
   var { CloseEvent } = require_events();
   var { makeRequest } = require_request2();
   var { fetching } = require_fetch();
-  var { Headers } = require_headers();
+  var { Headers: Headers2 } = require_headers();
   var { getGlobalDispatcher } = require_global2();
   var { kHeadersList } = require_symbols();
   var channels = {};
@@ -15542,7 +15542,7 @@ var require_connection = __commonJS((exports, module) => {
       redirect: "error"
     });
     if (options.headers) {
-      const headersList = new Headers(options.headers)[kHeadersList];
+      const headersList = new Headers2(options.headers)[kHeadersList];
       request.headersList = headersList;
     }
     const keyValue = crypto.randomBytes(16).toString("base64");
@@ -16523,11 +16523,11 @@ var require_lib = __commonJS((exports) => {
     HttpCodes2[HttpCodes2["ServiceUnavailable"] = 503] = "ServiceUnavailable";
     HttpCodes2[HttpCodes2["GatewayTimeout"] = 504] = "GatewayTimeout";
   })(HttpCodes || (exports.HttpCodes = HttpCodes = {}));
-  var Headers;
-  (function(Headers2) {
-    Headers2["Accept"] = "accept";
-    Headers2["ContentType"] = "content-type";
-  })(Headers || (exports.Headers = Headers = {}));
+  var Headers2;
+  (function(Headers3) {
+    Headers3["Accept"] = "accept";
+    Headers3["ContentType"] = "content-type";
+  })(Headers2 || (exports.Headers = Headers2 = {}));
   var MediaTypes;
   (function(MediaTypes2) {
     MediaTypes2["ApplicationJson"] = "application/json";
@@ -16681,7 +16681,7 @@ var require_lib = __commonJS((exports) => {
     }
     getJson(requestUrl, additionalHeaders = {}) {
       return __awaiter(this, undefined, undefined, function* () {
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
         const res = yield this.get(requestUrl, additionalHeaders);
         return this._processResponse(res, this.requestOptions);
       });
@@ -16689,8 +16689,8 @@ var require_lib = __commonJS((exports) => {
     postJson(requestUrl, obj, additionalHeaders = {}) {
       return __awaiter(this, undefined, undefined, function* () {
         const data = JSON.stringify(obj, null, 2);
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.ContentType, MediaTypes.ApplicationJson);
         const res = yield this.post(requestUrl, data, additionalHeaders);
         return this._processResponse(res, this.requestOptions);
       });
@@ -16698,8 +16698,8 @@ var require_lib = __commonJS((exports) => {
     putJson(requestUrl, obj, additionalHeaders = {}) {
       return __awaiter(this, undefined, undefined, function* () {
         const data = JSON.stringify(obj, null, 2);
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.ContentType, MediaTypes.ApplicationJson);
         const res = yield this.put(requestUrl, data, additionalHeaders);
         return this._processResponse(res, this.requestOptions);
       });
@@ -16707,8 +16707,8 @@ var require_lib = __commonJS((exports) => {
     patchJson(requestUrl, obj, additionalHeaders = {}) {
       return __awaiter(this, undefined, undefined, function* () {
         const data = JSON.stringify(obj, null, 2);
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.ContentType, MediaTypes.ApplicationJson);
         const res = yield this.patch(requestUrl, data, additionalHeaders);
         return this._processResponse(res, this.requestOptions);
       });
@@ -18795,42 +18795,1183 @@ var require_core = __commonJS((exports) => {
 });
 
 // actions/artifact/upload/src/main.ts
-var core = __toESM(require_core(), 1);
+var core2 = __toESM(require_core(), 1);
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { basename, join } from "path";
-var agentsToken = core.getInput("token") || process.env.DEV_AGENTS_TOKEN;
-var apiUrl = core.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
+
+// actions/core/src/index.ts
+var core = __toESM(require_core(), 1);
+var exec = __toESM(require_exec(), 1);
+
+// packages/sdk/ts/src/core/bodySerializer.gen.ts
+var jsonBodySerializer = {
+  bodySerializer: (body) => JSON.stringify(body, (_key, value) => typeof value === "bigint" ? value.toString() : value)
+};
+// packages/sdk/ts/src/core/params.gen.ts
+var extraPrefixesMap = {
+  $body_: "body",
+  $headers_: "headers",
+  $path_: "path",
+  $query_: "query"
+};
+var extraPrefixes = Object.entries(extraPrefixesMap);
+var buildKeyMap = (fields, map) => {
+  if (!map) {
+    map = new Map;
+  }
+  for (const config of fields) {
+    if ("in" in config) {
+      if (config.key) {
+        map.set(config.key, {
+          in: config.in,
+          map: config.map
+        });
+      }
+    } else if ("key" in config) {
+      map.set(config.key, {
+        map: config.map
+      });
+    } else if (config.args) {
+      buildKeyMap(config.args, map);
+    }
+  }
+  return map;
+};
+var stripEmptySlots = (params) => {
+  for (const [slot, value] of Object.entries(params)) {
+    if (value && typeof value === "object" && !Array.isArray(value) && !Object.keys(value).length) {
+      delete params[slot];
+    }
+  }
+};
+var buildClientParams = (args, fields) => {
+  const params = {
+    body: {},
+    headers: {},
+    path: {},
+    query: {}
+  };
+  const map = buildKeyMap(fields);
+  let config;
+  for (const [index, arg] of args.entries()) {
+    if (fields[index]) {
+      config = fields[index];
+    }
+    if (!config) {
+      continue;
+    }
+    if ("in" in config) {
+      if (config.key) {
+        const field = map.get(config.key);
+        const name = field.map || config.key;
+        if (field.in) {
+          params[field.in][name] = arg;
+        }
+      } else {
+        params.body = arg;
+      }
+    } else {
+      for (const [key, value] of Object.entries(arg ?? {})) {
+        const field = map.get(key);
+        if (field) {
+          if (field.in) {
+            const name = field.map || key;
+            params[field.in][name] = value;
+          } else {
+            params[field.map] = value;
+          }
+        } else {
+          const extra = extraPrefixes.find(([prefix]) => key.startsWith(prefix));
+          if (extra) {
+            const [prefix, slot] = extra;
+            params[slot][key.slice(prefix.length)] = value;
+          } else if ("allowExtra" in config && config.allowExtra) {
+            for (const [slot, allowed] of Object.entries(config.allowExtra)) {
+              if (allowed) {
+                params[slot][key] = value;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  stripEmptySlots(params);
+  return params;
+};
+// packages/sdk/ts/src/core/serverSentEvents.gen.ts
+var createSseClient = ({
+  onRequest,
+  onSseError,
+  onSseEvent,
+  responseTransformer,
+  responseValidator,
+  sseDefaultRetryDelay,
+  sseMaxRetryAttempts,
+  sseMaxRetryDelay,
+  sseSleepFn,
+  url,
+  ...options
+}) => {
+  let lastEventId;
+  const sleep = sseSleepFn ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const createStream = async function* () {
+    let retryDelay = sseDefaultRetryDelay ?? 3000;
+    let attempt = 0;
+    const signal = options.signal ?? new AbortController().signal;
+    while (true) {
+      if (signal.aborted)
+        break;
+      attempt++;
+      const headers = options.headers instanceof Headers ? options.headers : new Headers(options.headers);
+      if (lastEventId !== undefined) {
+        headers.set("Last-Event-ID", lastEventId);
+      }
+      try {
+        const requestInit = {
+          redirect: "follow",
+          ...options,
+          body: options.serializedBody,
+          headers,
+          signal
+        };
+        let request = new Request(url, requestInit);
+        if (onRequest) {
+          request = await onRequest(url, requestInit);
+        }
+        const _fetch = options.fetch ?? globalThis.fetch;
+        const response = await _fetch(request);
+        if (!response.ok)
+          throw new Error(`SSE failed: ${response.status} ${response.statusText}`);
+        if (!response.body)
+          throw new Error("No body in SSE response");
+        const reader = response.body.pipeThrough(new TextDecoderStream).getReader();
+        let buffer = "";
+        const abortHandler = () => {
+          try {
+            reader.cancel();
+          } catch {}
+        };
+        signal.addEventListener("abort", abortHandler);
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done)
+              break;
+            buffer += value;
+            buffer = buffer.replace(/\r\n/g, `
+`).replace(/\r/g, `
+`);
+            const chunks = buffer.split(`
+
+`);
+            buffer = chunks.pop() ?? "";
+            for (const chunk of chunks) {
+              const lines = chunk.split(`
+`);
+              const dataLines = [];
+              let eventName;
+              for (const line of lines) {
+                if (line.startsWith("data:")) {
+                  dataLines.push(line.replace(/^data:\s*/, ""));
+                } else if (line.startsWith("event:")) {
+                  eventName = line.replace(/^event:\s*/, "");
+                } else if (line.startsWith("id:")) {
+                  lastEventId = line.replace(/^id:\s*/, "");
+                } else if (line.startsWith("retry:")) {
+                  const parsed = Number.parseInt(line.replace(/^retry:\s*/, ""), 10);
+                  if (!Number.isNaN(parsed)) {
+                    retryDelay = parsed;
+                  }
+                }
+              }
+              let data;
+              let parsedJson = false;
+              if (dataLines.length) {
+                const rawData = dataLines.join(`
+`);
+                try {
+                  data = JSON.parse(rawData);
+                  parsedJson = true;
+                } catch {
+                  data = rawData;
+                }
+              }
+              if (parsedJson) {
+                if (responseValidator) {
+                  await responseValidator(data);
+                }
+                if (responseTransformer) {
+                  data = await responseTransformer(data);
+                }
+              }
+              onSseEvent?.({
+                data,
+                event: eventName,
+                id: lastEventId,
+                retry: retryDelay
+              });
+              if (dataLines.length) {
+                yield data;
+              }
+            }
+          }
+        } finally {
+          signal.removeEventListener("abort", abortHandler);
+          reader.releaseLock();
+        }
+        break;
+      } catch (error) {
+        onSseError?.(error);
+        if (sseMaxRetryAttempts !== undefined && attempt >= sseMaxRetryAttempts) {
+          break;
+        }
+        const backoff = Math.min(retryDelay * 2 ** (attempt - 1), sseMaxRetryDelay ?? 30000);
+        await sleep(backoff);
+      }
+    }
+  };
+  const stream = createStream();
+  return { stream };
+};
+
+// packages/sdk/ts/src/core/pathSerializer.gen.ts
+var separatorArrayExplode = (style) => {
+  switch (style) {
+    case "label":
+      return ".";
+    case "matrix":
+      return ";";
+    case "simple":
+      return ",";
+    default:
+      return "&";
+  }
+};
+var separatorArrayNoExplode = (style) => {
+  switch (style) {
+    case "form":
+      return ",";
+    case "pipeDelimited":
+      return "|";
+    case "spaceDelimited":
+      return "%20";
+    default:
+      return ",";
+  }
+};
+var separatorObjectExplode = (style) => {
+  switch (style) {
+    case "label":
+      return ".";
+    case "matrix":
+      return ";";
+    case "simple":
+      return ",";
+    default:
+      return "&";
+  }
+};
+var serializeArrayParam = ({
+  allowReserved,
+  explode,
+  name,
+  style,
+  value
+}) => {
+  if (!explode) {
+    const joinedValues2 = (allowReserved ? value : value.map((v) => encodeURIComponent(v))).join(separatorArrayNoExplode(style));
+    switch (style) {
+      case "label":
+        return `.${joinedValues2}`;
+      case "matrix":
+        return `;${name}=${joinedValues2}`;
+      case "simple":
+        return joinedValues2;
+      default:
+        return `${name}=${joinedValues2}`;
+    }
+  }
+  const separator = separatorArrayExplode(style);
+  const joinedValues = value.map((v) => {
+    if (style === "label" || style === "simple") {
+      return allowReserved ? v : encodeURIComponent(v);
+    }
+    return serializePrimitiveParam({
+      allowReserved,
+      name,
+      value: v
+    });
+  }).join(separator);
+  return style === "label" || style === "matrix" ? separator + joinedValues : joinedValues;
+};
+var serializePrimitiveParam = ({
+  allowReserved,
+  name,
+  value
+}) => {
+  if (value === undefined || value === null) {
+    return "";
+  }
+  if (typeof value === "object") {
+    throw new Error("Deeply-nested arrays/objects aren’t supported. Provide your own `querySerializer()` to handle these.");
+  }
+  return `${name}=${allowReserved ? value : encodeURIComponent(value)}`;
+};
+var serializeObjectParam = ({
+  allowReserved,
+  explode,
+  name,
+  style,
+  value,
+  valueOnly
+}) => {
+  if (value instanceof Date) {
+    return valueOnly ? value.toISOString() : `${name}=${value.toISOString()}`;
+  }
+  if (style !== "deepObject" && !explode) {
+    let values = [];
+    Object.entries(value).forEach(([key, v]) => {
+      values = [...values, key, allowReserved ? v : encodeURIComponent(v)];
+    });
+    const joinedValues2 = values.join(",");
+    switch (style) {
+      case "form":
+        return `${name}=${joinedValues2}`;
+      case "label":
+        return `.${joinedValues2}`;
+      case "matrix":
+        return `;${name}=${joinedValues2}`;
+      default:
+        return joinedValues2;
+    }
+  }
+  const separator = separatorObjectExplode(style);
+  const joinedValues = Object.entries(value).map(([key, v]) => serializePrimitiveParam({
+    allowReserved,
+    name: style === "deepObject" ? `${name}[${key}]` : key,
+    value: v
+  })).join(separator);
+  return style === "label" || style === "matrix" ? separator + joinedValues : joinedValues;
+};
+
+// packages/sdk/ts/src/core/utils.gen.ts
+var PATH_PARAM_RE = /\{[^{}]+\}/g;
+var defaultPathSerializer = ({ path, url: _url }) => {
+  let url = _url;
+  const matches = _url.match(PATH_PARAM_RE);
+  if (matches) {
+    for (const match of matches) {
+      let explode = false;
+      let name = match.substring(1, match.length - 1);
+      let style = "simple";
+      if (name.endsWith("*")) {
+        explode = true;
+        name = name.substring(0, name.length - 1);
+      }
+      if (name.startsWith(".")) {
+        name = name.substring(1);
+        style = "label";
+      } else if (name.startsWith(";")) {
+        name = name.substring(1);
+        style = "matrix";
+      }
+      const value = path[name];
+      if (value === undefined || value === null) {
+        continue;
+      }
+      if (Array.isArray(value)) {
+        url = url.replace(match, serializeArrayParam({ explode, name, style, value }));
+        continue;
+      }
+      if (typeof value === "object") {
+        url = url.replace(match, serializeObjectParam({
+          explode,
+          name,
+          style,
+          value,
+          valueOnly: true
+        }));
+        continue;
+      }
+      if (style === "matrix") {
+        url = url.replace(match, `;${serializePrimitiveParam({
+          name,
+          value
+        })}`);
+        continue;
+      }
+      const replaceValue = encodeURIComponent(style === "label" ? `.${value}` : value);
+      url = url.replace(match, replaceValue);
+    }
+  }
+  return url;
+};
+var getUrl = ({
+  baseUrl,
+  path,
+  query,
+  querySerializer,
+  url: _url
+}) => {
+  const pathUrl = _url.startsWith("/") ? _url : `/${_url}`;
+  let url = (baseUrl ?? "") + pathUrl;
+  if (path) {
+    url = defaultPathSerializer({ path, url });
+  }
+  let search = query ? querySerializer(query) : "";
+  if (search.startsWith("?")) {
+    search = search.substring(1);
+  }
+  if (search) {
+    url += `?${search}`;
+  }
+  return url;
+};
+function getValidRequestBody(options) {
+  const hasBody = options.body !== undefined;
+  const isSerializedBody = hasBody && options.bodySerializer;
+  if (isSerializedBody) {
+    if ("serializedBody" in options) {
+      const hasSerializedBody = options.serializedBody !== undefined && options.serializedBody !== "";
+      return hasSerializedBody ? options.serializedBody : null;
+    }
+    return options.body !== "" ? options.body : null;
+  }
+  if (hasBody) {
+    return options.body;
+  }
+  return;
+}
+
+// packages/sdk/ts/src/core/auth.gen.ts
+var getAuthToken = async (auth, callback) => {
+  const token = typeof callback === "function" ? await callback(auth) : callback;
+  if (!token) {
+    return;
+  }
+  if (auth.scheme === "bearer") {
+    return `Bearer ${token}`;
+  }
+  if (auth.scheme === "basic") {
+    return `Basic ${btoa(token)}`;
+  }
+  return token;
+};
+
+// packages/sdk/ts/src/client/utils.gen.ts
+var createQuerySerializer = ({
+  parameters = {},
+  ...args
+} = {}) => {
+  const querySerializer = (queryParams) => {
+    const search = [];
+    if (queryParams && typeof queryParams === "object") {
+      for (const name in queryParams) {
+        const value = queryParams[name];
+        if (value === undefined || value === null) {
+          continue;
+        }
+        const options = parameters[name] || args;
+        if (Array.isArray(value)) {
+          const serializedArray = serializeArrayParam({
+            allowReserved: options.allowReserved,
+            explode: true,
+            name,
+            style: "form",
+            value,
+            ...options.array
+          });
+          if (serializedArray)
+            search.push(serializedArray);
+        } else if (typeof value === "object") {
+          const serializedObject = serializeObjectParam({
+            allowReserved: options.allowReserved,
+            explode: true,
+            name,
+            style: "deepObject",
+            value,
+            ...options.object
+          });
+          if (serializedObject)
+            search.push(serializedObject);
+        } else {
+          const serializedPrimitive = serializePrimitiveParam({
+            allowReserved: options.allowReserved,
+            name,
+            value
+          });
+          if (serializedPrimitive)
+            search.push(serializedPrimitive);
+        }
+      }
+    }
+    return search.join("&");
+  };
+  return querySerializer;
+};
+var getParseAs = (contentType) => {
+  if (!contentType) {
+    return "stream";
+  }
+  const cleanContent = contentType.split(";")[0]?.trim();
+  if (!cleanContent) {
+    return;
+  }
+  if (cleanContent.startsWith("application/json") || cleanContent.endsWith("+json")) {
+    return "json";
+  }
+  if (cleanContent === "multipart/form-data") {
+    return "formData";
+  }
+  if (["application/", "audio/", "image/", "video/"].some((type) => cleanContent.startsWith(type))) {
+    return "blob";
+  }
+  if (cleanContent.startsWith("text/")) {
+    return "text";
+  }
+  return;
+};
+var checkForExistence = (options, name) => {
+  if (!name) {
+    return false;
+  }
+  if (options.headers.has(name) || options.query?.[name] || options.headers.get("Cookie")?.includes(`${name}=`)) {
+    return true;
+  }
+  return false;
+};
+var setAuthParams = async ({
+  security,
+  ...options
+}) => {
+  for (const auth of security) {
+    if (checkForExistence(options, auth.name)) {
+      continue;
+    }
+    const token = await getAuthToken(auth, options.auth);
+    if (!token) {
+      continue;
+    }
+    const name = auth.name ?? "Authorization";
+    switch (auth.in) {
+      case "query":
+        if (!options.query) {
+          options.query = {};
+        }
+        options.query[name] = token;
+        break;
+      case "cookie":
+        options.headers.append("Cookie", `${name}=${token}`);
+        break;
+      case "header":
+      default:
+        options.headers.set(name, token);
+        break;
+    }
+  }
+};
+var buildUrl = (options) => getUrl({
+  baseUrl: options.baseUrl,
+  path: options.path,
+  query: options.query,
+  querySerializer: typeof options.querySerializer === "function" ? options.querySerializer : createQuerySerializer(options.querySerializer),
+  url: options.url
+});
+var mergeConfigs = (a, b) => {
+  const config = { ...a, ...b };
+  if (config.baseUrl?.endsWith("/")) {
+    config.baseUrl = config.baseUrl.substring(0, config.baseUrl.length - 1);
+  }
+  config.headers = mergeHeaders(a.headers, b.headers);
+  return config;
+};
+var headersEntries = (headers) => {
+  const entries = [];
+  headers.forEach((value, key) => {
+    entries.push([key, value]);
+  });
+  return entries;
+};
+var mergeHeaders = (...headers) => {
+  const mergedHeaders = new Headers;
+  for (const header of headers) {
+    if (!header) {
+      continue;
+    }
+    const iterator = header instanceof Headers ? headersEntries(header) : Object.entries(header);
+    for (const [key, value] of iterator) {
+      if (value === null) {
+        mergedHeaders.delete(key);
+      } else if (Array.isArray(value)) {
+        for (const v of value) {
+          mergedHeaders.append(key, v);
+        }
+      } else if (value !== undefined) {
+        mergedHeaders.set(key, typeof value === "object" ? JSON.stringify(value) : value);
+      }
+    }
+  }
+  return mergedHeaders;
+};
+
+class Interceptors {
+  fns = [];
+  clear() {
+    this.fns = [];
+  }
+  eject(id) {
+    const index = this.getInterceptorIndex(id);
+    if (this.fns[index]) {
+      this.fns[index] = null;
+    }
+  }
+  exists(id) {
+    const index = this.getInterceptorIndex(id);
+    return Boolean(this.fns[index]);
+  }
+  getInterceptorIndex(id) {
+    if (typeof id === "number") {
+      return this.fns[id] ? id : -1;
+    }
+    return this.fns.indexOf(id);
+  }
+  update(id, fn) {
+    const index = this.getInterceptorIndex(id);
+    if (this.fns[index]) {
+      this.fns[index] = fn;
+      return id;
+    }
+    return false;
+  }
+  use(fn) {
+    this.fns.push(fn);
+    return this.fns.length - 1;
+  }
+}
+var createInterceptors = () => ({
+  error: new Interceptors,
+  request: new Interceptors,
+  response: new Interceptors
+});
+var defaultQuerySerializer = createQuerySerializer({
+  allowReserved: false,
+  array: {
+    explode: true,
+    style: "form"
+  },
+  object: {
+    explode: true,
+    style: "deepObject"
+  }
+});
+var defaultHeaders = {
+  "Content-Type": "application/json"
+};
+var createConfig = (override = {}) => ({
+  ...jsonBodySerializer,
+  headers: defaultHeaders,
+  parseAs: "auto",
+  querySerializer: defaultQuerySerializer,
+  ...override
+});
+
+// packages/sdk/ts/src/client/client.gen.ts
+var createClient = (config = {}) => {
+  let _config = mergeConfigs(createConfig(), config);
+  const getConfig = () => ({ ..._config });
+  const setConfig = (config2) => {
+    _config = mergeConfigs(_config, config2);
+    return getConfig();
+  };
+  const interceptors = createInterceptors();
+  const beforeRequest = async (options) => {
+    const opts = {
+      ..._config,
+      ...options,
+      fetch: options.fetch ?? _config.fetch ?? globalThis.fetch,
+      headers: mergeHeaders(_config.headers, options.headers),
+      serializedBody: undefined
+    };
+    if (opts.security) {
+      await setAuthParams({
+        ...opts,
+        security: opts.security
+      });
+    }
+    if (opts.requestValidator) {
+      await opts.requestValidator(opts);
+    }
+    if (opts.body !== undefined && opts.bodySerializer) {
+      opts.serializedBody = opts.bodySerializer(opts.body);
+    }
+    if (opts.body === undefined || opts.serializedBody === "") {
+      opts.headers.delete("Content-Type");
+    }
+    const url = buildUrl(opts);
+    return { opts, url };
+  };
+  const request = async (options) => {
+    const { opts, url } = await beforeRequest(options);
+    const requestInit = {
+      redirect: "follow",
+      ...opts,
+      body: getValidRequestBody(opts)
+    };
+    let request2 = new Request(url, requestInit);
+    for (const fn of interceptors.request.fns) {
+      if (fn) {
+        request2 = await fn(request2, opts);
+      }
+    }
+    const _fetch = opts.fetch;
+    let response;
+    try {
+      response = await _fetch(request2);
+    } catch (error2) {
+      let finalError2 = error2;
+      for (const fn of interceptors.error.fns) {
+        if (fn) {
+          finalError2 = await fn(error2, undefined, request2, opts);
+        }
+      }
+      finalError2 = finalError2 || {};
+      if (opts.throwOnError) {
+        throw finalError2;
+      }
+      return opts.responseStyle === "data" ? undefined : {
+        error: finalError2,
+        request: request2,
+        response: undefined
+      };
+    }
+    for (const fn of interceptors.response.fns) {
+      if (fn) {
+        response = await fn(response, request2, opts);
+      }
+    }
+    const result = {
+      request: request2,
+      response
+    };
+    if (response.ok) {
+      const parseAs = (opts.parseAs === "auto" ? getParseAs(response.headers.get("Content-Type")) : opts.parseAs) ?? "json";
+      if (response.status === 204 || response.headers.get("Content-Length") === "0") {
+        let emptyData;
+        switch (parseAs) {
+          case "arrayBuffer":
+          case "blob":
+          case "text":
+            emptyData = await response[parseAs]();
+            break;
+          case "formData":
+            emptyData = new FormData;
+            break;
+          case "stream":
+            emptyData = response.body;
+            break;
+          case "json":
+          default:
+            emptyData = {};
+            break;
+        }
+        return opts.responseStyle === "data" ? emptyData : {
+          data: emptyData,
+          ...result
+        };
+      }
+      let data;
+      switch (parseAs) {
+        case "arrayBuffer":
+        case "blob":
+        case "formData":
+        case "text":
+          data = await response[parseAs]();
+          break;
+        case "json": {
+          const text = await response.text();
+          data = text ? JSON.parse(text) : {};
+          break;
+        }
+        case "stream":
+          return opts.responseStyle === "data" ? response.body : {
+            data: response.body,
+            ...result
+          };
+      }
+      if (parseAs === "json") {
+        if (opts.responseValidator) {
+          await opts.responseValidator(data);
+        }
+        if (opts.responseTransformer) {
+          data = await opts.responseTransformer(data);
+        }
+      }
+      return opts.responseStyle === "data" ? data : {
+        data,
+        ...result
+      };
+    }
+    const textError = await response.text();
+    let jsonError;
+    try {
+      jsonError = JSON.parse(textError);
+    } catch {}
+    const error = jsonError ?? textError;
+    let finalError = error;
+    for (const fn of interceptors.error.fns) {
+      if (fn) {
+        finalError = await fn(error, response, request2, opts);
+      }
+    }
+    finalError = finalError || {};
+    if (opts.throwOnError) {
+      throw finalError;
+    }
+    return opts.responseStyle === "data" ? undefined : {
+      error: finalError,
+      ...result
+    };
+  };
+  const makeMethodFn = (method) => (options) => request({ ...options, method });
+  const makeSseFn = (method) => async (options) => {
+    const { opts, url } = await beforeRequest(options);
+    return createSseClient({
+      ...opts,
+      body: opts.body,
+      headers: opts.headers,
+      method,
+      onRequest: async (url2, init) => {
+        let request2 = new Request(url2, init);
+        for (const fn of interceptors.request.fns) {
+          if (fn) {
+            request2 = await fn(request2, opts);
+          }
+        }
+        return request2;
+      },
+      serializedBody: getValidRequestBody(opts),
+      url
+    });
+  };
+  const _buildUrl = (options) => buildUrl({ ..._config, ...options });
+  return {
+    buildUrl: _buildUrl,
+    connect: makeMethodFn("CONNECT"),
+    delete: makeMethodFn("DELETE"),
+    get: makeMethodFn("GET"),
+    getConfig,
+    head: makeMethodFn("HEAD"),
+    interceptors,
+    options: makeMethodFn("OPTIONS"),
+    patch: makeMethodFn("PATCH"),
+    post: makeMethodFn("POST"),
+    put: makeMethodFn("PUT"),
+    request,
+    setConfig,
+    sse: {
+      connect: makeSseFn("CONNECT"),
+      delete: makeSseFn("DELETE"),
+      get: makeSseFn("GET"),
+      head: makeSseFn("HEAD"),
+      options: makeSseFn("OPTIONS"),
+      patch: makeSseFn("PATCH"),
+      post: makeSseFn("POST"),
+      put: makeSseFn("PUT"),
+      trace: makeSseFn("TRACE")
+    },
+    trace: makeMethodFn("TRACE")
+  };
+};
+// packages/sdk/ts/src/client.gen.ts
+var client = createClient(createConfig({ baseUrl: "https://agents-dev.developing.company/api" }));
+
+// packages/sdk/ts/src/sdk.gen.ts
+class HeyApiClient {
+  client;
+  constructor(args) {
+    this.client = args?.client ?? client;
+  }
+}
+
+class HeyApiRegistry {
+  defaultKey = "default";
+  instances = new Map;
+  get(key) {
+    const instance = this.instances.get(key ?? this.defaultKey);
+    if (!instance) {
+      throw new Error(`No SDK client found. Create one with "new DevAgentSdk()" to fix this error.`);
+    }
+    return instance;
+  }
+  set(value, key) {
+    this.instances.set(key ?? this.defaultKey, value);
+  }
+}
+
+class DevAgentSdk extends HeyApiClient {
+  static __registry = new HeyApiRegistry;
+  constructor(args) {
+    super(args);
+    DevAgentSdk.__registry.set(this, args?.key);
+  }
+  getProfile(options) {
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/profile",
+      ...options
+    });
+  }
+  putProfile(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "name" },
+          { in: "body", key: "email" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).put({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/profile",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
+  getApp(options) {
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/app",
+      ...options
+    });
+  }
+  postApp(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "name" },
+          { in: "body", key: "redirectURI" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/app",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
+  deleteAppById(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
+    return (options?.client ?? this.client).delete({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/app/{id}",
+      ...options,
+      ...params
+    });
+  }
+  getAppById(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/app/{id}",
+      ...options,
+      ...params
+    });
+  }
+  getToken(options) {
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/token",
+      ...options
+    });
+  }
+  postToken(options) {
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/token",
+      ...options
+    });
+  }
+  deleteTokenById(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
+    return (options?.client ?? this.client).delete({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/token/{id}",
+      ...options,
+      ...params
+    });
+  }
+  getTokenById(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/token/{id}",
+      ...options,
+      ...params
+    });
+  }
+  postEvents(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ key: "eventIngestInput", map: "body" }] }]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/events",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
+  postEventsByIdArtifacts(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/events/{id}/artifacts",
+      ...options,
+      ...params
+    });
+  }
+  postGithubDispatch(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "owner" },
+          { in: "body", key: "repo" },
+          { in: "body", key: "agent" },
+          { in: "body", key: "prompt" },
+          { in: "body", key: "issue_number" },
+          { in: "body", key: "tags" },
+          { in: "body", key: "model" },
+          { in: "body", key: "ref" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/github/dispatch",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
+  getModelsPricing(options) {
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing",
+      ...options
+    });
+  }
+  getModelsPricingByModelId(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }] }]);
+    return (options?.client ?? this.client).get({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/pricing/{modelId}",
+      ...options,
+      ...params
+    });
+  }
+  postModelsCost(parameters, options) {
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "model" },
+          { in: "body", key: "provider" },
+          { in: "body", key: "tokens" }
+        ]
+      }
+    ]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/models/cost",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
+}
+// packages/sdk/ts/fetch.ts
+var DEFAULT_TIMEOUT_MS = 1e4;
+var RETRY_DELAY_MS = 2000;
+function createFetchWithRetry(timeoutMs = DEFAULT_TIMEOUT_MS) {
+  return async (input, init) => {
+    const applyTimeout = (req, reqInit) => {
+      const timeout = AbortSignal.timeout(timeoutMs);
+      if (req instanceof Request) {
+        const signal2 = req.signal ? AbortSignal.any([req.signal, timeout]) : timeout;
+        return [new Request(req, { signal: signal2 }), undefined];
+      }
+      const existing = reqInit?.signal;
+      const signal = existing ? AbortSignal.any([existing, timeout]) : timeout;
+      return [req, { ...reqInit, signal }];
+    };
+    const backup = input instanceof Request ? input.clone() : undefined;
+    try {
+      const [req, opts] = applyTimeout(input, init);
+      return await fetch(req, opts);
+    } catch {
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      const [req, opts] = applyTimeout(backup ?? input, init);
+      return fetch(req, opts);
+    }
+  };
+}
+// actions/artifact/upload/src/main.ts
+var agentsToken = core2.getInput("token") || process.env.DEV_AGENTS_TOKEN;
+var apiUrl = core2.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
 var eventId = process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID;
+var uploadUrl = process.env.DEV_AGENTS_ARTIFACT_URL || (eventId ? `${apiUrl}/events/${eventId}/artifacts` : null);
 async function uploadFile(filePath, name) {
   const contentType = filePath.endsWith(".json") ? "application/json" : "text/plain";
   const form = new FormData;
   form.append("name", name);
   form.append("file", new Blob([readFileSync(filePath)], { type: contentType }), name);
-  const res = await fetch(`${apiUrl}/events/${eventId}/artifacts`, {
+  const res = await createFetchWithRetry(120000)(uploadUrl, {
     method: "POST",
     headers: { Authorization: `Bearer ${agentsToken}` },
     body: form
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "(no body)");
-    core.warning(`Failed to upload ${name}: HTTP ${res.status} — ${text}`);
+    core2.warning(`Failed to upload ${name}: HTTP ${res.status} — ${text}`);
   } else {
-    core.info(`Uploaded ${name}`);
+    core2.info(`Uploaded ${name}`);
   }
 }
 async function run() {
   if (!agentsToken) {
-    core.info("No agents token available, skipping artifact upload");
+    core2.info("No agents token available, skipping artifact upload");
     return;
   }
-  if (!eventId) {
-    core.info("No event ID available, skipping artifact upload");
+  if (!uploadUrl) {
+    core2.info("No artifact URL or event ID available, skipping artifact upload");
     return;
   }
-  const path = core.getInput("path", { required: true });
-  const nameOverride = core.getInput("name");
+  const path = core2.getInput("path", { required: true });
+  const nameOverride = core2.getInput("name");
   if (!existsSync(path)) {
-    core.warning(`Artifact path not found: ${path}`);
+    core2.warning(`Artifact path not found: ${path}`);
     return;
   }
   const stat = statSync(path);
@@ -18845,4 +19986,4 @@ async function run() {
     await uploadFile(path, nameOverride || basename(path));
   }
 }
-run().catch(core.setFailed);
+run().catch(core2.setFailed);

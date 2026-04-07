@@ -9,6 +9,11 @@ import { Examples } from "@agents/core/examples";
 
 const IngestInput = Event.Source.Ref.and(
   z.object({
+    id: Event.Info.shape.id.optional().meta({
+      description:
+        "Client-generated event ID for idempotent creation. If omitted, the server generates one.",
+      example: Examples.Event.id,
+    }),
     parentEventId: Event.Info.shape.parentEventId.optional().meta({
       description: "Parent event ID to group related events.",
       example: null,
@@ -70,6 +75,7 @@ export namespace EventApi {
         }
 
         const id = await Event.create({
+          id: body.id ?? undefined,
           source: resolved.source,
           sourceId: resolved.sourceId,
           parentEventId: body.parentEventId ?? undefined,

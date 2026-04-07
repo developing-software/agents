@@ -12477,7 +12477,7 @@ var require_fetch = __commonJS((exports, module) => {
       this.emit("terminated", error);
     }
   }
-  function fetch(input, init = {}) {
+  function fetch2(input, init = {}) {
     webidl.argumentLengthCheck(arguments, 1, { header: "globalThis.fetch" });
     const p = createDeferredPromise();
     let requestObject;
@@ -13334,7 +13334,7 @@ var require_fetch = __commonJS((exports, module) => {
     }
   }
   module.exports = {
-    fetch,
+    fetch: fetch2,
     Fetch,
     fetching,
     finalizeAndReportTiming
@@ -16374,7 +16374,7 @@ var require_undici = __commonJS((exports, module) => {
   exports.getGlobalDispatcher = getGlobalDispatcher;
   if (util.nodeMajor > 16 || util.nodeMajor === 16 && util.nodeMinor >= 8) {
     let fetchImpl = null;
-    exports.fetch = async function fetch(resource) {
+    exports.fetch = async function fetch2(resource) {
       if (!fetchImpl) {
         fetchImpl = require_fetch().fetch;
       }
@@ -19627,14 +19627,14 @@ var require_dist_node5 = __commonJS((exports, module) => {
     let headers = {};
     let status;
     let url;
-    let { fetch } = globalThis;
+    let { fetch: fetch2 } = globalThis;
     if ((_b = requestOptions.request) == null ? undefined : _b.fetch) {
-      fetch = requestOptions.request.fetch;
+      fetch2 = requestOptions.request.fetch;
     }
-    if (!fetch) {
+    if (!fetch2) {
       throw new Error("fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing");
     }
-    return fetch(requestOptions.url, {
+    return fetch2(requestOptions.url, {
       method: requestOptions.method,
       body: requestOptions.body,
       redirect: (_c = requestOptions.request) == null ? undefined : _c.redirect,
@@ -23973,14 +23973,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -24001,14 +23994,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "redirectURI" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -24095,20 +24081,16 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postGithubDispatch(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "owner" },
-          { in: "body", key: "repo" },
-          { in: "body", key: "agent" },
-          { in: "body", key: "prompt" },
-          { in: "body", key: "issue_number" },
-          { in: "body", key: "tags" },
-          { in: "body", key: "model" },
-          { in: "body", key: "ref" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "owner" },
+      { in: "body", key: "repo" },
+      { in: "body", key: "agent" },
+      { in: "body", key: "prompt" },
+      { in: "body", key: "issue_number" },
+      { in: "body", key: "tags" },
+      { in: "body", key: "model" },
+      { in: "body", key: "ref" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/github/dispatch",
@@ -24138,15 +24120,11 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postModelsCost(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "model" },
-          { in: "body", key: "provider" },
-          { in: "body", key: "tokens" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "model" },
+      { in: "body", key: "provider" },
+      { in: "body", key: "tokens" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/cost",

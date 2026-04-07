@@ -1,4 +1,4 @@
-import { and, arrayContains, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, arrayContains, desc, eq, gte, inArray, isNull, lte, notLike, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
@@ -109,6 +109,7 @@ export namespace Event {
 
   export const create = fn(
     z.object({
+      id: z.string().optional(),
       type: z.string(),
       origin: z.enum(OriginType),
       source: z.string().optional(),
@@ -119,7 +120,7 @@ export namespace Event {
     }),
     async (input) => {
       return createTransaction(async (tx) => {
-        const id = createID("event");
+        const id = input.id ?? createID("event");
         const parentEventId = await inferParentEventId(input);
         log.info("create", {
           id,
@@ -128,16 +129,19 @@ export namespace Event {
           sourceId: input.sourceId,
           parentEventId,
         });
-        await tx.insert(eventTable).values({
-          id,
-          type: input.type,
-          origin: input.origin,
-          source: input.source,
-          sourceId: input.sourceId,
-          parentEventId,
-          tags: input.tags ?? [],
-          data: input.data ?? {},
-        });
+        await tx
+          .insert(eventTable)
+          .values({
+            id,
+            type: input.type,
+            origin: input.origin,
+            source: input.source,
+            sourceId: input.sourceId,
+            parentEventId,
+            tags: input.tags ?? [],
+            data: input.data ?? {},
+          })
+          .onConflictDoNothing();
         return id;
       });
     },
@@ -187,12 +191,15 @@ export namespace Event {
     source?: string;
     sourceId?: string;
     tags?: string[];
+    excludeTypePrefix?: string;
   }): Promise<string | undefined> {
     return useTransaction(async (tx) => {
       const conditions = [];
       if (opts.source) conditions.push(eq(eventTable.source, opts.source));
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
       if (opts.tags?.length) conditions.push(arrayContains(eventTable.tags, opts.tags));
+      if (opts.excludeTypePrefix)
+        conditions.push(notLike(eventTable.type, opts.excludeTypePrefix + "%"));
       conditions.push(isNull(eventTable.parentEventId));
       const row = await tx
         .select({ id: eventTable.id })
@@ -218,7 +225,9 @@ export namespace Event {
 
     const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
     if (prTag) {
-      const parentEventId = await findParent({ tags: [prTag] }).catch(() => undefined);
+      const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent." }).catch(
+        () => undefined,
+      );
       if (parentEventId) {
         return parentEventId;
       }
@@ -226,7 +235,10 @@ export namespace Event {
 
     const workflowTag = opts.tags?.find((tag) => tag.startsWith("gh:workflow:"));
     if (workflowTag) {
-      const parentEventId = await findParent({ tags: [workflowTag] }).catch(() => undefined);
+      const parentEventId = await findParent({
+        tags: [workflowTag],
+        excludeTypePrefix: "agent.",
+      }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;
       }
@@ -234,7 +246,10 @@ export namespace Event {
 
     const issueTag = opts.tags?.find((tag) => tag.startsWith("gh:issue:"));
     if (issueTag) {
-      const parentEventId = await findParent({ tags: [issueTag] }).catch(() => undefined);
+      const parentEventId = await findParent({
+        tags: [issueTag],
+        excludeTypePrefix: "agent.",
+      }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;
       }

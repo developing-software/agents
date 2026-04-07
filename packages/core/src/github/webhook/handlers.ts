@@ -101,7 +101,12 @@ export function registerHandlers(webhook: WebhookEmitter) {
     const issueTags = [Tags.ghRepo(repo.fullName), Tags.ghIssue(payload.issue.number)];
     const parentEventId =
       payload.action !== "opened"
-        ? await Event.findParent({ source: "repository", sourceId: repo.id, tags: issueTags })
+        ? await Event.findParent({
+            source: "repository",
+            sourceId: repo.id,
+            tags: issueTags,
+            excludeTypePrefix: "agent.",
+          })
         : undefined;
 
     await Event.create({
@@ -145,7 +150,12 @@ export function registerHandlers(webhook: WebhookEmitter) {
     ];
     const parentEventId =
       payload.action !== "opened"
-        ? await Event.findParent({ source: "repository", sourceId: repo.id, tags: prTags })
+        ? await Event.findParent({
+            source: "repository",
+            sourceId: repo.id,
+            tags: prTags,
+            excludeTypePrefix: "agent.",
+          })
         : undefined;
 
     await Event.create({
@@ -183,6 +193,7 @@ export function registerHandlers(webhook: WebhookEmitter) {
       source: "repository",
       sourceId: repo.id,
       tags: [Tags.ghRepo(repo.fullName), Tags.ghBranch(branch)],
+      excludeTypePrefix: "agent.",
     });
 
     await Event.create({

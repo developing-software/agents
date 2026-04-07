@@ -1,4 +1,5 @@
 # Code Review Skill
+
 1. List the files to review first
 2. After every 3-5 files, output a summary of findings so far
 3. Categorize issues: critical bugs, style, performance, unused code

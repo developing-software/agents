@@ -21,6 +21,9 @@ outputs:
   outcome:
     description: Test outcome (success or failure)
     value: ${{ steps.run-tests.outputs.outcome }}
+  summary:
+    description: One-line summary of the test results
+    value: ${{ steps.run-tests.outputs.summary }}
 
 runs:
   using: composite
@@ -47,11 +50,21 @@ runs:
       run: |
         bun test ${{ inputs.packages }} 2>&1 | tee "$RUNNER_TEMP/test-output.txt"
         exit_code=${PIPESTATUS[0]}
+        # Extract summary from bun test output
+        if [ $exit_code -eq 0 ]; then
+          pass_count=$(grep -oP '\d+ pass' "$RUNNER_TEMP/test-output.txt" | head -1 | grep -oP '\d+' || echo "0")
+          summary="${pass_count} tests passed"
+        else
+          pass_count=$(grep -oP '\d+ pass' "$RUNNER_TEMP/test-output.txt" | head -1 | grep -oP '\d+' || echo "0")
+          fail_count=$(grep -oP '\d+ fail' "$RUNNER_TEMP/test-output.txt" | head -1 | grep -oP '\d+' || echo "0")
+          summary="${pass_count} passed, ${fail_count} failed"
+        fi
         {
           echo "test-output<<EOF"
           cat "$RUNNER_TEMP/test-output.txt"
           echo "EOF"
           echo "outcome=$([ $exit_code -eq 0 ] && echo success || echo failure)"
+          echo "summary=$summary"
         } >> $GITHUB_OUTPUT
         exit $exit_code
 
@@ -59,7 +72,7 @@ runs:
       if: always()
       with:
         key: checks/tests/${{ inputs.name }}
-        data: '{"outcome":"${{ steps.run-tests.outputs.outcome }}"}'
+        data: '{"outcome":"${{ steps.run-tests.outputs.outcome }}","summary":"${{ steps.run-tests.outputs.summary }}"}'
         tag: check:tests/${{ inputs.name }}:${{ steps.run-tests.outputs.outcome }}
         output: ${{ runner.temp }}/test-output.txt
 

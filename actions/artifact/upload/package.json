@@ -7,7 +7,8 @@
     "build": "bun run build.ts"
   },
   "dependencies": {
-    "@actions/core": "catalog:action"
+    "@actions/core": "catalog:action",
+    "@agents/actions-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:action"

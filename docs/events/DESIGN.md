@@ -54,6 +54,15 @@ Events are the backbone of observability in this system. Every meaningful action
 | `github.pull_request.reviewed` | console | AI review of a PR against a plan                        |
 | `plan.evaluated`               | console | AI comparison of multiple implementations               |
 
+### Checks (CI)
+
+| Type               | Origin | Description                                         |
+| ------------------ | ------ | --------------------------------------------------- |
+| `checks.started`   | action | CI check workflow begins                            |
+| `checks.completed` | action | CI check workflow finishes, emits all check results |
+
+Typed schema: `ChecksEvent.Completed.Data` in `packages/core/src/events/checks/index.ts`. Includes checks (with outcomes and summaries) and workflow metadata.
+
 ### Infrastructure
 
 | Type              | Origin | Description             |
