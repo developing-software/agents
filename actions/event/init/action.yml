@@ -3,7 +3,7 @@ description: Auto-setup and auto-teardown for event lifecycle — creates result
 
 inputs:
   type:
-    description: "Event type prefix (e.g. agent, ci) — emits {type}.started / {type}.completed"
+    description: "Event type prefix (e.g. agent, checks) — emits {type}.started / {type}.completed"
     required: true
   token:
     description: Personal access token for posting events to the Agents API

@@ -11,6 +11,7 @@
     { label: 'Pull Requests', href: `/gh/${data.organization}/${data.repoName}/pulls` },
     { label: 'Agents', href: `/gh/${data.organization}/${data.repoName}/agents` },
     { label: 'Actions', href: `/gh/${data.organization}/${data.repoName}/actions` },
+    { label: 'Health', href: `/gh/${data.organization}/${data.repoName}/health` },
   ]);
 
   function isActive(href: string) {

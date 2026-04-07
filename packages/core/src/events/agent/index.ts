@@ -104,6 +104,7 @@ export namespace AgentEvent {
             z.string(),
             z.object({
               outcome: z.string().catch("unknown"),
+              summary: z.string().nullable().catch(null),
             }),
           ),
         )

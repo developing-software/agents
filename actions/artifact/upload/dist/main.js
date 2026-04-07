@@ -19941,12 +19941,13 @@ function createFetchWithRetry(timeoutMs = DEFAULT_TIMEOUT_MS) {
 var agentsToken = core2.getInput("token") || process.env.DEV_AGENTS_TOKEN;
 var apiUrl = core2.getInput("url") || process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
 var eventId = process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID;
+var uploadUrl = process.env.DEV_AGENTS_ARTIFACT_URL || (eventId ? `${apiUrl}/events/${eventId}/artifacts` : null);
 async function uploadFile(filePath, name) {
   const contentType = filePath.endsWith(".json") ? "application/json" : "text/plain";
   const form = new FormData;
   form.append("name", name);
   form.append("file", new Blob([readFileSync(filePath)], { type: contentType }), name);
-  const res = await createFetchWithRetry(120000)(`${apiUrl}/events/${eventId}/artifacts`, {
+  const res = await createFetchWithRetry(120000)(uploadUrl, {
     method: "POST",
     headers: { Authorization: `Bearer ${agentsToken}` },
     body: form
@@ -19963,8 +19964,8 @@ async function run() {
     core2.info("No agents token available, skipping artifact upload");
     return;
   }
-  if (!eventId) {
-    core2.info("No event ID available, skipping artifact upload");
+  if (!uploadUrl) {
+    core2.info("No artifact URL or event ID available, skipping artifact upload");
     return;
   }
   const path = core2.getInput("path", { required: true });

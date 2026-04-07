@@ -1,0 +1,123 @@
+name: Run Fallow Analysis
+description: Run fallow health, dead-code, and dupes checks — CI-only, always uploads artifacts
+
+inputs:
+  install:
+    description: Set to 'false' to skip bun setup and install (when caller already ran them)
+    default: "true"
+
+outputs:
+  health-outcome:
+    description: Health check outcome
+    value: ${{ steps.health.outputs.outcome }}
+  dead-code-outcome:
+    description: Dead code check outcome
+    value: ${{ steps.dead-code.outputs.outcome }}
+  dupes-outcome:
+    description: Dupes check outcome
+    value: ${{ steps.dupes.outputs.outcome }}
+  outcome:
+    description: Overall outcome (success only if all fallow checks pass)
+    value: ${{ steps.result.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      if: ${{ inputs.install != 'false' }}
+      uses: oven-sh/setup-bun@v2
+
+    - name: Install dependencies
+      if: ${{ inputs.install != 'false' }}
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    # --- Health ---
+    - name: Run fallow health
+      id: health
+      shell: bash
+      run: |
+        bunx fallow health --hotspots --top 3 --format json --quiet \
+          > "$RUNNER_TEMP/fallow-health.json" 2>&1 || true
+        score=$(jq -r '.health_score.score // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
+        grade=$(jq -r '.health_score.grade // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
+        findings=$(jq -r '.summary.functions_above_threshold // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
+        hotspots=$(jq -r '.vital_signs.hotspot_count // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
+        echo "outcome=success" >> "$GITHUB_OUTPUT"
+        echo "summary=Score ${score:-?}/100 (${grade:-?}) — ${findings:-0} complex functions, ${hotspots:-0} hotspots" >> "$GITHUB_OUTPUT"
+
+    - uses: developing-software/agents/actions/event/data@dev
+      if: always()
+      with:
+        key: checks/fallow/health
+        data: '{"outcome":"${{ steps.health.outputs.outcome }}","summary":"${{ steps.health.outputs.summary }}"}'
+        tag: check:fallow/health:${{ steps.health.outputs.outcome }}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always()
+      with:
+        path: ${{ runner.temp }}/fallow-health.json
+        name: checks/fallow/health.json
+
+    # --- Dead Code ---
+    - name: Run fallow dead-code
+      id: dead-code
+      shell: bash
+      run: |
+        bunx fallow dead-code --format json --quiet \
+          > "$RUNNER_TEMP/fallow-dead-code.json" 2>&1 || true
+        dead_files=$(jq -r '.summary.dead_files // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null)
+        dead_exports=$(jq -r '.summary.dead_exports // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null)
+        echo "outcome=success" >> "$GITHUB_OUTPUT"
+        echo "summary=${dead_files:-0} dead files, ${dead_exports:-0} dead exports" >> "$GITHUB_OUTPUT"
+
+    - uses: developing-software/agents/actions/event/data@dev
+      if: always()
+      with:
+        key: checks/fallow/dead-code
+        data: '{"outcome":"${{ steps.dead-code.outputs.outcome }}","summary":"${{ steps.dead-code.outputs.summary }}"}'
+        tag: check:fallow/dead-code:${{ steps.dead-code.outputs.outcome }}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always()
+      with:
+        path: ${{ runner.temp }}/fallow-dead-code.json
+        name: checks/fallow/dead-code.json
+
+    # --- Dupes ---
+    - name: Run fallow dupes
+      id: dupes
+      shell: bash
+      run: |
+        bunx fallow dupes --format json --quiet \
+          > "$RUNNER_TEMP/fallow-dupes.json" 2>&1 || true
+        clones=$(jq -r '.summary.total_clones // 0' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null)
+        echo "outcome=success" >> "$GITHUB_OUTPUT"
+        echo "summary=${clones:-0} code clones" >> "$GITHUB_OUTPUT"
+
+    - uses: developing-software/agents/actions/event/data@dev
+      if: always()
+      with:
+        key: checks/fallow/dupes
+        data: '{"outcome":"${{ steps.dupes.outputs.outcome }}","summary":"${{ steps.dupes.outputs.summary }}"}'
+        tag: check:fallow/dupes:${{ steps.dupes.outputs.outcome }}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always()
+      with:
+        path: ${{ runner.temp }}/fallow-dupes.json
+        name: checks/fallow/dupes.json
+
+    # --- Overall ---
+    - name: Compute outcome
+      id: result
+      if: always()
+      shell: bash
+      run: |
+        if [ "${{ steps.health.outputs.outcome }}" = "success" ] \
+          && [ "${{ steps.dead-code.outputs.outcome }}" = "success" ] \
+          && [ "${{ steps.dupes.outputs.outcome }}" = "success" ]; then
+          echo "outcome=success" >> "$GITHUB_OUTPUT"
+        else
+          echo "outcome=failure" >> "$GITHUB_OUTPUT"
+        fi

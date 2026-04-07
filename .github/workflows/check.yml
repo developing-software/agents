@@ -24,12 +24,20 @@ jobs:
 
       - uses: ./actions/event/init
         with:
-          type: ci
+          type: checks
           token: ${{ secrets.AGENTS_TOKEN }}
+          tags: artifact:branch
 
       - name: Run checks
         id: checks
         uses: ./.github/actions/check
+        with:
+          install: "false"
+
+      - name: Run fallow analysis
+        id: fallow
+        if: always()
+        uses: ./.github/actions/fallow
         with:
           install: "false"
 
@@ -39,6 +47,9 @@ jobs:
           LINT="${{ steps.checks.outputs.lint-outcome }}"
           TYPECHECK="${{ steps.checks.outputs.typecheck-outcome }}"
           TEST="${{ steps.checks.outputs.test-outcome }}"
+          HEALTH="${{ steps.fallow.outputs.health-outcome }}"
+          DEADCODE="${{ steps.fallow.outputs.dead-code-outcome }}"
+          DUPES="${{ steps.fallow.outputs.dupes-outcome }}"
 
           icon() { [ "$1" = "success" ] && echo "+" || echo "x"; }
 
@@ -50,6 +61,9 @@ jobs:
             echo "| Lint | $(icon "$LINT") $LINT |"
             echo "| Typecheck | $(icon "$TYPECHECK") $TYPECHECK |"
             echo "| Tests | $(icon "$TEST") $TEST |"
+            echo "| Fallow Health | $(icon "$HEALTH") $HEALTH |"
+            echo "| Fallow Dead Code | $(icon "$DEADCODE") $DEADCODE |"
+            echo "| Fallow Dupes | $(icon "$DUPES") $DUPES |"
 
             for file in lint-output.txt typecheck-output.txt test-output.txt; do
               if [ -f "$RUNNER_TEMP/$file" ]; then

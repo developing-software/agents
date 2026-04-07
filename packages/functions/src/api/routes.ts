@@ -11,6 +11,7 @@ import { AuthApi } from "./handler/auth";
 import { EventApi } from "./handler/event";
 import { GitHubApi } from "./handler/github";
 import { ModelsApi } from "./handler/models";
+import { BranchArtifactApi } from "./handler/branch-artifact";
 import { auth } from "./middleware";
 
 const log = Log.create({ namespace: "api" });
@@ -33,6 +34,7 @@ export const routes = app
   .route("/events", EventApi.route)
   .route("/github", GitHubApi.route)
   .route("/models", ModelsApi.route)
+  .route("/branch-artifacts", BranchArtifactApi.route)
   .onError((error, c) => {
     if (error instanceof VisibleError) {
       return c.json<ErrorResponseType>(error.toResponse(), error.statusCode());

@@ -20161,9 +20161,26 @@ async function run() {
         core2.saveState("start_event_id", data.id);
         core2.exportVariable("DEV_AGENTS_EVENT_ID", data.id);
       }
+      const branch = getBranch();
+      const hasArtifactBranch = allTags.includes("artifact:branch");
+      const base = apiUrl || "https://api.agents.developing.company/api";
+      if (hasArtifactBranch && branch && repository) {
+        core2.exportVariable("DEV_AGENTS_ARTIFACT_URL", `${base}/branch-artifacts/${repository}/${branch}`);
+      } else if (data?.id) {
+        core2.exportVariable("DEV_AGENTS_ARTIFACT_URL", `${base}/events/${data.id}/artifacts`);
+      }
     } catch (err) {
       core2.warning(`Failed to post ${eventType}.started event: ${err}`);
     }
   }
+}
+function getBranch() {
+  const headRef = process.env.GITHUB_HEAD_REF;
+  if (headRef)
+    return headRef;
+  const ref = process.env.GITHUB_REF ?? "";
+  if (ref.startsWith("refs/heads/"))
+    return ref.replace("refs/heads/", "");
+  return null;
 }
 run().catch(core2.setFailed);

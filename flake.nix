@@ -50,12 +50,13 @@
             with pkgs;
             [
               bun
-              nodejs
+              nodejs_24
 
               postgresql
               pkgs.llm-agents.claude-code
               pkgs.llm-agents.codex
               pkgs.llm-agents.opencode
+              python313
               # pkgs.llm-agents.gemini-cli
 
             ];
@@ -67,7 +68,6 @@
             echo "Dev Shell for ${system}"
             echo ""
             echo "===---===---==="
-            echo ""
             echo ""
             # bun install --frozen-lockfile
           '';

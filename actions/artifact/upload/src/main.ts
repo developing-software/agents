@@ -10,13 +10,18 @@ const apiUrl =
   "https://api.agents.developing.company/api";
 const eventId = process.env.DEV_AGENTS_EVENT_ID || process.env.AGENTS_WORKFLOW_EVENT_ID;
 
+// Use DEV_AGENTS_ARTIFACT_URL when available (set by event/init based on artifact:branch tag).
+// Falls back to event-scoped artifact URL.
+const uploadUrl =
+  process.env.DEV_AGENTS_ARTIFACT_URL || (eventId ? `${apiUrl}/events/${eventId}/artifacts` : null);
+
 async function uploadFile(filePath: string, name: string): Promise<void> {
   const contentType = filePath.endsWith(".json") ? "application/json" : "text/plain";
   const form = new FormData();
   form.append("name", name);
   form.append("file", new Blob([readFileSync(filePath)], { type: contentType }), name);
 
-  const res = await createFetchWithRetry(120_000)(`${apiUrl}/events/${eventId}/artifacts`, {
+  const res = await createFetchWithRetry(120_000)(uploadUrl!, {
     method: "POST",
     headers: { Authorization: `Bearer ${agentsToken}` },
     body: form,
@@ -35,8 +40,8 @@ async function run() {
     core.info("No agents token available, skipping artifact upload");
     return;
   }
-  if (!eventId) {
-    core.info("No event ID available, skipping artifact upload");
+  if (!uploadUrl) {
+    core.info("No artifact URL or event ID available, skipping artifact upload");
     return;
   }
 
