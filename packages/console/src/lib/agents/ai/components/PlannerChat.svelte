@@ -4,11 +4,11 @@
 	import { isToolUIPart, getToolName } from 'ai';
 	import { TextareaAutosize, useMutationObserver } from 'runed';
 	import Markdown from '$lib/ui/Markdown.svelte';
-	import ToolCard from '$lib/ai/components/ToolCard.svelte';
-	import ToolOutput from '$lib/ai/components/ToolOutput.svelte';
-	import TriageResult from '$lib/ai/components/TriageResult.svelte';
-	import AskUserInput from '$lib/ai/components/AskUserInput.svelte';
-	import ToolApproval from '$lib/ai/components/ToolApproval.svelte';
+	import ToolCard from '$lib/agents/ai/components/ToolCard.svelte';
+	import ToolOutput from '$lib/agents/ai/components/ToolOutput.svelte';
+	import TriageResult from '$lib/agents/ai/components/TriageResult.svelte';
+	import AskUserInput from '$lib/agents/ai/components/AskUserInput.svelte';
+	import ToolApproval from '$lib/agents/ai/components/ToolApproval.svelte';
 
 	type PlanSummary = {
 		id: string;

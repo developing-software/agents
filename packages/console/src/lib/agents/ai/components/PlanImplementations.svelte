@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { listPlanRuns, reviewPR, judgePlan, mergeWinner } from '$lib/ai/judge.remote';
+  import { listPlanRuns, reviewPR, judgePlan, mergeWinner } from '$lib/agents/ai/judge.remote';
   import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
 
   let {
@@ -56,6 +56,8 @@
     winner: { agent: string; prNumber: number };
     reasoning: string;
   };
+
+  let activeTab = $state<'overview' | 'diff' | 'judge'>('overview');
 
   const dataPromise = $derived.by(() => listPlanRuns({ organization, repoName, planId }));
 
@@ -204,200 +206,261 @@
   {@const judgment = mergedJudgment(data.judgment)}
   {@const runs = data.runs}
   {@const completed = isMergedOrClosed(planStatus)}
+  {@const reviewedCount = Object.keys(reviews).length}
+
+  {#snippet cardHeader(run: PlanRun)}
+    <div class="card-header">
+      <span class="agent-dot" style="background:{agentColor(run.agent)};"></span>
+      <span class="agent-name">{capitalize(run.agent)}</span>
+      {#if run.model}
+        <span class="model-tag">{run.model}</span>
+      {/if}
+    </div>
+
+    {#if run.prNumber != null}
+      <div class="pr-row">
+        {#if run.prUrl}
+          <a href={run.prUrl} target="_blank" rel="noopener noreferrer" class="pr-link">#{run.prNumber}</a>
+        {:else}
+          <span class="pr-num">#{run.prNumber}</span>
+        {/if}
+        {#if run.prState}
+          <span class="state-badge state-{run.prState}">{run.prState}</span>
+        {/if}
+      </div>
+    {:else}
+      <div class="pr-row">
+        <span class="dim-value">--</span>
+      </div>
+    {/if}
+  {/snippet}
 
   <div class="impl-container">
     <div class="impl-header">
       <span class="section-label">implementations</span>
-      {#if !completed && !judgment && runs.length >= 2}
-        <button
-          class="action-btn judge-btn"
-          disabled={judgeLoading}
-          onclick={() => handleJudge(runs)}
-        >
-          {judgeLoading ? '...' : 'Judge All'}
+      <div class="tabs">
+        <button type="button" class="tab" class:tab-active={activeTab === 'overview'} onclick={() => { activeTab = 'overview'; }}>Overview</button>
+        <button type="button" class="tab" class:tab-active={activeTab === 'diff'} onclick={() => { activeTab = 'diff'; }}>Diff</button>
+        <button type="button" class="tab" class:tab-active={activeTab === 'judge'} onclick={() => { activeTab = 'judge'; }}>
+          Judge{#if reviewedCount > 0} ({reviewedCount}/{runs.length}){/if}
         </button>
-      {/if}
+      </div>
     </div>
 
     {#if runs.length === 0}
       <div class="empty-text">No implementations yet. Dispatch agents to start.</div>
-    {:else}
-      <div class="cards-row">
-        {#each runs as run (run.id)}
-          {@const review = run.prNumber != null ? reviews[run.prNumber] : undefined}
-          {@const cc = checkCounts(run.checks)}
-          {@const winner = isWinner(run.prNumber, judgment)}
-
-          <div class="agent-card" class:winner-card={winner}>
-            <!-- Card header -->
-            <div class="card-header">
-              <span class="agent-dot" style="background:{agentColor(run.agent)};"></span>
-              <span class="agent-name">{capitalize(run.agent)}</span>
-              {#if run.model}
-                <span class="model-tag">{run.model}</span>
-              {/if}
-            </div>
-
-            <!-- PR row -->
-            {#if run.prNumber != null}
-              <div class="pr-row">
-                {#if run.prUrl}
-                  <a href={run.prUrl} target="_blank" rel="noopener noreferrer" class="pr-link">#{run.prNumber}</a>
-                {:else}
-                  <span class="pr-num">#{run.prNumber}</span>
-                {/if}
-                {#if run.prState}
-                  <span class="state-badge state-{run.prState}">{run.prState}</span>
-                {/if}
-              </div>
-            {:else}
-              <div class="pr-row">
-                <span class="dim-value">--</span>
-              </div>
-            {/if}
-
-            <!-- Metrics grid -->
-            <div class="metrics">
-              <span class="metric-label">lines</span>
-              <span class="metric-value">
-                <span class="lines-added">+{run.linesAdded ?? 0}</span>
-                <span class="lines-sep">/</span>
-                <span class="lines-removed">-{run.linesRemoved ?? 0}</span>
-              </span>
-
-              <span class="metric-label">cost</span>
-              <span class="metric-value">{formatCost(run.cost_usd)}</span>
-
-              <span class="metric-label">duration</span>
-              <span class="metric-value">{formatDuration(run.durationMs)}</span>
-
-              <span class="metric-label">turns</span>
-              <span class="metric-value">{run.turns ?? '--'}</span>
-
-              <span class="metric-label">checks</span>
-              <span class="metric-value">
-                <span class="check-pass">{cc.passed} pass</span>
-                {#if cc.failed > 0}
-                  <span class="check-fail">{cc.failed} fail</span>
-                {/if}
-              </span>
-            </div>
-
-            <!-- Actions row -->
-            <div class="card-actions">
-              {#if !completed && run.prNumber != null}
-                <button
-                  class="action-btn"
-                  disabled={reviewLoading === run.prNumber}
-                  onclick={() => handleReview(run)}
-                >
-                  {reviewLoading === run.prNumber ? '...' : 'Review'}
-                </button>
-              {/if}
-              {#if review}
-                <span class="score-badge">{review.overallScore}/10</span>
-              {/if}
-            </div>
-
-            <!-- Inline review -->
-            {#if review}
-              <div class="review-divider">
-                <span class="review-divider-label">Review</span>
-              </div>
-
-              <div class="review-summary">{review.summary}</div>
-
-              {#if review.strengths.length > 0}
-                <div class="review-category strengths-border">
-                  <div class="category-label strengths-label">strengths</div>
-                  {#each review.strengths as item, idx (item)}
-                    {#if idx > 0}<div class="category-divider"></div>{/if}
-                    <div class="category-item strength-text">{item}</div>
-                  {/each}
-                </div>
-              {/if}
-
-              {#if review.concerns.length > 0}
-                <div class="review-category concerns-border">
-                  <div class="category-label concerns-label">concerns</div>
-                  {#each review.concerns as item, idx (item)}
-                    {#if idx > 0}<div class="category-divider"></div>{/if}
-                    <div class="category-item concern-text">{item}</div>
-                  {/each}
-                </div>
-              {/if}
-
-              {#if review.suggestions.length > 0}
-                <div class="review-category suggestions-border">
-                  <div class="category-label suggestions-label">suggestions</div>
-                  {#each review.suggestions as item, idx (item)}
-                    {#if idx > 0}<div class="category-divider"></div>{/if}
-                    <div class="category-item suggestion-text">{item}</div>
-                  {/each}
-                </div>
-              {/if}
-            {/if}
-
-            <!-- Inline diff -->
-            {#if run.prNumber != null}
-              <PRDiffLoader {organization} {repoName} prNumber={run.prNumber} prUrl={run.prUrl} />
-            {/if}
-          </div>
-        {/each}
-      </div>
-
-      <!-- Verdict section (below all cards) -->
-      {#if judgment}
-        <div class="verdict-section">
-          <div class="verdict-divider">
-            <span class="verdict-divider-label">Verdict</span>
-          </div>
-
-          <div class="winner-announce">
+    {:else if activeTab === 'overview'}
+      <div class="tab-panel">
+        {#if judgment}
+          <div class="winner-banner">
             <span class="agent-dot" style="background:{agentColor(judgment.winner.agent)};"></span>
             <span class="winner-text">
               {capitalize(judgment.winner.agent)} wins
-              <span class="winner-pr">(PR #{judgment.winner.prNumber})</span>
+              <span class="winner-pr">— PR #{judgment.winner.prNumber}</span>
             </span>
           </div>
+        {/if}
 
-          <div class="rankings-list">
-            {#each judgment.rankings as entry (entry.rank)}
-              <div class="ranking-entry" class:winner-row={entry.prNumber === judgment.winner.prNumber}>
-                <span class="rank-num">#{entry.rank}</span>
-                <span class="agent-dot small" style="background:{agentColor(entry.agent)};"></span>
-                <span class="rank-agent">{capitalize(entry.agent)}</span>
-                <span class="score-badge">{entry.score}/10</span>
-                <span class="rank-details">
-                  {#if entry.strengths.length > 0}
-                    <span class="rank-strengths">{entry.strengths.join(', ')}</span>
-                  {/if}
-                  {#if entry.weaknesses.length > 0}
-                    <span class="rank-weaknesses">{entry.weaknesses.join(', ')}</span>
+        <div class="cards-row">
+          {#each runs as run (run.id)}
+            {@const review = run.prNumber != null ? reviews[run.prNumber] : undefined}
+            {@const cc = checkCounts(run.checks)}
+            {@const winner = isWinner(run.prNumber, judgment)}
+            {@const rankEntry = judgment?.rankings.find(r => r.prNumber === run.prNumber)}
+
+            <div class="agent-card" class:winner-card={winner}>
+              {@render cardHeader(run)}
+
+              {#if rankEntry}
+                <div class="rank-badge-row">
+                  <span class="rank-badge">#{rankEntry.rank}</span>
+                </div>
+              {/if}
+
+              <!-- Metrics grid -->
+              <div class="metrics">
+                <span class="metric-label">lines</span>
+                <span class="metric-value">
+                  <span class="lines-added">+{run.linesAdded ?? 0}</span>
+                  <span class="lines-sep">/</span>
+                  <span class="lines-removed">-{run.linesRemoved ?? 0}</span>
+                </span>
+
+                <span class="metric-label">cost</span>
+                <span class="metric-value">{formatCost(run.cost_usd)}</span>
+
+                <span class="metric-label">duration</span>
+                <span class="metric-value">{formatDuration(run.durationMs)}</span>
+
+                <span class="metric-label">turns</span>
+                <span class="metric-value">{run.turns ?? '--'}</span>
+
+                <span class="metric-label">checks</span>
+                <span class="metric-value">
+                  <span class="check-pass">{cc.passed} pass</span>
+                  {#if cc.failed > 0}
+                    <span class="check-fail">{cc.failed} fail</span>
                   {/if}
                 </span>
               </div>
-            {/each}
-          </div>
 
-          <div class="reasoning-block">
-            <span class="reasoning-label">reasoning</span>
-            <p class="reasoning-text">{judgment.reasoning}</p>
-          </div>
-
-          {#if !completed}
-            <div class="verdict-actions">
-              <button
-                class="action-btn merge-btn"
-                disabled={mergeLoading}
-                onclick={() => handleMerge(judgment.winner.prNumber, runs)}
-              >
-                {mergeLoading ? '...' : `Merge Winner (PR #${judgment.winner.prNumber})`}
-              </button>
+              {#if review}
+                <div class="card-actions">
+                  <span class="score-badge">{review.overallScore}/10</span>
+                </div>
+              {/if}
             </div>
-          {/if}
+          {/each}
         </div>
-      {/if}
+      </div>
+    {:else if activeTab === 'diff'}
+      <div class="tab-panel scrollable">
+        <div class="cards-row">
+          {#each runs as run (run.id)}
+            {@const winner = isWinner(run.prNumber, judgment)}
+            <div class="agent-card diff-card" class:winner-card={winner}>
+              {@render cardHeader(run)}
+
+              {#if run.prNumber != null}
+                <PRDiffLoader autoLoad {organization} {repoName} prNumber={run.prNumber} prUrl={run.prUrl} />
+              {:else}
+                <div class="dim-placeholder">No PR yet</div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {:else}
+      <div class="tab-panel scrollable">
+        {#if runs.length >= 2 && !judgment && !completed}
+          <div class="judge-all-header">
+            <button
+              class="action-btn judge-btn"
+              disabled={judgeLoading}
+              onclick={() => handleJudge(runs)}
+            >
+              {judgeLoading ? '...' : 'Judge All'}
+            </button>
+            <span class="judge-all-desc">Compare implementations and pick a winner</span>
+          </div>
+        {/if}
+
+        <div class="cards-row">
+          {#each runs as run (run.id)}
+            {@const review = run.prNumber != null ? reviews[run.prNumber] : undefined}
+            {@const winner = isWinner(run.prNumber, judgment)}
+
+            <div class="agent-card" class:winner-card={winner}>
+              {@render cardHeader(run)}
+
+              <div class="card-actions">
+                {#if review}
+                  <span class="score-badge">{review.overallScore}/10</span>
+                {:else if !completed && run.prNumber != null}
+                  <button
+                    class="action-btn"
+                    disabled={reviewLoading === run.prNumber}
+                    onclick={() => handleReview(run)}
+                  >
+                    {reviewLoading === run.prNumber ? '...' : 'Review'}
+                  </button>
+                {/if}
+              </div>
+
+              {#if review}
+                <div class="review-divider">
+                  <span class="review-divider-label">Review</span>
+                </div>
+
+                <div class="review-summary">{review.summary}</div>
+
+                {#if review.strengths.length > 0}
+                  <div class="review-category strengths-border">
+                    <div class="category-label strengths-label">strengths</div>
+                    {#each review.strengths as item, idx (item)}
+                      {#if idx > 0}<div class="category-divider"></div>{/if}
+                      <div class="category-item strength-text">{item}</div>
+                    {/each}
+                  </div>
+                {/if}
+
+                {#if review.concerns.length > 0}
+                  <div class="review-category concerns-border">
+                    <div class="category-label concerns-label">concerns</div>
+                    {#each review.concerns as item, idx (item)}
+                      {#if idx > 0}<div class="category-divider"></div>{/if}
+                      <div class="category-item concern-text">{item}</div>
+                    {/each}
+                  </div>
+                {/if}
+
+                {#if review.suggestions.length > 0}
+                  <div class="review-category suggestions-border">
+                    <div class="category-label suggestions-label">suggestions</div>
+                    {#each review.suggestions as item, idx (item)}
+                      {#if idx > 0}<div class="category-divider"></div>{/if}
+                      <div class="category-item suggestion-text">{item}</div>
+                    {/each}
+                  </div>
+                {/if}
+              {/if}
+            </div>
+          {/each}
+        </div>
+
+        <!-- Verdict section (below all cards) -->
+        {#if judgment}
+          <div class="verdict-section">
+            <div class="verdict-divider">
+              <span class="verdict-divider-label">Verdict</span>
+            </div>
+
+            <div class="winner-announce">
+              <span class="agent-dot" style="background:{agentColor(judgment.winner.agent)};"></span>
+              <span class="winner-text">
+                {capitalize(judgment.winner.agent)} wins
+                <span class="winner-pr">(PR #{judgment.winner.prNumber})</span>
+              </span>
+            </div>
+
+            <div class="rankings-list">
+              {#each judgment.rankings as entry (entry.rank)}
+                <div class="ranking-entry" class:winner-row={entry.prNumber === judgment.winner.prNumber}>
+                  <span class="rank-num">#{entry.rank}</span>
+                  <span class="agent-dot small" style="background:{agentColor(entry.agent)};"></span>
+                  <span class="rank-agent">{capitalize(entry.agent)}</span>
+                  <span class="score-badge">{entry.score}/10</span>
+                  <span class="rank-details">
+                    {#if entry.strengths.length > 0}
+                      <span class="rank-strengths">{entry.strengths.join(', ')}</span>
+                    {/if}
+                    {#if entry.weaknesses.length > 0}
+                      <span class="rank-weaknesses">{entry.weaknesses.join(', ')}</span>
+                    {/if}
+                  </span>
+                </div>
+              {/each}
+            </div>
+
+            <div class="reasoning-block">
+              <span class="reasoning-label">reasoning</span>
+              <p class="reasoning-text">{judgment.reasoning}</p>
+            </div>
+
+            {#if !completed}
+              <div class="verdict-actions">
+                <button
+                  class="action-btn merge-btn"
+                  disabled={mergeLoading}
+                  onclick={() => handleMerge(judgment.winner.prNumber, runs)}
+                >
+                  {mergeLoading ? '...' : `Merge Winner (PR #${judgment.winner.prNumber})`}
+                </button>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
     {/if}
   </div>
 {:catch error}
@@ -423,6 +486,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .section-label {
@@ -441,6 +506,47 @@
   .error-text {
     font-size: 12px;
     color: var(--color-danger);
+  }
+
+  /* ── Tabs (Feed.svelte pattern) ──────────────────────────────────────── */
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .tab {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 2px 10px;
+    border-radius: 3px;
+    border: none;
+    background: none;
+    color: var(--color-dim);
+    cursor: pointer;
+    line-height: 1.6;
+    transition: color 0.1s, background 0.1s;
+  }
+  .tab:hover { color: var(--color-muted); }
+  .tab-active { background: var(--color-surface); color: var(--color-text); }
+
+  /* ── Tab panels ──────────────────────────────────────────────────────── */
+
+  .tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tab-panel.scrollable {
+    max-height: 75vh;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    padding-right: 4px;
   }
 
   /* ── Cards row ───────────────────────────────────────────────────────── */
@@ -463,6 +569,10 @@
     gap: 8px;
     flex: 1;
     min-width: 280px;
+  }
+
+  .agent-card.diff-card {
+    min-width: 380px;
   }
 
   .agent-card.winner-card {
@@ -535,6 +645,13 @@
   .dim-value {
     font-size: 12px;
     color: var(--color-dim);
+  }
+
+  .dim-placeholder {
+    font-size: 11px;
+    color: var(--color-dim);
+    font-style: italic;
+    padding: 8px 0;
   }
 
   /* ── State badges ────────────────────────────────────────────────────── */
@@ -639,6 +756,25 @@
     white-space: nowrap;
   }
 
+  /* ── Rank badge (overview) ───────────────────────────────────────────── */
+
+  .rank-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rank-badge {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
   /* ── Card actions ────────────────────────────────────────────────────── */
 
   .card-actions {
@@ -692,6 +828,31 @@
   .judge-btn:hover:not(:disabled) {
     background: color-mix(in srgb, var(--color-warning) 15%, transparent);
     border-color: var(--color-warning);
+  }
+
+  /* ── Judge all header ────────────────────────────────────────────────── */
+
+  .judge-all-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .judge-all-desc {
+    font-size: 11px;
+    color: var(--color-dim);
+  }
+
+  /* ── Winner banner (overview) ────────────────────────────────────────── */
+
+  .winner-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+    border-radius: 5px;
   }
 
   /* ── Review divider ──────────────────────────────────────────────────── */

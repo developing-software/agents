@@ -2,11 +2,11 @@ import { streamText, stepCountIs, convertToModelMessages, type UIMessage } from 
 import type { RequestHandler } from "./$types";
 import { Repository } from "@agents/core/repository/index";
 import { Plan } from "@agents/core/plan/index";
-import { createModel } from "$lib/ai/model";
-import { githubTools } from "$lib/ai/tools/github-tools";
-import { planTools } from "$lib/ai/tools/plan-tools";
-import { triageTools } from "$lib/ai/tools/triage-tools";
-import { askUserTool } from "$lib/ai/tools/ask-user-tool";
+import { createModel } from "$lib/agents/ai/model";
+import { githubTools } from "$lib/agents/ai/tools/github-tools";
+import { planTools } from "$lib/agents/ai/tools/plan-tools";
+import { triageTools } from "$lib/agents/ai/tools/triage-tools";
+import { askUserTool } from "$lib/agents/ai/tools/ask-user-tool";
 
 export const POST: RequestHandler = async ({ request, params, locals, platform }) => {
   if (!locals.userID) {
