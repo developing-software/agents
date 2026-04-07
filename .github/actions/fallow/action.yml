@@ -35,15 +35,20 @@ runs:
     # --- Health ---
     - name: Run fallow health
       id: health
+      if: always()
       shell: bash
       run: |
-        bunx fallow health --hotspots --top 3 --format json --quiet \
-          > "$RUNNER_TEMP/fallow-health.json" 2>&1 || true
-        score=$(jq -r '.health_score.score // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
-        grade=$(jq -r '.health_score.grade // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
-        findings=$(jq -r '.summary.functions_above_threshold // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
-        hotspots=$(jq -r '.vital_signs.hotspot_count // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null)
-        echo "outcome=success" >> "$GITHUB_OUTPUT"
+        if bunx fallow health --hotspots --top 3 --format json --quiet \
+          > "$RUNNER_TEMP/fallow-health.json" 2>&1; then
+          outcome="success"
+        else
+          outcome="failure"
+        fi
+        score=$(jq -r '.health_score.score // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        grade=$(jq -r '.health_score.grade // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        findings=$(jq -r '.summary.functions_above_threshold // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        hotspots=$(jq -r '.vital_signs.hotspot_count // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
         echo "summary=Score ${score:-?}/100 (${grade:-?}) — ${findings:-0} complex functions, ${hotspots:-0} hotspots" >> "$GITHUB_OUTPUT"
 
     - uses: developing-software/agents/actions/event/data@dev
@@ -62,13 +67,18 @@ runs:
     # --- Dead Code ---
     - name: Run fallow dead-code
       id: dead-code
+      if: always()
       shell: bash
       run: |
-        bunx fallow dead-code --format json --quiet \
-          > "$RUNNER_TEMP/fallow-dead-code.json" 2>&1 || true
-        dead_files=$(jq -r '.summary.dead_files // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null)
-        dead_exports=$(jq -r '.summary.dead_exports // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null)
-        echo "outcome=success" >> "$GITHUB_OUTPUT"
+        if bunx fallow dead-code --format json --quiet \
+          > "$RUNNER_TEMP/fallow-dead-code.json" 2>&1; then
+          outcome="success"
+        else
+          outcome="failure"
+        fi
+        dead_files=$(jq -r '.summary.dead_files // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
+        dead_exports=$(jq -r '.summary.dead_exports // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
+        echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
         echo "summary=${dead_files:-0} dead files, ${dead_exports:-0} dead exports" >> "$GITHUB_OUTPUT"
 
     - uses: developing-software/agents/actions/event/data@dev
@@ -87,12 +97,17 @@ runs:
     # --- Dupes ---
     - name: Run fallow dupes
       id: dupes
+      if: always()
       shell: bash
       run: |
-        bunx fallow dupes --format json --quiet \
-          > "$RUNNER_TEMP/fallow-dupes.json" 2>&1 || true
-        clones=$(jq -r '.summary.total_clones // 0' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null)
-        echo "outcome=success" >> "$GITHUB_OUTPUT"
+        if bunx fallow dupes --format json --quiet \
+          > "$RUNNER_TEMP/fallow-dupes.json" 2>&1; then
+          outcome="success"
+        else
+          outcome="failure"
+        fi
+        clones=$(jq -r '.summary.total_clones // 0' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null || true)
+        echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
         echo "summary=${clones:-0} code clones" >> "$GITHUB_OUTPUT"
 
     - uses: developing-software/agents/actions/event/data@dev
