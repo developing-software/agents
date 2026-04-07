@@ -47,7 +47,7 @@ runs:
       if: always()
       shell: bash
       run: |
-        if fallow health --hotspots --top 3 --format json --quiet \
+        if bunx fallow health --hotspots --top 3 --format json --quiet \
           > "$RUNNER_TEMP/fallow-health.json"; then
           outcome="success"
         else
@@ -81,7 +81,7 @@ runs:
       if: always()
       shell: bash
       run: |
-        if fallow dead-code --format json --quiet \
+        if bunx fallow dead-code --format json --quiet \
           > "$RUNNER_TEMP/fallow-dead-code.json"; then
           outcome="success"
         else
@@ -114,7 +114,7 @@ runs:
       if: always()
       shell: bash
       run: |
-        if fallow dupes --format json --quiet \
+        if bunx fallow dupes --format json --quiet \
           > "$RUNNER_TEMP/fallow-dupes.json"; then
           outcome="success"
         else
