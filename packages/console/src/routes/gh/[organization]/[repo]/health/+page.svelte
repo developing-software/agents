@@ -9,10 +9,6 @@
   let { data }: PageProps = $props();
 
   let branchInput = $derived(data.branch);
-  let expandedKey: string | null = $state(null);
-  let artifactContent: string | null = $state(null);
-  let artifactContentType: string | null = $state(null);
-  let artifactLoading = $state(false);
 
   const groupedChecks = $derived.by(() => {
     const groups: Record<string, typeof data.checks> = {};
@@ -25,44 +21,16 @@
     return groups;
   });
 
+  function artifactUrl(category: string, name: string) {
+    return `/gh/${page.params.organization}/${page.params.repo}/health/artifact?branch=${encodeURIComponent(data.branch)}&category=${encodeURIComponent(category)}&name=${encodeURIComponent(name)}`;
+  }
+
   function onBranchKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
       const value = branchInput.trim();
       if (value) {
         goto(`?branch=${encodeURIComponent(value)}`);
       }
-    }
-  }
-
-  async function toggleCheck(category: string, name: string) {
-    const key = `${category}/${name}`;
-
-    if (expandedKey === key) {
-      expandedKey = null;
-      return;
-    }
-
-    expandedKey = key;
-    artifactContent = null;
-    artifactContentType = null;
-    artifactLoading = true;
-
-    try {
-      const res = await fetch(
-        `/gh/${page.params.organization}/${page.params.repo}/health/artifact?branch=${encodeURIComponent(data.branch)}&category=${encodeURIComponent(category)}&name=${encodeURIComponent(name)}`
-      );
-      if (res.ok) {
-        artifactContent = await res.text();
-        artifactContentType = res.headers.get('content-type');
-      } else {
-        artifactContent = null;
-        artifactContentType = null;
-      }
-    } catch {
-      artifactContent = null;
-      artifactContentType = null;
-    } finally {
-      artifactLoading = false;
     }
   }
 </script>
@@ -102,11 +70,7 @@
                 name={check.name}
                 outcome={check.outcome}
                 summary={check.summary}
-                expanded={expandedKey === `${check.category}/${check.name}`}
-                loading={expandedKey === `${check.category}/${check.name}` && artifactLoading}
-                content={expandedKey === `${check.category}/${check.name}` ? artifactContent : null}
-                contentType={expandedKey === `${check.category}/${check.name}` ? artifactContentType : null}
-                ontoggle={() => toggleCheck(check.category, check.name)}
+                artifactUrl={artifactUrl(check.category, check.name)}
               />
             {/each}
           </div>

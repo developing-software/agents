@@ -47,18 +47,20 @@ runs:
       if: always()
       shell: bash
       run: |
-        if bunx fallow health --hotspots --top 3 --format json --quiet \
-          > "$RUNNER_TEMP/fallow-health.json" 2>&1; then
+        if fallow health --hotspots --top 3 --format json --quiet \
+          > "$RUNNER_TEMP/fallow-health.json"; then
           outcome="success"
         else
           outcome="failure"
         fi
-        score=$(jq -r '.health_score.score // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
-        grade=$(jq -r '.health_score.grade // empty' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
-        findings=$(jq -r '.summary.functions_above_threshold // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        files=$(jq -r '.summary.files_analyzed // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        funcs=$(jq -r '.summary.functions_analyzed // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        above=$(jq -r '.summary.functions_above_threshold // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
         hotspots=$(jq -r '.vital_signs.hotspot_count // 0' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        avg_cyc=$(jq -r '.vital_signs.avg_cyclomatic // "?"' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
+        maint=$(jq -r '.vital_signs.maintainability_avg // "?"' "$RUNNER_TEMP/fallow-health.json" 2>/dev/null || true)
         echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
-        echo "summary=Score ${score:-?}/100 (${grade:-?}) — ${findings:-0} complex functions, ${hotspots:-0} hotspots" >> "$GITHUB_OUTPUT"
+        echo "summary=${files:-0} files, ${funcs:-0} functions — ${above:-0} above threshold, ${hotspots:-0} hotspots, maintainability ${maint:-?}" >> "$GITHUB_OUTPUT"
 
     - uses: developing-software/agents/actions/event/data@dev
       if: always()
@@ -79,16 +81,19 @@ runs:
       if: always()
       shell: bash
       run: |
-        if bunx fallow dead-code --format json --quiet \
-          > "$RUNNER_TEMP/fallow-dead-code.json" 2>&1; then
+        if fallow dead-code --format json --quiet \
+          > "$RUNNER_TEMP/fallow-dead-code.json"; then
           outcome="success"
         else
           outcome="failure"
         fi
-        dead_files=$(jq -r '.summary.dead_files // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
-        dead_exports=$(jq -r '.summary.dead_exports // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
+        total=$(jq -r '.total_issues // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
+        unused_files=$(jq -r '.summary.unused_files // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
+        unused_exports=$(jq -r '.summary.unused_exports // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
+        unused_types=$(jq -r '.summary.unused_types // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
+        circular=$(jq -r '.summary.circular_dependencies // 0' "$RUNNER_TEMP/fallow-dead-code.json" 2>/dev/null || true)
         echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
-        echo "summary=${dead_files:-0} dead files, ${dead_exports:-0} dead exports" >> "$GITHUB_OUTPUT"
+        echo "summary=${total:-0} issues — ${unused_files:-0} unused files, ${unused_exports:-0} unused exports, ${unused_types:-0} unused types, ${circular:-0} circular deps" >> "$GITHUB_OUTPUT"
 
     - uses: developing-software/agents/actions/event/data@dev
       if: always()
@@ -109,15 +114,18 @@ runs:
       if: always()
       shell: bash
       run: |
-        if bunx fallow dupes --format json --quiet \
-          > "$RUNNER_TEMP/fallow-dupes.json" 2>&1; then
+        if fallow dupes --format json --quiet \
+          > "$RUNNER_TEMP/fallow-dupes.json"; then
           outcome="success"
         else
           outcome="failure"
         fi
-        clones=$(jq -r '.summary.total_clones // 0' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null || true)
+        groups=$(jq -r '.stats.clone_groups // 0' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null || true)
+        instances=$(jq -r '.stats.clone_instances // 0' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null || true)
+        pct=$(jq -r '.stats.duplication_percentage // 0 | . * 10 | floor | . / 10' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null || true)
+        dup_lines=$(jq -r '.stats.duplicated_lines // 0' "$RUNNER_TEMP/fallow-dupes.json" 2>/dev/null || true)
         echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
-        echo "summary=${clones:-0} code clones" >> "$GITHUB_OUTPUT"
+        echo "summary=${groups:-0} clone groups, ${instances:-0} instances — ${pct:-0}% duplication (${dup_lines:-0} lines)" >> "$GITHUB_OUTPUT"
 
     - uses: developing-software/agents/actions/event/data@dev
       if: always()

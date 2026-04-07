@@ -1,14 +1,12 @@
 <script lang="ts">
+  import FallowReport from './FallowReport.svelte';
+
   interface Props {
     category: string;
     name: string;
     outcome: string;
     summary: string | null;
-    expanded: boolean;
-    loading: boolean;
-    content: string | null;
-    contentType: string | null;
-    ontoggle: () => void;
+    artifactUrl: string;
   }
 
   let {
@@ -16,28 +14,49 @@
     name,
     outcome,
     summary,
-    expanded,
-    loading,
-    content,
-    contentType,
-    ontoggle,
+    artifactUrl,
   }: Props = $props();
 
-  const formattedContent = $derived.by(() => {
-    if (!content) return null;
-    if (contentType === 'application/json') {
+  let expanded = $state(false);
+  let content: string | null = $state(null);
+  let contentType: string | null = $state(null);
+  let loading = $state(false);
+  let fetched = $state(false);
+  let view = $state<'report' | 'json'>('report');
+
+  const parsedJson = $derived.by(() => {
+    if (!content || contentType !== 'application/json') return null;
+    try {
+      return JSON.parse(content);
+    } catch {
+      return null;
+    }
+  });
+
+  const formattedJson = $derived(parsedJson ? JSON.stringify(parsedJson, null, 2) : null);
+
+  async function toggle() {
+    expanded = !expanded;
+    if (expanded && !fetched) {
+      loading = true;
       try {
-        return JSON.stringify(JSON.parse(content), null, 2);
+        const res = await fetch(artifactUrl);
+        if (res.ok) {
+          content = await res.text();
+          contentType = res.headers.get('content-type');
+        }
       } catch {
-        return content;
+        // leave content null
+      } finally {
+        loading = false;
+        fetched = true;
       }
     }
-    return content;
-  });
+  }
 </script>
 
 <div class="card">
-  <button type="button" class="header" onclick={ontoggle}>
+  <button type="button" class="header" onclick={toggle}>
     <span
       class="dot"
       class:success={outcome === 'success'}
@@ -56,8 +75,28 @@
         <span class="placeholder">Loading...</span>
       {:else if content === null}
         <span class="placeholder">No artifact available</span>
+      {:else if parsedJson}
+        <div class="tabs">
+          <button
+            type="button"
+            class="tab"
+            class:tab-active={view === 'report'}
+            onclick={() => view = 'report'}
+          >Report</button>
+          <button
+            type="button"
+            class="tab"
+            class:tab-active={view === 'json'}
+            onclick={() => view = 'json'}
+          >JSON</button>
+        </div>
+        {#if view === 'report'}
+          <FallowReport data={parsedJson} />
+        {:else}
+          <pre class="content-pre">{formattedJson}</pre>
+        {/if}
       {:else}
-        <pre class="content-pre">{formattedContent}</pre>
+        <pre class="content-pre">{content}</pre>
       {/if}
     </div>
   {/if}
@@ -163,6 +202,38 @@
     padding: 8px;
     white-space: pre-wrap;
     word-break: break-word;
+    color: var(--color-text);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px;
+    margin-bottom: 8px;
+  }
+
+  .tab {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 2px 10px;
+    border-radius: 3px;
+    border: none;
+    background: none;
+    color: var(--color-dim);
+    cursor: pointer;
+    line-height: 1.6;
+    transition: color 0.1s, background 0.1s;
+  }
+
+  .tab:hover {
+    color: var(--color-muted);
+  }
+
+  .tab-active {
+    background: var(--color-surface);
     color: var(--color-text);
   }
 </style>
