@@ -27,7 +27,7 @@ The full lifecycle works end-to-end: issues are triaged via AI planner chat, pla
 - **Platform / observability:** Console (repo browser, issues, PRs, agent config, events, health), API (event ingestion, artifacts, webhooks, models pricing), core (actor system, event store, agent discovery)
 - **Plan system:** Full CRUD, status lifecycle, tags-based linking, prompt generation, console pages (list, kanban, detail, create/edit), dispatch drawer, AI planner chat
 - **Multi-agent evaluation:** Multi-dispatch, comparison view, single-implementation LLM review, multi-implementation LLM judge, merge winner with auto-close losers
-- **Runed migration (partial):** `Debounced` in ModelSelector, `TextareaAutosize` + `useMutationObserver` in PlannerChat, `useDebounce` in actions page, hover styles moved to CSS
+- **Runed migration:** `Debounced` in ModelSelector, `TextareaAutosize` + `useMutationObserver` in PlannerChat, `useDebounce` in actions page, `onClickOutside` in Drawer, hover styles moved to CSS
 
 ---
 
@@ -93,13 +93,7 @@ The `AgentEvent` schema is the first typed event; other event types still flow t
 - `packages/core/src/events/github/` — `GithubEvent.Data` (pull_request, issue lifecycle)
 - Update console `*.remote.ts` consumers to use typed `parse()` instead of manual casts
 
-### 6. Finish Runed Migration
-
-**Priority:** Low — 4/5 completed, only Drawer remains
-
-- `packages/console/src/lib/ui/Drawer.svelte` — replace overlay `onclick={close}` with `onClickOutside` from runed (gated on `open` via `$effect`). Keep overlay as non-interactive backdrop if visual contrast is still needed.
-
-### 7. Observability Polish
+### 6. Observability Polish
 
 **Priority:** Low — quality-of-life improvements to existing screens
 
