@@ -9,6 +9,7 @@
     { label: 'Files', href: `/gh/${data.organization}/${data.repoName}/tree` },
     { label: 'Issues', href: `/gh/${data.organization}/${data.repoName}/issues` },
     { label: 'Pull Requests', href: `/gh/${data.organization}/${data.repoName}/pulls` },
+    { label: 'Branches', href: `/gh/${data.organization}/${data.repoName}/branches` },
     { label: 'Agents', href: `/gh/${data.organization}/${data.repoName}/agents` },
     { label: 'Actions', href: `/gh/${data.organization}/${data.repoName}/actions` },
     { label: 'Health', href: `/gh/${data.organization}/${data.repoName}/health` },
