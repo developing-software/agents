@@ -21,7 +21,6 @@
   let expanded = $state(false);
   let content: string | null = $state(null);
   let fetchError: string | null = $state(null);
-  let fetchDiagnostic = $state<{ tried: string[]; available: string[]; truncated: boolean } | null>(null);
   let loading = $state(false);
   let fetched = $state(false);
   let view = $state<'report' | 'json'>('report');
@@ -54,32 +53,15 @@
     if (expanded && !fetched) {
       loading = true;
       fetchError = null;
-      fetchDiagnostic = null;
       try {
         const res = await fetch(artifactUrl);
         if (res.ok) {
           const text = await res.text();
           content = text || null;
+        } else if (res.status === 404) {
+          fetchError = 'Artifact not available for this branch';
         } else {
           fetchError = `${res.status}${res.statusText ? ` ${res.statusText}` : ''}`;
-          // The 404 body is JSON with tried/available keys — surface it so
-          // the user can see the mismatch between expected and actual R2 keys.
-          try {
-            const body = (await res.json()) as {
-              tried?: unknown;
-              available?: unknown;
-              truncated?: unknown;
-            };
-            if (body && Array.isArray(body.tried)) {
-              fetchDiagnostic = {
-                tried: body.tried as string[],
-                available: Array.isArray(body.available) ? (body.available as string[]) : [],
-                truncated: !!body.truncated,
-              };
-            }
-          } catch {
-            /* body was not JSON — ignore */
-          }
         }
       } catch (err) {
         fetchError = String(err);
@@ -118,31 +100,7 @@
       {#if loading}
         <span class="placeholder">Loading artifact…</span>
       {:else if fetchError}
-        <div class="fetch-error">
-          <span class="placeholder">Failed to load artifact ({fetchError})</span>
-          {#if fetchDiagnostic}
-            <div class="diagnostic">
-              <div class="diagnostic-label">Tried keys</div>
-              <ul class="diagnostic-list">
-                {#each fetchDiagnostic.tried as k (k)}
-                  <li><code>{k}</code></li>
-                {/each}
-              </ul>
-              <div class="diagnostic-label">
-                Found under branch prefix{fetchDiagnostic.truncated ? ' (first 20)' : ''}
-              </div>
-              {#if fetchDiagnostic.available.length > 0}
-                <ul class="diagnostic-list">
-                  {#each fetchDiagnostic.available as k (k)}
-                    <li><code>{k}</code></li>
-                  {/each}
-                </ul>
-              {:else}
-                <div class="diagnostic-empty">nothing — the branch has no artifacts in R2</div>
-              {/if}
-            </div>
-          {/if}
-        </div>
+        <span class="placeholder">{fetchError}</span>
       {:else if !content}
         <span class="placeholder">No artifact available</span>
       {:else}
@@ -282,64 +240,6 @@
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: var(--color-muted);
-  }
-
-  .fetch-error {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .diagnostic {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 8px 10px;
-    background: var(--color-surface);
-    border: 1px dashed var(--color-border);
-    border-radius: 3px;
-  }
-
-  .diagnostic-label {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--color-dim);
-    margin-top: 4px;
-  }
-
-  .diagnostic-label:first-child {
-    margin-top: 0;
-  }
-
-  .diagnostic-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  .diagnostic-list li {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: var(--color-text);
-    word-break: break-all;
-  }
-
-  .diagnostic-list code {
-    background: none;
-    padding: 0;
-    color: inherit;
-  }
-
-  .diagnostic-empty {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: var(--color-dim);
-    font-style: italic;
   }
 
   .content-pre {

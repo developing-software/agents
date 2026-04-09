@@ -22,54 +22,17 @@ export const GET: RequestHandler = async ({ url, params, locals, platform }) => 
     return error(503, "Artifact storage unavailable");
   }
 
-  // First try the canonical key shape for both common extensions.
-  const candidates: string[] = [];
+  // Try .json then .txt
   for (const ext of ["json", "txt"]) {
-    candidates.push(BranchArtifact.checkKey(organization, repo, branch, category, name, ext));
-  }
-
-  for (const key of candidates) {
+    const key = BranchArtifact.checkKey(organization, repo, branch, category, name, ext);
     const obj = await bucket.get(key);
     if (obj) {
       const contentType =
-        obj.httpMetadata?.contentType ??
-        (key.endsWith(".json") ? "application/json" : "text/plain");
+        obj.httpMetadata?.contentType ?? (ext === "json" ? "application/json" : "text/plain");
       const text = await obj.text();
       return new Response(text, { headers: { "Content-Type": contentType } });
     }
   }
 
-  // Fallback: scan the branch prefix and pick the first object whose key
-  // contains both the category and the name — this is robust to future key
-  // shape changes in the uploader without requiring a console redeploy.
-  const prefix = BranchArtifact.branchPrefix(organization, repo, branch);
-  const listed = await bucket.list({ prefix });
-  const match = listed.objects.find((o) => {
-    const k = o.key.toLowerCase();
-    return k.includes(`/${category.toLowerCase()}/`) && k.includes(name.toLowerCase());
-  });
-
-  if (match) {
-    const obj = await bucket.get(match.key);
-    if (obj) {
-      const contentType =
-        obj.httpMetadata?.contentType ??
-        (match.key.endsWith(".json") ? "application/json" : "text/plain");
-      const text = await obj.text();
-      return new Response(text, { headers: { "Content-Type": contentType } });
-    }
-  }
-
-  // Nothing matched. Return a diagnostic body so the UI can show the user
-  // which keys we tried and which keys actually exist under the branch.
-  const diagnostic = {
-    error: "Artifact not found",
-    tried: candidates,
-    available: listed.objects.slice(0, 20).map((o) => o.key),
-    truncated: listed.objects.length > 20,
-  };
-  return new Response(JSON.stringify(diagnostic, null, 2), {
-    status: 404,
-    headers: { "Content-Type": "application/json" },
-  });
+  return error(404, "Artifact not found");
 };
