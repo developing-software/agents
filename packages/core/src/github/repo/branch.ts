@@ -84,6 +84,12 @@ export namespace GithubBranch {
   export const Info = z.object({
     name: z.string(),
     protected: z.boolean(),
+  });
+  export type Info = z.infer<typeof Info>;
+
+  export const Detailed = z.object({
+    name: z.string(),
+    protected: z.boolean(),
     reserved: z.boolean(),
     isDefault: z.boolean(),
     agent: z.string().nullable(),
@@ -92,17 +98,32 @@ export namespace GithubBranch {
     lastCommitAuthor: z.string().nullable(),
     lastCommitMessage: z.string().nullable(),
   });
-  export type Info = z.infer<typeof Info>;
+  export type Detailed = z.infer<typeof Detailed>;
 
   /**
-   * List branches with commit metadata in a single GraphQL round-trip.
-   * Protected flag is merged in from REST listBranches (GraphQL's
-   * branchProtectionRule requires admin read, which we may not have).
+   * List branches via a single REST call. Returns just name + protected flag.
+   * Used by lightweight callers like BranchSelect; prefer `listDetailed()`
+   * when you also need commit metadata and default/agent detection.
+   */
+  export async function list(repo: RepoRef): Promise<Info[]> {
+    const octokit = await GitHub.appClient(repo.installationId);
+    const { data } = await octokit.rest.repos.listBranches({
+      owner: repo.owner,
+      repo: repo.repo,
+      per_page: 100,
+    });
+    return data.map((b) => ({ name: b.name, protected: b.protected }));
+  }
+
+  /**
+   * List branches with commit metadata via GraphQL. Merges the `protected`
+   * flag from REST listBranches since GraphQL's branchProtectionRule
+   * requires admin read.
    *
    * TODO: v1 caps at 100 branches. Add pagination via pageInfo.hasNextPage
    * for repos that exceed that.
    */
-  export async function list(repo: RepoRef): Promise<Info[]> {
+  export async function listDetailed(repo: RepoRef): Promise<Detailed[]> {
     const octokit = await GitHub.appClient(repo.installationId);
 
     const gql = `

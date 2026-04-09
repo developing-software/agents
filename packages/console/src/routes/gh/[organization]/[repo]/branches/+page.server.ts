@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   if (!repo) return { branches: [], defaultBranch: "main" };
 
   const [branches, pulls] = await Promise.all([
-    GithubBranch.list(repo),
+    GithubBranch.listDetailed(repo),
     GithubPullRequest.list(repo),
   ]);
 
