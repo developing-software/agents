@@ -38,6 +38,20 @@ Remove the \`export\` keyword, or delete the declaration if the function itself 
 Verify: bun run fallow:dead-code`;
 }
 
+export function circularDepPrompt(cycle: any): string {
+  const files = Array.isArray(cycle) ? cycle : Array.isArray(cycle?.cycle) ? cycle.cycle : [];
+  const lines = [
+    `Break the circular dependency:`,
+    "",
+    `  ${files.join(" → ")}`,
+    "",
+    "Identify the root module that should not import the others, then invert or extract the shared piece into a neutral module.",
+    "",
+    "Verify: bun run fallow:dead-code",
+  ];
+  return lines.join("\n");
+}
+
 export function cloneGroupPrompt(group: any): string {
   const lines = [
     `Extract duplicated code into a shared module (${group.line_count ?? "?"} lines, ${group.instances?.length ?? "?"} instances):`,
@@ -83,14 +97,20 @@ export function healthSelectionPrompt(hotspots: any[], style: "fix" | "plan"): s
 }
 
 export function deadCodeSelectionPrompt(
-  items: { files: any[]; exports: any[]; types: any[] },
+  items: {
+    files: any[];
+    exports: any[];
+    types: any[];
+    cycles?: any[];
+  },
   style: "fix" | "plan",
 ): string {
-  const total = items.files.length + items.exports.length + items.types.length;
+  const cycles = items.cycles ?? [];
+  const total = items.files.length + items.exports.length + items.types.length + cycles.length;
   const header =
     style === "plan"
-      ? `Create a plan to remove these ${total} dead code items:`
-      : `Remove these ${total} dead code items:`;
+      ? `Create a plan to resolve these ${total} dead code issues:`
+      : `Resolve these ${total} dead code issues:`;
 
   const lines = [header];
 
@@ -115,6 +135,14 @@ export function deadCodeSelectionPrompt(
     for (const t of items.types) {
       const loc = t.line != null ? `:${t.line}` : "";
       lines.push(`- \`${t.path}${loc}\` — \`${t.export_name}\``);
+    }
+  }
+
+  if (cycles.length > 0) {
+    lines.push("", "Circular dependencies:");
+    for (const c of cycles) {
+      const files = Array.isArray(c) ? c : Array.isArray(c?.cycle) ? c.cycle : [];
+      lines.push(`- ${files.join(" → ")}`);
     }
   }
 
