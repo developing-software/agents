@@ -10,7 +10,11 @@
 	<span class="title">New Plan</span>
 </div>
 
-<PlanForm repoId={data.repo.id} organization={data.organization} repoName={data.repoName} />
+{#if data.repo}
+	<PlanForm repoId={data.repo.id} organization={data.organization} repoName={data.repoName} />
+{:else}
+	<div class="not-found">Repository not found.</div>
+{/if}
 
 <style>
 	.header {
@@ -35,5 +39,14 @@
 		font-size: 14px;
 		font-weight: 500;
 		color: var(--color-text);
+	}
+
+	.not-found {
+		font-family: "JetBrains Mono", monospace;
+		font-size: 12px;
+		color: var(--color-muted);
+		padding: 12px;
+		border: 1px dashed var(--color-border);
+		border-radius: 4px;
 	}
 </style>

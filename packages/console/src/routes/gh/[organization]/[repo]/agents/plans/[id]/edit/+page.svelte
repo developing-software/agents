@@ -5,7 +5,7 @@
 	let { data }: PageProps = $props();
 </script>
 
-{#if data.plan}
+{#if data.plan && data.repo}
 	<div class="header">
 		<a href="/gh/{data.organization}/{data.repoName}/agents/plans/{data.plan.id}" class="back">&larr; Plan</a>
 		<span class="title">Edit Plan</span>

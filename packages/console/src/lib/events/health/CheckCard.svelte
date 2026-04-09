@@ -1,5 +1,6 @@
 <script lang="ts">
   import FallowReport from './FallowReport.svelte';
+  import { getToolDef } from './tools';
 
   interface Props {
     category: string;
@@ -24,6 +25,8 @@
   let fetched = $state(false);
   let view = $state<'report' | 'json'>('report');
 
+  const toolDef = $derived(getToolDef(category, name));
+
   const parsedJson = $derived.by(() => {
     if (!content) return null;
     try {
@@ -35,6 +38,16 @@
 
   const formattedJson = $derived(parsedJson ? JSON.stringify(parsedJson, null, 2) : content);
 
+  const headline = $derived.by(() => {
+    if (toolDef?.headline) {
+      const h = toolDef.headline(summary);
+      if (h) {
+        return h.unit ? `${h.value} ${h.unit}` : h.value;
+      }
+    }
+    return summary;
+  });
+
   async function toggle() {
     expanded = !expanded;
     if (expanded && !fetched) {
@@ -45,8 +58,10 @@
         if (res.ok) {
           const text = await res.text();
           content = text || null;
+        } else if (res.status === 404) {
+          fetchError = 'Artifact not available for this branch';
         } else {
-          fetchError = `${res.status} ${res.statusText}`;
+          fetchError = `${res.status}${res.statusText ? ` ${res.statusText}` : ''}`;
         }
       } catch (err) {
         fetchError = String(err);
@@ -58,26 +73,34 @@
   }
 </script>
 
-<div class="card">
+<div class="card" class:card-expanded={expanded}>
   <button type="button" class="header" onclick={toggle}>
     <span
       class="dot"
       class:success={outcome === 'success'}
       class:failure={outcome !== 'success'}
+      aria-hidden="true"
     ></span>
-    <span class="label">{category}/{name}</span>
-    {#if summary}
-      <span class="summary">{summary}</span>
+    {#if toolDef?.glyph}
+      <span class="glyph" aria-hidden="true">{toolDef.glyph}</span>
     {/if}
-    <span class="chevron" class:open={expanded}></span>
+    <span class="label">
+      <span class="label-category">{category}</span>
+      <span class="label-sep">/</span>
+      <span class="label-name">{name}</span>
+    </span>
+    {#if headline}
+      <span class="headline" title={summary ?? ''}>{headline}</span>
+    {/if}
+    <span class="chevron" class:open={expanded}>▾</span>
   </button>
 
   {#if expanded}
     <div class="body">
       {#if loading}
-        <span class="placeholder">Loading artifact...</span>
+        <span class="placeholder">Loading artifact…</span>
       {:else if fetchError}
-        <span class="placeholder">Failed to load artifact ({fetchError})</span>
+        <span class="placeholder">{fetchError}</span>
       {:else if !content}
         <span class="placeholder">No artifact available</span>
       {:else}
@@ -115,6 +138,10 @@
     border: 1px solid var(--color-border);
     border-radius: 4px;
     overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .card-expanded {
+    border-color: var(--color-border-bright, var(--color-border));
   }
 
   .header {
@@ -122,7 +149,7 @@
     align-items: center;
     gap: 8px;
     width: 100%;
-    padding: 8px 10px;
+    padding: 8px 12px;
     background: none;
     border: none;
     cursor: pointer;
@@ -142,24 +169,44 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-
   .dot.success {
     background: var(--color-success);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-success) 50%, transparent);
   }
-
   .dot.failure {
     background: var(--color-danger);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 50%, transparent);
+  }
+
+  .glyph {
+    font-size: 11px;
+    color: var(--color-muted);
+    flex-shrink: 0;
   }
 
   .label {
     font-family: "JetBrains Mono", monospace;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--color-text);
     flex-shrink: 0;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 1px;
+  }
+  .label-category {
+    color: var(--color-dim);
+  }
+  .label-sep {
+    color: var(--color-border-bright, var(--color-border));
+    padding: 0 1px;
+  }
+  .label-name {
+    color: var(--color-text);
+    font-weight: 500;
   }
 
-  .summary {
+  .headline {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: var(--color-muted);
@@ -173,12 +220,10 @@
 
   .chevron {
     flex-shrink: 0;
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid var(--color-dim);
+    font-size: 10px;
+    color: var(--color-dim);
     transition: transform 0.15s ease;
+    display: inline-block;
   }
 
   .chevron.open {
@@ -187,7 +232,8 @@
 
   .body {
     border-top: 1px solid var(--color-border);
-    padding: 8px 10px;
+    padding: 12px 14px;
+    container-type: inline-size;
   }
 
   .placeholder {
@@ -219,13 +265,14 @@
     border: 1px solid var(--color-border);
     border-radius: 4px;
     padding: 2px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    width: fit-content;
   }
 
   .tab {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
-    padding: 2px 10px;
+    padding: 2px 12px;
     border-radius: 3px;
     border: none;
     background: none;

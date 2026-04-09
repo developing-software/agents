@@ -1,4 +1,5 @@
 // Shared utility functions for plan rendering
+import type { Plan } from "@agents/core/plan/index";
 
 export type PlanStatus =
   | "draft"
@@ -8,6 +9,12 @@ export type PlanStatus =
   | "completed"
   | "rejected";
 export type AuthorType = "human" | "llm";
+
+/**
+ * Canonical shape for a plan in the console UI. Mirrors the core `Plan.Info`
+ * so components don't fall out of sync when the schema changes.
+ */
+export type PlanItem = Plan.Info;
 
 export function statusDotColor(status: string): string {
   switch (status) {
