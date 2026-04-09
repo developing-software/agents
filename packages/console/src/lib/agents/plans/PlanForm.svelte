@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { createPlan, updatePlan } from './plans.remote';
-	import { PLAN_STATUSES } from './plan-helpers';
+	import { PLAN_STATUSES, type PlanStatus, type AuthorType } from './plan-helpers';
 	import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
 	import { listIssues } from '$lib/github/github.remote';
 	import IssueList from '$lib/github/IssueList.svelte';
@@ -17,8 +17,8 @@
 			id: string;
 			title: string;
 			body: string;
-			status: string;
-			authorType: string;
+			status: PlanStatus;
+			authorType: AuthorType;
 			tags: string[];
 		} | null | undefined;
 		repoId: string;
@@ -28,8 +28,8 @@
 
 	let title = $state(untrack(() => plan?.title ?? ''));
 	let body = $state(untrack(() => plan?.body ?? ''));
-	let authorType = $state(untrack(() => plan?.authorType ?? 'human'));
-	let status = $state(untrack(() => plan?.status ?? 'draft'));
+	let authorType = $state<AuthorType>(untrack(() => plan?.authorType ?? 'human'));
+	let status = $state<PlanStatus>(untrack(() => plan?.status ?? 'draft'));
 	let tagsInput = $state(untrack(() => plan?.tags.filter(t => !t.startsWith('gh:issue:')).join(', ') ?? ''));
 	let saving = $state(false);
 	let error = $state<string | null>(null);
