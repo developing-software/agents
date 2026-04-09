@@ -97,8 +97,16 @@ export namespace GithubBranch {
     lastCommitDate: z.string().nullable(),
     lastCommitAuthor: z.string().nullable(),
     lastCommitMessage: z.string().nullable(),
+    aheadBy: z.number().nullable(),
+    behindBy: z.number().nullable(),
+    compareBase: z.string().nullable(),
   });
   export type Detailed = z.infer<typeof Detailed>;
+
+  export interface ListDetailedOptions {
+    /** Max concurrent compare REST calls. Defaults to 10. */
+    compareConcurrency?: number;
+  }
 
   /**
    * List branches via a single REST call. Returns just name + protected flag.
@@ -116,14 +124,22 @@ export namespace GithubBranch {
   }
 
   /**
-   * List branches with commit metadata via GraphQL. Merges the `protected`
-   * flag from REST listBranches since GraphQL's branchProtectionRule
-   * requires admin read.
+   * List branches with commit metadata via GraphQL, plus ahead/behind
+   * commit counts relative to the compare base (prefers `dev` when it
+   * exists, otherwise falls back to the GitHub default branch). The
+   * compare adds one REST call per branch, parallelised with a
+   * concurrency cap.
+   *
+   * Merges the `protected` flag from REST listBranches since GraphQL's
+   * branchProtectionRule requires admin read.
    *
    * TODO: v1 caps at 100 branches. Add pagination via pageInfo.hasNextPage
    * for repos that exceed that.
    */
-  export async function listDetailed(repo: RepoRef): Promise<Detailed[]> {
+  export async function listDetailed(
+    repo: RepoRef,
+    options: ListDetailedOptions = {},
+  ): Promise<Detailed[]> {
     const octokit = await GitHub.appClient(repo.installationId);
 
     const gql = `
@@ -175,7 +191,13 @@ export namespace GithubBranch {
     const defaultBranch = gqlRes.repository.defaultBranchRef?.name ?? null;
     const protectedSet = new Set(restRes.data.filter((b) => b.protected).map((b) => b.name));
 
-    return gqlRes.repository.refs.nodes.map((n) => {
+    // Prefer `dev` as the compare base when it exists (matches the
+    // convention in repo.remote.ts#dispatchAgent), otherwise fall back to
+    // the GitHub default branch.
+    const hasDev = gqlRes.repository.refs.nodes.some((n) => n.name === "dev");
+    const compareBase = hasDev ? "dev" : defaultBranch;
+
+    const branches: Detailed[] = gqlRes.repository.refs.nodes.map((n) => {
       const name = n.name;
       const target = n.target ?? null;
       return {
@@ -188,8 +210,53 @@ export namespace GithubBranch {
         lastCommitDate: target?.committedDate ?? null,
         lastCommitAuthor: target?.author?.user?.login ?? target?.author?.name ?? null,
         lastCommitMessage: target?.messageHeadline ?? null,
+        aheadBy: null,
+        behindBy: null,
+        compareBase,
       };
     });
+
+    if (compareBase) {
+      await populateCompare(octokit, repo, branches, compareBase, options.compareConcurrency ?? 10);
+    }
+
+    return branches;
+  }
+
+  /** Populates aheadBy/behindBy on each branch vs `base`, in place. */
+  async function populateCompare(
+    octokit: Awaited<ReturnType<typeof GitHub.appClient>>,
+    repo: RepoRef,
+    branches: Detailed[],
+    base: string,
+    concurrency: number,
+  ): Promise<void> {
+    const targets = branches.filter((b) => b.name !== base && b.sha);
+    let idx = 0;
+
+    async function worker() {
+      while (true) {
+        const i = idx++;
+        if (i >= targets.length) return;
+        const b = targets[i]!;
+        try {
+          const { data } = await octokit.rest.repos.compareCommitsWithBasehead({
+            owner: repo.owner,
+            repo: repo.repo,
+            basehead: `${base}...${b.name}`,
+            per_page: 1,
+          });
+          b.aheadBy = data.ahead_by;
+          b.behindBy = data.behind_by;
+        } catch {
+          // Leave as null on failure (renamed base, diverged history, etc.).
+        }
+      }
+    }
+
+    await Promise.all(
+      Array.from({ length: Math.min(concurrency, targets.length) }, () => worker()),
+    );
   }
 
   /** Delete a single branch. Throws VisibleError for reserved/default. */

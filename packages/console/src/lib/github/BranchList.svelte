@@ -27,6 +27,9 @@
     lastCommitDate: string | null;
     lastCommitAuthor: string | null;
     lastCommitMessage: string | null;
+    aheadBy: number | null;
+    behindBy: number | null;
+    compareBase: string | null;
     pullRequest: PullRef | null;
     pullRequestCount: number;
     hasMergedPR: boolean;
@@ -315,6 +318,25 @@
             {/if}
           </span>
 
+          <!-- Ahead/behind vs compare base -->
+          <span
+            class="col-compare"
+            title={b.compareBase ? `vs ${b.compareBase}` : ''}
+          >
+            {#if b.isDefault || b.name === b.compareBase}
+              <span class="compare-empty">—</span>
+            {:else if b.aheadBy === null && b.behindBy === null}
+              <span class="compare-empty">·</span>
+            {:else}
+              <span class="compare-ahead" class:dim={b.aheadBy === 0}
+                >+{b.aheadBy ?? 0}</span
+              >
+              <span class="compare-behind" class:dim={b.behindBy === 0}
+                >-{b.behindBy ?? 0}</span
+              >
+            {/if}
+          </span>
+
           <!-- PR badge -->
           <span class="col-pr">
             {#if b.pullRequest}
@@ -501,6 +523,28 @@
     color: var(--color-accent);
     line-height: 14px;
     letter-spacing: 0.2px;
+  }
+  .col-compare {
+    width: 64px;
+    flex-shrink: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    display: inline-flex;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+  .compare-ahead {
+    color: var(--color-success);
+  }
+  .compare-behind {
+    color: var(--color-danger);
+  }
+  .compare-ahead.dim,
+  .compare-behind.dim {
+    color: var(--color-dim);
+  }
+  .compare-empty {
+    color: var(--color-dim);
   }
   .col-pr {
     width: 140px;
