@@ -6,8 +6,7 @@ import { fn } from "../util/fn";
 import { Log } from "../util/log";
 import { Common } from "../common";
 import { Examples } from "../examples";
-import { GithubIssue } from "../github/repo/issue";
-import { Repository } from "../repository/index";
+import { render as renderContext } from "./context";
 import { planTable, PlanStatus, AuthorType } from "./plan.sql";
 
 const log = Log.create({ service: "plan" });
@@ -171,41 +170,9 @@ export namespace Plan {
     });
   }
 
-  export async function composePrompt(plan: Info, opts: ToPromptOptions = {}): Promise<string> {
-    const options = ToPromptOptions.parse(opts);
-    const issueNumbers = plan.tags
-      .filter((t) => t.startsWith("gh:issue:"))
-      .map((t) => {
-        const issueNumberText = t.split(":")[2];
-        return issueNumberText ? parseInt(issueNumberText, 10) : NaN;
-      })
-      .filter((n) => !isNaN(n));
-
-    const sections: string[] = [`# Plan: ${plan.title}`, plan.body];
-
-    if ((options.includeIssueDetails ?? true) && issueNumbers.length > 0 && plan.sourceId) {
-      const repo = await Repository.findByID(plan.sourceId);
-      if (repo) {
-        const issues = await Promise.all(
-          issueNumbers.map((n) => GithubIssue.get(repo, n).catch(() => null)),
-        );
-
-        const validIssues = issues.filter((i): i is GithubIssue.Info => i !== null);
-        if (validIssues.length > 0) {
-          sections.push("## Linked Issues");
-          for (const issue of validIssues) {
-            sections.push(`### Issue #${issue.number}: ${issue.title}`);
-            if (issue.body) sections.push(issue.body);
-          }
-        }
-      }
-    }
-
-    return sections.join("\n\n");
-  }
-
   export async function toPrompt(plan: Info, opts: ToPromptOptions = {}): Promise<string> {
-    return composePrompt(plan, opts);
+    const options = ToPromptOptions.parse(opts);
+    return renderContext(plan, options);
   }
 
   function serialize(row: typeof planTable.$inferSelect): Info {

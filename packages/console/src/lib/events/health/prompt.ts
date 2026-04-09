@@ -38,6 +38,20 @@ Remove the \`export\` keyword, or delete the declaration if the function itself 
 Verify: bun run fallow:dead-code`;
 }
 
+export function circularDepPrompt(cycle: any): string {
+  const files = Array.isArray(cycle) ? cycle : Array.isArray(cycle?.cycle) ? cycle.cycle : [];
+  const lines = [
+    `Break the circular dependency:`,
+    "",
+    `  ${files.join(" → ")}`,
+    "",
+    "Identify the root module that should not import the others, then invert or extract the shared piece into a neutral module.",
+    "",
+    "Verify: bun run fallow:dead-code",
+  ];
+  return lines.join("\n");
+}
+
 export function cloneGroupPrompt(group: any): string {
   const lines = [
     `Extract duplicated code into a shared module (${group.line_count ?? "?"} lines, ${group.instances?.length ?? "?"} instances):`,
@@ -45,9 +59,7 @@ export function cloneGroupPrompt(group: any): string {
   ];
   if (Array.isArray(group.instances)) {
     for (const inst of group.instances) {
-      lines.push(
-        `  ${inst.file ?? inst.path ?? "?"}:${inst.start_line}-${inst.end_line}`,
-      );
+      lines.push(`  ${inst.file ?? inst.path ?? "?"}:${inst.start_line}-${inst.end_line}`);
     }
     const frag = group.instances[0]?.fragment;
     if (frag) {
@@ -61,10 +73,7 @@ export function cloneGroupPrompt(group: any): string {
 
 // --- selection prompts ---
 
-export function healthSelectionPrompt(
-  hotspots: any[],
-  style: "fix" | "plan",
-): string {
+export function healthSelectionPrompt(hotspots: any[], style: "fix" | "plan"): string {
   const header =
     style === "plan"
       ? `Create a plan to refactor these ${hotspots.length} hotspot files:`
@@ -72,9 +81,7 @@ export function healthSelectionPrompt(
 
   const lines = [header, ""];
   for (const h of hotspots) {
-    lines.push(
-      `- \`${h.path}\` — score ${h.score}, ${h.commits} commits, ${h.trend}`,
-    );
+    lines.push(`- \`${h.path}\` — score ${h.score}, ${h.commits} commits, ${h.trend}`);
     if (Array.isArray(h.actions)) {
       for (const a of h.actions) {
         lines.push(`  ${a.description ?? a}`);
@@ -83,24 +90,27 @@ export function healthSelectionPrompt(
   }
 
   if (style === "plan") {
-    lines.push(
-      "",
-      "For each file, outline: the problem, proposed fix, and any risks.",
-    );
+    lines.push("", "For each file, outline: the problem, proposed fix, and any risks.");
   }
   lines.push("", "Verify: bun run fallow:health");
   return lines.join("\n");
 }
 
 export function deadCodeSelectionPrompt(
-  items: { files: any[]; exports: any[]; types: any[] },
+  items: {
+    files: any[];
+    exports: any[];
+    types: any[];
+    cycles?: any[];
+  },
   style: "fix" | "plan",
 ): string {
-  const total = items.files.length + items.exports.length + items.types.length;
+  const cycles = items.cycles ?? [];
+  const total = items.files.length + items.exports.length + items.types.length + cycles.length;
   const header =
     style === "plan"
-      ? `Create a plan to remove these ${total} dead code items:`
-      : `Remove these ${total} dead code items:`;
+      ? `Create a plan to resolve these ${total} dead code issues:`
+      : `Resolve these ${total} dead code issues:`;
 
   const lines = [header];
 
@@ -128,20 +138,22 @@ export function deadCodeSelectionPrompt(
     }
   }
 
+  if (cycles.length > 0) {
+    lines.push("", "Circular dependencies:");
+    for (const c of cycles) {
+      const files = Array.isArray(c) ? c : Array.isArray(c?.cycle) ? c.cycle : [];
+      lines.push(`- ${files.join(" → ")}`);
+    }
+  }
+
   if (style === "plan") {
-    lines.push(
-      "",
-      "For each item, confirm it's safe to remove and note any side effects.",
-    );
+    lines.push("", "For each item, confirm it's safe to remove and note any side effects.");
   }
   lines.push("", "Verify: bun run fallow:dead-code");
   return lines.join("\n");
 }
 
-export function dupesSelectionPrompt(
-  groups: any[],
-  style: "fix" | "plan",
-): string {
+export function dupesSelectionPrompt(groups: any[], style: "fix" | "plan"): string {
   const header =
     style === "plan"
       ? `Create a plan to deduplicate these ${groups.length} clone groups:`
@@ -157,18 +169,13 @@ export function dupesSelectionPrompt(
     );
     if (Array.isArray(g.instances)) {
       for (const inst of g.instances) {
-        lines.push(
-          `   ${inst.file ?? inst.path ?? "?"}:${inst.start_line}-${inst.end_line}`,
-        );
+        lines.push(`   ${inst.file ?? inst.path ?? "?"}:${inst.start_line}-${inst.end_line}`);
       }
     }
   }
 
   if (style === "plan") {
-    lines.push(
-      "",
-      "For each group, propose where to put the shared code and how to import it.",
-    );
+    lines.push("", "For each group, propose where to put the shared code and how to import it.");
   }
   lines.push("", "Verify: bun run fallow:dupes");
   return lines.join("\n");

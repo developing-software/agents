@@ -72,12 +72,12 @@ Typed schema: `ChecksEvent.Completed.Data` in `packages/core/src/events/checks/i
 
 ### Deployments
 
-| Type                      | Origin | Description                                              |
-| ------------------------- | ------ | -------------------------------------------------------- |
-| `deploy.started`          | action | Deploy workflow begins (SST, Terraform, etc.)            |
-| `deploy.completed`        | action | Deploy workflow finishes; emits outputs and PR metadata  |
-| `deploy.remove.started`   | action | Teardown workflow begins                                 |
-| `deploy.remove.completed` | action | Teardown finishes                                        |
+| Type                      | Origin | Description                                             |
+| ------------------------- | ------ | ------------------------------------------------------- |
+| `deploy.started`          | action | Deploy workflow begins (SST, Terraform, etc.)           |
+| `deploy.completed`        | action | Deploy workflow finishes; emits outputs and PR metadata |
+| `deploy.remove.started`   | action | Teardown workflow begins                                |
+| `deploy.remove.completed` | action | Teardown finishes                                       |
 
 Standard tags: `env:<stage>`, `tool:<name>` (e.g. `sst`), `gh:branch:<head>` and `gh:base:<base>` on PR runs, plus all auto-injected `gh:*` tags from `event/init`.
 

@@ -3,8 +3,8 @@
   import PlanDetail from '$lib/agents/plans/PlanDetail.svelte';
   import Events from '$lib/events/repository/Feed.svelte';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
-  import PlannerDrawer from '$lib/ai/components/PlannerDrawer.svelte';
-  import PlanImplementations from '$lib/ai/components/PlanImplementations.svelte';
+  import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
+  import PlanImplementations from '$lib/agents/ai/components/PlanImplementations.svelte';
   import { updatePlan } from '$lib/agents/plans/plans.remote';
   import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';

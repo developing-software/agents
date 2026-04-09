@@ -4,24 +4,10 @@
     authorBadgeStyle,
     relativeTime,
     PLAN_STATUSES,
+    type PlanItem,
   } from './plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
-
-  type PlanItem = {
-    id: string;
-    title: string;
-    body: string;
-    status: string;
-    authorType: string;
-    tags: string[];
-    data: Record<string, unknown>;
-    source: string | null;
-    sourceId: string | null;
-    createdBy: string | null;
-    timeCreated: string;
-    timeUpdated: string;
-  };
 
   let {
     organization,

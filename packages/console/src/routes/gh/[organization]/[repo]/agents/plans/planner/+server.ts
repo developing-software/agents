@@ -2,11 +2,11 @@ import { streamText, stepCountIs, convertToModelMessages, type UIMessage } from 
 import type { RequestHandler } from "./$types";
 import { Repository } from "@agents/core/repository/index";
 import { Plan } from "@agents/core/plan/index";
-import { createModel } from "$lib/ai/model";
-import { githubTools } from "$lib/ai/tools/github-tools";
-import { planTools } from "$lib/ai/tools/plan-tools";
-import { triageTools } from "$lib/ai/tools/triage-tools";
-import { askUserTool } from "$lib/ai/tools/ask-user-tool";
+import { createModel } from "$lib/agents/ai/model";
+import { githubTools } from "$lib/agents/ai/tools/github-tools";
+import { planTools } from "$lib/agents/ai/tools/plan-tools";
+import { triageTools } from "$lib/agents/ai/tools/triage-tools";
+import { askUserTool } from "$lib/agents/ai/tools/ask-user-tool";
 
 export const POST: RequestHandler = async ({ request, params, locals, platform }) => {
   if (!locals.userID) {
@@ -47,7 +47,7 @@ Plans should have these markdown sections:
 ## Acceptance Criteria
 
 Be concise and actionable. Use the tools available to you to gather context before making decisions.
-When you need clarification, use the askUser tool to present options or ask questions — include ASCII diagrams or tables when they help illustrate the question.`;
+When you need clarification, use the askUser tool — it accepts an array of 1-4 questions you can ask in a single panel. Each question has a short \`header\` (~12 chars), the full \`question\`, optional \`options\` for multiple choice, and optional \`multiSelect: true\` when choices are not mutually exclusive. Batch related questions together instead of asking one at a time. Use \`context\` for ASCII diagrams or tables that help illustrate the questions.`;
 
   const editPrompt = `You are a development planner for the ${organization}/${repoName} repository.
 You are in EDIT mode for an existing plan.
@@ -63,7 +63,7 @@ ${existingPlan?.body}
 
 Help the user refine this plan — add issues, update scope, adjust acceptance criteria, or change status.
 Use the updatePlan tool to save changes. When updating the body, include all existing content plus your changes.
-Be concise and actionable. Use askUser when you need clarification — include ASCII diagrams or tables when they help.`;
+Be concise and actionable. When you need clarification, use the askUser tool — it accepts an array of 1-4 questions you can ask in a single panel. Each question has a short \`header\` (~12 chars), the full \`question\`, optional \`options\` for multiple choice, and optional \`multiSelect: true\` when choices are not mutually exclusive. Batch related questions together instead of asking one at a time. Use \`context\` for ASCII diagrams or tables that help illustrate the questions.`;
 
   const result = streamText({
     model: createModel(platform?.env?.ANTHROPIC_API_KEY),

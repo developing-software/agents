@@ -3,7 +3,7 @@
   import PlanList from '$lib/agents/plans/PlanList.svelte';
   import PlanKanban from '$lib/agents/plans/PlanKanban.svelte';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
-  import PlannerDrawer from '$lib/ai/components/PlannerDrawer.svelte';
+  import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
 
   let { data }: PageProps = $props();
 

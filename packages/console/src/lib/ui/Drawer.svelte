@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onClickOutside } from 'runed';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -17,16 +18,19 @@
     onclose,
   }: Props = $props();
 
+  let drawer = $state<HTMLElement>();
+
   function close() {
     open = false;
     onclose?.();
   }
+
+  onClickOutside(() => drawer, close);
 </script>
 
 {#if open}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="overlay" onclick={close}></div>
-  <div class="drawer" role="dialog" aria-modal="true" aria-label={title} style="width: {width}; max-width: 100vw;">
+  <div class="overlay"></div>
+  <div bind:this={drawer} class="drawer" role="dialog" aria-modal="true" aria-label={title} style="width: {width}; max-width: 100vw;">
     <div class="drawer-header">
       <span class="drawer-title">{title}</span>
       <button type="button" class="close-btn" onclick={close}>&times;</button>

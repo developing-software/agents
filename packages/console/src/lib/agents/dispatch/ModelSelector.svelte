@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AgentCompat } from '@agents/core/agent';
+  import type { AgentCompat, AgentWorkflow } from '@agents/core/agent';
   import type { SvelteSet } from 'svelte/reactivity';
   import { Debounced, watch } from 'runed';
   import { searchAgentModels } from './dispatch.remote';
@@ -12,7 +12,7 @@
     featuredModels,
     selected,
   }: {
-    agent: string;
+    agent: AgentWorkflow.Agent;
     agentLabel: string;
     featuredModels: AgentModelInfo[];
     selected: SvelteSet<string>;

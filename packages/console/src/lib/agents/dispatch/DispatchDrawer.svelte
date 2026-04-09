@@ -1,26 +1,12 @@
 <script lang="ts">
+  import type { AgentCompat, AgentWorkflow } from '@agents/core/agent';
   import Drawer from '$lib/ui/Drawer.svelte';
   import { previewPrompt, dispatchPlan, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
   import BranchSelect from '$lib/ui/BranchSelect.svelte';
-  import { statusDotColor, statusBadgeStyle } from '$lib/agents/plans/plan-helpers';
+  import { statusDotColor, statusBadgeStyle, type PlanItem } from '$lib/agents/plans/plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import ModelSelector from './ModelSelector.svelte';
   import { SvelteSet } from 'svelte/reactivity';
-
-  type PlanItem = {
-    id: string;
-    title: string;
-    body: string;
-    status: string;
-    authorType: string;
-    tags: string[];
-    data: Record<string, unknown>;
-    source: string | null;
-    sourceId: string | null;
-    createdBy: string | null;
-    timeCreated: string;
-    timeUpdated: string;
-  };
 
   let {
     plan,
@@ -45,13 +31,21 @@
   let dispatchError = $state<string | null>(null);
   let dispatchResults = $state<{ harness: string; status: string }[] | null>(null);
 
-  type AgentConfig = { id: string; label: string; multiProvider: boolean; defaultModel: string };
-  type AgentData = { agents: AgentConfig[]; featuredModels: Record<string, unknown[]> };
+  type AgentConfig = {
+    id: AgentWorkflow.Agent;
+    label: string;
+    multiProvider: boolean;
+    defaultModel: string;
+  };
+  type AgentData = {
+    agents: AgentConfig[];
+    featuredModels: Record<string, AgentCompat.AgentModelInfo[]>;
+  };
 
   const agentDataPromise: Promise<AgentData> = listAgentConfigs({}).then(async (agents) => {
     const entries = await Promise.all(
       agents.map(async (a) => {
-        const models = await listFeaturedModels({ agent: a.id as 'claude' | 'opencode' | 'codex' });
+        const models = await listFeaturedModels({ agent: a.id });
         return [a.id, models] as const;
       }),
     );

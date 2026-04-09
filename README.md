@@ -233,12 +233,12 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
   +-----------------------------+    +-----------------------------+
   |    GitHub Actions            |    |    Database (Postgres)      |
   |                             |    |                             |
-  |  actions/agent/claude       |    |  - events (tags, parent    |
-  |  actions/agent/codex        |    |       chaining, data)       |
-  |  actions/agent/opencode     |    |  - plans (tags, status,    |
-  |  actions/git/branch,pr      |    |       lifecycle)            |
-  |  actions/event/emit,init    |    |  - repositories             |
-  |  actions/comment/create     |    |  - users + flags            |
+  |  actions/agent              |    |  - events (tags, parent    |
+  |       (unified collector)   |    |       chaining, data)       |
+  |  actions/comment            |    |  - plans (tags, status,    |
+  |       (PR cost summary)     |    |       lifecycle)            |
+  |  actions/git/branch,pr      |    |  - repositories             |
+  |  actions/event/emit,init    |    |  - users + flags            |
   |  actions/artifact/upload    |    |  - installations            |
   +-----------------------------+    +-----------------------------+
 ```
@@ -256,10 +256,8 @@ agents/
     sdk/ts/         TypeScript SDK (auto-generated from OpenAPI spec)
   actions/
     core/           Shared action utilities
-    agent/
-      claude/       Claude Code agent harness
-      codex/        Codex agent harness
-      opencode/     OpenCode agent harness
+    agent/          Unified agent metrics collector (claude/codex/opencode extractors)
+    comment/        Upsert PR cost/check summary comment
     git/
       branch/       Branch creation
       commit/       Commit with metadata
@@ -269,9 +267,6 @@ agents/
       init/         Initialize event context
       data/         Attach data to events
       tag/          Tag management for events
-    comment/
-      create/       Create GitHub comments
-      update/       Update GitHub comments
     artifact/
       upload/       Upload artifacts to R2 storage
   .agents/
@@ -299,4 +294,3 @@ bun run lint         # lint (oxlint)
 bun run typecheck    # type check
 bun test             # run tests
 ```
-

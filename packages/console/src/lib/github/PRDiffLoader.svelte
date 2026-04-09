@@ -6,12 +6,14 @@
 		organization,
 		repoName,
 		prNumber,
-		prUrl = null
+		prUrl = null,
+		autoLoad = false
 	}: {
 		organization: string;
 		repoName: string;
 		prNumber: number;
 		prUrl?: string | null;
+		autoLoad?: boolean;
 	} = $props();
 
 	let loading = $state(false);
@@ -20,16 +22,9 @@
 	let error = $state<string | null>(null);
 	let visible = $state(false);
 
-	async function toggle() {
-		if (loading) return;
-
-		if (diff != null) {
-			visible = !visible;
-			return;
-		}
-
+	async function load() {
+		if (loading || diff != null) return;
 		error = null;
-
 		loading = true;
 		try {
 			const result = await getPRDiff({ organization, repoName, prNumber });
@@ -43,18 +38,39 @@
 			loading = false;
 		}
 	}
+
+	async function toggle() {
+		if (loading) return;
+		if (diff != null) {
+			visible = !visible;
+			return;
+		}
+		await load();
+	}
+
+	$effect(() => {
+		if (autoLoad && diff == null && !loading) {
+			void load();
+		}
+	});
 </script>
 
 <div class="diff-loader">
-	<button class="action-btn" disabled={loading} onclick={toggle}>
-		{#if loading}
-			...
-		{:else if visible}
-			Hide Diff
-		{:else}
-			Diff
-		{/if}
-	</button>
+	{#if !autoLoad}
+		<button class="action-btn" disabled={loading} onclick={toggle}>
+			{#if loading}
+				...
+			{:else if visible}
+				Hide Diff
+			{:else}
+				Diff
+			{/if}
+		</button>
+	{/if}
+
+	{#if loading && autoLoad}
+		<div class="diff-loading">loading diff…</div>
+	{/if}
 
 	{#if error}
 		<div class="diff-error">{error}</div>
@@ -97,5 +113,12 @@
 	.diff-error {
 		font-size: 11px;
 		color: var(--color-danger);
+	}
+
+	.diff-loading {
+		font-size: 11px;
+		color: var(--color-dim);
+		font-style: italic;
+		padding: 4px 0;
 	}
 </style>

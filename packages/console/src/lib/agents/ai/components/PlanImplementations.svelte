@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { listPlanRuns, reviewPR, judgePlan, mergeWinner } from '$lib/ai/judge.remote';
-  import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
+  import { listPlanRuns, reviewPR, judgePlan, mergeWinner } from '$lib/agents/ai/judge.remote';
+  import PlanImplementationCard from './PlanImplementationCard.svelte';
 
   let {
     organization,
@@ -84,31 +84,6 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  function formatCost(v: number | null): string {
-    if (v == null) return '--';
-    return `$${v.toFixed(2)}`;
-  }
-
-  function formatDuration(ms: number | null): string {
-    if (ms == null) return '--';
-    if (ms < 1000) return `${ms}ms`;
-    const secs = ms / 1000;
-    if (secs < 60) return `${secs.toFixed(1)}s`;
-    const mins = Math.floor(secs / 60);
-    const remSecs = Math.round(secs % 60);
-    return `${mins}m ${remSecs}s`;
-  }
-
-  function checkCounts(checks: Array<{ outcome: string }>): { passed: number; failed: number } {
-    let passed = 0;
-    let failed = 0;
-    for (const c of checks) {
-      if (c.outcome === 'success') passed++;
-      else failed++;
-    }
-    return { passed, failed };
-  }
-
   function mergedReviews(serverReviews: Record<number, ReviewResult>): Record<number, ReviewResult> {
     return { ...serverReviews, ...localReviews };
   }
@@ -163,11 +138,6 @@
     }
   }
 
-  function isWinner(prNumber: number | null, judgment: CompareResult | null): boolean {
-    if (!judgment || prNumber == null) return false;
-    return judgment.winner.prNumber === prNumber;
-  }
-
   function isMergedOrClosed(planSt: string): boolean {
     return planSt === 'completed';
   }
@@ -208,7 +178,7 @@
   <div class="impl-container">
     <div class="impl-header">
       <span class="section-label">implementations</span>
-      {#if !completed && !judgment && runs.length >= 2}
+      {#if runs.length >= 2 && !judgment && !completed}
         <button
           class="action-btn judge-btn"
           disabled={judgeLoading}
@@ -225,128 +195,21 @@
       <div class="cards-row">
         {#each runs as run (run.id)}
           {@const review = run.prNumber != null ? reviews[run.prNumber] : undefined}
-          {@const cc = checkCounts(run.checks)}
-          {@const winner = isWinner(run.prNumber, judgment)}
-
-          <div class="agent-card" class:winner-card={winner}>
-            <!-- Card header -->
-            <div class="card-header">
-              <span class="agent-dot" style="background:{agentColor(run.agent)};"></span>
-              <span class="agent-name">{capitalize(run.agent)}</span>
-              {#if run.model}
-                <span class="model-tag">{run.model}</span>
-              {/if}
-            </div>
-
-            <!-- PR row -->
-            {#if run.prNumber != null}
-              <div class="pr-row">
-                {#if run.prUrl}
-                  <a href={run.prUrl} target="_blank" rel="noopener noreferrer" class="pr-link">#{run.prNumber}</a>
-                {:else}
-                  <span class="pr-num">#{run.prNumber}</span>
-                {/if}
-                {#if run.prState}
-                  <span class="state-badge state-{run.prState}">{run.prState}</span>
-                {/if}
-              </div>
-            {:else}
-              <div class="pr-row">
-                <span class="dim-value">--</span>
-              </div>
-            {/if}
-
-            <!-- Metrics grid -->
-            <div class="metrics">
-              <span class="metric-label">lines</span>
-              <span class="metric-value">
-                <span class="lines-added">+{run.linesAdded ?? 0}</span>
-                <span class="lines-sep">/</span>
-                <span class="lines-removed">-{run.linesRemoved ?? 0}</span>
-              </span>
-
-              <span class="metric-label">cost</span>
-              <span class="metric-value">{formatCost(run.cost_usd)}</span>
-
-              <span class="metric-label">duration</span>
-              <span class="metric-value">{formatDuration(run.durationMs)}</span>
-
-              <span class="metric-label">turns</span>
-              <span class="metric-value">{run.turns ?? '--'}</span>
-
-              <span class="metric-label">checks</span>
-              <span class="metric-value">
-                <span class="check-pass">{cc.passed} pass</span>
-                {#if cc.failed > 0}
-                  <span class="check-fail">{cc.failed} fail</span>
-                {/if}
-              </span>
-            </div>
-
-            <!-- Actions row -->
-            <div class="card-actions">
-              {#if !completed && run.prNumber != null}
-                <button
-                  class="action-btn"
-                  disabled={reviewLoading === run.prNumber}
-                  onclick={() => handleReview(run)}
-                >
-                  {reviewLoading === run.prNumber ? '...' : 'Review'}
-                </button>
-              {/if}
-              {#if review}
-                <span class="score-badge">{review.overallScore}/10</span>
-              {/if}
-            </div>
-
-            <!-- Inline review -->
-            {#if review}
-              <div class="review-divider">
-                <span class="review-divider-label">Review</span>
-              </div>
-
-              <div class="review-summary">{review.summary}</div>
-
-              {#if review.strengths.length > 0}
-                <div class="review-category strengths-border">
-                  <div class="category-label strengths-label">strengths</div>
-                  {#each review.strengths as item, idx (item)}
-                    {#if idx > 0}<div class="category-divider"></div>{/if}
-                    <div class="category-item strength-text">{item}</div>
-                  {/each}
-                </div>
-              {/if}
-
-              {#if review.concerns.length > 0}
-                <div class="review-category concerns-border">
-                  <div class="category-label concerns-label">concerns</div>
-                  {#each review.concerns as item, idx (item)}
-                    {#if idx > 0}<div class="category-divider"></div>{/if}
-                    <div class="category-item concern-text">{item}</div>
-                  {/each}
-                </div>
-              {/if}
-
-              {#if review.suggestions.length > 0}
-                <div class="review-category suggestions-border">
-                  <div class="category-label suggestions-label">suggestions</div>
-                  {#each review.suggestions as item, idx (item)}
-                    {#if idx > 0}<div class="category-divider"></div>{/if}
-                    <div class="category-item suggestion-text">{item}</div>
-                  {/each}
-                </div>
-              {/if}
-            {/if}
-
-            <!-- Inline diff -->
-            {#if run.prNumber != null}
-              <PRDiffLoader {organization} {repoName} prNumber={run.prNumber} prUrl={run.prUrl} />
-            {/if}
-          </div>
+          <PlanImplementationCard
+            {run}
+            {review}
+            {judgment}
+            {organization}
+            {repoName}
+            {completed}
+            reviewLoading={reviewLoading === run.prNumber}
+            onReview={() => handleReview(run)}
+            {agentColor}
+          />
         {/each}
       </div>
 
-      <!-- Verdict section (below all cards) -->
+      <!-- Verdict section (single block below all cards) -->
       {#if judgment}
         <div class="verdict-section">
           <div class="verdict-divider">
@@ -423,6 +286,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .section-label {
@@ -449,34 +314,10 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    align-items: flex-start;
   }
 
-  /* ── Agent card ──────────────────────────────────────────────────────── */
-
-  .agent-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-    min-width: 280px;
-  }
-
-  .agent-card.winner-card {
-    border-left: 3px solid var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 3%, var(--color-surface));
-  }
-
-  /* ── Card header ─────────────────────────────────────────────────────── */
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+  /* ── Agent dot ───────────────────────────────────────────────────────── */
 
   .agent-dot {
     width: 7px;
@@ -488,164 +329,6 @@
   .agent-dot.small {
     width: 6px;
     height: 6px;
-  }
-
-  .agent-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-text);
-  }
-
-  .model-tag {
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    background: var(--color-elevated);
-    color: var(--color-muted);
-    border: 1px solid var(--color-border);
-    line-height: 1.6;
-    margin-left: auto;
-  }
-
-  /* ── PR row ──────────────────────────────────────────────────────────── */
-
-  .pr-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .pr-link {
-    font-size: 12px;
-    color: var(--color-accent);
-    text-decoration: none;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .pr-link:hover {
-    text-decoration: underline;
-  }
-
-  .pr-num {
-    font-size: 12px;
-    color: var(--color-text);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .dim-value {
-    font-size: 12px;
-    color: var(--color-dim);
-  }
-
-  /* ── State badges ────────────────────────────────────────────────────── */
-
-  .state-badge {
-    font-size: 10px;
-    padding: 1px 7px;
-    border-radius: 3px;
-    line-height: 1.4;
-  }
-
-  .state-open {
-    color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
-  }
-
-  .state-merged {
-    color: var(--color-merged);
-    background: color-mix(in srgb, var(--color-merged) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-merged) 25%, transparent);
-  }
-
-  .state-closed {
-    color: var(--color-dim);
-    background: color-mix(in srgb, var(--color-dim) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-dim) 25%, transparent);
-  }
-
-  /* ── Metrics grid ────────────────────────────────────────────────────── */
-
-  .metrics {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 2px 10px;
-    padding: 4px 0;
-  }
-
-  .metric-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--color-dim);
-    letter-spacing: 0.03em;
-    line-height: 1.8;
-  }
-
-  .metric-value {
-    font-size: 12px;
-    color: var(--color-text);
-    font-variant-numeric: tabular-nums;
-    line-height: 1.8;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  /* ── Lines ───────────────────────────────────────────────────────────── */
-
-  .lines-added {
-    font-size: 12px;
-    color: var(--color-success);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .lines-sep {
-    font-size: 10px;
-    color: var(--color-dim);
-    margin: 0 1px;
-  }
-
-  .lines-removed {
-    font-size: 12px;
-    color: var(--color-danger, var(--color-warning));
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── Checks ──────────────────────────────────────────────────────────── */
-
-  .check-pass {
-    font-size: 11px;
-    color: var(--color-success);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .check-fail {
-    font-size: 11px;
-    color: var(--color-danger, var(--color-warning));
-    font-variant-numeric: tabular-nums;
-    margin-left: 4px;
-  }
-
-  /* ── Score badge ─────────────────────────────────────────────────────── */
-
-  .score-badge {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 3px;
-    color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  /* ── Card actions ────────────────────────────────────────────────────── */
-
-  .card-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 2px;
   }
 
   /* ── Buttons ─────────────────────────────────────────────────────────── */
@@ -694,91 +377,17 @@
     border-color: var(--color-warning);
   }
 
-  /* ── Review divider ──────────────────────────────────────────────────── */
+  /* ── Score badge (verdict rankings) ──────────────────────────────────── */
 
-  .review-divider {
-    border-top: 1px dashed var(--color-border);
-    margin-top: 4px;
-    padding-top: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .review-divider-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--color-dim);
-    letter-spacing: 0.03em;
-  }
-
-  .review-summary {
-    font-size: 12px;
-    color: var(--color-muted);
-    line-height: 1.55;
-  }
-
-  /* ── Review categories ───────────────────────────────────────────────── */
-
-  .review-category {
-    padding-left: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .review-category.strengths-border {
-    border-left: 2px solid var(--color-success);
-  }
-
-  .review-category.concerns-border {
-    border-left: 2px solid var(--color-warning);
-  }
-
-  .review-category.suggestions-border {
-    border-left: 2px solid var(--color-muted);
-  }
-
-  .category-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-bottom: 4px;
-  }
-
-  .category-label.strengths-label {
-    color: var(--color-success);
-  }
-
-  .category-label.concerns-label {
-    color: var(--color-warning);
-  }
-
-  .category-label.suggestions-label {
-    color: var(--color-muted);
-  }
-
-  .category-item {
+  .score-badge {
     font-size: 11px;
-    line-height: 1.55;
-    padding: 3px 0;
-  }
-
-  .category-item.strength-text {
-    color: color-mix(in srgb, var(--color-success) 80%, var(--color-text));
-  }
-
-  .category-item.concern-text {
-    color: color-mix(in srgb, var(--color-warning) 80%, var(--color-text));
-  }
-
-  .category-item.suggestion-text {
-    color: var(--color-dim);
-  }
-
-  .category-divider {
-    height: 1px;
-    background: color-mix(in srgb, var(--color-border) 50%, transparent);
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
   /* ── Verdict section ─────────────────────────────────────────────────── */
