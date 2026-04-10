@@ -40,8 +40,8 @@ describe("Markdown", () => {
     unmount();
     render(Markdown, { source: "## Updated heading" });
     expect(screen.queryByRole("heading", { level: 2, name: "First heading" })).toBeNull();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Updated heading" }).textContent,
-    ).toBe("Updated heading");
+    expect(screen.getByRole("heading", { level: 2, name: "Updated heading" }).textContent).toBe(
+      "Updated heading",
+    );
   });
 });

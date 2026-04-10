@@ -41,6 +41,7 @@
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "test": "bun --filter '*' test",
     "typecheck": "bun --filter '*' typecheck",
     "fallow": "fallow health --hotspots --top 3 && fallow dead-code && fallow dupes",
     "fallow:health": "fallow health --hotspots --top 3",
