@@ -2,8 +2,9 @@
   import type { LayoutProps } from './$types';
   import './layout.css';
   import favicon from '$lib/assets/favicon.svg';
-  import { page } from '$app/state';
+  import { navigating, page } from '$app/state';
   import { PersistedState } from 'runed';
+    import PreLoadingIndicator from './PreLoadingIndicator.svelte';
 
   let { data, children }: LayoutProps = $props();
 
@@ -126,6 +127,9 @@
     {/if}
 
     <main class="content">
+      {#if navigating.complete}
+        <PreLoadingIndicator />
+      {/if}
       {@render children()}
     </main>
   </div>
