@@ -7,9 +7,16 @@ import { mock } from "bun:test";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 
 // Register happy-dom globally at load time so that `screen` from
-// @testing-library/dom can bind to document.body on import.
+// @testing-library / dom can bind to document.body on import.
 GlobalRegistrator.register();
 
+// beforeEach(async () => {
+//   await GlobalRegistrator.register();
+// });
+
+// afterEach(async () => {
+//   await GlobalRegistrator.unregister();
+// });
 // Redirect svelte imports to browser/client entries so tests can use
 // `import { mount } from "svelte"` without --conditions browser.
 const svelteRoot = dirname(dirname(fileURLToPath(import.meta.resolve("svelte"))));
