@@ -57,6 +57,15 @@ export namespace ModelsApi {
           }),
         }),
       ),
+      validator(
+        "query",
+        z.object({
+          provider: z.string().optional().meta({
+            description: "Provider ID to filter pricing lookup (e.g. anthropic, openai)",
+            example: "anthropic",
+          }),
+        }),
+      ),
       describeRoute({
         tags: ["Models"],
         summary: "Get pricing for a model",
@@ -82,7 +91,8 @@ export namespace ModelsApi {
       }),
       async (c) => {
         const { modelId } = c.req.valid("param");
-        const pricing = await Models.pricing(modelId);
+        const { provider } = c.req.valid("query");
+        const pricing = await Models.pricing(modelId, provider);
         return c.json({ pricing });
       },
     )

@@ -29,6 +29,7 @@ import type {
   GetTokenResponses,
   PostAppErrors,
   PostAppResponses,
+  PostBranchArtifactsByOwnerByRepoByBranchResponses,
   PostEventsByIdArtifactsErrors,
   PostEventsByIdArtifactsResponses,
   PostEventsErrors,
@@ -461,10 +462,21 @@ export class DevAgentSdk extends HeyApiClient {
   public getModelsPricingByModelId<ThrowOnError extends boolean = false>(
     parameters: {
       modelId: string;
+      provider?: string;
     },
     options?: Options<never, ThrowOnError>,
   ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }] }]);
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "modelId" },
+            { in: "query", key: "provider" },
+          ],
+        },
+      ],
+    );
     return (options?.client ?? this.client).get<
       GetModelsPricingByModelIdResponses,
       GetModelsPricingByModelIdErrors,
@@ -537,6 +549,38 @@ export class DevAgentSdk extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
+    });
+  }
+
+  public postBranchArtifactsByOwnerByRepoByBranch<ThrowOnError extends boolean = false>(
+    parameters: {
+      owner: string;
+      repo: string;
+      branch: string;
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "owner" },
+            { in: "path", key: "repo" },
+            { in: "path", key: "branch" },
+          ],
+        },
+      ],
+    );
+    return (options?.client ?? this.client).post<
+      PostBranchArtifactsByOwnerByRepoByBranchResponses,
+      unknown,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/branch-artifacts/{owner}/{repo}/{branch}",
+      ...options,
+      ...params,
     });
   }
 }

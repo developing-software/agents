@@ -36,6 +36,7 @@
   },
   "type": "module",
   "scripts": {
+    "clean": "rm -rf node_modules **/node_modules",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",

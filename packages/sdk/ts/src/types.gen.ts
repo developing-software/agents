@@ -891,7 +891,12 @@ export type GetModelsPricingByModelIdData = {
      */
     modelId: string;
   };
-  query?: never;
+  query?: {
+    /**
+     * Provider ID to filter pricing lookup (e.g. anthropic, openai)
+     */
+    provider?: string;
+  };
   url: "/models/pricing/{modelId}";
 };
 
@@ -1095,3 +1100,18 @@ export type PostModelsCostResponses = {
 };
 
 export type PostModelsCostResponse = PostModelsCostResponses[keyof PostModelsCostResponses];
+
+export type PostBranchArtifactsByOwnerByRepoByBranchData = {
+  body?: never;
+  path: {
+    owner: string;
+    repo: string;
+    branch: string;
+  };
+  query?: never;
+  url: "/branch-artifacts/{owner}/{repo}/{branch}";
+};
+
+export type PostBranchArtifactsByOwnerByRepoByBranchResponses = {
+  200: unknown;
+};

@@ -25,6 +25,7 @@ describe("models", () => {
   test("GET /models/pricing/:modelId — exact match", async () => {
     const response = await validateOpenAPIRoute("get", "/models/pricing/:modelId", {
       modelId: "claude-sonnet-4-6",
+      provider: "anthropic",
     });
     expect(response.pricing).not.toBeNull();
     expect(response.pricing.model).toBe("claude-sonnet-4-6");
@@ -36,6 +37,7 @@ describe("models", () => {
   test("GET /models/pricing/:modelId — prefix match", async () => {
     const response = await validateOpenAPIRoute("get", "/models/pricing/:modelId", {
       modelId: "claude-sonnet-4-6-20260217",
+      provider: "anthropic",
     });
     expect(response.pricing).not.toBeNull();
     expect(response.pricing.model).toInclude("claude-sonnet-4-6");
@@ -52,6 +54,7 @@ describe("models", () => {
   test("POST /models/cost — calculates cost", async () => {
     const response = await validateOpenAPIRoute("post", "/models/cost", undefined, {
       model: "claude-sonnet-4-6",
+      provider: "anthropic",
       tokens: {
         input: 1_000_000,
         output: 100_000,

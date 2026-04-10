@@ -1939,6 +1939,15 @@
             },
             "required": true,
             "description": "Model ID to look up (supports longest-prefix-match)"
+          },
+          {
+            "in": "query",
+            "name": "provider",
+            "schema": {
+              "example": "anthropic",
+              "type": "string"
+            },
+            "description": "Provider ID to filter pricing lookup (e.g. anthropic, openai)"
           }
         ],
         "tags": ["Models"],
@@ -2293,6 +2302,40 @@
             },
             "description": "Internal Server Error"
           }
+        }
+      }
+    },
+    "/branch-artifacts/{owner}/{repo}/{branch}": {
+      "post": {
+        "operationId": "postBranchArtifactsByOwnerByRepoByBranch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "owner",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "branch",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {}
         }
       }
     }
