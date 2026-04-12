@@ -3,6 +3,8 @@
   import { generateToken } from './repo.remote';
   import GitHubLink from '$lib/ui/GitHubLink.svelte';
   import Events from '$lib/events/repository/Feed.svelte';
+  import OverviewLinks from '$lib/agents/OverviewLinks.svelte';
+  import OverviewMetrics from '$lib/agents/OverviewMetrics.svelte';
 
 
   let { data }: PageProps = $props();
@@ -31,9 +33,18 @@
   </section>
 
   <!-- ============================================================ -->
-  <!-- RIGHT: Issues + PRs + Token -->
+  <!-- RIGHT: Overview + Issues + PRs + Token -->
   <!-- ============================================================ -->
   <aside class="right-column">
+
+    <!-- Overview -->
+    <section class="panel">
+      <h2 class="section-heading">Overview</h2>
+      <div class="overview-content">
+        <OverviewLinks organization={data.organization} repo={data.repoName} />
+        <OverviewMetrics metrics={data.overviewMetrics} />
+      </div>
+    </section>
 
     <!-- Issues -->
     <section class="panel">
@@ -383,5 +394,12 @@
     margin-top: 8px;
     font-size: 12px;
     color: var(--color-danger);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Overview Panel */
+  /* ------------------------------------------------------------------ */
+  .overview-content {
+    margin-top: 12px;
   }
 </style>
