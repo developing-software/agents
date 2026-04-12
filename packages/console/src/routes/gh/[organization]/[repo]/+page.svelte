@@ -23,6 +23,16 @@
   }
 </script>
 
+<!-- ============================================================ -->
+<!-- TOP: Overview -->
+<!-- ============================================================ -->
+<section class="panel overview-panel">
+  <h2 class="section-heading" style="margin-bottom: 10px;">Overview</h2>
+  <OverviewLinks organization={data.organization} repoName={data.repoName} />
+  <div class="overview-divider"></div>
+  <OverviewMetrics organization={data.organization} repoName={data.repoName} />
+</section>
+
 <div class="page-grid">
   <!-- ============================================================ -->
   <!-- LEFT: Activity Feed -->
@@ -36,14 +46,6 @@
   <!-- RIGHT: Issues + PRs + Token -->
   <!-- ============================================================ -->
   <aside class="right-column">
-
-    <!-- Overview -->
-    <section class="panel">
-      <h2 class="section-heading" style="margin-bottom: 10px;">Overview</h2>
-      <OverviewLinks organization={data.organization} repoName={data.repoName} />
-      <div class="overview-divider"></div>
-      <OverviewMetrics organization={data.organization} repoName={data.repoName} />
-    </section>
 
     <!-- Issues -->
     <section class="panel">
@@ -145,6 +147,13 @@
 </div>
 
 <style>
+  /* ------------------------------------------------------------------ */
+  /* Overview panel (full-width, above the grid) */
+  /* ------------------------------------------------------------------ */
+  .overview-panel {
+    margin-bottom: 24px;
+  }
+
   /* ------------------------------------------------------------------ */
   /* Page grid */
   /* ------------------------------------------------------------------ */
