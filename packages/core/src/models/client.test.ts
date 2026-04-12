@@ -67,7 +67,7 @@ describe("Models", () => {
   });
 
   test("pricing() returns exact match", async () => {
-    const p = await Models.pricing("claude-sonnet-4-6");
+    const p = await Models.pricing("claude-sonnet-4-6", "anthropic");
     expect(p).not.toBeNull();
     expect(p!.model).toBe("claude-sonnet-4-6");
     expect(p!.provider).toBe("anthropic");
@@ -78,7 +78,7 @@ describe("Models", () => {
   });
 
   test("pricing() returns longest prefix match for dated model IDs", async () => {
-    const p = await Models.pricing("claude-sonnet-4-6-20260217");
+    const p = await Models.pricing("claude-sonnet-4-6-20260217", "anthropic");
     expect(p).not.toBeNull();
     expect(p!.model).toInclude("claude-sonnet-4-6");
     expect(p!.provider).toBe("anthropic");

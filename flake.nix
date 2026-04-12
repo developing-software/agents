@@ -42,7 +42,7 @@
     in
     {
       devShells = eachSystem (system: {
-        default = pkgsFor.${system}.mkShell {
+        default = pkgsFor.${system}.mkShell rec {
           packages =
             let
               pkgs = pkgsFor.${system};
@@ -56,21 +56,33 @@
               pkgs.llm-agents.claude-code
               pkgs.llm-agents.codex
               pkgs.llm-agents.opencode
-              python313
+              # python313
               # pkgs.llm-agents.gemini-cli
-
             ];
 
-          shellHook = ''
-            echo ""
-            echo "===---===---==="
-            echo ""
-            echo "Dev Shell for ${system}"
-            echo ""
-            echo "===---===---==="
-            echo ""
-            # bun install --frozen-lockfile
-          '';
+          shellHook =
+            let
+              pkgs = pkgsFor.${system};
+              lib = pkgs.lib;
+              fmt = list: lib.concatMapStringsSep "\n" (p: "${p.pname or p.name}\t\t v${p.version or ""}") list;
+            in
+            ''
+              echo ""
+              echo "═══════════════════════════════════════════════════"
+              echo ""
+              echo "▗▄▄▄ ▗▄▄▄▖▗▖  ▗▖     ▗▄▖  ▗▄▄▖▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖▗▄▄▖"
+              echo "▐▌  █▐▌   ▐▌  ▐▌    ▐▌ ▐▌▐▌   ▐▌   ▐▛▚▖▐▌  █ ▐▌   "
+              echo "▐▌  █▐▛▀▀▘▐▌  ▐▌    ▐▛▀▜▌▐▌▝▜▌▐▛▀▀▘▐▌ ▝▜▌  █  ▝▀▚▖"
+              echo "▐▙▄▄▀▐▙▄▄▖ ▝▚▞▘     ▐▌ ▐▌▝▚▄▞▘▐▙▄▄▖▐▌  ▐▌  █ ▗▄▄▞▘"
+              echo ""
+
+              printf "%*s\n" $(( (50 + 22) / 2 )) "pkgs added by flake.nix"
+              echo "${fmt packages}" | column -t | ${lib.getExe pkgs.gum} style --border rounded --padding "0 1" --border-foreground 212 --width 50
+              echo ""
+              echo "═══════════════════════════════════════════════════"
+
+              # bun install --frozen-lockfile
+            '';
         };
       });
     };

@@ -58,6 +58,8 @@ export type {
   PostAppErrors,
   PostAppResponse,
   PostAppResponses,
+  PostBranchArtifactsByOwnerByRepoByBranchData,
+  PostBranchArtifactsByOwnerByRepoByBranchResponses,
   PostEventsByIdArtifactsData,
   PostEventsByIdArtifactsError,
   PostEventsByIdArtifactsErrors,

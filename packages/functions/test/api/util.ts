@@ -136,12 +136,27 @@ export function setupApiTest() {
 
     const originalPath = path.toLowerCase();
 
-    const pathParams = path.split("/").filter((x) => x.startsWith(":"));
-    if (pathParams.length > 0) {
+    const pathParamNames = new Set<string>();
+    const pathSegments = path.split("/").filter((x) => x.startsWith(":"));
+    if (pathSegments.length > 0) {
       const paramsObj: Record<string, string> = Object.fromEntries(
-        pathParams.map((x) => [x.slice(1), params![x.slice(1)]]).filter(([x, y]) => x && y),
+        pathSegments
+          .map((x) => {
+            pathParamNames.add(x.slice(1));
+            return [x.slice(1), params![x.slice(1)]];
+          })
+          .filter(([x, y]) => x && y),
       );
       path = path.replace(/:[^/]+/g, (x) => paramsObj[x.slice(1)]!);
+    }
+
+    // Forward remaining params as query parameters
+    if (params) {
+      const queryEntries = Object.entries(params).filter(([k]) => !pathParamNames.has(k));
+      if (queryEntries.length > 0) {
+        const qs = new URLSearchParams(queryEntries).toString();
+        path = `${path}?${qs}`;
+      }
     }
 
     // Get the expected status codes for this route

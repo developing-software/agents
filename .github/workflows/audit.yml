@@ -1,0 +1,80 @@
+name: Audits
+run-name: "audit/${{ inputs.scope || 'all' }}/${{ github.run_id }}"
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Specific audit scope (e.g. 'metrics'). Leave empty for all."
+        required: false
+        type: string
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .agents/audits
+          fetch-depth: 1
+
+      - name: Build audit matrix
+        id: matrix
+        shell: bash
+        run: |
+          SCOPE="${{ inputs.scope }}"
+          RESULT="[]"
+          for f in .agents/audits/*.md; do
+            [ -f "$f" ] || continue
+            NAME=$(basename "$f" .md)
+            if [ -n "$SCOPE" ] && [ "$NAME" != "$SCOPE" ]; then continue; fi
+            TITLE=$(sed -n '/^---$/,/^---$/{ /^title:/{ s/^title: *//; p; } }' "$f")
+            RESULT=$(echo "$RESULT" | jq -c --arg n "$NAME" --arg t "$TITLE" --arg p "$f" \
+              '. + [{"name":$n,"title":$t,"prompt":$p}]')
+          done
+          echo "result=$RESULT" >> "$GITHUB_OUTPUT"
+
+  audit:
+    needs: setup
+    if: needs.setup.outputs.matrix != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.setup.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - name: Read audit prompt
+        id: prompt
+        shell: bash
+        run: |
+          # Strip YAML frontmatter, pass body as prompt
+          BODY=$(sed '1{/^---$/!q}; 1,/^---$/d' "${{ matrix.prompt }}")
+          {
+            echo "content<<PROMPT_DELIMITER"
+            echo "$BODY"
+            echo "PROMPT_DELIMITER"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/audit
+        with:
+          audit_name: ${{ matrix.name }}
+          report_title: ${{ matrix.title }}
+          prompt: ${{ steps.prompt.outputs.content }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          token: ${{ secrets.AGENTS_TOKEN }}
