@@ -8,6 +8,9 @@ inputs:
   issue_number:
     description: "Optional issue number — uses naming {prefix}/issue-{N}-{runId}"
     required: false
+  existing_branch:
+    description: "Existing branch to checkout instead of creating new (for fix dispatches)"
+    required: false
 
 outputs:
   branch:
@@ -23,19 +26,28 @@ runs:
       env:
         PREFIX: ${{ inputs.prefix }}
         ISSUE_NUMBER: ${{ inputs.issue_number }}
+        EXISTING_BRANCH: ${{ inputs.existing_branch }}
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-        RUN_ID="${GITHUB_RUN_ID}"
-        if [ -n "$ISSUE_NUMBER" ]; then
-          BRANCH="${PREFIX}/issue-${ISSUE_NUMBER}-${RUN_ID}"
+        if [ -n "$EXISTING_BRANCH" ]; then
+          # Checkout existing branch (for fix dispatches on open PRs)
+          git fetch origin "$EXISTING_BRANCH"
+          git checkout "$EXISTING_BRANCH"
+          BRANCH="$EXISTING_BRANCH"
         else
-          BRANCH="${PREFIX}/run-${RUN_ID}"
-        fi
+          # Create new branch
+          RUN_ID="${GITHUB_RUN_ID}"
+          if [ -n "$ISSUE_NUMBER" ]; then
+            BRANCH="${PREFIX}/issue-${ISSUE_NUMBER}-${RUN_ID}"
+          else
+            BRANCH="${PREFIX}/run-${RUN_ID}"
+          fi
 
-        git checkout -b "$BRANCH"
-        git push origin "$BRANCH" --force
+          git checkout -b "$BRANCH"
+          git push origin "$BRANCH" --force
+        fi
 
         INITIAL_SHA=$(git rev-parse HEAD)
 

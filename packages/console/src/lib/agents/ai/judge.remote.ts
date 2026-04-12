@@ -175,6 +175,7 @@ export const reviewPR = command(
     organization: z.string(),
     repoName: z.string(),
     planId: z.string(),
+    runId: z.string(),
     agent: z.string(),
     prNumber: z.number(),
     checks: z.array(z.object({ category: z.string(), name: z.string(), outcome: z.string() })),
@@ -185,7 +186,7 @@ export const reviewPR = command(
       linesRemoved: z.number().nullable(),
     }),
   }),
-  async ({ organization, repoName, planId, agent, prNumber, checks, metrics }) => {
+  async ({ organization, repoName, planId, runId, agent, prNumber, checks, metrics }) => {
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) throw new Error("Repository not found");
 
@@ -205,16 +206,17 @@ export const reviewPR = command(
 
     const review = result.output;
 
-    await Event.create({
+    const eventId = await Event.create({
       type: "github.pull_request.reviewed",
       origin: "console",
       source: "repository",
       sourceId: repo.id,
+      parentEventId: runId,
       tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
       data: review as Record<string, unknown>,
     });
 
-    return review;
+    return { ...review, eventId };
   },
 );
 
@@ -247,6 +249,7 @@ export const judgePlan = command(
       origin: "console",
       source: "repository",
       sourceId: repo.id,
+      parentEventId: planId,
       tags: [`plan:${planId}`],
       data: judgment as Record<string, unknown>,
     });
@@ -260,6 +263,7 @@ export const humanReviewPR = command(
     organization: z.string(),
     repoName: z.string(),
     planId: z.string(),
+    runId: z.string(),
     agent: z.string(),
     prNumber: z.number(),
     scores: z.object({
@@ -269,22 +273,23 @@ export const humanReviewPR = command(
     }),
     verdict: z.string(),
   }),
-  async ({ organization, repoName, planId, agent, prNumber, scores, verdict }) => {
+  async ({ organization, repoName, planId, runId, agent, prNumber, scores, verdict }) => {
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) throw new Error("Repository not found");
 
     const review = { agent, prNumber, scores, verdict, suggestions: [] };
 
-    await Event.create({
+    const eventId = await Event.create({
       type: "github.pull_request.reviewed",
       origin: "console",
       source: "repository",
       sourceId: repo.id,
+      parentEventId: runId,
       tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
       data: review as Record<string, unknown>,
     });
 
-    return review;
+    return { ...review, eventId };
   },
 );
 
@@ -322,6 +327,7 @@ export const humanPickWinner = command(
       origin: "console",
       source: "repository",
       sourceId: repo.id,
+      parentEventId: planId,
       tags: [`plan:${planId}`],
       data: judgment as Record<string, unknown>,
     });

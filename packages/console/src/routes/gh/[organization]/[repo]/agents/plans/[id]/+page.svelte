@@ -5,10 +5,10 @@
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
   import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
   import PlanImplementations from '$lib/agents/ai/components/PlanImplementations.svelte';
-  import { updatePlan, createSubPlan } from '$lib/agents/plans/plans.remote';
+  import { updatePlan } from '$lib/agents/plans/plans.remote';
+  import { dispatchFix } from '$lib/agents/dispatch/dispatch.remote';
   import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
-  import { goto } from '$app/navigation';
 
   let { data }: PageProps = $props();
 
@@ -16,6 +16,7 @@
   let dispatched = $state(false);
   let statusValue = $state(data.plan?.status ?? 'draft');
   let plannerOpen = $state(false);
+  let fixDispatching = $state(false);
 
   async function handleStatusChange(e: Event) {
     if (!data.plan) return;
@@ -31,18 +32,22 @@
     drawerOpen = false;
   }
 
-  async function handleRefine(runId: string, suggestions: string[]) {
-    if (!data.plan) return;
-    const body = suggestions.map((s) => `- ${s}`).join('\n');
-    const result = await createSubPlan({
-      parentEventId: runId,
-      title: `Refinement: ${data.plan.title}`,
-      body: `## Refinements\n\n${body}\n\n---\n\nBased on review of parent plan: ${data.plan.title}`,
-      source: 'repository',
-      sourceId: data.plan.sourceId ?? '',
-      tags: [...data.plan.tags.filter((t) => !t.startsWith('plan:')), `plan:${data.plan.id}`],
-    });
-    goto(`/gh/${data.organization}/${data.repoName}/agents/plans/${result.id}`);
+  async function handleDispatchFix(prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) {
+    if (!data.plan || fixDispatching) return;
+    fixDispatching = true;
+    try {
+      await dispatchFix({
+        planId: data.plan.id,
+        organization: data.organization,
+        repoName: data.repoName,
+        prNumber,
+        reviewEventId,
+        review: { verdict: review.verdict, suggestions: review.suggestions ?? [] },
+        agent: { harness: 'claude' },
+      });
+    } finally {
+      fixDispatching = false;
+    }
   }
 </script>
 
@@ -94,7 +99,7 @@
       repoName={data.repoName}
       planId={data.plan.id}
       planStatus={data.plan.status}
-      onRefine={handleRefine}
+      onDispatchFix={handleDispatchFix}
     />
   </div>
 

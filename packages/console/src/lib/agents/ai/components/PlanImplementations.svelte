@@ -9,13 +9,13 @@
     repoName,
     planId,
     planStatus,
-    onRefine,
+    onDispatchFix,
   }: {
     organization: string;
     repoName: string;
     planId: string;
     planStatus: string;
-    onRefine?: (runId: string, suggestions: string[]) => void;
+    onDispatchFix?: (prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) => void;
   } = $props();
 
   // -- Data loading --
@@ -125,7 +125,7 @@
             {prStatesPromise}
             onReviewComplete={handleReviewComplete}
             onError={handleError}
-            {onRefine}
+            {onDispatchFix}
             {agentColor}
           />
         {/each}

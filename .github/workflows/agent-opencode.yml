@@ -17,6 +17,10 @@ on:
         description: "Model override"
         required: false
         type: string
+      branch:
+        description: "Existing branch to work on (skips branch creation)"
+        required: false
+        type: string
     secrets:
       AGENTS_TOKEN:
         required: true
@@ -35,6 +39,10 @@ on:
         default: ""
       model:
         description: "Model override"
+        required: false
+        type: string
+      branch:
+        description: "Existing branch to work on (skips branch creation)"
         required: false
         type: string
 
@@ -77,6 +85,7 @@ jobs:
         with:
           prefix: opencode
           issue_number: ${{ steps.issue.outputs.number }}
+          existing_branch: ${{ inputs.branch }}
 
       - uses: ./actions/comment
         with:

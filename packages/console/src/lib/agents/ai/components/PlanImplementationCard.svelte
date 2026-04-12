@@ -14,7 +14,7 @@
     prStatesPromise,
     onReviewComplete,
     onError,
-    onRefine,
+    onDispatchFix,
     agentColor,
   }: {
     run: PlanRun;
@@ -27,7 +27,7 @@
     prStatesPromise: Promise<Record<number, string | null>>;
     onReviewComplete: (prNumber: number, review: ReviewResult) => void;
     onError: (message: string) => void;
-    onRefine?: (runId: string, suggestions: string[]) => void;
+    onDispatchFix?: (prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) => void;
     agentColor: (agent: string) => string;
   } = $props();
 
@@ -88,6 +88,7 @@
     try {
       const result = await reviewPR({
         organization, repoName, planId,
+        runId: run.id,
         agent: run.agent, prNumber: run.prNumber,
         checks: run.checks,
         metrics: { cost_usd: run.cost_usd, durationMs: run.durationMs, linesAdded: run.linesAdded, linesRemoved: run.linesRemoved },
@@ -117,6 +118,7 @@
     try {
       const result = await humanReviewPR({
         organization, repoName, planId,
+        runId: run.id,
         agent: run.agent, prNumber: run.prNumber,
         scores: editScores,
         verdict: editVerdict,
@@ -274,12 +276,12 @@
           {#if !completed}
             <button class="action-btn" onclick={() => startEdit(review)}>Edit Review</button>
           {/if}
-          {#if onRefine && review.suggestions && review.suggestions.length > 0}
+          {#if onDispatchFix && run.prNumber != null && review.eventId && !completed}
             <button
-              class="action-btn refine-btn"
-              onclick={() => onRefine(run.id, review.suggestions!)}
+              class="action-btn fix-btn"
+              onclick={() => onDispatchFix(run.prNumber!, review.eventId!, { verdict: review.verdict, suggestions: review.suggestions })}
             >
-              Refine
+              Fix
             </button>
           {/if}
         </div>
@@ -643,15 +645,15 @@
     cursor: not-allowed;
   }
 
-  .refine-btn {
-    border-color: color-mix(in srgb, var(--color-muted) 40%, transparent);
-    background: color-mix(in srgb, var(--color-muted) 8%, transparent);
-    color: var(--color-muted);
+  .fix-btn {
+    border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
+    background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+    color: var(--color-warning);
   }
 
-  .refine-btn:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--color-muted) 15%, transparent);
-    border-color: var(--color-muted);
+  .fix-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+    border-color: var(--color-warning);
   }
 
   .cancel-btn {

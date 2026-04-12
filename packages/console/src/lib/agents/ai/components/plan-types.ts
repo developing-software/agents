@@ -24,6 +24,7 @@ export type ReviewResult = {
   scores: { adherence: number; quality: number; completeness: number };
   verdict: string;
   suggestions?: string[];
+  eventId?: string;
 };
 
 export type CompareRanking = {

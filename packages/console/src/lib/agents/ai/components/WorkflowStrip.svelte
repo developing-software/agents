@@ -59,6 +59,7 @@
         try {
           const result = await reviewPR({
             organization, repoName, planId,
+            runId: run.id,
             agent: run.agent, prNumber: run.prNumber,
             checks: run.checks,
             metrics: { cost_usd: run.cost_usd, durationMs: run.durationMs, linesAdded: run.linesAdded, linesRemoved: run.linesRemoved },

@@ -249,6 +249,13 @@ export namespace Event {
       return opts.parentEventId;
     }
 
+    // Explicit parent tag takes precedence over plan inference
+    const parentTag = opts.tags?.find((tag) => tag.startsWith("parent:"));
+    if (parentTag) {
+      const parentId = parentTag.slice("parent:".length);
+      if (parentId) return parentId;
+    }
+
     // Plan tag — the plan ID IS the event ID, so use it directly as parent
     const planTag = opts.tags?.find((tag) => tag.startsWith("plan:"));
     if (planTag) {
