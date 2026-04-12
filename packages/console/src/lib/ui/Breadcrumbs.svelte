@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
 
+
   const breadcrumbs = $derived(page.data.breadcrumbs as Breadcrumb[] | undefined);
 </script>
 
