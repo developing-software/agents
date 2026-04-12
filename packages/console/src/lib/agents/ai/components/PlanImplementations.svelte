@@ -2,8 +2,6 @@
   import { listPlanRuns, listPrStates, reviewPR, judgePlan, mergeWinner } from '$lib/agents/ai/judge.remote';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
   import PlanImplementationCard from './PlanImplementationCard.svelte';
-  import PlanComparisonTable from './PlanComparisonTable.svelte';
-  import PlanDiffCompare from './PlanDiffCompare.svelte';
   import { capitalize } from '$lib/events/helpers';
 
   let {
@@ -50,7 +48,6 @@
 
   // -- Local state --
 
-  let viewMode = $state<'compare' | 'cards'>('compare');
   let reviewLoading = $state<number | null>(null);
   let reviewAllLoading = $state(false);
   let reviewAllProgress = $state<{ done: number; total: number } | null>(null);
@@ -185,161 +182,12 @@
   <div class="impl-container">
     <div class="impl-header">
       <span class="section-label">implementations</span>
-      {#if runs.length >= 2}
-        <div class="view-tabs">
-          <button class="vtab" class:vtab-active={viewMode === 'compare'} onclick={() => { viewMode = 'compare'; }}>Compare</button>
-          <button class="vtab" class:vtab-active={viewMode === 'cards'} onclick={() => { viewMode = 'cards'; }}>Cards</button>
-        </div>
-      {/if}
     </div>
 
     {#if runs.length === 0}
       <div class="empty-text">No implementations yet. Dispatch agents to start.</div>
-    {:else if viewMode === 'compare' && runs.length >= 2}
-      <!-- ── Compare View ──────────────────────────────────────────────── -->
-
-      <!-- Comparison Table -->
-      <PlanComparisonTable {runs} {reviews} {judgment} {agentColor} />
-
-      <!-- Judge Workflow Strip -->
-      <div class="workflow-strip">
-        <!-- Step 1: Review -->
-        <div class="workflow-step">
-          <div class="step-header">
-            <span class="step-num">1</span>
-            <span class="step-title">Review</span>
-            {#if hasUnreviewed && !completed}
-              <button
-                class="action-btn review-all-btn"
-                disabled={reviewAllLoading}
-                onclick={() => handleReviewAll(runs, reviews)}
-              >
-                {#if reviewAllLoading && reviewAllProgress}
-                  Reviewing {reviewAllProgress.done}/{reviewAllProgress.total}...
-                {:else}
-                  Review All
-                {/if}
-              </button>
-            {/if}
-          </div>
-          <div class="review-statuses">
-            {#each runs as run (run.id)}
-              {@const hasReview = run.prNumber != null && reviews[run.prNumber] != null}
-              {@const isReviewing = reviewLoading === run.prNumber}
-              <div class="review-status-row">
-                <span class="agent-dot" style="background:{agentColor(run.agent)};"></span>
-                <span class="review-agent-name">{capitalize(run.agent)}</span>
-                {#if run.prNumber == null}
-                  <span class="review-state dim">no PR</span>
-                {:else if hasReview}
-                  {@const review = reviews[run.prNumber]}
-                  <span class="review-state reviewed">
-                    {avgScore(review.scores)}/10
-                  </span>
-                {:else if isReviewing}
-                  <span class="review-state loading">reviewing...</span>
-                {:else if !completed}
-                  <button
-                    class="action-btn action-btn-sm"
-                    onclick={() => handleReview(run)}
-                  >Review</button>
-                {:else}
-                  <span class="review-state dim">--</span>
-                {/if}
-              </div>
-            {/each}
-          </div>
-        </div>
-
-        <!-- Step 2: Compare -->
-        <div class="workflow-step" class:step-disabled={!allHaveReviews(runs, reviews) && !judgment}>
-          <div class="step-header">
-            <span class="step-num">2</span>
-            <span class="step-title">Compare</span>
-            {#if !judgment && !completed}
-              <button
-                class="action-btn judge-btn"
-                disabled={judgeLoading || !canJudge}
-                title={canJudge ? 'Compare all implementations' : 'All implementations must be reviewed first'}
-                onclick={() => handleJudge(runs, reviews)}
-              >
-                {judgeLoading ? 'Judging...' : 'Judge All'}
-              </button>
-            {/if}
-          </div>
-          {#if judgment}
-            <div class="verdict-inline">
-              <button
-                class="verdict-toggle"
-                onclick={() => { verdictExpanded = !verdictExpanded; }}
-              >
-                <span class="agent-dot" style="background:{agentColor(judgment.winner.agent)};"></span>
-                <span class="winner-text">{capitalize(judgment.winner.agent)} wins</span>
-                <span class="winner-pr">PR #{judgment.winner.prNumber}</span>
-                <span class="expand-arrow">{verdictExpanded ? '\u25B4' : '\u25BE'}</span>
-              </button>
-              {#if verdictExpanded}
-                <div class="verdict-detail">
-                  <div class="rankings-list">
-                    {#each judgment.rankings as entry (entry.rank)}
-                      <div class="ranking-entry" class:winner-row={entry.prNumber === judgment.winner.prNumber}>
-                        <span class="rank-num">#{entry.rank}</span>
-                        <span class="agent-dot small" style="background:{agentColor(entry.agent)};"></span>
-                        <span class="rank-agent">{capitalize(entry.agent)}</span>
-                        <span class="score-badge">{avgScore(entry.scores)}/10</span>
-                        <span class="rank-details">
-                          <span class="dimension-scores">
-                            <span class="dim-score">adh {entry.scores.adherence}</span>
-                            <span class="dim-sep">/</span>
-                            <span class="dim-score">qual {entry.scores.quality}</span>
-                            <span class="dim-sep">/</span>
-                            <span class="dim-score">comp {entry.scores.completeness}</span>
-                          </span>
-                          {#if entry.note}
-                            <span class="rank-note">{entry.note}</span>
-                          {/if}
-                        </span>
-                      </div>
-                    {/each}
-                  </div>
-                  <div class="reasoning-block">
-                    <span class="reasoning-label">reasoning</span>
-                    <p class="reasoning-text">{judgment.reasoning}</p>
-                  </div>
-                </div>
-              {/if}
-            </div>
-          {/if}
-        </div>
-
-        <!-- Step 3: Merge -->
-        <div class="workflow-step" class:step-disabled={!judgment}>
-          <div class="step-header">
-            <span class="step-num">3</span>
-            <span class="step-title">Merge</span>
-            {#if judgment && !completed}
-              <button
-                class="action-btn merge-btn"
-                disabled={mergeLoading}
-                onclick={() => handleMerge(judgment.winner.prNumber, runs)}
-              >
-                {mergeLoading ? 'Merging...' : `Merge PR #${judgment.winner.prNumber}`}
-              </button>
-            {:else if completed}
-              <span class="step-done">completed</span>
-            {/if}
-          </div>
-        </div>
-      </div>
-
-      <!-- Diff Compare -->
-      <div class="diff-section">
-        <span class="section-label">diffs</span>
-        <PlanDiffCompare {runs} {organization} {repoName} {agentColor} />
-      </div>
-
     {:else}
-      <!-- ── Cards View ────────────────────────────────────────────────── -->
+      <!-- Cards -->
       <div class="cards-row">
         {#each runs as run (run.id)}
           {@const review = run.prNumber != null ? reviews[run.prNumber] : undefined}
@@ -359,60 +207,136 @@
         {/each}
       </div>
 
-      <!-- Verdict section for cards view -->
-      {#if judgment}
-        <div class="verdict-section">
-          <div class="verdict-divider">
-            <span class="verdict-divider-label">Verdict</span>
-          </div>
-
-          <div class="winner-announce">
-            <span class="agent-dot" style="background:{agentColor(judgment.winner.agent)};"></span>
-            <span class="winner-announce-text">
-              {capitalize(judgment.winner.agent)} wins
-              <span class="winner-announce-pr">(PR #{judgment.winner.prNumber})</span>
-            </span>
-          </div>
-
-          <div class="rankings-list">
-            {#each judgment.rankings as entry (entry.rank)}
-              <div class="ranking-entry" class:winner-row={entry.prNumber === judgment.winner.prNumber}>
-                <span class="rank-num">#{entry.rank}</span>
-                <span class="agent-dot small" style="background:{agentColor(entry.agent)};"></span>
-                <span class="rank-agent">{capitalize(entry.agent)}</span>
-                <span class="score-badge">{avgScore(entry.scores)}/10</span>
-                <span class="rank-details">
-                  <span class="dimension-scores">
-                    <span class="dim-score">adh {entry.scores.adherence}</span>
-                    <span class="dim-sep">/</span>
-                    <span class="dim-score">qual {entry.scores.quality}</span>
-                    <span class="dim-sep">/</span>
-                    <span class="dim-score">comp {entry.scores.completeness}</span>
-                  </span>
-                  {#if entry.note}
-                    <span class="rank-note">{entry.note}</span>
+      <!-- Judge Workflow Strip (only when 2+ runs) -->
+      {#if runs.length >= 2}
+        <div class="workflow-strip">
+          <!-- Step 1: Review -->
+          <div class="workflow-step">
+            <div class="step-header">
+              <span class="step-num">1</span>
+              <span class="step-title">Review</span>
+              {#if hasUnreviewed && !completed}
+                <button
+                  class="action-btn review-all-btn"
+                  disabled={reviewAllLoading}
+                  onclick={() => handleReviewAll(runs, reviews)}
+                >
+                  {#if reviewAllLoading && reviewAllProgress}
+                    Reviewing {reviewAllProgress.done}/{reviewAllProgress.total}...
+                  {:else}
+                    Review All
                   {/if}
-                </span>
-              </div>
-            {/each}
-          </div>
-
-          <div class="reasoning-block">
-            <span class="reasoning-label">reasoning</span>
-            <p class="reasoning-text">{judgment.reasoning}</p>
-          </div>
-
-          {#if !completed}
-            <div class="verdict-actions">
-              <button
-                class="action-btn merge-btn"
-                disabled={mergeLoading}
-                onclick={() => handleMerge(judgment.winner.prNumber, runs)}
-              >
-                {mergeLoading ? '...' : `Merge Winner (PR #${judgment.winner.prNumber})`}
-              </button>
+                </button>
+              {/if}
             </div>
-          {/if}
+            <div class="review-statuses">
+              {#each runs as run (run.id)}
+                {@const hasReview = run.prNumber != null && reviews[run.prNumber] != null}
+                {@const isReviewing = reviewLoading === run.prNumber}
+                <div class="review-status-row">
+                  <span class="agent-dot" style="background:{agentColor(run.agent)};"></span>
+                  <span class="review-agent-name">{capitalize(run.agent)}</span>
+                  {#if run.prNumber == null}
+                    <span class="review-state dim">no PR</span>
+                  {:else if hasReview}
+                    {@const review = reviews[run.prNumber]}
+                    <span class="review-state reviewed">
+                      {avgScore(review.scores)}/10
+                    </span>
+                  {:else if isReviewing}
+                    <span class="review-state loading">reviewing...</span>
+                  {:else if !completed}
+                    <button
+                      class="action-btn action-btn-sm"
+                      onclick={() => handleReview(run)}
+                    >Review</button>
+                  {:else}
+                    <span class="review-state dim">--</span>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          </div>
+
+          <!-- Step 2: Compare -->
+          <div class="workflow-step" class:step-disabled={!allHaveReviews(runs, reviews) && !judgment}>
+            <div class="step-header">
+              <span class="step-num">2</span>
+              <span class="step-title">Compare</span>
+              {#if !judgment && !completed}
+                <button
+                  class="action-btn judge-btn"
+                  disabled={judgeLoading || !canJudge}
+                  title={canJudge ? 'Compare all implementations' : 'All implementations must be reviewed first'}
+                  onclick={() => handleJudge(runs, reviews)}
+                >
+                  {judgeLoading ? 'Judging...' : 'Judge All'}
+                </button>
+              {/if}
+            </div>
+            {#if judgment}
+              <div class="verdict-inline">
+                <button
+                  class="verdict-toggle"
+                  onclick={() => { verdictExpanded = !verdictExpanded; }}
+                >
+                  <span class="agent-dot" style="background:{agentColor(judgment.winner.agent)};"></span>
+                  <span class="winner-text">{capitalize(judgment.winner.agent)} wins</span>
+                  <span class="winner-pr">PR #{judgment.winner.prNumber}</span>
+                  <span class="expand-arrow">{verdictExpanded ? '\u25B4' : '\u25BE'}</span>
+                </button>
+                {#if verdictExpanded}
+                  <div class="verdict-detail">
+                    <div class="rankings-list">
+                      {#each judgment.rankings as entry (entry.rank)}
+                        <div class="ranking-entry" class:winner-row={entry.prNumber === judgment.winner.prNumber}>
+                          <span class="rank-num">#{entry.rank}</span>
+                          <span class="agent-dot small" style="background:{agentColor(entry.agent)};"></span>
+                          <span class="rank-agent">{capitalize(entry.agent)}</span>
+                          <span class="score-badge">{avgScore(entry.scores)}/10</span>
+                          <span class="rank-details">
+                            <span class="dimension-scores">
+                              <span class="dim-score">adh {entry.scores.adherence}</span>
+                              <span class="dim-sep">/</span>
+                              <span class="dim-score">qual {entry.scores.quality}</span>
+                              <span class="dim-sep">/</span>
+                              <span class="dim-score">comp {entry.scores.completeness}</span>
+                            </span>
+                            {#if entry.note}
+                              <span class="rank-note">{entry.note}</span>
+                            {/if}
+                          </span>
+                        </div>
+                      {/each}
+                    </div>
+                    <div class="reasoning-block">
+                      <span class="reasoning-label">reasoning</span>
+                      <p class="reasoning-text">{judgment.reasoning}</p>
+                    </div>
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Step 3: Merge -->
+          <div class="workflow-step" class:step-disabled={!judgment}>
+            <div class="step-header">
+              <span class="step-num">3</span>
+              <span class="step-title">Merge</span>
+              {#if judgment && !completed}
+                <button
+                  class="action-btn merge-btn"
+                  disabled={mergeLoading}
+                  onclick={() => handleMerge(judgment.winner.prNumber, runs)}
+                >
+                  {mergeLoading ? 'Merging...' : `Merge PR #${judgment.winner.prNumber}`}
+                </button>
+              {:else if completed}
+                <span class="step-done">completed</span>
+              {/if}
+            </div>
+          </div>
         </div>
       {/if}
     {/if}
@@ -461,32 +385,6 @@
     font-size: 12px;
     color: var(--color-danger);
   }
-
-  /* ── View tabs ──────────────────────────────────────────────────────── */
-
-  .view-tabs {
-    display: flex;
-    gap: 2px;
-    background: var(--color-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    padding: 2px;
-  }
-
-  .vtab {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 2px 10px;
-    border-radius: 3px;
-    border: none;
-    background: none;
-    color: var(--color-dim);
-    cursor: pointer;
-    line-height: 1.6;
-    transition: color 0.1s, background 0.1s;
-  }
-  .vtab:hover { color: var(--color-muted); }
-  .vtab-active { background: var(--color-surface); color: var(--color-text); }
 
   /* ── Cards row ──────────────────────────────────────────────────────── */
 
@@ -611,7 +509,7 @@
     color: var(--color-dim);
   }
 
-  /* ── Verdict inline (compare view) ──────────────────────────────────── */
+  /* ── Verdict inline ─────────────────────────────────────────────────── */
 
   .verdict-inline {
     margin-top: 8px;
@@ -652,14 +550,6 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-  }
-
-  /* ── Diff section ───────────────────────────────────────────────────── */
-
-  .diff-section {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
   }
 
   /* ── Buttons ────────────────────────────────────────────────────────── */
@@ -829,58 +719,6 @@
     font-size: 12px;
     color: var(--color-muted);
     line-height: 1.6;
-  }
-
-  /* ── Verdict section (cards view) ───────────────────────────────────── */
-
-  .verdict-section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .verdict-divider {
-    border-top: 1px dashed var(--color-border);
-    margin-top: 2px;
-    padding-top: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .verdict-divider-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--color-dim);
-    letter-spacing: 0.03em;
-  }
-
-  .winner-announce {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
-    border-radius: 5px;
-  }
-
-  .winner-announce-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-accent);
-  }
-
-  .winner-announce-pr {
-    font-weight: 400;
-    font-size: 12px;
-    color: var(--color-muted);
-    margin-left: 4px;
-  }
-
-  .verdict-actions {
-    display: flex;
-    gap: 6px;
   }
 
   /* ── Skeleton ───────────────────────────────────────────────────────── */

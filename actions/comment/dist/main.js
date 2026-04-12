@@ -23973,7 +23973,14 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "name" },
+          { in: "body", key: "email" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -23994,7 +24001,14 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "name" },
+          { in: "body", key: "redirectURI" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -24072,11 +24086,15 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   patchEventsById(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [
-      { in: "path", key: "id" },
-      { in: "body", key: "data" },
-      { in: "body", key: "tags" }
-    ] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "path", key: "id" },
+          { in: "body", key: "data" },
+          { in: "body", key: "tags" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).patch({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/events/{id}",
@@ -24099,16 +24117,20 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postGithubDispatch(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [
-      { in: "body", key: "owner" },
-      { in: "body", key: "repo" },
-      { in: "body", key: "agent" },
-      { in: "body", key: "prompt" },
-      { in: "body", key: "issue_number" },
-      { in: "body", key: "tags" },
-      { in: "body", key: "model" },
-      { in: "body", key: "ref" }
-    ] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "owner" },
+          { in: "body", key: "repo" },
+          { in: "body", key: "agent" },
+          { in: "body", key: "prompt" },
+          { in: "body", key: "issue_number" },
+          { in: "body", key: "tags" },
+          { in: "body", key: "model" },
+          { in: "body", key: "ref" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/github/dispatch",
@@ -24129,7 +24151,14 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   getModelsPricingByModelId(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }, { in: "query", key: "provider" }] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "path", key: "modelId" },
+          { in: "query", key: "provider" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).get({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/pricing/{modelId}",
@@ -24138,11 +24167,15 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postModelsCost(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [
-      { in: "body", key: "model" },
-      { in: "body", key: "provider" },
-      { in: "body", key: "tokens" }
-    ] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "body", key: "model" },
+          { in: "body", key: "provider" },
+          { in: "body", key: "tokens" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/cost",
@@ -24156,11 +24189,15 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postBranchArtifactsByOwnerByRepoByBranch(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [
-      { in: "path", key: "owner" },
-      { in: "path", key: "repo" },
-      { in: "path", key: "branch" }
-    ] }]);
+    const params = buildClientParams([parameters], [
+      {
+        args: [
+          { in: "path", key: "owner" },
+          { in: "path", key: "repo" },
+          { in: "path", key: "branch" }
+        ]
+      }
+    ]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/branch-artifacts/{owner}/{repo}/{branch}",
@@ -24200,27 +24237,28 @@ function readContextTags() {
 }
 
 // actions/comment/src/resolve.ts
-function resolveTarget() {
+function resolveTargets() {
   const tags = readContextTags();
+  const targets = new Set;
   const issueNumber = extractIssueFromTags(tags);
   if (issueNumber != null) {
     core2.info(`Resolved comment target from gh:issue tag: #${issueNumber}`);
-    return issueNumber;
+    targets.add(issueNumber);
   }
   const prNumber = extractPrFromTags(tags);
   if (prNumber != null) {
     core2.info(`Resolved comment target from gh:pr tag: #${prNumber}`);
-    return prNumber;
+    targets.add(prNumber);
   }
   const inputNumber = core2.getInput("issue_number");
   if (inputNumber) {
     const parsed = parseInt(inputNumber, 10);
     if (!Number.isNaN(parsed)) {
       core2.info(`Resolved comment target from issue_number input: #${parsed}`);
-      return parsed;
+      targets.add(parsed);
     }
   }
-  return null;
+  return Array.from(targets);
 }
 
 // actions/comment/src/upsert.ts
@@ -24269,9 +24307,9 @@ async function upsertComment(params) {
 // actions/comment/src/main.ts
 async function run() {
   const phase = core4.getInput("phase", { required: true });
-  const issueNumber = resolveTarget();
-  if (issueNumber == null) {
-    core4.info("No issue/PR target resolved from tags or inputs -- skipping comment.");
+  const targets = resolveTargets();
+  if (targets.length === 0) {
+    core4.info("No issue/PR targets resolved from tags or inputs -- skipping comment.");
     return;
   }
   const token = process.env.GITHUB_TOKEN;
@@ -24292,19 +24330,23 @@ async function run() {
       runUrl: process.env.DEV_AGENTS_RUN_URL || `https://github.com/${owner}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID ?? ""}`,
       branch: process.env.DEV_AGENTS_BRANCH || null
     });
-    await upsertComment({ octokit, owner, repo, issueNumber, body });
+    for (const issueNumber of targets) {
+      await upsertComment({ octokit, owner, repo, issueNumber, body });
+    }
   } else {
     const resultsDir = process.env.DEV_AGENTS_RESULTS_DIR;
     const results = resultsDir ? readResultsDir(resultsDir) : { agent: null, diff: null, pr: null, checks: null };
-    const existing = await findExistingComment({ octokit, owner, repo, issueNumber });
-    const body = buildSummaryBody({
-      results,
-      existingBody: existing?.body ?? null,
-      runUrl: process.env.DEV_AGENTS_RUN_URL || "",
-      consoleUrl: core4.getInput("console_url") || null,
-      eventId: process.env.DEV_AGENTS_EVENT_ID || null
-    });
-    await upsertComment({ octokit, owner, repo, issueNumber, body });
+    for (const issueNumber of targets) {
+      const existing = await findExistingComment({ octokit, owner, repo, issueNumber });
+      const body = buildSummaryBody({
+        results,
+        existingBody: existing?.body ?? null,
+        runUrl: process.env.DEV_AGENTS_RUN_URL || "",
+        consoleUrl: core4.getInput("console_url") || null,
+        eventId: process.env.DEV_AGENTS_EVENT_ID || null
+      });
+      await upsertComment({ octokit, owner, repo, issueNumber, body });
+    }
   }
 }
 run().catch((error) => {

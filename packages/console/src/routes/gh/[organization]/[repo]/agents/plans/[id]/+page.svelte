@@ -87,28 +87,26 @@
 
   <PlanDetail plan={data.plan} />
 
-  {#if data.plan.status === 'implementing' || data.plan.status === 'completed'}
-    <div class="events-section">
-      <span class="section-title">Implementations</span>
-      <PlanImplementations
-        organization={data.organization}
-        repoName={data.repoName}
-        planId={data.plan.id}
-        planStatus={data.plan.status}
-        onRefine={handleRefine}
-      />
-    </div>
-  {:else}
-    <div class="events-section">
-      <span class="section-title">Events</span>
-      <Events
-        organization={data.organization}
-        repoName={data.repoName}
-        filterTags={[`plan:${data.plan.id}`]}
-        emptyText="No events linked to this plan"
-      />
-    </div>
-  {/if}
+  <div class="events-section">
+    <span class="section-title">Implementations</span>
+    <PlanImplementations
+      organization={data.organization}
+      repoName={data.repoName}
+      planId={data.plan.id}
+      planStatus={data.plan.status}
+      onRefine={handleRefine}
+    />
+  </div>
+
+  <div class="events-section">
+    <span class="section-title">Events</span>
+    <Events
+      organization={data.organization}
+      repoName={data.repoName}
+      filterTags={[`plan:${data.plan.id}`]}
+      emptyText="No events linked to this plan"
+    />
+  </div>
 
   <DispatchDrawer
     plan={data.plan}
