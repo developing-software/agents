@@ -194,6 +194,64 @@ describe("event", () => {
     expect(event!.tags).toContain(Tags.ghRepo("octocat/hello"));
   });
 
+  it("infers parent from plan tag", async () => {
+    const sourceId = testSourceId();
+    const planId = await Event.create({
+      type: "plan",
+      origin: "console",
+      source: "repository",
+      sourceId,
+      tags: [Tags.ghRepo("octocat/hello-world")],
+      data: { title: "Test plan", body: "...", status: "implementing", authorType: "human" },
+    });
+
+    const agentId = await Event.create({
+      type: "agent",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags: [`plan:${planId}`, Tags.ghRepo("octocat/hello-world")],
+    });
+
+    const agent = await Event.fromID(agentId);
+    expect(agent?.parentEventId).toBe(planId);
+  });
+
+  it("plan tag takes priority over issue tag inference", async () => {
+    const sourceId = testSourceId();
+    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(42)];
+
+    const issueEventId = await Event.create({
+      type: "github.issues.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags,
+    });
+
+    const planId = await Event.create({
+      type: "plan",
+      origin: "console",
+      source: "repository",
+      sourceId,
+      tags: [Tags.ghRepo("octocat/hello-world")],
+      data: { title: "Plan", body: "...", status: "implementing", authorType: "human" },
+    });
+
+    const agentId = await Event.create({
+      type: "agent",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags: [`plan:${planId}`, ...tags],
+    });
+
+    const agent = await Event.fromID(agentId);
+    expect(agent?.parentEventId).toBe(planId);
+    // Not the issue event
+    expect(agent?.parentEventId).not.toBe(issueEventId);
+  });
+
   it("keeps an explicit parentEventId instead of inferring one", async () => {
     const sourceId = testSourceId();
     const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(42)];

@@ -249,6 +249,13 @@ export namespace Event {
       return opts.parentEventId;
     }
 
+    // Plan tag — the plan ID IS the event ID, so use it directly as parent
+    const planTag = opts.tags?.find((tag) => tag.startsWith("plan:"));
+    if (planTag) {
+      const planId = planTag.slice("plan:".length);
+      if (planId) return planId;
+    }
+
     const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
     if (prTag) {
       const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent" }).catch(
