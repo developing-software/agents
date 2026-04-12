@@ -1,4 +1,4 @@
-import { command, query } from "$app/server";
+import { command, query, getRequestEvent } from "$app/server";
 import { z } from "zod";
 import { generateText, Output } from "ai";
 import { Repository } from "@agents/core/repository/index";
@@ -11,6 +11,10 @@ import { createModel } from "./model";
 import { flattenChecks } from "$lib/events/helpers";
 
 // -- Helpers --
+
+function getApiKey(): string | undefined {
+  return getRequestEvent().platform?.env?.ANTHROPIC_API_KEY;
+}
 
 function extractPrNumber(tags: string[]): number | null {
   for (const tag of tags) {
@@ -194,7 +198,7 @@ export const reviewPR = command(
     const prompt = PlanJudge.composeReviewPrompt({ plan, agent, prNumber, diff, checks, metrics });
 
     const result = await generateText({
-      model: createModel(),
+      model: createModel(getApiKey()),
       output: Output.object({ schema: PlanJudge.ReviewResult }),
       prompt,
     });
@@ -231,7 +235,7 @@ export const judgePlan = command(
     const prompt = PlanJudge.composeComparePrompt({ plan, reviews });
 
     const result = await generateText({
-      model: createModel(),
+      model: createModel(getApiKey()),
       output: Output.object({ schema: PlanJudge.CompareResult }),
       prompt,
     });
@@ -248,6 +252,81 @@ export const judgePlan = command(
     });
 
     return judgment;
+  },
+);
+
+export const humanReviewPR = command(
+  z.object({
+    organization: z.string(),
+    repoName: z.string(),
+    planId: z.string(),
+    agent: z.string(),
+    prNumber: z.number(),
+    scores: z.object({
+      adherence: z.number().min(1).max(10),
+      quality: z.number().min(1).max(10),
+      completeness: z.number().min(1).max(10),
+    }),
+    verdict: z.string(),
+  }),
+  async ({ organization, repoName, planId, agent, prNumber, scores, verdict }) => {
+    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
+    if (!repo) throw new Error("Repository not found");
+
+    const review = { agent, prNumber, scores, verdict, suggestions: [] };
+
+    await Event.create({
+      type: "github.pull_request.reviewed",
+      origin: "console",
+      source: "repository",
+      sourceId: repo.id,
+      tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
+      data: review as Record<string, unknown>,
+    });
+
+    return review;
+  },
+);
+
+export const humanPickWinner = command(
+  z.object({
+    organization: z.string(),
+    repoName: z.string(),
+    planId: z.string(),
+    winnerPrNumber: z.number(),
+    winnerAgent: z.string(),
+    reasoning: z.string().default("Manually selected by human reviewer"),
+    reviews: z.array(PlanJudge.ReviewResult),
+  }),
+  async ({ organization, repoName, planId, winnerPrNumber, winnerAgent, reasoning, reviews }) => {
+    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
+    if (!repo) throw new Error("Repository not found");
+
+    const rankings = reviews.map((r, i) => ({
+      rank: r.prNumber === winnerPrNumber ? 1 : i + 2,
+      agent: r.agent,
+      prNumber: r.prNumber,
+      scores: r.scores,
+      note: r.prNumber === winnerPrNumber ? "Human-selected winner" : undefined,
+    }));
+    rankings.sort((a, b) => a.rank - b.rank);
+
+    const judgment = {
+      rankings,
+      winner: { agent: winnerAgent, prNumber: winnerPrNumber },
+      reasoning,
+    };
+
+    await Event.create({
+      type: "plan.evaluated",
+      origin: "console",
+      source: "repository",
+      sourceId: repo.id,
+      tags: [`plan:${planId}`],
+      data: judgment as Record<string, unknown>,
+    });
+
+    return judgment as PlanJudge.CompareResult;
   },
 );
 

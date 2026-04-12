@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { reviewPR, humanReviewPR } from '$lib/agents/ai/judge.remote';
   import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
 
@@ -8,10 +9,11 @@
     judgment,
     organization,
     repoName,
+    planId,
     completed,
     prStatesPromise,
-    reviewLoading,
-    onReview,
+    onReviewComplete,
+    onError,
     onRefine,
     agentColor,
   }: {
@@ -20,10 +22,11 @@
     judgment: CompareResult | null;
     organization: string;
     repoName: string;
+    planId: string;
     completed: boolean;
     prStatesPromise: Promise<Record<number, string | null>>;
-    reviewLoading: boolean;
-    onReview: () => void;
+    onReviewComplete: (prNumber: number, review: ReviewResult) => void;
+    onError: (message: string) => void;
     onRefine?: (runId: string, suggestions: string[]) => void;
     agentColor: (agent: string) => string;
   } = $props();
@@ -34,6 +37,13 @@
   });
 
   let activeTab = $state<'overview' | 'diff' | 'judge'>('overview');
+
+  // -- Review state (owned by card) --
+  let reviewLoading = $state(false);
+  let editing = $state(false);
+  let editScores = $state({ adherence: 7, quality: 7, completeness: 7 });
+  let editVerdict = $state('');
+  let editSaving = $state(false);
 
   const rankEntry = $derived(judgment?.rankings.find(r => r.prNumber === run.prNumber));
   const isWinner = $derived(judgment != null && run.prNumber != null && judgment.winner.prNumber === run.prNumber);
@@ -65,6 +75,60 @@
     const remSecs = Math.round(secs % 60);
     return `${mins}m ${remSecs}s`;
   }
+
+  function avgScore(scores: { adherence: number; quality: number; completeness: number }): string {
+    return ((scores.adherence + scores.quality + scores.completeness) / 3).toFixed(1);
+  }
+
+  // -- Review actions --
+
+  async function handleReview() {
+    if (!run.prNumber) return;
+    reviewLoading = true;
+    try {
+      const result = await reviewPR({
+        organization, repoName, planId,
+        agent: run.agent, prNumber: run.prNumber,
+        checks: run.checks,
+        metrics: { cost_usd: run.cost_usd, durationMs: run.durationMs, linesAdded: run.linesAdded, linesRemoved: run.linesRemoved },
+      });
+      onReviewComplete(run.prNumber, result);
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'Review failed');
+    } finally {
+      reviewLoading = false;
+    }
+  }
+
+  function startEdit(existing?: ReviewResult) {
+    editing = true;
+    if (existing) {
+      editScores = { ...existing.scores };
+      editVerdict = existing.verdict;
+    } else {
+      editScores = { adherence: 7, quality: 7, completeness: 7 };
+      editVerdict = '';
+    }
+  }
+
+  async function saveHumanReview() {
+    if (!run.prNumber) return;
+    editSaving = true;
+    try {
+      const result = await humanReviewPR({
+        organization, repoName, planId,
+        agent: run.agent, prNumber: run.prNumber,
+        scores: editScores,
+        verdict: editVerdict,
+      });
+      onReviewComplete(run.prNumber, result);
+      editing = false;
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'Save review failed');
+    } finally {
+      editSaving = false;
+    }
+  }
 </script>
 
 <div class="agent-card" class:winner-card={isWinner}>
@@ -76,7 +140,7 @@
       <span class="model-tag">{run.model}</span>
     {/if}
     {#if review}
-      <span class="score-badge">{((review.scores.adherence + review.scores.quality + review.scores.completeness) / 3).toFixed(1)}/10</span>
+      <span class="score-badge">{avgScore(review.scores)}/10</span>
     {/if}
     {#if rankEntry}
       <span class="rank-badge">#{rankEntry.rank}</span>
@@ -149,7 +213,42 @@
         <div class="dim-placeholder">No PR yet</div>
       {/if}
     {:else if activeTab === 'judge'}
-      {#if review}
+      {#if editing && run.prNumber != null}
+        <!-- Human review form -->
+        <div class="human-review-form">
+          <div class="score-inputs">
+            <label class="score-input-label">
+              adh
+              <input type="number" min="1" max="10" class="score-input" bind:value={editScores.adherence} />
+            </label>
+            <label class="score-input-label">
+              qual
+              <input type="number" min="1" max="10" class="score-input" bind:value={editScores.quality} />
+            </label>
+            <label class="score-input-label">
+              comp
+              <input type="number" min="1" max="10" class="score-input" bind:value={editScores.completeness} />
+            </label>
+          </div>
+          <textarea
+            class="verdict-input"
+            rows="2"
+            placeholder="Verdict..."
+            bind:value={editVerdict}
+          ></textarea>
+          <div class="form-actions">
+            <button
+              class="action-btn"
+              disabled={editSaving || !editVerdict.trim()}
+              onclick={saveHumanReview}
+            >{editSaving ? 'Saving...' : 'Save'}</button>
+            <button
+              class="action-btn cancel-btn"
+              onclick={() => { editing = false; }}
+            >Cancel</button>
+          </div>
+        </div>
+      {:else if review}
         <div class="scores-grid">
           <span class="metric-label">adherence</span>
           <span class="metric-value">{review.scores.adherence}/10</span>
@@ -171,17 +270,29 @@
           </div>
         {/if}
 
-        {#if onRefine && review.suggestions && review.suggestions.length > 0}
-          <button
-            class="action-btn refine-btn"
-            onclick={() => onRefine(run.id, review.suggestions!)}
-          >
-            Refine
-          </button>
-        {/if}
+        <div class="judge-actions">
+          {#if !completed}
+            <button class="action-btn" onclick={() => startEdit(review)}>Edit Review</button>
+          {/if}
+          {#if onRefine && review.suggestions && review.suggestions.length > 0}
+            <button
+              class="action-btn refine-btn"
+              onclick={() => onRefine(run.id, review.suggestions!)}
+            >
+              Refine
+            </button>
+          {/if}
+        </div>
       {:else if !completed && run.prNumber != null}
-        <div class="judge-empty">
-          <span class="judge-empty-desc">Use the workflow strip above to review this PR.</span>
+        <div class="judge-actions">
+          <button
+            class="action-btn"
+            disabled={reviewLoading}
+            onclick={handleReview}
+          >
+            {reviewLoading ? 'Reviewing...' : 'Review'}
+          </button>
+          <button class="action-btn" onclick={() => startEdit()}>Manual</button>
         </div>
       {:else}
         <div class="dim-placeholder">No review available.</div>
@@ -342,7 +453,7 @@
     font-weight: 600;
   }
 
-  /* ── Tabs (Feed.svelte pattern) ──────────────────────────────────────── */
+  /* ── Tabs ────────────────────────────────────────────────────────────── */
 
   .tabs {
     display: flex;
@@ -370,7 +481,7 @@
   .tab:hover { color: var(--color-muted); }
   .tab-active { background: var(--color-surface); color: var(--color-text); }
 
-  /* ── Card body (scrollable) ──────────────────────────────────────────── */
+  /* ── Card body ──────────────────────────────────────────────────────── */
 
   .card-body {
     flex: 1 1 auto;
@@ -445,52 +556,7 @@
     margin-left: 4px;
   }
 
-  /* ── Buttons ─────────────────────────────────────────────────────────── */
-
-  .action-btn {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 4px;
-    border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-    color: var(--color-accent);
-    cursor: pointer;
-    transition: background 0.1s, border-color 0.1s;
-  }
-
-  .action-btn:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
-    border-color: var(--color-accent);
-  }
-
-  .action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .refine-btn {
-    margin-top: 4px;
-    align-self: flex-start;
-  }
-
-  /* ── Judge empty state ───────────────────────────────────────────────── */
-
-  .judge-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 8px 0;
-  }
-
-  .judge-empty-desc {
-    font-size: 11px;
-    color: var(--color-dim);
-    line-height: 1.5;
-  }
-
-  /* ── Scores grid (modern review) ─────────────────────────────────────── */
+  /* ── Scores grid ─────────────────────────────────────────────────────── */
 
   .scores-grid {
     display: grid;
@@ -542,6 +608,119 @@
   .category-divider {
     height: 1px;
     background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  }
+
+  /* ── Judge actions ──────────────────────────────────────────────────── */
+
+  .judge-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────────────────── */
+
+  .action-btn {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    color: var(--color-accent);
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    border-color: var(--color-accent);
+  }
+
+  .action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .refine-btn {
+    border-color: color-mix(in srgb, var(--color-muted) 40%, transparent);
+    background: color-mix(in srgb, var(--color-muted) 8%, transparent);
+    color: var(--color-muted);
+  }
+
+  .refine-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-muted) 15%, transparent);
+    border-color: var(--color-muted);
+  }
+
+  .cancel-btn {
+    border-color: var(--color-border) !important;
+    background: none !important;
+    color: var(--color-muted) !important;
+  }
+
+  /* ── Human review form ──────────────────────────────────────────────── */
+
+  .human-review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 0;
+  }
+
+  .score-inputs {
+    display: flex;
+    gap: 10px;
+  }
+
+  .score-input-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--color-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .score-input {
+    width: 42px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 2px 4px;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-elevated);
+    color: var(--color-text);
+    text-align: center;
+  }
+
+  .score-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
+  .verdict-input {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 6px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-elevated);
+    color: var(--color-text);
+    resize: vertical;
+    line-height: 1.4;
+  }
+
+  .verdict-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 6px;
   }
 
   @keyframes pulse {
