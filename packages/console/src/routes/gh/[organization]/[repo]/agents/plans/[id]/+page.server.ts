@@ -1,7 +1,12 @@
 import type { PageServerLoad } from "./$types";
-import { Plan } from "@agents/core/plan/index";
+import { Plan } from "@agents/core/events/plan/index";
+import { Event } from "@agents/core/events/index";
 
 export const load: PageServerLoad = async ({ params }) => {
   const plan = await Plan.fromID(params.id);
-  return { plan: plan ?? null };
+  let parentEvent: Event.Info | null = null;
+  if (plan?.parentEventId) {
+    parentEvent = (await Event.fromID(plan.parentEventId)) ?? null;
+  }
+  return { plan: plan ?? null, parentEvent };
 };

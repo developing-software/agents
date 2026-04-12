@@ -5,9 +5,10 @@
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
   import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
   import PlanImplementations from '$lib/agents/ai/components/PlanImplementations.svelte';
-  import { updatePlan } from '$lib/agents/plans/plans.remote';
+  import { updatePlan, createSubPlan } from '$lib/agents/plans/plans.remote';
   import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
 
   let { data }: PageProps = $props();
 
@@ -29,9 +30,37 @@
     dispatched = true;
     drawerOpen = false;
   }
+
+  async function handleRefine(runId: string, suggestions: string[]) {
+    if (!data.plan) return;
+    const body = suggestions.map((s) => `- ${s}`).join('\n');
+    const result = await createSubPlan({
+      parentEventId: runId,
+      title: `Refinement: ${data.plan.title}`,
+      body: `## Refinements\n\n${body}\n\n---\n\nBased on review of parent plan: ${data.plan.title}`,
+      source: 'repository',
+      sourceId: data.plan.sourceId ?? '',
+      tags: [...data.plan.tags.filter((t) => !t.startsWith('plan:')), `plan:${data.plan.id}`],
+    });
+    goto(`/gh/${data.organization}/${data.repoName}/agents/plans/${result.id}`);
+  }
 </script>
 
 {#if data.plan}
+  {#if data.parentEvent}
+    <div class="breadcrumb">
+      <a href="/gh/{data.organization}/{data.repoName}/agents/plans" class="breadcrumb-link">Plans</a>
+      <span class="breadcrumb-sep">›</span>
+      {#if data.parentEvent.type === 'plan'}
+        <a href="/gh/{data.organization}/{data.repoName}/agents/plans/{data.parentEvent.id}" class="breadcrumb-link">Parent Plan</a>
+      {:else}
+        <span class="breadcrumb-text">{data.parentEvent.type}</span>
+      {/if}
+      <span class="breadcrumb-sep">›</span>
+      <span class="breadcrumb-current">{data.plan.title}</span>
+    </div>
+  {/if}
+
   <div class="header">
     <a href="/gh/{data.organization}/{data.repoName}/agents/plans" class="back">← Plans</a>
     <span class="title">{data.plan.title}</span>
@@ -66,6 +95,7 @@
         repoName={data.repoName}
         planId={data.plan.id}
         planStatus={data.plan.status}
+        onRefine={handleRefine}
       />
     </div>
   {:else}
@@ -103,6 +133,38 @@
 {/if}
 
 <style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  .breadcrumb-link {
+    color: var(--color-dim);
+    text-decoration: none;
+  }
+  .breadcrumb-link:hover {
+    color: var(--color-muted);
+  }
+
+  .breadcrumb-sep {
+    color: var(--color-dim);
+  }
+
+  .breadcrumb-text {
+    color: var(--color-dim);
+  }
+
+  .breadcrumb-current {
+    color: var(--color-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 300px;
+  }
+
   .header {
     display: flex;
     align-items: center;

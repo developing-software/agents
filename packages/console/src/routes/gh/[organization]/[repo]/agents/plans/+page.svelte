@@ -2,12 +2,13 @@
   import type { PageProps } from './$types';
   import PlanList from '$lib/agents/plans/PlanList.svelte';
   import PlanKanban from '$lib/agents/plans/PlanKanban.svelte';
+  import PlanTree from '$lib/agents/plans/PlanTree.svelte';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
   import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
 
   let { data }: PageProps = $props();
 
-  let view = $state<'list' | 'kanban'>('list');
+  let view = $state<'list' | 'kanban' | 'tree'>('list');
 
   type PlanItem = NonNullable<typeof data.plans>[number];
 
@@ -48,6 +49,7 @@
       <div class="tabs">
         <button type="button" class="tab" class:tab-active={view === 'list'} onclick={() => { view = 'list'; }}>List</button>
         <button type="button" class="tab" class:tab-active={view === 'kanban'} onclick={() => { view = 'kanban'; }}>Board</button>
+        <button type="button" class="tab" class:tab-active={view === 'tree'} onclick={() => { view = 'tree'; }}>Tree</button>
       </div>
 
       <button type="button" class="planner-btn" onclick={openPlanner}>Planner</button>
@@ -57,8 +59,10 @@
 
   {#if view === 'list'}
     <PlanList organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={openDrawer} bind:dispatched />
-  {:else}
+  {:else if view === 'kanban'}
     <PlanKanban organization={data.organization} repoName={data.repoName} plans={data.plans} ondispatch={openDrawer} bind:dispatched />
+  {:else}
+    <PlanTree organization={data.organization} repoName={data.repoName} />
   {/if}
 </div>
 

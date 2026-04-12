@@ -3,7 +3,7 @@ import { GithubInstallation } from "../installation/index";
 import { User } from "../../user/index";
 import { Log } from "../../util/log";
 import { Event } from "../../events/index";
-import { Tags } from "../../tag";
+import { Tags } from "../../events/tag";
 import { Repository } from "../../repository/index";
 
 interface WebhookEmitter {

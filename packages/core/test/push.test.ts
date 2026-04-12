@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { registerHandlers } from "../src/github/webhook/handlers";
 import { Event } from "../src/events";
-import { Tags } from "../src/tag";
+import { Tags } from "../src/events/tag";
 import { GithubInstallation } from "../src/github/installation";
 import { Repository } from "../src/repository";
 

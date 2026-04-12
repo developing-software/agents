@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { Plan } from "@agents/core/plan/index";
+import { Plan } from "@agents/core/events/plan/index";
 
 export type PlanToolsContext = {
   owner: string;

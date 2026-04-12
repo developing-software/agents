@@ -2,7 +2,7 @@ import { command, query } from "$app/server";
 import { z } from "zod";
 import { AgentWorkflow, AgentCompat } from "@agents/core/agent";
 import { GithubBranch } from "@agents/core/github/repo/branch";
-import { Plan } from "@agents/core/plan/index";
+import { Plan } from "@agents/core/events/plan/index";
 import { Repository } from "@agents/core/repository/index";
 import { error } from "@sveltejs/kit";
 

@@ -4,18 +4,35 @@ import type { Plan } from "./index";
 export namespace PlanJudge {
   // -- Output schemas --
 
+  export const ReviewScores = z.object({
+    adherence: z
+      .number()
+      .min(1)
+      .max(10)
+      .describe("How well the implementation fulfills the plan requirements"),
+    quality: z
+      .number()
+      .min(1)
+      .max(10)
+      .describe("Code quality, readability, and correctness"),
+    completeness: z
+      .number()
+      .min(1)
+      .max(10)
+      .describe("Coverage of plan requirements and test coverage"),
+  });
+  export type ReviewScores = z.infer<typeof ReviewScores>;
+
   export const ReviewResult = z.object({
     agent: z.string().describe("Name of the agent that created the PR"),
     prNumber: z.number().describe("Pull request number"),
-    overallScore: z.number().describe("Score from 1 to 10"),
-    summary: z.string().describe("Brief overall assessment of the implementation"),
-    strengths: z.array(z.string().describe("A specific strength")).describe("List of strengths"),
-    concerns: z
-      .array(z.string().describe("A specific concern"))
-      .describe("List of concerns or issues found"),
+    scores: ReviewScores,
+    verdict: z.string().describe("Concise overall assessment, 1-2 sentences"),
     suggestions: z
-      .array(z.string().describe("An actionable suggestion"))
-      .describe("List of actionable improvement suggestions"),
+      .array(z.string().describe("An actionable improvement"))
+      .max(3)
+      .optional()
+      .describe("Up to 3 actionable improvements, if any"),
   });
   export type ReviewResult = z.infer<typeof ReviewResult>;
 
@@ -23,13 +40,8 @@ export namespace PlanJudge {
     rank: z.number().describe("Rank position, 1 being the best"),
     agent: z.string().describe("Name of the agent"),
     prNumber: z.number().describe("Pull request number"),
-    score: z.number().describe("Score from 1 to 10"),
-    strengths: z
-      .array(z.string().describe("A specific strength"))
-      .describe("Key strengths of this implementation"),
-    weaknesses: z
-      .array(z.string().describe("A specific weakness"))
-      .describe("Key weaknesses of this implementation"),
+    scores: ReviewScores,
+    note: z.string().optional().describe("Brief note on this ranking"),
   });
 
   export const CompareResult = z.object({
@@ -40,7 +52,7 @@ export namespace PlanJudge {
         prNumber: z.number().describe("Pull request number of the winning implementation"),
       })
       .describe("The recommended winner"),
-    reasoning: z.string().describe("Detailed explanation of the ranking decision"),
+    reasoning: z.string().describe("Explanation of the ranking decision"),
   });
   export type CompareResult = z.infer<typeof CompareResult>;
 
@@ -60,6 +72,7 @@ export namespace PlanJudge {
   }
 
   export interface ReviewInput {
+    plan: Plan.Info;
     agent: string;
     prNumber: number;
     diff: string;
@@ -69,7 +82,7 @@ export namespace PlanJudge {
 
   export interface CompareInput {
     plan: Plan.Info;
-    implementations: Array<ReviewInput>;
+    reviews: ReviewResult[];
   }
 
   const MAX_DIFF_CHARS = 50_000;
@@ -104,59 +117,13 @@ export namespace PlanJudge {
   }
 
   /**
-   * PR-focused review prompt. Evaluates code quality, correctness, and style.
-   * No plan context injected.
+   * Plan-aware review prompt. Evaluates the PR against plan requirements
+   * with dimensional scoring.
    */
   export function composeReviewPrompt(input: ReviewInput): string {
-    return `You are a senior code reviewer. Evaluate this pull request on its own merits.
-
-Focus on:
-- Code quality and readability
-- Correctness and potential bugs
-- Test coverage (based on check results)
-- Style consistency
-- Whether the diff is clean and well-structured
-
-## Agent: ${input.agent}
-## PR #${input.prNumber}
-
-## Metrics
-${formatMetrics(input.metrics)}
-
-## Check Results
-${formatChecks(input.checks)}
-
-## Diff
-\`\`\`diff
-${truncateDiff(input.diff)}
-\`\`\`
-
-Provide a structured review with an overall score (1-10), summary, strengths, concerns, and actionable suggestions.`;
-  }
-
-  /**
-   * Plan-aware comparison prompt. Evaluates all implementations against the plan
-   * and acceptance criteria to pick a winner.
-   */
-  export function composeComparePrompt(input: CompareInput): string {
     const criteria = extractAcceptanceCriteria(input.plan.body);
 
-    const implSections = input.implementations.map((impl, i) => {
-      return `### Implementation ${i + 1}: ${impl.agent} (PR #${impl.prNumber})
-
-#### Metrics
-${formatMetrics(impl.metrics)}
-
-#### Check Results
-${formatChecks(impl.checks)}
-
-#### Diff
-\`\`\`diff
-${truncateDiff(impl.diff)}
-\`\`\``;
-    });
-
-    return `You are a senior engineering lead comparing multiple implementations of the same plan. Your job is to rank them and pick a winner.
+    return `You are a senior code reviewer. Evaluate this pull request against the plan it implements.
 
 ## Plan: ${input.plan.title}
 
@@ -164,18 +131,58 @@ ${input.plan.body}
 
 ${criteria ? `## Acceptance Criteria\n${criteria}` : ""}
 
-## Implementations
+## Implementation by ${input.agent} (PR #${input.prNumber})
 
-${implSections.join("\n\n---\n\n")}
+### Metrics
+${formatMetrics(input.metrics)}
+
+### Check Results
+${formatChecks(input.checks)}
+
+### Diff
+\`\`\`diff
+${truncateDiff(input.diff)}
+\`\`\`
 
 ## Instructions
 
-Compare the implementations against:
-1. The plan requirements and acceptance criteria
-2. Code quality and correctness
-3. Test results (check outcomes)
-4. Efficiency (cost, duration, lines changed)
+Score this implementation on three dimensions (1-10 each):
+- **adherence**: How well does this fulfill the plan requirements and acceptance criteria?
+- **quality**: Code quality, readability, correctness, and potential bugs.
+- **completeness**: Coverage of all plan requirements and test coverage based on check results.
 
-Rank all implementations, identify the winner, and explain your reasoning. Be specific about strengths and weaknesses of each.`;
+Provide a concise verdict (1-2 sentences). Only include suggestions if there are clear, actionable improvements (max 3).`;
+  }
+
+  /**
+   * Comparison prompt that synthesizes individual reviews to rank implementations.
+   * Uses review data instead of re-reading diffs.
+   */
+  export function composeComparePrompt(input: CompareInput): string {
+    const criteria = extractAcceptanceCriteria(input.plan.body);
+
+    const reviewSections = input.reviews.map((r, i) => {
+      const avg = ((r.scores.adherence + r.scores.quality + r.scores.completeness) / 3).toFixed(1);
+      const suggestions = r.suggestions?.length ? `\nSuggestions: ${r.suggestions.join("; ")}` : "";
+      return `### ${i + 1}. ${r.agent} (PR #${r.prNumber})
+Scores: adherence=${r.scores.adherence}, quality=${r.scores.quality}, completeness=${r.scores.completeness} (avg ${avg})
+Verdict: ${r.verdict}${suggestions}`;
+    });
+
+    return `You are a senior engineering lead comparing multiple implementations of the same plan. Rank them and pick a winner.
+
+## Plan: ${input.plan.title}
+
+${input.plan.body}
+
+${criteria ? `## Acceptance Criteria\n${criteria}` : ""}
+
+## Reviews
+
+${reviewSections.join("\n\n")}
+
+## Instructions
+
+Based on the reviews above, rank the implementations and identify the winner. For each ranking, provide the three dimension scores and an optional brief note. Explain your reasoning concisely.`;
   }
 }

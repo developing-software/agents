@@ -24,22 +24,13 @@
   type ReviewResult = {
     agent: string;
     prNumber: number;
-    overallScore: number;
-    summary: string;
-    strengths: string[];
-    concerns: string[];
-    suggestions: string[];
+    scores: { adherence: number; quality: number; completeness: number };
+    verdict: string;
+    suggestions?: string[];
   };
 
   type CompareResult = {
-    rankings: Array<{
-      rank: number;
-      agent: string;
-      prNumber: number;
-      score: number;
-      strengths: string[];
-      weaknesses: string[];
-    }>;
+    rankings: Array<{ rank: number; agent: string; prNumber: number; scores: { adherence: number; quality: number; completeness: number }; note?: string }>;
     winner: { agent: string; prNumber: number };
     reasoning: string;
   };
@@ -51,8 +42,10 @@
     organization,
     repoName,
     completed,
+    prStatesPromise,
     reviewLoading,
     onReview,
+    onRefine,
     agentColor,
   }: {
     run: PlanRun;
@@ -61,10 +54,17 @@
     organization: string;
     repoName: string;
     completed: boolean;
+    prStatesPromise: Promise<Record<number, string | null>>;
     reviewLoading: boolean;
     onReview: () => void;
+    onRefine?: (runId: string, suggestions: string[]) => void;
     agentColor: (agent: string) => string;
   } = $props();
+
+  const prStatePromise = $derived.by(() => {
+    if (run.prNumber == null) return Promise.resolve(null);
+    return prStatesPromise.then((states) => states[run.prNumber!] ?? null);
+  });
 
   let activeTab = $state<'overview' | 'diff' | 'judge'>('overview');
 
@@ -109,7 +109,7 @@
       <span class="model-tag">{run.model}</span>
     {/if}
     {#if review}
-      <span class="score-badge">{review.overallScore}/10</span>
+      <span class="score-badge">{((review.scores.adherence + review.scores.quality + review.scores.completeness) / 3).toFixed(1)}/10</span>
     {/if}
     {#if rankEntry}
       <span class="rank-badge">#{rankEntry.rank}</span>
@@ -124,9 +124,15 @@
       {:else}
         <span class="pr-num">#{run.prNumber}</span>
       {/if}
-      {#if run.prState}
-        <span class="state-badge state-{run.prState}">{run.prState}</span>
-      {/if}
+      {#await prStatePromise}
+        <span class="state-badge state-loading">...</span>
+      {:then prState}
+        {#if prState}
+          <span class="state-badge state-{prState}">{prState}</span>
+        {/if}
+      {:catch}
+        <span class="state-badge state-closed">?</span>
+      {/await}
     </div>
   {:else}
     <div class="pr-row">
@@ -177,29 +183,18 @@
       {/if}
     {:else if activeTab === 'judge'}
       {#if review}
-        <div class="review-summary">{review.summary}</div>
+        <div class="scores-grid">
+          <span class="metric-label">adherence</span>
+          <span class="metric-value">{review.scores.adherence}/10</span>
+          <span class="metric-label">quality</span>
+          <span class="metric-value">{review.scores.quality}/10</span>
+          <span class="metric-label">completeness</span>
+          <span class="metric-value">{review.scores.completeness}/10</span>
+        </div>
 
-        {#if review.strengths.length > 0}
-          <div class="review-category strengths-border">
-            <div class="category-label strengths-label">strengths</div>
-            {#each review.strengths as item, idx (item)}
-              {#if idx > 0}<div class="category-divider"></div>{/if}
-              <div class="category-item strength-text">{item}</div>
-            {/each}
-          </div>
-        {/if}
+        <div class="review-summary">{review.verdict}</div>
 
-        {#if review.concerns.length > 0}
-          <div class="review-category concerns-border">
-            <div class="category-label concerns-label">concerns</div>
-            {#each review.concerns as item, idx (item)}
-              {#if idx > 0}<div class="category-divider"></div>{/if}
-              <div class="category-item concern-text">{item}</div>
-            {/each}
-          </div>
-        {/if}
-
-        {#if review.suggestions.length > 0}
+        {#if review.suggestions && review.suggestions.length > 0}
           <div class="review-category suggestions-border">
             <div class="category-label suggestions-label">suggestions</div>
             {#each review.suggestions as item, idx (item)}
@@ -207,6 +202,15 @@
               <div class="category-item suggestion-text">{item}</div>
             {/each}
           </div>
+        {/if}
+
+        {#if onRefine && review.suggestions && review.suggestions.length > 0}
+          <button
+            class="action-btn refine-btn"
+            onclick={() => onRefine(run.id, review.suggestions!)}
+          >
+            Refine
+          </button>
         {/if}
       {:else if !completed && run.prNumber != null}
         <div class="judge-empty">
@@ -217,7 +221,7 @@
           >
             {reviewLoading ? '...' : 'Review'}
           </button>
-          <span class="judge-empty-desc">Get an LLM review of this PR against the plan.</span>
+          <span class="judge-empty-desc">Review this PR against the plan.</span>
         </div>
       {:else}
         <div class="dim-placeholder">No review available.</div>
@@ -327,6 +331,13 @@
     padding: 1px 7px;
     border-radius: 3px;
     line-height: 1.4;
+  }
+
+  .state-loading {
+    color: var(--color-dim);
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    animation: pulse 1.4s ease-in-out infinite;
   }
 
   .state-open {
@@ -498,6 +509,11 @@
     cursor: not-allowed;
   }
 
+  .refine-btn {
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+
   /* ── Judge empty state ───────────────────────────────────────────────── */
 
   .judge-empty {
@@ -512,6 +528,15 @@
     font-size: 11px;
     color: var(--color-dim);
     line-height: 1.5;
+  }
+
+  /* ── Scores grid (modern review) ─────────────────────────────────────── */
+
+  .scores-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 10px;
+    padding: 4px 0;
   }
 
   /* ── Review summary & categories ─────────────────────────────────────── */
@@ -529,14 +554,6 @@
     gap: 0;
   }
 
-  .review-category.strengths-border {
-    border-left: 2px solid var(--color-success);
-  }
-
-  .review-category.concerns-border {
-    border-left: 2px solid var(--color-warning);
-  }
-
   .review-category.suggestions-border {
     border-left: 2px solid var(--color-muted);
   }
@@ -546,14 +563,6 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
     margin-bottom: 4px;
-  }
-
-  .category-label.strengths-label {
-    color: var(--color-success);
-  }
-
-  .category-label.concerns-label {
-    color: var(--color-warning);
   }
 
   .category-label.suggestions-label {
@@ -566,14 +575,6 @@
     padding: 3px 0;
   }
 
-  .category-item.strength-text {
-    color: color-mix(in srgb, var(--color-success) 80%, var(--color-text));
-  }
-
-  .category-item.concern-text {
-    color: color-mix(in srgb, var(--color-warning) 80%, var(--color-text));
-  }
-
   .category-item.suggestion-text {
     color: var(--color-dim);
   }
@@ -581,5 +582,10 @@
   .category-divider {
     height: 1px;
     background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
   }
 </style>

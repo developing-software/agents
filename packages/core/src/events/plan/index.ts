@@ -1,13 +1,12 @@
-import { and, arrayContains, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { createTransaction, useTransaction } from "../drizzle/transaction";
-import { createID } from "../util/id";
-import { fn } from "../util/fn";
-import { Log } from "../util/log";
-import { Common } from "../common";
-import { Examples } from "../examples";
+import { fn } from "../../util/fn";
+import { Log } from "../../util/log";
+import { Common } from "../../common";
+import { Examples } from "../../examples";
+import { Event } from "../index";
 import { render as renderContext } from "./context";
-import { planTable, PlanStatus, AuthorType } from "./plan.sql";
+import { PlanStatus, AuthorType } from "./plan.sql";
+import type { PlanEventData } from "./plan.sql";
 
 const log = Log.create({ service: "plan" });
 
@@ -62,6 +61,9 @@ export namespace Plan {
         description: "ID of the user who created this plan.",
         example: Examples.Plan.createdBy,
       }),
+      parentEventId: z.string().nullable().meta({
+        description: "ID of the parent event, if this is a sub-plan.",
+      }),
       timeCreated: z.string().meta({
         description: "ISO timestamp when the plan was created.",
         example: Examples.Plan.timeCreated,
@@ -89,6 +91,7 @@ export namespace Plan {
     source: z.string().optional(),
     sourceId: z.string().optional(),
     createdBy: z.string().optional(),
+    parentEventId: z.string().optional(),
   });
 
   export type CreateInput = z.infer<typeof CreateInput>;
@@ -104,34 +107,29 @@ export namespace Plan {
   export type UpdateInput = z.infer<typeof UpdateInput>;
 
   export const create = fn(CreateInput, async (input) => {
-    return createTransaction(async (tx) => {
-      const id = createID("plan");
-      log.info("create", { id, title: input.title, status: input.status });
-      await tx.insert(planTable).values({
-        id,
+    log.info("create", { title: input.title, status: input.status });
+    return Event.create({
+      type: "plan",
+      origin: "console",
+      source: input.source,
+      sourceId: input.sourceId,
+      parentEventId: input.parentEventId,
+      tags: input.tags ?? [],
+      data: {
         title: input.title,
         body: input.body,
         status: input.status,
         authorType: input.authorType,
-        tags: input.tags ?? [],
-        data: input.data ?? {},
-        source: input.source,
-        sourceId: input.sourceId,
         createdBy: input.createdBy,
-      });
-      return id;
+        ...(input.data ?? {}),
+      },
     });
   });
 
   export const fromID = fn(Info.shape.id, async (id) => {
-    return useTransaction(async (tx) => {
-      const row = await tx
-        .select()
-        .from(planTable)
-        .where(eq(planTable.id, id))
-        .then((r) => r[0]);
-      return row ? serialize(row) : undefined;
-    });
+    const event = await Event.fromID(id);
+    if (!event || event.type !== "plan") return undefined;
+    return serialize(event);
   });
 
   export async function list(opts: {
@@ -141,32 +139,29 @@ export namespace Plan {
     sourceId?: string;
     limit?: number;
   }): Promise<Info[]> {
-    return useTransaction(async (tx) => {
-      const conditions = [];
-      if (opts.status) conditions.push(eq(planTable.status, opts.status));
-      if (opts.tags?.length) conditions.push(arrayContains(planTable.tags, opts.tags));
-      if (opts.source) conditions.push(eq(planTable.source, opts.source));
-      if (opts.sourceId) conditions.push(eq(planTable.sourceId, opts.sourceId));
-      let query = tx
-        .select()
-        .from(planTable)
-        .where(and(...conditions))
-        .orderBy(desc(planTable.timeCreated));
-      if (opts.limit) query = query.limit(opts.limit) as typeof query;
-      return query.then((rows) => rows.map(serialize));
+    const events = await Event.list({
+      source: opts.source,
+      sourceId: opts.sourceId,
+      tags: opts.tags,
+      type: "plan",
+      limit: opts.limit,
     });
+    const plans = events.map(serialize);
+    if (opts.status) return plans.filter((p) => p.status === opts.status);
+    return plans;
   }
 
   export async function update(id: string, input: UpdateInput): Promise<void> {
-    return createTransaction(async (tx) => {
-      const values: Record<string, unknown> = { timeUpdated: new Date() };
-      if (input.title !== undefined) values.title = input.title;
-      if (input.body !== undefined) values.body = input.body;
-      if (input.status !== undefined) values.status = input.status;
-      if (input.tags !== undefined) values.tags = input.tags;
-      if (input.data !== undefined) values.data = input.data;
-      log.info("update", { id, fields: Object.keys(values) });
-      await tx.update(planTable).set(values).where(eq(planTable.id, id));
+    const dataPatch: Record<string, unknown> = {};
+    if (input.title !== undefined) dataPatch.title = input.title;
+    if (input.body !== undefined) dataPatch.body = input.body;
+    if (input.status !== undefined) dataPatch.status = input.status;
+    if (input.data !== undefined) Object.assign(dataPatch, input.data);
+
+    log.info("update", { id, fields: Object.keys(dataPatch) });
+    await Event.update(id, {
+      data: Object.keys(dataPatch).length > 0 ? dataPatch : undefined,
+      tags: input.tags,
     });
   }
 
@@ -175,20 +170,29 @@ export namespace Plan {
     return renderContext(plan, options);
   }
 
-  function serialize(row: typeof planTable.$inferSelect): Info {
+  export async function listAsTree(opts: {
+    source?: string;
+    sourceId?: string;
+  }): Promise<Event.TreeNode[]> {
+    return Event.listTree({ ...opts, type: "plan" });
+  }
+
+  function serialize(event: Event.Info): Info {
+    const d = event.data as PlanEventData;
     return {
-      id: row.id,
-      title: row.title,
-      body: row.body,
-      status: row.status,
-      authorType: row.authorType,
-      tags: row.tags ?? [],
-      data: (row.data as Record<string, unknown>) ?? {},
-      source: row.source ?? null,
-      sourceId: row.sourceId ?? null,
-      createdBy: row.createdBy ?? null,
-      timeCreated: row.timeCreated.toISOString(),
-      timeUpdated: row.timeUpdated.toISOString(),
+      id: event.id,
+      title: d.title,
+      body: d.body,
+      status: d.status as PlanStatus,
+      authorType: d.authorType as AuthorType,
+      tags: event.tags,
+      data: event.data,
+      source: event.source,
+      sourceId: event.sourceId,
+      createdBy: d.createdBy ?? null,
+      parentEventId: event.parentEventId,
+      timeCreated: event.timeCreated,
+      timeUpdated: event.timeCreated,
     };
   }
 }

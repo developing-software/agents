@@ -1,5 +1,5 @@
 // Shared utility functions for plan rendering
-import type { Plan } from "@agents/core/plan/index";
+import type { Plan } from "@agents/core/events/plan/index";
 
 export type PlanStatus =
   | "draft"

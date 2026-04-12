@@ -4,8 +4,8 @@ import { generateText, Output } from "ai";
 import { Repository } from "@agents/core/repository/index";
 import { Event } from "@agents/core/events/index";
 import { AgentEvent } from "@agents/core/events/agent";
-import { Plan } from "@agents/core/plan/index";
-import { PlanJudge } from "@agents/core/plan/judge";
+import { Plan } from "@agents/core/events/plan/index";
+import { PlanJudge } from "@agents/core/events/plan/judge";
 import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
 import { createModel } from "./model";
 import { flattenChecks } from "$lib/events/helpers";
@@ -59,43 +59,45 @@ export const listPlanRuns = query(
 
     const tags = [`plan:${planId}`];
 
-    // Fetch agent.completed events for this plan
-    const events = await Event.list({
-      type: "agent.completed",
-      source: "repository",
-      sourceId: repo.id,
-      tags,
-      limit: 20,
-    });
+    // Fetch events and reviews/judgment in parallel (all DB queries)
+    const [events, reviewEvents, judgmentEvents] = await Promise.all([
+      Event.list({
+        type: "agent.completed",
+        source: "repository",
+        sourceId: repo.id,
+        tags,
+        limit: 20,
+      }),
+      Event.list({
+        type: "github.pull_request.reviewed",
+        source: "repository",
+        sourceId: repo.id,
+        tags,
+        limit: 20,
+      }),
+      Event.list({
+        type: "plan.evaluated",
+        source: "repository",
+        sourceId: repo.id,
+        tags,
+        limit: 1,
+      }),
+    ]);
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
-
-    // Build runs from agent.completed events
-    const runs: PlanRun[] = [];
-    for (const e of events) {
+    // Build runs from agent.completed events (no I/O, just parsing)
+    const runs: PlanRun[] = events.map((e) => {
       const parsed = AgentEvent.Completed.parse(e.data);
       const metrics = parsed.agent.metrics;
       const tokens = metrics?.tokens;
       const checks = flattenChecks(parsed.checks);
       const prNumber = extractPrNumber(e.tags);
 
-      // Get live PR state
-      let prState: string | null = null;
-      if (prNumber) {
-        try {
-          const pr = await GithubPullRequest.get(repoRef, prNumber);
-          prState = pr.state;
-        } catch {
-          prState = null;
-        }
-      }
-
-      runs.push({
+      return {
         id: e.id,
         agent: parsed.agent.name,
         model: metrics?.model ?? null,
         prNumber,
-        prState,
+        prState: null,
         prUrl: parsed.pr?.url || null,
         runUrl: parsed.workflow.runUrl || null,
         cost_usd: metrics?.cost_usd ?? null,
@@ -108,23 +110,7 @@ export const listPlanRuns = query(
         checks,
         tags: e.tags,
         timeCreated: e.timeCreated,
-      });
-    }
-
-    // Fetch existing reviews and judgment
-    const reviewEvents = await Event.list({
-      type: "github.pull_request.reviewed",
-      source: "repository",
-      sourceId: repo.id,
-      tags,
-      limit: 20,
-    });
-    const judgmentEvents = await Event.list({
-      type: "plan.evaluated",
-      source: "repository",
-      sourceId: repo.id,
-      tags,
-      limit: 1,
+      };
     });
 
     const reviews: Record<number, PlanJudge.ReviewResult> = {};
@@ -144,6 +130,37 @@ export const listPlanRuns = query(
     }
 
     return { runs, reviews, judgment };
+  },
+);
+
+export const listPrStates = query(
+  z.object({
+    organization: z.string(),
+    repoName: z.string(),
+    prNumbers: z.array(z.number()),
+  }),
+  async ({ organization, repoName, prNumbers }) => {
+    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
+    if (!repo) return {} as Record<number, string | null>;
+
+    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
+
+    const results = await Promise.all(
+      prNumbers.map(async (prNumber) => {
+        try {
+          const pr = await GithubPullRequest.get(repoRef, prNumber);
+          return { prNumber, state: pr.state };
+        } catch {
+          return { prNumber, state: null };
+        }
+      }),
+    );
+
+    const states: Record<number, string | null> = {};
+    for (const { prNumber, state } of results) {
+      states[prNumber] = state;
+    }
+    return states;
   },
 );
 
@@ -168,10 +185,13 @@ export const reviewPR = command(
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) throw new Error("Repository not found");
 
+    const plan = await Plan.fromID(planId);
+    if (!plan) throw new Error("Plan not found");
+
     const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
     const diff = await GithubPullRequest.getDiff(repoRef, prNumber);
 
-    const prompt = PlanJudge.composeReviewPrompt({ agent, prNumber, diff, checks, metrics });
+    const prompt = PlanJudge.composeReviewPrompt({ plan, agent, prNumber, diff, checks, metrics });
 
     const result = await generateText({
       model: createModel(),
@@ -199,38 +219,16 @@ export const judgePlan = command(
     organization: z.string(),
     repoName: z.string(),
     planId: z.string(),
-    runs: z.array(
-      z.object({
-        agent: z.string(),
-        prNumber: z.number(),
-        checks: z.array(z.object({ category: z.string(), name: z.string(), outcome: z.string() })),
-        metrics: z.object({
-          cost_usd: z.number().nullable(),
-          durationMs: z.number().nullable(),
-          linesAdded: z.number().nullable(),
-          linesRemoved: z.number().nullable(),
-        }),
-      }),
-    ),
+    reviews: z.array(PlanJudge.ReviewResult),
   }),
-  async ({ organization, repoName, planId, runs }) => {
+  async ({ organization, repoName, planId, reviews }) => {
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) throw new Error("Repository not found");
 
     const plan = await Plan.fromID(planId);
     if (!plan) throw new Error("Plan not found");
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
-
-    // Fetch all diffs in parallel
-    const implementations = await Promise.all(
-      runs.map(async (run) => ({
-        ...run,
-        diff: await GithubPullRequest.getDiff(repoRef, run.prNumber),
-      })),
-    );
-
-    const prompt = PlanJudge.composeComparePrompt({ plan, implementations });
+    const prompt = PlanJudge.composeComparePrompt({ plan, reviews });
 
     const result = await generateText({
       model: createModel(),

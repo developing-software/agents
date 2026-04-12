@@ -1,9 +1,9 @@
-import { AgentSkill } from "../agent/skill";
-import { createContext } from "../context";
-import { GithubContent } from "../github/repo/content";
-import { GithubIssue } from "../github/repo/issue";
-import { Repository } from "../repository/index";
-import { lazy } from "../util/lazy";
+import { AgentSkill } from "../../agent/skill";
+import { createContext } from "../../context";
+import { GithubContent } from "../../github/repo/content";
+import { GithubIssue } from "../../github/repo/issue";
+import { Repository } from "../../repository/index";
+import { lazy } from "../../util/lazy";
 import type { Plan } from "./index";
 
 export type SectionRenderer = () => Promise<string | null>;

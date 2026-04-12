@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { listPlanRuns, reviewPR, judgePlan, mergeWinner } from '$lib/agents/ai/judge.remote';
+  import { listPlanRuns, listPrStates, reviewPR, judgePlan, mergeWinner } from '$lib/agents/ai/judge.remote';
   import PlanImplementationCard from './PlanImplementationCard.svelte';
 
   let {
@@ -7,12 +7,16 @@
     repoName,
     planId,
     planStatus,
+    onRefine,
   }: {
     organization: string;
     repoName: string;
     planId: string;
     planStatus: string;
+    onRefine?: (runId: string, suggestions: string[]) => void;
   } = $props();
+
+  // -- Types (union of modern + legacy) --
 
   type PlanRun = {
     id: string;
@@ -37,33 +41,45 @@
   type ReviewResult = {
     agent: string;
     prNumber: number;
-    overallScore: number;
-    summary: string;
-    strengths: string[];
-    concerns: string[];
-    suggestions: string[];
+    scores: { adherence: number; quality: number; completeness: number };
+    verdict: string;
+    suggestions?: string[];
+  };
+
+  type CompareRanking = {
+    rank: number;
+    agent: string;
+    prNumber: number;
+    scores: { adherence: number; quality: number; completeness: number };
+    note?: string;
   };
 
   type CompareResult = {
-    rankings: Array<{
-      rank: number;
-      agent: string;
-      prNumber: number;
-      score: number;
-      strengths: string[];
-      weaknesses: string[];
-    }>;
+    rankings: CompareRanking[];
     winner: { agent: string; prNumber: number };
     reasoning: string;
   };
 
+  // -- Reactive data loading --
+
   const dataPromise = $derived.by(() => listPlanRuns({ organization, repoName, planId }));
+  const prStatesPromise = $derived.by(() =>
+    dataPromise.then((data) => {
+      const prNumbers = data.runs.map((r) => r.prNumber).filter((n): n is number => n != null);
+      if (prNumbers.length === 0) return {} as Record<number, string | null>;
+      return listPrStates({ organization, repoName, prNumbers });
+    }),
+  );
+
+  // -- Local state --
 
   let reviewLoading = $state<number | null>(null);
   let judgeLoading = $state(false);
   let mergeLoading = $state(false);
   let localReviews = $state<Record<number, ReviewResult>>({});
   let localJudgment = $state<CompareResult | null>(null);
+
+  // -- Agent colors --
 
   const AGENT_COLORS: Record<string, string> = {
     claude: 'var(--color-accent)',
@@ -84,6 +100,8 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
+  // -- Merge server + local data --
+
   function mergedReviews(serverReviews: Record<number, ReviewResult>): Record<number, ReviewResult> {
     return { ...serverReviews, ...localReviews };
   }
@@ -91,6 +109,8 @@
   function mergedJudgment(serverJudgment: CompareResult | null): CompareResult | null {
     return localJudgment ?? serverJudgment;
   }
+
+  // -- Actions --
 
   async function handleReview(run: PlanRun) {
     if (!run.prNumber) return;
@@ -108,17 +128,16 @@
     }
   }
 
-  async function handleJudge(runs: PlanRun[]) {
+  async function handleJudge(runs: PlanRun[], reviews: Record<number, ReviewResult>) {
     judgeLoading = true;
     try {
-      const runsWithPr = runs.filter((r): r is PlanRun & { prNumber: number } => r.prNumber != null);
+      const reviewList = runs
+        .filter((r): r is PlanRun & { prNumber: number } => r.prNumber != null)
+        .map((r) => reviews[r.prNumber])
+        .filter((r): r is ReviewResult => r != null);
       const result = await judgePlan({
         organization, repoName, planId,
-        runs: runsWithPr.map(r => ({
-          agent: r.agent, prNumber: r.prNumber,
-          checks: r.checks,
-          metrics: { cost_usd: r.cost_usd, durationMs: r.durationMs, linesAdded: r.linesAdded, linesRemoved: r.linesRemoved },
-        })),
+        reviews: reviewList,
       });
       localJudgment = result;
     } finally {
@@ -140,6 +159,19 @@
 
   function isMergedOrClosed(planSt: string): boolean {
     return planSt === 'completed';
+  }
+
+  function allHaveReviews(runs: PlanRun[], reviews: Record<number, ReviewResult>): boolean {
+    const runsWithPr = runs.filter(r => r.prNumber != null);
+    if (runsWithPr.length === 0) return false;
+    return runsWithPr.every(r => reviews[r.prNumber!] != null);
+  }
+
+  /**
+   * Compute an average score from the 3 dimensions.
+   */
+  function avgScore(scores: { adherence: number; quality: number; completeness: number }): string {
+    return ((scores.adherence + scores.quality + scores.completeness) / 3).toFixed(1);
   }
 </script>
 
@@ -174,6 +206,7 @@
   {@const judgment = mergedJudgment(data.judgment)}
   {@const runs = data.runs}
   {@const completed = isMergedOrClosed(planStatus)}
+  {@const canJudge = runs.length >= 2 && !judgment && !completed && allHaveReviews(runs, reviews)}
 
   <div class="impl-container">
     <div class="impl-header">
@@ -181,8 +214,9 @@
       {#if runs.length >= 2 && !judgment && !completed}
         <button
           class="action-btn judge-btn"
-          disabled={judgeLoading}
-          onclick={() => handleJudge(runs)}
+          disabled={judgeLoading || !canJudge}
+          title={canJudge ? 'Judge all implementations' : 'All implementations must have modern reviews before judging'}
+          onclick={() => handleJudge(runs, reviews)}
         >
           {judgeLoading ? '...' : 'Judge All'}
         </button>
@@ -202,8 +236,10 @@
             {organization}
             {repoName}
             {completed}
+            {prStatesPromise}
             reviewLoading={reviewLoading === run.prNumber}
             onReview={() => handleReview(run)}
+            {onRefine}
             {agentColor}
           />
         {/each}
@@ -230,13 +266,17 @@
                 <span class="rank-num">#{entry.rank}</span>
                 <span class="agent-dot small" style="background:{agentColor(entry.agent)};"></span>
                 <span class="rank-agent">{capitalize(entry.agent)}</span>
-                <span class="score-badge">{entry.score}/10</span>
+                <span class="score-badge">{avgScore(entry.scores)}/10</span>
                 <span class="rank-details">
-                  {#if entry.strengths.length > 0}
-                    <span class="rank-strengths">{entry.strengths.join(', ')}</span>
-                  {/if}
-                  {#if entry.weaknesses.length > 0}
-                    <span class="rank-weaknesses">{entry.weaknesses.join(', ')}</span>
+                  <span class="dimension-scores">
+                    <span class="dim-score">adh {entry.scores.adherence}</span>
+                    <span class="dim-sep">/</span>
+                    <span class="dim-score">qual {entry.scores.quality}</span>
+                    <span class="dim-sep">/</span>
+                    <span class="dim-score">comp {entry.scores.completeness}</span>
+                  </span>
+                  {#if entry.note}
+                    <span class="rank-note">{entry.note}</span>
                   {/if}
                 </span>
               </div>
@@ -489,16 +529,31 @@
     min-width: 0;
   }
 
-  .rank-strengths {
+  /* ── Dimension scores ────────────────────────────────────────────────── */
+
+  .dimension-scores {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: 11px;
-    color: var(--color-success);
-    line-height: 1.4;
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
   }
 
-  .rank-weaknesses {
+  .dim-score {
+    white-space: nowrap;
+  }
+
+  .dim-sep {
+    color: var(--color-dim);
+    font-size: 10px;
+  }
+
+  .rank-note {
     font-size: 11px;
-    color: var(--color-warning);
+    color: var(--color-dim);
     line-height: 1.4;
+    font-style: italic;
   }
 
   /* ── Reasoning ───────────────────────────────────────────────────────── */

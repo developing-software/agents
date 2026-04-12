@@ -9,7 +9,10 @@
       "./src/*.ts",
       "./src/*/index.ts"
     ],
-    "./events/agent": "./src/events/agent/index.ts"
+    "./events/agent": "./src/events/agent/index.ts",
+    "./events/plan/*": "./src/events/plan/*.ts",
+    "./events/plan/index": "./src/events/plan/index.ts",
+    "./events/tag": "./src/events/tag/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

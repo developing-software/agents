@@ -1,6 +1,6 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
-import { Plan } from "@agents/core/plan/index";
+import { Plan } from "@agents/core/events/plan/index";
 import { Repository } from "@agents/core/repository/index";
 import type { PlanStatus } from "./plan-helpers";
 
@@ -32,6 +32,25 @@ export const createPlan = command(
       tags,
       source: "repository",
       sourceId: repoId,
+    });
+    return { id };
+  },
+);
+
+export const createSubPlan = command(
+  z.object({
+    parentEventId: z.string(),
+    title: z.string(),
+    body: z.string(),
+    source: z.string(),
+    sourceId: z.string(),
+    tags: z.array(z.string()).default([]),
+  }),
+  async (input) => {
+    const id = await Plan.create({
+      ...input,
+      authorType: "human",
+      status: "draft",
     });
     return { id };
   },

@@ -147,6 +147,32 @@ export namespace Event {
     },
   );
 
+  export async function update(
+    id: string,
+    patch: {
+      data?: Record<string, unknown>;
+      tags?: string[];
+    },
+  ): Promise<void> {
+    return createTransaction(async (tx) => {
+      const values: Record<string, unknown> = { timeUpdated: new Date() };
+      if (patch.data) {
+        const row = await tx
+          .select({ data: eventTable.data })
+          .from(eventTable)
+          .where(eq(eventTable.id, id))
+          .then((r) => r[0]);
+        if (!row) return;
+        values.data = { ...(row.data as Record<string, unknown>), ...patch.data };
+      }
+      if (patch.tags) {
+        values.tags = patch.tags;
+      }
+      log.info("update", { id, fields: Object.keys(values) });
+      await tx.update(eventTable).set(values).where(eq(eventTable.id, id));
+    });
+  }
+
   export const fromID = fn(Info.shape.id, async (id) => {
     return useTransaction(async (tx) => {
       const row = await tx
