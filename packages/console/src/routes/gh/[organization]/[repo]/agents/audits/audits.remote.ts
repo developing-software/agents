@@ -20,7 +20,7 @@ export const listAuditRuns = query(repoInput, async ({ organization, repoName })
   return Event.list({
     source: "repository",
     sourceId: repo.id,
-    type: "audit.completed",
+    type: "audit",
     limit: 30,
   });
 });

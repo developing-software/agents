@@ -73,7 +73,7 @@ describe("event", () => {
     });
 
     const childId = await Event.create({
-      type: "agent.started",
+      type: "agent",
       origin: "action",
       source: "repository",
       sourceId,
@@ -85,12 +85,12 @@ describe("event", () => {
     expect(child?.parentEventId).toBe(rootId);
   });
 
-  it("does not infer agent.started as parent of another agent.started", async () => {
+  it("does not infer agent as parent of another agent", async () => {
     const sourceId = testSourceId();
     const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(16)];
 
     const firstAgentId = await Event.create({
-      type: "agent.started",
+      type: "agent",
       origin: "action",
       source: "repository",
       sourceId,
@@ -98,7 +98,7 @@ describe("event", () => {
     });
 
     const secondAgentId = await Event.create({
-      type: "agent.started",
+      type: "agent",
       origin: "action",
       source: "repository",
       sourceId,
@@ -111,7 +111,7 @@ describe("event", () => {
     expect(second?.parentEventId).toBeNull();
   });
 
-  it("agent.started parents under github.issues.opened, not under another agent.started", async () => {
+  it("agent parents under github.issues.opened, not under another agent", async () => {
     const sourceId = testSourceId();
     const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(16)];
 
@@ -124,7 +124,7 @@ describe("event", () => {
     });
 
     const firstAgentId = await Event.create({
-      type: "agent.started",
+      type: "agent",
       origin: "action",
       source: "repository",
       sourceId,
@@ -132,7 +132,7 @@ describe("event", () => {
     });
 
     const secondAgentId = await Event.create({
-      type: "agent.started",
+      type: "agent",
       origin: "action",
       source: "repository",
       sourceId,
@@ -164,7 +164,7 @@ describe("event", () => {
     });
 
     const childId = await Event.create({
-      type: "agent.completed",
+      type: "agent",
       origin: "action",
       source: "repository",
       sourceId,
@@ -174,6 +174,24 @@ describe("event", () => {
 
     const child = await Event.fromID(childId);
     expect(child?.parentEventId).toBe(prRootId);
+  });
+
+  it("update merges data and replaces tags", async () => {
+    const id = await Event.create({
+      type: "agent",
+      origin: "action",
+      data: { runUrl: "https://example.com", trigger: "push" },
+      tags: [Tags.ghRepo("octocat/hello")],
+    });
+    await Event.update(id, {
+      data: { workflow: { durationMs: 5000, conclusion: "success" } },
+      tags: [Tags.ghRepo("octocat/hello"), Tags.ghPr(42)],
+    });
+    const event = await Event.fromID(id);
+    expect(event!.data.runUrl).toBe("https://example.com");
+    expect((event!.data.workflow as any).durationMs).toBe(5000);
+    expect(event!.tags).toContain(Tags.ghPr(42));
+    expect(event!.tags).toContain(Tags.ghRepo("octocat/hello"));
   });
 
   it("keeps an explicit parentEventId instead of inferring one", async () => {
@@ -194,7 +212,7 @@ describe("event", () => {
     });
 
     const childId = await Event.create({
-      type: "agent.started",
+      type: "agent",
       origin: "action",
       source: "repository",
       sourceId,

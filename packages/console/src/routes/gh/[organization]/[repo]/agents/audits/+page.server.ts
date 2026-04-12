@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     Event.list({
       source: "repository",
       sourceId: repo.id,
-      type: "audit.completed",
+      type: "audit",
       limit: 30,
     }),
   ]);

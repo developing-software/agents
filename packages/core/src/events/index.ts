@@ -251,7 +251,7 @@ export namespace Event {
 
     const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
     if (prTag) {
-      const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent." }).catch(
+      const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent" }).catch(
         () => undefined,
       );
       if (parentEventId) {
@@ -263,7 +263,7 @@ export namespace Event {
     if (workflowTag) {
       const parentEventId = await findParent({
         tags: [workflowTag],
-        excludeTypePrefix: "agent.",
+        excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;
@@ -274,7 +274,7 @@ export namespace Event {
     if (issueTag) {
       const parentEventId = await findParent({
         tags: [issueTag],
-        excludeTypePrefix: "agent.",
+        excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;

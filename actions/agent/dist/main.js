@@ -32422,7 +32422,8 @@ var AgentEvent;
         url: exports_external.string().catch("")
       }).optional().catch(undefined),
       checks: exports_external.record(exports_external.string(), exports_external.record(exports_external.string(), exports_external.object({
-        outcome: exports_external.string().catch("unknown")
+        outcome: exports_external.string().catch("unknown"),
+        summary: exports_external.string().nullable().catch(null)
       }))).optional().catch(undefined)
     });
     function parse5(raw) {
@@ -33617,6 +33618,24 @@ class DevAgentSdk extends HeyApiClient {
       }
     });
   }
+  patchEventsById(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "path", key: "id" },
+      { in: "body", key: "data" },
+      { in: "body", key: "tags" }
+    ] }]);
+    return (options?.client ?? this.client).patch({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/events/{id}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
   postEventsByIdArtifacts(parameters, options) {
     const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
     return (options?.client ?? this.client).post({
@@ -33657,7 +33676,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   getModelsPricingByModelId(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }] }]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }, { in: "query", key: "provider" }] }]);
     return (options?.client ?? this.client).get({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/pricing/{modelId}",
@@ -33681,6 +33700,19 @@ class DevAgentSdk extends HeyApiClient {
         ...options?.headers,
         ...params.headers
       }
+    });
+  }
+  postBranchArtifactsByOwnerByRepoByBranch(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "path", key: "owner" },
+      { in: "path", key: "repo" },
+      { in: "path", key: "branch" }
+    ] }]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/branch-artifacts/{owner}/{repo}/{branch}",
+      ...options,
+      ...params
     });
   }
 }
@@ -33923,7 +33955,7 @@ async function uploadArtifact(result) {
     const form = new FormData;
     form.append("name", name);
     form.append("file", new Blob([readFileSync4(result.artifactPath)], { type: contentType }), name);
-    const res = await createFetchWithRetry()(`${apiUrl}/events/${eventId}/artifacts`, {
+    const res = await createFetchWithRetry(120000)(`${apiUrl}/events/${eventId}/artifacts`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: form

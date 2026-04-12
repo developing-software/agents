@@ -176,7 +176,7 @@
                 {/each}
               </div>
             {/if}
-            {#if e.type === 'deploy.completed'}
+            {#if e.type === 'deploy'}
               {@const dep = DeployEvent.Completed.parse(e.data)}
               {#if Object.keys(dep.outputs).length > 0}
                 <div class="deploy-urls">
@@ -186,8 +186,6 @@
                   {/each}
                 </div>
               {/if}
-            {:else if e.type === 'deploy.started'}
-              <div class="deploy-pending">deploying…</div>
             {/if}
           </div>
           {#if selectedEventId === e.id}

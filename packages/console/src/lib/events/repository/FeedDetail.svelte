@@ -72,8 +72,7 @@
   <!-- Deploy details -->
   {#if event.type.startsWith('deploy.')}
     {@const dep = DeployEvent.Completed.parse(event.data)}
-    {@const isStarted = event.type.endsWith('.started')}
-    {@const conclusion = isStarted ? 'in progress' : (dep.workflow.conclusion ?? 'unknown')}
+    {@const conclusion = dep.workflow.conclusion ?? 'unknown'}
     {@const conclusionColor = conclusion === 'success'
       ? 'var(--color-success)'
       : conclusion === 'failure'
@@ -92,14 +91,14 @@
         {/if}
         <span class="info-label">Status</span>
         <span class="info-value mono" style="color:{conclusionColor};">{conclusion}</span>
-        {#if !isStarted && dep.workflow.durationMs > 0}
+        {#if dep.workflow.durationMs > 0}
           <span class="info-label">Duration</span>
           <span class="info-value mono">{formatDuration(dep.workflow.durationMs)}</span>
         {/if}
       </div>
     </div>
 
-    {#if !isStarted && Object.keys(dep.outputs).length > 0}
+    {#if Object.keys(dep.outputs).length > 0}
       <div class="section">
         <span class="section-heading">OUTPUTS</span>
         <div class="deploy-outputs">

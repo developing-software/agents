@@ -7,7 +7,6 @@ import {
   readContextTags,
   uniqueTags,
 } from "@agents/actions-core";
-import { createID } from "@agents/core/util/id";
 
 interface WorkflowStatus {
   conclusion: string | null;
@@ -153,24 +152,20 @@ async function run() {
   // Read tags
   const tags = uniqueTags(readContextTags());
 
-  // Emit {type}.completed event
-  if (agentsToken) {
+  // Update event with completed data
+  if (agentsToken && startEventId) {
     try {
       const sdk = createApiClient(agentsToken, apiUrl);
-      await sdk.postEvents({
-        eventIngestInput: {
-          id: createID("event"),
-          repoFullName: repository,
-          parentEventId: startEventId || null,
-          origin: "action",
-          type: `${eventType}.completed`,
-          tags,
-          data,
-        },
+      await sdk.patchEventsById({
+        id: startEventId,
+        data,
+        tags,
       });
     } catch (err) {
-      core.warning(`Failed to post ${eventType}.completed event: ${err}`);
+      core.warning(`Failed to update ${eventType} event: ${err}`);
     }
+  } else if (!startEventId) {
+    core.info("No start event ID found — setup likely failed, skipping event update.");
   }
 
   // Write job summary

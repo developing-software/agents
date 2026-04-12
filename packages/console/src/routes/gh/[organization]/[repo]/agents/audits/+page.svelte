@@ -40,7 +40,7 @@
   }
 
   const auditRuns = $derived(
-    data.runs.filter((r) => r.type === 'audit.completed'),
+    data.runs.filter((r) => r.type === 'audit'),
   );
 
   function extractAuditName(run: { tags: string[] }): string {

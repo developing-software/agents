@@ -72,7 +72,7 @@ export const getDashboardSummary = query(z.object({}), async () => {
   const events = await Event.list({
     source: "repository",
     sourceIds: repoIds,
-    type: "agent.completed",
+    type: "agent",
     limit: 500,
   });
 
@@ -200,7 +200,7 @@ export const listAgentRuns = query(
     if (!repo) return [];
 
     const events = await Event.list({
-      type: "agent.completed",
+      type: "agent",
       source: "repository",
       sourceId: repo.id,
       limit,

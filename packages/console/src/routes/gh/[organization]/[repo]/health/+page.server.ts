@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   try {
     const events = await Event.list({
-      type: "checks.completed",
+      type: "checks",
       source: "repository",
       sourceId: repo.id,
       tags: [`gh:branch:${branch}`],

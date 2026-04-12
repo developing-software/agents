@@ -19724,14 +19724,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "email" }] }]);
     return (options?.client ?? this.client).put({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/profile",
@@ -19752,14 +19745,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postApp(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "redirectURI" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "body", key: "name" }, { in: "body", key: "redirectURI" }] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/app",
@@ -19836,6 +19822,24 @@ class DevAgentSdk extends HeyApiClient {
       }
     });
   }
+  patchEventsById(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "path", key: "id" },
+      { in: "body", key: "data" },
+      { in: "body", key: "tags" }
+    ] }]);
+    return (options?.client ?? this.client).patch({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/events/{id}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers
+      }
+    });
+  }
   postEventsByIdArtifacts(parameters, options) {
     const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
     return (options?.client ?? this.client).post({
@@ -19846,20 +19850,16 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postGithubDispatch(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "owner" },
-          { in: "body", key: "repo" },
-          { in: "body", key: "agent" },
-          { in: "body", key: "prompt" },
-          { in: "body", key: "issue_number" },
-          { in: "body", key: "tags" },
-          { in: "body", key: "model" },
-          { in: "body", key: "ref" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "owner" },
+      { in: "body", key: "repo" },
+      { in: "body", key: "agent" },
+      { in: "body", key: "prompt" },
+      { in: "body", key: "issue_number" },
+      { in: "body", key: "tags" },
+      { in: "body", key: "model" },
+      { in: "body", key: "ref" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/github/dispatch",
@@ -19880,7 +19880,7 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   getModelsPricingByModelId(parameters, options) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }] }]);
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "modelId" }, { in: "query", key: "provider" }] }]);
     return (options?.client ?? this.client).get({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/pricing/{modelId}",
@@ -19889,15 +19889,11 @@ class DevAgentSdk extends HeyApiClient {
     });
   }
   postModelsCost(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "model" },
-          { in: "body", key: "provider" },
-          { in: "body", key: "tokens" }
-        ]
-      }
-    ]);
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "body", key: "model" },
+      { in: "body", key: "provider" },
+      { in: "body", key: "tokens" }
+    ] }]);
     return (options?.client ?? this.client).post({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/models/cost",
@@ -19908,6 +19904,19 @@ class DevAgentSdk extends HeyApiClient {
         ...options?.headers,
         ...params.headers
       }
+    });
+  }
+  postBranchArtifactsByOwnerByRepoByBranch(parameters, options) {
+    const params = buildClientParams([parameters], [{ args: [
+      { in: "path", key: "owner" },
+      { in: "path", key: "repo" },
+      { in: "path", key: "branch" }
+    ] }]);
+    return (options?.client ?? this.client).post({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/branch-artifacts/{owner}/{repo}/{branch}",
+      ...options,
+      ...params
     });
   }
 }
@@ -20148,7 +20157,7 @@ async function run() {
           id: createID("event"),
           repoFullName: repository,
           origin: "action",
-          type: `${eventType}.started`,
+          type: eventType,
           tags: allTags,
           data: {
             runUrl,
@@ -20170,7 +20179,7 @@ async function run() {
         core2.exportVariable("DEV_AGENTS_ARTIFACT_URL", `${base}/events/${data.id}/artifacts`);
       }
     } catch (err) {
-      core2.warning(`Failed to post ${eventType}.started event: ${err}`);
+      core2.warning(`Failed to post ${eventType} event: ${err}`);
     }
   }
 }

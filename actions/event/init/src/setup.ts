@@ -126,7 +126,7 @@ async function run() {
           id: createID("event"),
           repoFullName: repository,
           origin: "action",
-          type: `${eventType}.started`,
+          type: eventType,
           tags: allTags,
           data: {
             runUrl,
@@ -156,7 +156,7 @@ async function run() {
         core.exportVariable("DEV_AGENTS_ARTIFACT_URL", `${base}/events/${data.id}/artifacts`);
       }
     } catch (err) {
-      core.warning(`Failed to post ${eventType}.started event: ${err}`);
+      core.warning(`Failed to post ${eventType} event: ${err}`);
     }
   }
 }

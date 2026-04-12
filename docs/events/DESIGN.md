@@ -10,7 +10,7 @@ Events are the backbone of observability in this system. Every meaningful action
   parentEventId: string?   // Links to parent event (chain/tree)
   source: string?          // Entity type (e.g., "repository")
   sourceId: string?        // Entity ID (ULID reference, no FK)
-  type: string             // Event type (e.g., "agent.started")
+  type: string             // Event type (e.g., "agent")
   origin: OriginType       // Where the event came from
   tags: string[]           // Filterable, searchable labels
   data: Record<string, unknown>  // Arbitrary payload (open schema)
@@ -33,10 +33,9 @@ Events are the backbone of observability in this system. Every meaningful action
 
 ### Agent Lifecycle
 
-| Type              | Origin | Description                                 |
-| ----------------- | ------ | ------------------------------------------- |
-| `agent.started`   | action | Agent workflow begins                       |
-| `agent.completed` | action | Workflow finishes, emits all collected data |
+| Type    | Origin | Description                                                          |
+| ------- | ------ | -------------------------------------------------------------------- |
+| `agent` | action | Agent workflow event — created on setup, updated on teardown with full data |
 
 ### GitHub Webhooks
 
@@ -85,12 +84,7 @@ Typed schema: `DeployEvent.Completed.Data` in `packages/core/src/events/deploy/i
 
 ## Event Chains
 
-Events form trees via `parentEventId`. A typical agent run chain:
-
-```
-agent.started
-  └── agent.completed   (all collected data)
-```
+Events form trees via `parentEventId`. Agent events are single nodes — created at workflow start and updated at teardown with full data.
 
 Parent inference works via tag matching — when `parentEventId` isn't explicit, `Event.inferParentEventId()` finds existing events with matching `gh:pr:`, `gh:issue:`, or `gh:workflow:` tags.
 
@@ -153,7 +147,7 @@ Is it categorical AND you also need it in the payload for display?
 
 ## Data Convention
 
-Event data uses an **open schema**. Any action can write any key. The `{type}.completed` event's data is assembled from `data.json` files in the results directory — the teardown recursively walks the directory tree and builds a nested object.
+Event data uses an **open schema**. Any action can write any key. The event's data is assembled from `data.json` files in the results directory — the teardown recursively walks the directory tree and builds a nested object, then merges it into the event via `PATCH /events/:id`.
 
 These keys are conventions, not enforced schemas. Any action can write additional keys via `event/data`.
 
@@ -161,7 +155,7 @@ These keys are conventions, not enforced schemas. Any action can write additiona
 
 Event data schemas are defined as **self-contained Zod modules** in `packages/core/src/events/{type}/index.ts`. Each module exports a namespace following the `{Type}Event` convention, with subnamespaces per lifecycle phase:
 
-- `AgentEvent.Completed.Data` — full `agent.completed` event body schema
+- `AgentEvent.Completed.Data` — full `agent` event body schema
 - `AgentEvent.Completed.parse(raw)` — never throws, returns typed defaults for missing/invalid fields
 - `AgentEvent.resolveAgent(name)` — normalizes agent name aliases (e.g. `"claude"` → `"claude-code"`)
 
@@ -169,20 +163,13 @@ Event data schemas are defined as **self-contained Zod modules** in `packages/co
 
 **Constraints:** These modules import only `zod` — no DB, drizzle, or internal dependencies. This allows them to be used by both `@agents/core` consumers and GitHub Actions.
 
-**Source of truth:** See `packages/core/src/events/agent/index.ts` for the `agent.completed` schema, including agent/metrics/pricing/workflow/diff/pr/checks fields.
+**Source of truth:** See `packages/core/src/events/agent/index.ts` for the `agent` event schema, including agent/metrics/pricing/workflow/diff/pr/checks fields.
 
 ## Data Schemas by Event Type
 
-### agent.started
+### agent
 
-```ts
-data: {
-  runUrl: string,          // GitHub Actions run URL
-  // + any extra data passed via event/init data input
-}
-```
-
-### agent.completed
+Created on setup with initial data (`runUrl`, `trigger`), then updated on teardown with full data.
 
 Typed schema: `AgentEvent.Completed.Data` in `packages/core/src/events/agent/index.ts`. Includes agent info, metrics, pricing, workflow, diff, PR, and checks.
 

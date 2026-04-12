@@ -62,7 +62,7 @@ export const listPlanRuns = query(
     // Fetch events and reviews/judgment in parallel (all DB queries)
     const [events, reviewEvents, judgmentEvents] = await Promise.all([
       Event.list({
-        type: "agent.completed",
+        type: "agent",
         source: "repository",
         sourceId: repo.id,
         tags,
@@ -84,7 +84,7 @@ export const listPlanRuns = query(
       }),
     ]);
 
-    // Build runs from agent.completed events (no I/O, just parsing)
+    // Build runs from agent events (no I/O, just parsing)
     const runs: PlanRun[] = events.map((e) => {
       const parsed = AgentEvent.Completed.parse(e.data);
       const metrics = parsed.agent.metrics;

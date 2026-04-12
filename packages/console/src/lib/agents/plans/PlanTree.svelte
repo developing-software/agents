@@ -47,7 +47,7 @@
     switch (type) {
       case 'plan':
         return 'var(--color-accent)';
-      case 'agent.completed':
+      case 'agent':
         return 'var(--color-success)';
       default:
         return 'var(--color-dim)';
@@ -108,7 +108,7 @@
   {:else}
     {#snippet renderNode(node: TreeNode, depth: number)}
       {@const isPlan = node.type === 'plan'}
-      {@const isAgentCompleted = node.type === 'agent.completed'}
+      {@const isAgentCompleted = node.type === 'agent'}
       {@const status = isPlan ? extractStatusFromTags(node.tags) : null}
       {@const pr = isAgentCompleted ? extractPrFromTags(node.tags) : null}
       <div class="node" style="padding-left: {depth * 16}px;">
