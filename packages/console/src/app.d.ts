@@ -13,7 +13,9 @@ declare global {
     interface Locals {
       userID: string | null;
     }
-    // interface PageData {}
+    interface PageData {
+      breadcrumbs?: Array<{ label: string; href?: string }>;
+    }
     // interface PageState {}
   }
 }

@@ -4,7 +4,8 @@
   import favicon from '$lib/assets/favicon.svg';
   import { navigating, page } from '$app/state';
   import { PersistedState } from 'runed';
-    import PreLoadingIndicator from './PreLoadingIndicator.svelte';
+  import PreLoadingIndicator from './PreLoadingIndicator.svelte';
+  import Breadcrumbs from '$lib/ui/Breadcrumbs.svelte';
 
   let { data, children }: LayoutProps = $props();
 
@@ -25,6 +26,12 @@
   function orgInitials(org: string) {
     return org.slice(0, 2).toUpperCase();
   }
+
+  function repoInitials(repo: string) {
+    return repo.slice(0, 2).toUpperCase();
+  }
+
+  const breadcrumbs = $derived(page.data.breadcrumbs);
 </script>
 
 <svelte:head>
@@ -51,6 +58,11 @@
       <img src={favicon} alt="agents logo" class="topbar-favicon" />
       <span class="topbar-name">agents</span>
     </a>
+
+    {#if breadcrumbs?.length}
+      <span class="topbar-sep" aria-hidden="true">/</span>
+      <Breadcrumbs items={breadcrumbs} />
+    {/if}
 
     <div class="topbar-actions">
       <a href="/models" class="topbar-link">Models</a>
@@ -104,7 +116,7 @@
                       aria-current={isActive ? 'page' : undefined}
                       onclick={() => (drawerOpen = false)}
                     >
-                      <span class="repo-dot" class:repo-dot-active={isActive}></span>
+                      <span class="repo-initial" class:repo-initial-active={isActive}>{repoInitials(repo.repo)}</span>
                       <span class="repo-link-text">{repo.repo}</span>
                     </a>
                   </li>
@@ -181,7 +193,15 @@
     gap: 7px;
     text-decoration: none;
     color: var(--color-text);
-    flex: 1;
+    flex-shrink: 0;
+  }
+
+  .topbar-sep {
+    color: var(--color-dim);
+    font-size: 12px;
+    flex-shrink: 0;
+    user-select: none;
+    margin: 0 2px;
   }
 
   .topbar-favicon {
@@ -398,19 +418,35 @@
     background: var(--color-elevated);
   }
 
-  /* Repo dot (collapsed indicator) */
-  .repo-dot {
+  /* Repo initial badge (collapsed indicator) */
+  .repo-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-border-bright);
-    margin-left: 3px;
-    transition: background 0.1s, opacity 120ms ease;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--color-muted);
+    letter-spacing: 0.04em;
+    transition: opacity 120ms ease, background 0.1s, color 0.1s;
+    margin-left: 1px;
   }
 
-  .repo-dot-active {
-    background: var(--color-accent);
+  .repo-initial-active {
+    background: color-mix(in srgb, var(--color-accent) 15%, var(--color-elevated));
+    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+    color: var(--color-accent);
+  }
+
+  .repo-link:hover .repo-initial:not(.repo-initial-active) {
+    background: var(--color-hover);
+    color: var(--color-text);
   }
 
   .repo-link-text {
@@ -420,8 +456,8 @@
     text-overflow: ellipsis;
   }
 
-  /* Collapsed: show dot, hide text */
-  .sidebar:not(.expanded) .repo-dot {
+  /* Collapsed: show initial, hide text */
+  .sidebar:not(.expanded) .repo-initial {
     opacity: 1;
   }
 
@@ -432,8 +468,8 @@
     overflow: hidden;
   }
 
-  /* Expanded: hide dot, show text */
-  .sidebar.expanded .repo-dot {
+  /* Expanded: hide initial, show text */
+  .sidebar.expanded .repo-initial {
     opacity: 0;
     width: 0;
     overflow: hidden;
@@ -503,7 +539,7 @@
 
     /* On mobile: always show expanded layout, no pin toggle */
     .sidebar .org-initial,
-    .sidebar .repo-dot {
+    .sidebar .repo-initial {
       display: none;
     }
 
