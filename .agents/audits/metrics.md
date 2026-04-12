@@ -29,6 +29,7 @@ Use subagents (Agent tool) to research these areas in parallel (one subagent per
 The codebase has a tag system spanning type definitions (core), tag production (agent actions, webhooks), and tag display (console styling, extraction, filtering).
 
 **Questions to answer:**
+
 - Are all tags produced in application code also defined in the core Tag type union?
 - Do all tag prefixes have console styling and extractor functions?
 - Are there builder keys in the Tags object that don't correspond to any produced tag?
@@ -41,6 +42,7 @@ The codebase has a tag system spanning type definitions (core), tag production (
 Agent harnesses (claude, codex, opencode) emit metrics via events. These flow through type definitions, query functions, and into console display components.
 
 **Questions to answer:**
+
 - Do all harnesses emit the same set of metric fields, or are some missing/null for certain harnesses?
 - Are emitted metrics fully represented in the EventMetrics type and METRIC_KEYS arrays?
 - Do query functions (`getEventSummary`, `getAgentComparison`, `listAgentRuns`) use consistent event types as their source?
@@ -53,6 +55,7 @@ Agent harnesses (claude, codex, opencode) emit metrics via events. These flow th
 The console displays agent run data across several pages and components. Some collected data may not be surfaced anywhere.
 
 **Questions to answer:**
+
 - What fields are in the `agent.completed` event payload but not shown in any console UI?
 - What dashboard views are missing (time-series trends, per-model breakdowns, filtering)?
 - Are there defined OriginType values that no code ever uses?
@@ -90,6 +93,7 @@ Every finding MUST include all of these fields:
 ```
 
 Severity levels:
+
 - **CRITICAL** — type mismatch, data loss, or misleading display
 - **IMPROVEMENT** — functional gap, missing data surface, inconsistency
 - **SUGGESTION** — nice-to-have enhancement
@@ -99,6 +103,7 @@ Severity levels:
 Write `.agents/reports/audit-metrics.md` using **GitHub Flavored Markdown (GFM)** -- the report will be rendered as a GitHub issue body.
 
 Use GFM features for readability:
+
 - `- [ ]` / `- [x]` task list checkboxes for trackable findings
 - `<details><summary>...</summary>...</details>` for collapsible implementation plans
 - Tables with `| col | col |` syntax for structured data
@@ -110,33 +115,39 @@ Use GFM features for readability:
 
 ## Summary
 
-| Severity | Count |
-|---|---|
-| Critical | N |
-| Improvement | N |
-| Suggestion | N |
+| Severity    | Count |
+| ----------- | ----- |
+| Critical    | N     |
+| Improvement | N     |
+| Suggestion  | N     |
 
 **Delta from previous audit:** N fixed, N still open, N new
 
 ## Fixed Since Last Audit
+
 - [x] Description of what was fixed (was: previous finding title)
 
 ## Open Findings
 
 ### Tag System
+
 - [ ] Finding title — one-line summary
-(full finding with implementation plan below)
+      (full finding with implementation plan below)
 
 ### Metric Pipeline
+
 - [ ] ...
 
 ### Console Coverage
+
 - [ ] ...
 
 ## New Opportunities
+
 Ordered by impact. Each with implementation plan.
 Focus on metrics inferable from existing event data.
 
 ## Checklist
+
 All findings as a flat `- [ ]` list for tracking.
 ```

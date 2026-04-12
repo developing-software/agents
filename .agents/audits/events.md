@@ -8,6 +8,7 @@ You are running an event system audit of this repository.
 Your job: evaluate how events are designed, whether tags and data fields are used correctly, whether the event chain is complete, and what metrics can be inferred from existing event data -- then produce an actionable report with implementation plans for each finding.
 
 Read the event system documentation first:
+
 - `docs/events/DESIGN.md` — event schema, types, tags vs data rules
 - `docs/events/INFERENCE.md` — derivable metrics, chain inference, gaps
 
@@ -35,14 +36,17 @@ Use subagents (Agent tool) to research these areas in parallel (one subagent per
 Check every event emission point in the codebase against the rules in `docs/events/DESIGN.md`.
 
 **Tags should be:** small, categorical, deterministic — single words, short identifiers, numbers, enum values. Used for filtering and grouping.
+
 - GOOD: `gh:repo:owner/name`, `gh:issue:42`, `model:claude-sonnet-4-20250514`, `harness:claude`, `scope:small`
 - BAD: long strings, error messages, URLs, numeric measurements, nested data
 
 **Data should be:** everything that is NOT small and simple — long strings, nested objects, arrays, numeric measurements.
+
 - GOOD: `finalMessage`, `errorMessage`, `durationMs`, `checks[]`, `metrics{}`
 - BAD: filterable categorical values that belong in tags
 
 **Anti-patterns to flag:**
+
 - Long strings stored as tags (error messages, final messages, URLs)
 - Filterable/categorical values only in `data` but not in `tags` (can't query by them)
 - Numeric metrics stored as tags instead of data fields
@@ -55,6 +59,7 @@ Check every event emission point in the codebase against the rules in `docs/even
 Check whether the event lifecycle is complete — no information lost between steps, proper parent/child linking, all event types documented.
 
 **Questions to answer:**
+
 - Do all `agent.result` and `agent.completed` events correctly reference their `agent.started` parent?
 - Are there metrics or context values in `agent.result` that don't make it into `agent.completed`, causing information loss in the chain?
 - Do webhook events properly chain to agent events via tag inference?
@@ -69,6 +74,7 @@ Check whether the event lifecycle is complete — no information lost between st
 Check whether event data fields are well-structured, consistent across harnesses, and useful for downstream analysis.
 
 **Questions to answer:**
+
 - Do all three harnesses (claude, codex, opencode) emit the same metric fields in `agent.result`? Which fields are null/missing for which harnesses?
 - Is the `data` field well-structured for each event type, or is it a grab-bag of unrelated fields?
 - Are there fields in event data that are always null or always the same value (dead fields)?
@@ -82,6 +88,7 @@ Check whether event data fields are well-structured, consistent across harnesses
 Using `docs/events/INFERENCE.md` as a reference, check which derivable metrics are actually implemented and which are still missing.
 
 **Questions to answer:**
+
 - Which metrics from the "Not Yet Computed" section in INFERENCE.md are still unimplemented?
 - Are there NEW inference opportunities not listed in the docs? (Look at what data is available and think about what's useful)
 - Which "Gaps That Block Inference" from the docs still exist?
@@ -116,6 +123,7 @@ Every finding MUST include all of these fields:
 ```
 
 Severity levels:
+
 - **CRITICAL** — data loss, broken event chain, wrong tag/data placement that prevents querying
 - **IMPROVEMENT** — missing inference, inconsistent data across harnesses, undocumented event type
 - **SUGGESTION** — new derivable metric, restructuring for better analysis
@@ -125,6 +133,7 @@ Severity levels:
 Write `.agents/reports/audit-events.md` using **GitHub Flavored Markdown (GFM)** -- the report will be rendered as a GitHub issue body.
 
 Use GFM features for readability:
+
 - `- [ ]` / `- [x]` task list checkboxes for trackable findings
 - `<details><summary>...</summary>...</details>` for collapsible implementation plans
 - Tables with `| col | col |` syntax for structured data
@@ -136,40 +145,48 @@ Use GFM features for readability:
 
 ## Summary
 
-| Severity | Count |
-|---|---|
-| Critical | N |
-| Improvement | N |
-| Suggestion | N |
+| Severity    | Count |
+| ----------- | ----- |
+| Critical    | N     |
+| Improvement | N     |
+| Suggestion  | N     |
 
 **Delta from previous audit:** N fixed, N still open, N new
 
 ## Fixed Since Last Audit
+
 - [x] Description of what was fixed (was: previous finding title)
 
 ## Open Findings
 
 ### Tags vs Data
+
 - [ ] Finding title — one-line summary
-(full finding with implementation plan below)
+      (full finding with implementation plan below)
 
 ### Event Chain
+
 - [ ] ...
 
 ### Data Quality
+
 - [ ] ...
 
 ### Inference Opportunities
+
 - [ ] ...
 
 ## Event Type Inventory
+
 Table of all event types found, their tags, data fields, and emission points.
 Flag any that differ from docs/events/DESIGN.md.
 
 ## Harness Consistency Matrix
+
 Table showing which metric fields each harness emits (claude, codex, opencode).
 Flag nulls and mismatches.
 
 ## Checklist
+
 All findings as a flat `- [ ]` list for tracking.
 ```

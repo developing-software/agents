@@ -7,6 +7,7 @@
     type: string;
     origin: string;
     tags: string[];
+    data: Record<string, unknown>;
     parentEventId: string | null;
     timeCreated: string;
     children: TreeNode[];
@@ -30,11 +31,13 @@
     return null;
   }
 
-  function extractStatusFromTags(tags: string[]): string | null {
-    for (const tag of tags) {
-      const match = tag.match(/^status:(.+)$/);
-      if (match) return match[1];
-    }
+  function extractStatus(node: TreeNode): string | null {
+    if (node.type === 'plan' && typeof node.data?.status === 'string') return node.data.status;
+    return null;
+  }
+
+  function extractTitle(node: TreeNode): string | null {
+    if (node.type === 'plan' && typeof node.data?.title === 'string') return node.data.title;
     return null;
   }
 
@@ -109,7 +112,8 @@
     {#snippet renderNode(node: TreeNode, depth: number)}
       {@const isPlan = node.type === 'plan'}
       {@const isAgentCompleted = node.type === 'agent'}
-      {@const status = isPlan ? extractStatusFromTags(node.tags) : null}
+      {@const status = extractStatus(node)}
+      {@const title = extractTitle(node)}
       {@const pr = isAgentCompleted ? extractPrFromTags(node.tags) : null}
       <div class="node" style="padding-left: {depth * 16}px;">
         <div class="row" class:row-highlight={isPlan}>
@@ -117,7 +121,11 @@
             <span class="connector">&#x2514;</span>
           {/if}
           <span class="dot" style="background:{dotColor(node.type)};"></span>
-          <span class="etype" class:etype-accent={isPlan} class:etype-muted={!isPlan && depth > 0}>{node.type}</span>
+          {#if isPlan && title}
+            <a href="/gh/{organization}/{repoName}/agents/plans/{node.id}" class="etype etype-accent plan-link">{title}</a>
+          {:else}
+            <span class="etype" class:etype-accent={isPlan} class:etype-muted={!isPlan && depth > 0}>{node.type}</span>
+          {/if}
           {#if status}
             <span class="pill" style={statusPillStyle(status)}>{status}</span>
           {/if}
@@ -176,6 +184,8 @@
   .etype { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--color-text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .etype-accent { color: var(--color-accent); font-weight: 600; }
   .etype-muted { color: var(--color-muted); font-size: 11px; }
+  .plan-link { text-decoration: none; }
+  .plan-link:hover { text-decoration: underline; }
 
   .pill { font-family: "JetBrains Mono", monospace; font-size: 10px; padding: 0 5px; border-radius: 3px; flex-shrink: 0; line-height: 1.6; white-space: nowrap; }
 

@@ -1,39 +1,6 @@
 <script lang="ts">
   import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
-
-  type PlanRun = {
-    id: string;
-    agent: string;
-    model: string | null;
-    prNumber: number | null;
-    prState: string | null;
-    prUrl: string | null;
-    runUrl: string | null;
-    cost_usd: number | null;
-    input_tokens: number | null;
-    output_tokens: number | null;
-    turns: number | null;
-    durationMs: number | null;
-    linesAdded: number | null;
-    linesRemoved: number | null;
-    checks: Array<{ category: string; name: string; outcome: string }>;
-    tags: string[];
-    timeCreated: string;
-  };
-
-  type ReviewResult = {
-    agent: string;
-    prNumber: number;
-    scores: { adherence: number; quality: number; completeness: number };
-    verdict: string;
-    suggestions?: string[];
-  };
-
-  type CompareResult = {
-    rankings: Array<{ rank: number; agent: string; prNumber: number; scores: { adherence: number; quality: number; completeness: number }; note?: string }>;
-    winner: { agent: string; prNumber: number };
-    reasoning: string;
-  };
+  import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
 
   let {
     run,
@@ -214,14 +181,7 @@
         {/if}
       {:else if !completed && run.prNumber != null}
         <div class="judge-empty">
-          <button
-            class="action-btn"
-            disabled={reviewLoading}
-            onclick={onReview}
-          >
-            {reviewLoading ? '...' : 'Review'}
-          </button>
-          <span class="judge-empty-desc">Review this PR against the plan.</span>
+          <span class="judge-empty-desc">Use the workflow strip above to review this PR.</span>
         </div>
       {:else}
         <div class="dim-placeholder">No review available.</div>

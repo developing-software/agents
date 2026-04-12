@@ -4,7 +4,7 @@ import { Event } from "@agents/core/events/index";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const { repo } = await parent();
-  if (!repo) return { audits: [], runs: [] };
+  if (!repo) return { audits: [], runs: [], repoId: null };
 
   const [audits, runs] = await Promise.all([
     AgentAudit.list(repo),
@@ -12,9 +12,9 @@ export const load: PageServerLoad = async ({ parent }) => {
       source: "repository",
       sourceId: repo.id,
       type: "audit",
-      limit: 30,
+      limit: 50,
     }),
   ]);
 
-  return { audits, runs };
+  return { audits, runs, repoId: repo.id };
 };

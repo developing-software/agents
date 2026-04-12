@@ -10,11 +10,7 @@ export namespace PlanJudge {
       .min(1)
       .max(10)
       .describe("How well the implementation fulfills the plan requirements"),
-    quality: z
-      .number()
-      .min(1)
-      .max(10)
-      .describe("Code quality, readability, and correctness"),
+    quality: z.number().min(1).max(10).describe("Code quality, readability, and correctness"),
     completeness: z
       .number()
       .min(1)

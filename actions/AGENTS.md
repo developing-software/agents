@@ -179,18 +179,18 @@ Uploads a file or directory to the Agents API R2 storage under the current event
 
 ## Env Var Conventions
 
-| Variable                 | Set by            | Purpose                                               |
-| ------------------------ | ----------------- | ----------------------------------------------------- |
-| `DEV_AGENTS_TOKEN`       | `event/init`      | Agents API token, inherited by all downstream actions |
-| `DEV_AGENTS_API_URL`     | `event/init`      | Agents API base URL                                   |
-| `DEV_AGENTS_RESULTS_DIR` | `event/init`      | Path to results folder for data collection            |
-| `DEV_AGENTS_TAGS_DIR`    | `event/init`      | Path to tags directory (one file per tag)             |
-| `DEV_AGENTS_RUN_URL`     | `event/init`      | GitHub Actions run URL                                |
+| Variable                 | Set by            | Purpose                                                 |
+| ------------------------ | ----------------- | ------------------------------------------------------- |
+| `DEV_AGENTS_TOKEN`       | `event/init`      | Agents API token, inherited by all downstream actions   |
+| `DEV_AGENTS_API_URL`     | `event/init`      | Agents API base URL                                     |
+| `DEV_AGENTS_RESULTS_DIR` | `event/init`      | Path to results folder for data collection              |
+| `DEV_AGENTS_TAGS_DIR`    | `event/init`      | Path to tags directory (one file per tag)               |
+| `DEV_AGENTS_RUN_URL`     | `event/init`      | GitHub Actions run URL                                  |
 | `DEV_AGENTS_EVENT_ID`    | `event/init`      | ID of the event (created on setup, updated on teardown) |
-| `DEV_AGENTS_BRANCH`      | `git/branch`      | Name of the created working branch                    |
-| `DEV_AGENTS_INITIAL_SHA` | `git/branch`      | SHA before agent changes (for commit detection)       |
-| `DEV_AGENTS_COMMENT_ID`  | `comment/create`  | Issue comment ID for live updates                     |
-| `DEV_AGENTS_HARNESS`     | workflow (manual) | Agent harness name, used in comments                  |
+| `DEV_AGENTS_BRANCH`      | `git/branch`      | Name of the created working branch                      |
+| `DEV_AGENTS_INITIAL_SHA` | `git/branch`      | SHA before agent changes (for commit detection)         |
+| `DEV_AGENTS_COMMENT_ID`  | `comment/create`  | Issue comment ID for live updates                       |
+| `DEV_AGENTS_HARNESS`     | workflow (manual) | Agent harness name, used in comments                    |
 
 ## Event Types
 

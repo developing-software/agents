@@ -1,6 +1,10 @@
 <script lang="ts">
   import { listPlanRuns, listPrStates, reviewPR, judgePlan, mergeWinner } from '$lib/agents/ai/judge.remote';
+  import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
   import PlanImplementationCard from './PlanImplementationCard.svelte';
+  import PlanComparisonTable from './PlanComparisonTable.svelte';
+  import PlanDiffCompare from './PlanDiffCompare.svelte';
+  import { capitalize } from '$lib/events/helpers';
 
   let {
     organization,
@@ -16,50 +20,6 @@
     onRefine?: (runId: string, suggestions: string[]) => void;
   } = $props();
 
-  // -- Types (union of modern + legacy) --
-
-  type PlanRun = {
-    id: string;
-    agent: string;
-    model: string | null;
-    prNumber: number | null;
-    prState: string | null;
-    prUrl: string | null;
-    runUrl: string | null;
-    cost_usd: number | null;
-    input_tokens: number | null;
-    output_tokens: number | null;
-    turns: number | null;
-    durationMs: number | null;
-    linesAdded: number | null;
-    linesRemoved: number | null;
-    checks: Array<{ category: string; name: string; outcome: string }>;
-    tags: string[];
-    timeCreated: string;
-  };
-
-  type ReviewResult = {
-    agent: string;
-    prNumber: number;
-    scores: { adherence: number; quality: number; completeness: number };
-    verdict: string;
-    suggestions?: string[];
-  };
-
-  type CompareRanking = {
-    rank: number;
-    agent: string;
-    prNumber: number;
-    scores: { adherence: number; quality: number; completeness: number };
-    note?: string;
-  };
-
-  type CompareResult = {
-    rankings: CompareRanking[];
-    winner: { agent: string; prNumber: number };
-    reasoning: string;
-  };
-
   // -- Reactive data loading --
 
   const dataPromise = $derived.by(() => listPlanRuns({ organization, repoName, planId }));
@@ -70,14 +30,6 @@
       return listPrStates({ organization, repoName, prNumbers });
     }),
   );
-
-  // -- Local state --
-
-  let reviewLoading = $state<number | null>(null);
-  let judgeLoading = $state(false);
-  let mergeLoading = $state(false);
-  let localReviews = $state<Record<number, ReviewResult>>({});
-  let localJudgment = $state<CompareResult | null>(null);
 
   // -- Agent colors --
 
@@ -96,9 +48,17 @@
     return FALLBACK_COLORS[Math.abs(hash) % FALLBACK_COLORS.length]!;
   }
 
-  function capitalize(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
+  // -- Local state --
+
+  let viewMode = $state<'compare' | 'cards'>('compare');
+  let reviewLoading = $state<number | null>(null);
+  let reviewAllLoading = $state(false);
+  let reviewAllProgress = $state<{ done: number; total: number } | null>(null);
+  let judgeLoading = $state(false);
+  let mergeLoading = $state(false);
+  let localReviews = $state<Record<number, ReviewResult>>({});
+  let localJudgment = $state<CompareResult | null>(null);
+  let verdictExpanded = $state(false);
 
   // -- Merge server + local data --
 
@@ -108,6 +68,20 @@
 
   function mergedJudgment(serverJudgment: CompareResult | null): CompareResult | null {
     return localJudgment ?? serverJudgment;
+  }
+
+  function isMergedOrClosed(planSt: string): boolean {
+    return planSt === 'completed';
+  }
+
+  function allHaveReviews(runs: PlanRun[], reviews: Record<number, ReviewResult>): boolean {
+    const runsWithPr = runs.filter(r => r.prNumber != null);
+    if (runsWithPr.length === 0) return false;
+    return runsWithPr.every(r => reviews[r.prNumber!] != null);
+  }
+
+  function avgScore(scores: { adherence: number; quality: number; completeness: number }): string {
+    return ((scores.adherence + scores.quality + scores.completeness) / 3).toFixed(1);
   }
 
   // -- Actions --
@@ -125,6 +99,22 @@
       localReviews[run.prNumber] = result;
     } finally {
       reviewLoading = null;
+    }
+  }
+
+  async function handleReviewAll(runs: PlanRun[], reviews: Record<number, ReviewResult>) {
+    const unreviewed = runs.filter(r => r.prNumber != null && reviews[r.prNumber!] == null);
+    if (unreviewed.length === 0) return;
+    reviewAllLoading = true;
+    reviewAllProgress = { done: 0, total: unreviewed.length };
+    try {
+      for (const run of unreviewed) {
+        await handleReview(run);
+        reviewAllProgress = { done: (reviewAllProgress?.done ?? 0) + 1, total: unreviewed.length };
+      }
+    } finally {
+      reviewAllLoading = false;
+      reviewAllProgress = null;
     }
   }
 
@@ -155,23 +145,6 @@
     } finally {
       mergeLoading = false;
     }
-  }
-
-  function isMergedOrClosed(planSt: string): boolean {
-    return planSt === 'completed';
-  }
-
-  function allHaveReviews(runs: PlanRun[], reviews: Record<number, ReviewResult>): boolean {
-    const runsWithPr = runs.filter(r => r.prNumber != null);
-    if (runsWithPr.length === 0) return false;
-    return runsWithPr.every(r => reviews[r.prNumber!] != null);
-  }
-
-  /**
-   * Compute an average score from the 3 dimensions.
-   */
-  function avgScore(scores: { adherence: number; quality: number; completeness: number }): string {
-    return ((scores.adherence + scores.quality + scores.completeness) / 3).toFixed(1);
   }
 </script>
 
@@ -207,25 +180,166 @@
   {@const runs = data.runs}
   {@const completed = isMergedOrClosed(planStatus)}
   {@const canJudge = runs.length >= 2 && !judgment && !completed && allHaveReviews(runs, reviews)}
+  {@const hasUnreviewed = runs.some(r => r.prNumber != null && reviews[r.prNumber!] == null)}
 
   <div class="impl-container">
     <div class="impl-header">
       <span class="section-label">implementations</span>
-      {#if runs.length >= 2 && !judgment && !completed}
-        <button
-          class="action-btn judge-btn"
-          disabled={judgeLoading || !canJudge}
-          title={canJudge ? 'Judge all implementations' : 'All implementations must have modern reviews before judging'}
-          onclick={() => handleJudge(runs, reviews)}
-        >
-          {judgeLoading ? '...' : 'Judge All'}
-        </button>
+      {#if runs.length >= 2}
+        <div class="view-tabs">
+          <button class="vtab" class:vtab-active={viewMode === 'compare'} onclick={() => { viewMode = 'compare'; }}>Compare</button>
+          <button class="vtab" class:vtab-active={viewMode === 'cards'} onclick={() => { viewMode = 'cards'; }}>Cards</button>
+        </div>
       {/if}
     </div>
 
     {#if runs.length === 0}
       <div class="empty-text">No implementations yet. Dispatch agents to start.</div>
+    {:else if viewMode === 'compare' && runs.length >= 2}
+      <!-- ── Compare View ──────────────────────────────────────────────── -->
+
+      <!-- Comparison Table -->
+      <PlanComparisonTable {runs} {reviews} {judgment} {agentColor} />
+
+      <!-- Judge Workflow Strip -->
+      <div class="workflow-strip">
+        <!-- Step 1: Review -->
+        <div class="workflow-step">
+          <div class="step-header">
+            <span class="step-num">1</span>
+            <span class="step-title">Review</span>
+            {#if hasUnreviewed && !completed}
+              <button
+                class="action-btn review-all-btn"
+                disabled={reviewAllLoading}
+                onclick={() => handleReviewAll(runs, reviews)}
+              >
+                {#if reviewAllLoading && reviewAllProgress}
+                  Reviewing {reviewAllProgress.done}/{reviewAllProgress.total}...
+                {:else}
+                  Review All
+                {/if}
+              </button>
+            {/if}
+          </div>
+          <div class="review-statuses">
+            {#each runs as run (run.id)}
+              {@const hasReview = run.prNumber != null && reviews[run.prNumber] != null}
+              {@const isReviewing = reviewLoading === run.prNumber}
+              <div class="review-status-row">
+                <span class="agent-dot" style="background:{agentColor(run.agent)};"></span>
+                <span class="review-agent-name">{capitalize(run.agent)}</span>
+                {#if run.prNumber == null}
+                  <span class="review-state dim">no PR</span>
+                {:else if hasReview}
+                  {@const review = reviews[run.prNumber]}
+                  <span class="review-state reviewed">
+                    {avgScore(review.scores)}/10
+                  </span>
+                {:else if isReviewing}
+                  <span class="review-state loading">reviewing...</span>
+                {:else if !completed}
+                  <button
+                    class="action-btn action-btn-sm"
+                    onclick={() => handleReview(run)}
+                  >Review</button>
+                {:else}
+                  <span class="review-state dim">--</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        </div>
+
+        <!-- Step 2: Compare -->
+        <div class="workflow-step" class:step-disabled={!allHaveReviews(runs, reviews) && !judgment}>
+          <div class="step-header">
+            <span class="step-num">2</span>
+            <span class="step-title">Compare</span>
+            {#if !judgment && !completed}
+              <button
+                class="action-btn judge-btn"
+                disabled={judgeLoading || !canJudge}
+                title={canJudge ? 'Compare all implementations' : 'All implementations must be reviewed first'}
+                onclick={() => handleJudge(runs, reviews)}
+              >
+                {judgeLoading ? 'Judging...' : 'Judge All'}
+              </button>
+            {/if}
+          </div>
+          {#if judgment}
+            <div class="verdict-inline">
+              <button
+                class="verdict-toggle"
+                onclick={() => { verdictExpanded = !verdictExpanded; }}
+              >
+                <span class="agent-dot" style="background:{agentColor(judgment.winner.agent)};"></span>
+                <span class="winner-text">{capitalize(judgment.winner.agent)} wins</span>
+                <span class="winner-pr">PR #{judgment.winner.prNumber}</span>
+                <span class="expand-arrow">{verdictExpanded ? '\u25B4' : '\u25BE'}</span>
+              </button>
+              {#if verdictExpanded}
+                <div class="verdict-detail">
+                  <div class="rankings-list">
+                    {#each judgment.rankings as entry (entry.rank)}
+                      <div class="ranking-entry" class:winner-row={entry.prNumber === judgment.winner.prNumber}>
+                        <span class="rank-num">#{entry.rank}</span>
+                        <span class="agent-dot small" style="background:{agentColor(entry.agent)};"></span>
+                        <span class="rank-agent">{capitalize(entry.agent)}</span>
+                        <span class="score-badge">{avgScore(entry.scores)}/10</span>
+                        <span class="rank-details">
+                          <span class="dimension-scores">
+                            <span class="dim-score">adh {entry.scores.adherence}</span>
+                            <span class="dim-sep">/</span>
+                            <span class="dim-score">qual {entry.scores.quality}</span>
+                            <span class="dim-sep">/</span>
+                            <span class="dim-score">comp {entry.scores.completeness}</span>
+                          </span>
+                          {#if entry.note}
+                            <span class="rank-note">{entry.note}</span>
+                          {/if}
+                        </span>
+                      </div>
+                    {/each}
+                  </div>
+                  <div class="reasoning-block">
+                    <span class="reasoning-label">reasoning</span>
+                    <p class="reasoning-text">{judgment.reasoning}</p>
+                  </div>
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+
+        <!-- Step 3: Merge -->
+        <div class="workflow-step" class:step-disabled={!judgment}>
+          <div class="step-header">
+            <span class="step-num">3</span>
+            <span class="step-title">Merge</span>
+            {#if judgment && !completed}
+              <button
+                class="action-btn merge-btn"
+                disabled={mergeLoading}
+                onclick={() => handleMerge(judgment.winner.prNumber, runs)}
+              >
+                {mergeLoading ? 'Merging...' : `Merge PR #${judgment.winner.prNumber}`}
+              </button>
+            {:else if completed}
+              <span class="step-done">completed</span>
+            {/if}
+          </div>
+        </div>
+      </div>
+
+      <!-- Diff Compare -->
+      <div class="diff-section">
+        <span class="section-label">diffs</span>
+        <PlanDiffCompare {runs} {organization} {repoName} {agentColor} />
+      </div>
+
     {:else}
+      <!-- ── Cards View ────────────────────────────────────────────────── -->
       <div class="cards-row">
         {#each runs as run (run.id)}
           {@const review = run.prNumber != null ? reviews[run.prNumber] : undefined}
@@ -245,7 +359,7 @@
         {/each}
       </div>
 
-      <!-- Verdict section (single block below all cards) -->
+      <!-- Verdict section for cards view -->
       {#if judgment}
         <div class="verdict-section">
           <div class="verdict-divider">
@@ -254,9 +368,9 @@
 
           <div class="winner-announce">
             <span class="agent-dot" style="background:{agentColor(judgment.winner.agent)};"></span>
-            <span class="winner-text">
+            <span class="winner-announce-text">
               {capitalize(judgment.winner.agent)} wins
-              <span class="winner-pr">(PR #{judgment.winner.prNumber})</span>
+              <span class="winner-announce-pr">(PR #{judgment.winner.prNumber})</span>
             </span>
           </div>
 
@@ -348,7 +462,33 @@
     color: var(--color-danger);
   }
 
-  /* ── Cards row ───────────────────────────────────────────────────────── */
+  /* ── View tabs ──────────────────────────────────────────────────────── */
+
+  .view-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .vtab {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 2px 10px;
+    border-radius: 3px;
+    border: none;
+    background: none;
+    color: var(--color-dim);
+    cursor: pointer;
+    line-height: 1.6;
+    transition: color 0.1s, background 0.1s;
+  }
+  .vtab:hover { color: var(--color-muted); }
+  .vtab-active { background: var(--color-surface); color: var(--color-text); }
+
+  /* ── Cards row ──────────────────────────────────────────────────────── */
 
   .cards-row {
     display: flex;
@@ -357,13 +497,14 @@
     align-items: flex-start;
   }
 
-  /* ── Agent dot ───────────────────────────────────────────────────────── */
+  /* ── Agent dot ──────────────────────────────────────────────────────── */
 
   .agent-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
+    display: inline-block;
   }
 
   .agent-dot.small {
@@ -371,7 +512,157 @@
     height: 6px;
   }
 
-  /* ── Buttons ─────────────────────────────────────────────────────────── */
+  /* ── Workflow Strip ─────────────────────────────────────────────────── */
+
+  .workflow-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .workflow-step {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .workflow-step:last-child {
+    border-bottom: none;
+  }
+
+  .workflow-step.step-disabled {
+    opacity: 0.45;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-dim);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .step-done {
+    font-size: 10px;
+    color: var(--color-success);
+    margin-left: auto;
+  }
+
+  /* ── Review statuses ────────────────────────────────────────────────── */
+
+  .review-statuses {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding-left: 24px;
+  }
+
+  .review-status-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .review-agent-name {
+    font-size: 11px;
+    color: var(--color-text);
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .review-state {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .review-state.reviewed {
+    color: var(--color-success);
+    font-weight: 600;
+  }
+
+  .review-state.loading {
+    color: var(--color-accent);
+    font-style: italic;
+  }
+
+  .review-state.dim {
+    color: var(--color-dim);
+  }
+
+  /* ── Verdict inline (compare view) ──────────────────────────────────── */
+
+  .verdict-inline {
+    margin-top: 8px;
+    padding-left: 24px;
+  }
+
+  .verdict-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  .winner-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .winner-pr {
+    font-size: 11px;
+    color: var(--color-muted);
+    font-weight: 400;
+  }
+
+  .expand-arrow {
+    font-size: 10px;
+    color: var(--color-dim);
+    margin-left: 4px;
+  }
+
+  .verdict-detail {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── Diff section ───────────────────────────────────────────────────── */
+
+  .diff-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* ── Buttons ────────────────────────────────────────────────────────── */
 
   .action-btn {
     font-family: "JetBrains Mono", monospace;
@@ -383,6 +674,7 @@
     color: var(--color-accent);
     cursor: pointer;
     transition: background 0.1s, border-color 0.1s;
+    margin-left: auto;
   }
 
   .action-btn:hover:not(:disabled) {
@@ -393,6 +685,16 @@
   .action-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .action-btn-sm {
+    font-size: 10px;
+    padding: 1px 8px;
+    margin-left: 0;
+  }
+
+  .review-all-btn {
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
   }
 
   .merge-btn {
@@ -417,7 +719,7 @@
     border-color: var(--color-warning);
   }
 
-  /* ── Score badge (verdict rankings) ──────────────────────────────────── */
+  /* ── Score badge ────────────────────────────────────────────────────── */
 
   .score-badge {
     font-size: 11px;
@@ -430,54 +732,7 @@
     white-space: nowrap;
   }
 
-  /* ── Verdict section ─────────────────────────────────────────────────── */
-
-  .verdict-section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .verdict-divider {
-    border-top: 1px dashed var(--color-border);
-    margin-top: 2px;
-    padding-top: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .verdict-divider-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--color-dim);
-    letter-spacing: 0.03em;
-  }
-
-  .winner-announce {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
-    border-radius: 5px;
-  }
-
-  .winner-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-accent);
-  }
-
-  .winner-pr {
-    font-weight: 400;
-    font-size: 12px;
-    color: var(--color-muted);
-    margin-left: 4px;
-  }
-
-  /* ── Rankings list ───────────────────────────────────────────────────── */
+  /* ── Rankings list ──────────────────────────────────────────────────── */
 
   .rankings-list {
     display: flex;
@@ -529,8 +784,6 @@
     min-width: 0;
   }
 
-  /* ── Dimension scores ────────────────────────────────────────────────── */
-
   .dimension-scores {
     display: flex;
     align-items: center;
@@ -556,7 +809,7 @@
     font-style: italic;
   }
 
-  /* ── Reasoning ───────────────────────────────────────────────────────── */
+  /* ── Reasoning ──────────────────────────────────────────────────────── */
 
   .reasoning-block {
     display: flex;
@@ -578,12 +831,59 @@
     line-height: 1.6;
   }
 
+  /* ── Verdict section (cards view) ───────────────────────────────────── */
+
+  .verdict-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .verdict-divider {
+    border-top: 1px dashed var(--color-border);
+    margin-top: 2px;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .verdict-divider-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--color-dim);
+    letter-spacing: 0.03em;
+  }
+
+  .winner-announce {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+    border-radius: 5px;
+  }
+
+  .winner-announce-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .winner-announce-pr {
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--color-muted);
+    margin-left: 4px;
+  }
+
   .verdict-actions {
     display: flex;
     gap: 6px;
   }
 
-  /* ── Skeleton ────────────────────────────────────────────────────────── */
+  /* ── Skeleton ───────────────────────────────────────────────────────── */
 
   .skel-card {
     background: var(--color-surface);

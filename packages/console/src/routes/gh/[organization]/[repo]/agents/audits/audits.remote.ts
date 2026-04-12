@@ -4,6 +4,7 @@ import { Repository } from "@agents/core/repository/index";
 import { AgentAudit } from "@agents/core/agent/audit";
 import { GithubContent } from "@agents/core/github/repo/content";
 import { Event } from "@agents/core/events/index";
+import { Plan } from "@agents/core/events/plan/index";
 import { error } from "@sveltejs/kit";
 
 const repoInput = z.object({ organization: z.string(), repoName: z.string() });
@@ -53,5 +54,42 @@ export const updateAudit = command(
       message: `Update audit: ${name}`,
       mode,
     });
+  },
+);
+
+export const createPlanFromAudit = command(
+  z.object({
+    organization: z.string(),
+    repoName: z.string(),
+    auditName: z.string(),
+    auditTitle: z.string(),
+    auditBody: z.string(),
+  }),
+  async ({ organization, repoName, auditName, auditTitle, auditBody }) => {
+    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
+    if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
+
+    const tags = [`gh:repo:${organization}/${repoName}`, `type:audit-${auditName}`];
+
+    const body = [
+      `## Audit: ${auditTitle}`,
+      ``,
+      auditBody,
+      ``,
+      `---`,
+      `Run the audit described above. Report findings with pass/fail outcome.`,
+    ].join("\n");
+
+    const id = await Plan.create({
+      title: `Audit: ${auditTitle}`,
+      body,
+      authorType: "human",
+      status: "approved",
+      tags,
+      source: "repository",
+      sourceId: repo.id,
+    });
+
+    return { id };
   },
 );

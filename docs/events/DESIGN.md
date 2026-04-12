@@ -33,8 +33,8 @@ Events are the backbone of observability in this system. Every meaningful action
 
 ### Agent Lifecycle
 
-| Type    | Origin | Description                                                          |
-| ------- | ------ | -------------------------------------------------------------------- |
+| Type    | Origin | Description                                                                 |
+| ------- | ------ | --------------------------------------------------------------------------- |
 | `agent` | action | Agent workflow event — created on setup, updated on teardown with full data |
 
 ### GitHub Webhooks
@@ -55,24 +55,24 @@ Events are the backbone of observability in this system. Every meaningful action
 
 ### Checks (CI)
 
-| Type     | Origin | Description                                                    |
-| -------- | ------ | -------------------------------------------------------------- |
+| Type     | Origin | Description                                                         |
+| -------- | ------ | ------------------------------------------------------------------- |
 | `checks` | action | CI check event — created on setup, updated on teardown with results |
 
 Typed schema: `ChecksEvent.Completed.Data` in `packages/core/src/events/checks/index.ts`. Includes checks (with outcomes and summaries) and workflow metadata.
 
 ### Infrastructure
 
-| Type    | Origin | Description   |
-| ------- | ------ | ------------- |
-| `audit` | action | Audit event   |
+| Type    | Origin | Description |
+| ------- | ------ | ----------- |
+| `audit` | action | Audit event |
 
 ### Deployments
 
-| Type            | Origin | Description                                                           |
-| --------------- | ------ | --------------------------------------------------------------------- |
-| `deploy`        | action | Deploy event — created on setup, updated on teardown with outputs/PR  |
-| `deploy.remove` | action | Teardown event — created on setup, updated on teardown                |
+| Type            | Origin | Description                                                          |
+| --------------- | ------ | -------------------------------------------------------------------- |
+| `deploy`        | action | Deploy event — created on setup, updated on teardown with outputs/PR |
+| `deploy.remove` | action | Teardown event — created on setup, updated on teardown               |
 
 Standard tags: `env:<stage>`, `tool:<name>` (e.g. `sst`), `gh:branch:<head>` and `gh:base:<base>` on PR runs, plus all auto-injected `gh:*` tags from `event/init`.
 

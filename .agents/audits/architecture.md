@@ -32,6 +32,7 @@ Use subagents (Agent tool) to research these areas in parallel (one subagent per
 Each domain in `packages/core` (user, repository, events, plan, agent, api, tag, github, etc.) should follow consistent patterns.
 
 **Expected patterns (check which domains follow them and which don't):**
+
 - Namespace object exporting `Info` (Zod schema), derived input types, and static methods
 - Static methods like `.get()`, `.list()`, `.create()`, `.update()`, `.remove()` where applicable
 - `Info` schema with consistent shared fields (`id`, `timeCreated`, `timeUpdated`)
@@ -41,6 +42,7 @@ Each domain in `packages/core` (user, repository, events, plan, agent, api, tag,
 - Consistent use of `VisibleError` for client-safe errors
 
 **Questions to answer:**
+
 - Which domains follow all expected patterns? Which deviate and how?
 - Are there domains missing input schemas that downstream packages need?
 - Are shared fields (`id`, `tags`, `source`, `sourceId`, `timeCreated`) defined consistently, or do some add extra validation that others miss?
@@ -54,6 +56,7 @@ Each domain in `packages/core` (user, repository, events, plan, agent, api, tag,
 All Hono route handlers in `packages/functions` should follow consistent patterns.
 
 **Expected patterns:**
+
 - Routes use the `validator()` wrapper for request validation
 - Validators reuse core schemas (`Info.shape`, `*Input`) instead of inline `z.object()`
 - Consistent error handling via `VisibleError`
@@ -62,6 +65,7 @@ All Hono route handlers in `packages/functions` should follow consistent pattern
 - OpenAPI metadata (`.meta()`) is present on validators
 
 **Questions to answer:**
+
 - Which routes follow all expected patterns? Which are outliers?
 - Are there inline validators that duplicate core schemas? Flag type mismatches (different constraints, optionality, enum values) as critical.
 - Is business logic living in route handlers that should be in core? (Route handlers should be thin — validate, call core, return)
@@ -75,12 +79,14 @@ All Hono route handlers in `packages/functions` should follow consistent pattern
 The `*.remote.ts` files in `packages/console` define server-side functions (queries and commands) that call into core or the API.
 
 **Expected patterns:**
+
 - `query()` for read operations, `command()` for mutations
 - Input validators reuse core schemas instead of inline definitions
 - Consistent patterns for repository-scoped operations (organization + repoName params)
 - Error handling consistent across remote files
 
 **Questions to answer:**
+
 - Which remote files follow all expected patterns? Which are outliers?
 - Are there inline validators that duplicate core schemas? Especially repeated shapes like `{ organization, repoName }` that could be a shared type.
 - Is business logic living in remote functions that should be in core?
@@ -94,6 +100,7 @@ The `*.remote.ts` files in `packages/console` define server-side functions (quer
 Evaluate how logic is distributed across the three packages and whether package boundaries are respected.
 
 **Expected layering:**
+
 ```
 packages/core       → Domain models, business logic, DB access, shared types
 packages/functions   → HTTP API layer: validate, call core, return (thin handlers)
@@ -101,6 +108,7 @@ packages/console     → Server functions: validate, call core or API, return (t
 ```
 
 **Questions to answer:**
+
 - Is there business logic in functions or console that should be in core? (e.g., complex queries, data transformations, multi-step operations)
 - Do functions and console both implement the same operation differently? (Should be one implementation in core, called from both)
 - Are there direct database imports (`db`, `Bun.sql`, table schemas) in functions or console that bypass core's API?
@@ -114,6 +122,7 @@ packages/console     → Server functions: validate, call core or API, return (t
 Cross-reference validators across all three packages to find duplication and type mismatches.
 
 **Questions to answer:**
+
 - Which core schema fields are re-defined inline in functions or console?
 - Are there type mismatches where inline definitions differ from core (missing constraints, different optionality, wrong enum values)? These are the highest severity — actual bug risk.
 - What new core input schemas would eliminate the most duplication?
@@ -125,7 +134,7 @@ Cross-reference validators across all three packages to find duplication and typ
 
 Every finding MUST include all of these fields:
 
-```
+````
 ### [SEVERITY] Title
 
 **Evidence:** `file/path.ts:LINE` — description of what you found
@@ -138,24 +147,29 @@ Every finding MUST include all of these fields:
 **Before:**
 ```ts
 // current code
-```
+````
 
 **After:**
+
 ```ts
 // proposed refactor
 ```
 
 **Files to change:**
+
 - `path/to/file.ts` — what to change
 
 **Steps:**
+
 1. ...
 
 **Scope:** small / medium / large
+
 </details>
 ```
 
 Severity levels:
+
 - **CRITICAL** — type mismatch between inline and core (bug risk), business logic in wrong layer causing divergence, missing auth/error handling
 - **IMPROVEMENT** — inconsistent patterns, inline duplication, logic that should move to core
 - **SUGGESTION** — missing core input schema, new shared abstraction, file reorganization
@@ -165,6 +179,7 @@ Severity levels:
 Write `.agents/reports/audit-architecture.md` using **GitHub Flavored Markdown (GFM)** -- the report will be rendered as a GitHub issue body.
 
 Use GFM features for readability:
+
 - `- [ ]` / `- [x]` task list checkboxes for trackable findings
 - `<details><summary>...</summary>...</details>` for collapsible implementation plans
 - Tables with `| col | col |` syntax for inventories and matrices
@@ -176,44 +191,54 @@ Use GFM features for readability:
 
 ## Summary
 
-| Severity | Count |
-|---|---|
-| Critical | N |
-| Improvement | N |
-| Suggestion | N |
+| Severity    | Count |
+| ----------- | ----- |
+| Critical    | N     |
+| Improvement | N     |
+| Suggestion  | N     |
 
 **Delta from previous audit:** N fixed, N still open, N new
 
 ## Fixed Since Last Audit
+
 - [x] Description of what was fixed (was: previous finding title)
 
 ## Core Domain Inventory
+
 Table of all domains, their patterns (Info, inputs, static methods, sql file), and deviations.
 
 ## Open Findings
 
 ### Core Domain Consistency
+
 - [ ] Finding title — one-line summary
-(full finding with implementation plan below)
+      (full finding with implementation plan below)
 
 ### API Route Patterns
+
 - [ ] ...
 
 ### Remote Function Patterns
+
 - [ ] ...
 
 ### Cross-Package Architecture
+
 - [ ] ...
 
 ### Validator Reuse & Type Safety
+
 - [ ] ...
 
 ## Duplication Matrix
+
 Table showing which core fields are duplicated inline across packages.
 
 ## Pattern Compliance
+
 Summary of which domains/routes/remote files follow expected patterns and which are outliers.
 
 ## Checklist
+
 All findings as a flat `- [ ]` list for tracking.
 ```

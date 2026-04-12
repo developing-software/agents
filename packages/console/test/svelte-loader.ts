@@ -40,17 +40,17 @@ plugin({
       const isLocalFile = !filename.includes("/node_modules/");
       const result = isModule
         ? compileModule(source, {
-          filename,
-          dev: false,
-          generate: "client",
-        })
+            filename,
+            dev: false,
+            generate: "client",
+          })
         : compile(source, {
-          filename,
-          generate: "client",
-          css: "injected",
-          dev: false,
-          runes: isLocalFile ? true : undefined,
-        });
+            filename,
+            generate: "client",
+            css: "injected",
+            dev: false,
+            runes: isLocalFile ? true : undefined,
+          });
 
       return {
         contents: result.js.code,

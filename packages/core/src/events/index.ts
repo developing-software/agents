@@ -302,7 +302,7 @@ export namespace Event {
     return useTransaction(async (tx) => {
       const rows = await tx.execute(sql`
         WITH RECURSIVE event_tree AS (
-          SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags FROM ${eventTable}
+          SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags, data FROM ${eventTable}
           WHERE parent_event_id IS NULL
             ${opts.source ? sql`AND source = ${opts.source}` : sql``}
             ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
@@ -311,7 +311,7 @@ export namespace Event {
             ${opts.from ? sql`AND time_created >= ${opts.from}::timestamptz` : sql``}
             ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}
           UNION ALL
-          SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags FROM ${eventTable} e
+          SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags, e.data FROM ${eventTable} e
           JOIN event_tree et ON e.parent_event_id = et.id
         )
         SELECT * FROM event_tree
@@ -335,7 +335,7 @@ export namespace Event {
           type: row.type,
           origin: row.origin,
           tags: row.tags ?? [],
-          data: {},
+          data: (row.data as Record<string, unknown>) ?? {},
           timeCreated: new Date(row.time_created).toISOString(),
           children: [],
         };
