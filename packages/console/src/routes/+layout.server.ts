@@ -2,7 +2,7 @@ import type { LayoutServerLoad } from "./$types";
 import { Repository } from "@agents/core/repository/index";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-  if (!locals.userID) return { userID: null, sidebarOrgs: [] };
+  if (!locals.userID) return { userID: null, sidebarOrgs: [], breadcrumbs: [] };
 
   try {
     const repos = await Repository.list();
@@ -15,8 +15,9 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     return {
       userID: locals.userID,
       sidebarOrgs: [...byOrg.entries()].map(([org, repos]) => ({ org, repos })),
+      breadcrumbs: [{ label: "Home", href: "/" }],
     };
   } catch {
-    return { userID: locals.userID, sidebarOrgs: [] };
+    return { userID: locals.userID, sidebarOrgs: [], breadcrumbs: [] };
   }
 };

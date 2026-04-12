@@ -4,7 +4,8 @@
   import favicon from '$lib/assets/favicon.svg';
   import { navigating, page } from '$app/state';
   import { PersistedState } from 'runed';
-    import PreLoadingIndicator from './PreLoadingIndicator.svelte';
+  import PreLoadingIndicator from './PreLoadingIndicator.svelte';
+  import Breadcrumbs from '$lib/ui/Breadcrumbs.svelte';
 
   let { data, children }: LayoutProps = $props();
 
@@ -24,6 +25,10 @@
 
   function orgInitials(org: string) {
     return org.slice(0, 2).toUpperCase();
+  }
+
+  function repoInitials(repo: string) {
+    return repo.slice(0, 2).toUpperCase();
   }
 </script>
 
@@ -51,6 +56,8 @@
       <img src={favicon} alt="agents logo" class="topbar-favicon" />
       <span class="topbar-name">agents</span>
     </a>
+
+    <Breadcrumbs items={data.breadcrumbs ?? []} />
 
     <div class="topbar-actions">
       <a href="/models" class="topbar-link">Models</a>
@@ -104,7 +111,7 @@
                       aria-current={isActive ? 'page' : undefined}
                       onclick={() => (drawerOpen = false)}
                     >
-                      <span class="repo-dot" class:repo-dot-active={isActive}></span>
+                      <span class="repo-initial" class:repo-initial-active={isActive}>{repoInitials(repo.repo)}</span>
                       <span class="repo-link-text">{repo.repo}</span>
                     </a>
                   </li>
@@ -398,19 +405,33 @@
     background: var(--color-elevated);
   }
 
-  /* Repo dot (collapsed indicator) */
-  .repo-dot {
+  /* Repo initial (collapsed indicator) */
+  .repo-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-border-bright);
-    margin-left: 3px;
-    transition: background 0.1s, opacity 120ms ease;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-border);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--color-muted);
+    letter-spacing: 0.04em;
+    transition: background 0.1s, opacity 120ms ease, border-color 0.1s;
   }
 
-  .repo-dot-active {
-    background: var(--color-accent);
+  .repo-initial-active {
+    background: var(--color-elevated);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .repo-link:hover .repo-initial {
+    background: var(--color-hover);
   }
 
   .repo-link-text {
@@ -420,8 +441,8 @@
     text-overflow: ellipsis;
   }
 
-  /* Collapsed: show dot, hide text */
-  .sidebar:not(.expanded) .repo-dot {
+  /* Collapsed: show initial, hide text */
+  .sidebar:not(.expanded) .repo-initial {
     opacity: 1;
   }
 
@@ -432,8 +453,8 @@
     overflow: hidden;
   }
 
-  /* Expanded: hide dot, show text */
-  .sidebar.expanded .repo-dot {
+  /* Expanded: hide initial, show text */
+  .sidebar.expanded .repo-initial {
     opacity: 0;
     width: 0;
     overflow: hidden;
@@ -503,7 +524,7 @@
 
     /* On mobile: always show expanded layout, no pin toggle */
     .sidebar .org-initial,
-    .sidebar .repo-dot {
+    .sidebar .repo-initial {
       display: none;
     }
 
