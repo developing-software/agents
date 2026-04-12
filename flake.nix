@@ -42,7 +42,7 @@
     in
     {
       devShells = eachSystem (system: {
-        default = pkgsFor.${system}.mkShell {
+        default = pkgsFor.${system}.mkShell rec {
           packages =
             let
               pkgs = pkgsFor.${system};
@@ -58,19 +58,27 @@
               pkgs.llm-agents.opencode
               python313
               # pkgs.llm-agents.gemini-cli
-
             ];
 
-          shellHook = ''
-            echo ""
-            echo "===---===---==="
-            echo ""
-            echo "Dev Shell for ${system}"
-            echo ""
-            echo "===---===---==="
-            echo ""
-            # bun install --frozen-lockfile
-          '';
+          shellHook =
+            let
+              pkgs = pkgsFor.${system};
+              lib = pkgs.lib;
+              packageList = lib.concatMapStringsSep "\n" (p: "${p.pname or p.name}\t${p.version or ""}") packages;
+            in
+            ''
+              echo ""
+              echo "▗▄▄▄ ▗▄▄▄▖▗▖  ▗▖     ▗▄▖  ▗▄▄▖▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖▗▄▄▖"
+              echo "▐▌  █▐▌   ▐▌  ▐▌    ▐▌ ▐▌▐▌   ▐▌   ▐▛▚▖▐▌  █ ▐▌   "
+              echo "▐▌  █▐▛▀▀▘▐▌  ▐▌    ▐▛▀▜▌▐▌▝▜▌▐▛▀▀▘▐▌ ▝▜▌  █  ▝▀▚▖"
+              echo "▐▙▄▄▀▐▙▄▄▖ ▝▚▞▘     ▐▌ ▐▌▝▚▄▞▘▐▙▄▄▖▐▌  ▐▌  █ ▗▄▄▞▘"
+              echo ""
+
+              echo "Packages Added by DEV SHELL"
+              echo "${packageList}" | column -t | ${lib.getExe pkgs.gum} style --border rounded --padding "0 1" --border-foreground 212
+
+              # bun install --frozen-lockfile
+            '';
         };
       });
     };
