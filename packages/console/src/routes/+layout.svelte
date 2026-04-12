@@ -477,6 +477,7 @@
     flex: 1;
     min-width: 0;
     overflow-y: auto;
+    position: relative;
   }
 
   /* Mobile: overlay drawer */

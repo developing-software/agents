@@ -1,21 +1,32 @@
-<script>
-  import { onMount } from 'svelte'
+<script lang="ts">
   let p = $state(0)
   let visible = $state(false)
-  onMount(() => {
+
+  $effect(() => {
     visible = true
+    const handles: ReturnType<typeof setTimeout>[] = []
+
     function next() {
       p += 0.1
       const remaining = 1 - p
-      if (remaining > 0.15) setTimeout(next, 500 / remaining)
+      if (remaining > 0.15) {
+        const handle = setTimeout(next, 500 / remaining)
+        handles.push(handle)
+      }
     }
-    setTimeout(next, 250)
+
+    const initialHandle = setTimeout(next, 250)
+    handles.push(initialHandle)
+
+    return () => {
+      handles.forEach(handle => clearTimeout(handle))
+    }
   })
 </script>
 
 {#if visible}
   <div class="progress-container">
-    <div class="progress bg-primary" style="width: {p * 100}%"></div>
+    <div class="progress" style="width: {p * 100}%"></div>
   </div>
 {/if}
 
@@ -38,15 +49,15 @@
     left: 0;
     top: 0;
     height: 100%;
-
+    background-color: var(--color-accent);
     transition: width 0.4s;
   }
 
   .fade {
-    position: fixed;
+    position: absolute;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(0, 0, 0, 0.12);
     pointer-events: none;
     z-index: 998;
     animation: fade 0.4s;
