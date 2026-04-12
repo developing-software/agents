@@ -10,6 +10,13 @@ export type RepoContext = {
   repo: string;
 };
 
+const MAX_TOOL_OUTPUT_CHARS = 30_000;
+
+function truncate(text: string, limit = MAX_TOOL_OUTPUT_CHARS): string {
+  if (text.length <= limit) return text;
+  return text.slice(0, limit) + "\n\n... [truncated — output too long]";
+}
+
 export function githubTools(ctx: RepoContext) {
   return {
     listIssues: tool({
@@ -18,7 +25,8 @@ export function githubTools(ctx: RepoContext) {
         state: z.enum(["open", "closed", "all"]).default("open").describe("Filter by issue state"),
       }),
       execute: async () => {
-        return GithubIssue.list(ctx);
+        const issues = await GithubIssue.list(ctx);
+        return truncate(JSON.stringify(issues));
       },
     }),
 
@@ -28,7 +36,8 @@ export function githubTools(ctx: RepoContext) {
         number: z.number().describe("Issue number"),
       }),
       execute: async ({ number }) => {
-        return GithubIssue.get(ctx, number);
+        const issue = await GithubIssue.get(ctx, number);
+        return truncate(JSON.stringify(issue));
       },
     }),
 
@@ -73,10 +82,11 @@ export function githubTools(ctx: RepoContext) {
       execute: async ({ path }) => {
         if (path) {
           const entries = await GithubContent.listDir(ctx, path);
-          return entries ?? [];
+          return truncate(JSON.stringify(entries ?? []));
         }
         const tree = await GithubContent.getTree(ctx);
-        return tree.filter((e) => e.type === "blob").map((e) => e.path);
+        const paths = tree.filter((e) => e.type === "blob").map((e) => e.path);
+        return truncate(paths.join("\n"));
       },
     }),
 
@@ -87,7 +97,7 @@ export function githubTools(ctx: RepoContext) {
       }),
       execute: async ({ path }) => {
         const content = await GithubContent.readFile(ctx, path);
-        return content ?? "File not found";
+        return truncate(content ?? "File not found");
       },
     }),
   };
