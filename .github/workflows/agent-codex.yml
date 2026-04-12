@@ -45,7 +45,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      actions: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -112,10 +112,20 @@ jobs:
           issue_number: ${{ steps.issue.outputs.number }}
 
       - uses: ./actions/git/pr
+        id: pr
         if: always()
         with:
           prefix: codex
           issue_number: ${{ steps.issue.outputs.number }}
+
+      - name: Trigger SST deploy
+        if: always() && steps.pr.outputs.pr_number
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run sst.yml \
+            --ref "$DEV_AGENTS_BRANCH" \
+            -f pr_number="${{ steps.pr.outputs.pr_number }}"
 
       - uses: ./actions/comment
         if: always()

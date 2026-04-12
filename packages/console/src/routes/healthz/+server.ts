@@ -2,7 +2,7 @@ import { json } from "@sveltejs/kit";
 import { healthcheck, withDatabase } from "@agents/core/drizzle/index";
 
 export const GET = async ({ platform }: { platform: App.Platform | undefined }) => {
-  const runtime = platform ? "workder" : "node";
+  const runtime = platform ? "worker" : "node";
   const url = platform?.env?.HYPERDRIVE?.connectionString ?? process.env.DATABASE_URL;
 
   try {
