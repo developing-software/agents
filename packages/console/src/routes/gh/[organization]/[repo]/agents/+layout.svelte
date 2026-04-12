@@ -12,6 +12,7 @@
     { label: 'Config', href: `${basePath}/config` },
     { label: 'Skills', href: `${basePath}/skills` },
     { label: 'Prompts', href: `${basePath}/prompts` },
+    { label: 'Audits', href: `${basePath}/audits` },
   ]);
 
   function isActive(href: string) {

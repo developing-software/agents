@@ -129,6 +129,73 @@ export namespace GithubContent {
     });
   }
 
+  export interface CommitFilesOptions {
+    repo: RepoRef;
+    files: Array<{ path: string; content: string }>;
+    message: string;
+    /** "direct" commits to the base branch; "pr" creates a new branch + PR. */
+    mode: "direct" | "pr";
+    /** Branch to commit to (direct) or base branch for the PR (pr). */
+    base?: string;
+  }
+
+  export interface CommitResult {
+    mode: "direct" | "pr";
+    pr?: { number: number; url: string; branch: string };
+  }
+
+  /**
+   * Write file(s) either directly to a branch or via a new branch + PR.
+   * Reusable across audit editing, AGENTS.md, skills, etc.
+   */
+  export async function commitFiles(opts: CommitFilesOptions): Promise<CommitResult> {
+    if (opts.mode === "direct") {
+      for (const file of opts.files) {
+        await writeFile(opts.repo, file.path, file.content, opts.message, opts.base);
+      }
+      return { mode: "direct" };
+    }
+
+    const octokit = await GitHub.appClient(opts.repo.installationId);
+
+    // Resolve the base branch
+    const base = opts.base ?? "dev";
+    const { data: baseRef } = await octokit.rest.git.getRef({
+      owner: opts.repo.owner,
+      repo: opts.repo.repo,
+      ref: `heads/${base}`,
+    });
+
+    // Create a new branch
+    const branchName = `console/edit-${Date.now()}`;
+    await octokit.rest.git.createRef({
+      owner: opts.repo.owner,
+      repo: opts.repo.repo,
+      ref: `refs/heads/${branchName}`,
+      sha: baseRef.object.sha,
+    });
+
+    // Write files to the new branch
+    for (const file of opts.files) {
+      await writeFile(opts.repo, file.path, file.content, opts.message, branchName);
+    }
+
+    // Create PR
+    const { data: pr } = await octokit.rest.pulls.create({
+      owner: opts.repo.owner,
+      repo: opts.repo.repo,
+      title: opts.message,
+      body: `Files changed:\n${opts.files.map((f) => `- \`${f.path}\``).join("\n")}`,
+      head: branchName,
+      base,
+    });
+
+    return {
+      mode: "pr",
+      pr: { number: pr.number, url: pr.html_url, branch: branchName },
+    };
+  }
+
   /**
    * Delete a file via commit.
    */

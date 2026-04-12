@@ -1,0 +1,219 @@
+---
+title: Architecture Audit
+description: Code structure and patterns across backend packages
+---
+
+You are running an architecture audit of the backend layers in this monorepo.
+
+Your job: evaluate code structure, patterns, and consistency across three packages — `packages/core` (domain models and business logic), `packages/functions` (Hono API routes), and the server-side remote functions in `packages/console` (`*.remote.ts` files only). Do NOT audit frontend components, Svelte files, or UI code.
+
+Look for inconsistent patterns, misplaced logic, validator duplication, and architectural drift — then produce an actionable report with implementation plans for each finding.
+
+## Previous Audit
+
+Read `.agents/context/previous-audit-architecture.md` first. This contains the previous audit report.
+Track what was fixed since then, what is still open, and what is new.
+
+## Constraints
+
+- Do NOT create GitHub issues or PRs -- the workflow handles that.
+- Do NOT modify any source files -- this is a read-only audit.
+- Do NOT use shell commands beyond `ls`, `find`, and `wc`.
+- Only write to `.agents/reports/audit-architecture.md`.
+- Fill every section with real findings. No placeholders or template text.
+- Do NOT audit `.svelte` files, frontend components, or UI code. Only audit `.ts` files in core, functions, and `*.remote.ts` files in console.
+
+## Audit Areas
+
+Use subagents (Agent tool) to research these areas in parallel (one subagent per area). Each subagent explores its area, discovers the relevant files itself, and returns structured findings. Then you compile the final report.
+
+### Area 1: Core Domain Model Consistency
+
+Each domain in `packages/core` (user, repository, events, plan, agent, api, tag, github, etc.) should follow consistent patterns.
+
+**Expected patterns (check which domains follow them and which don't):**
+- Namespace object exporting `Info` (Zod schema), derived input types, and static methods
+- Static methods like `.get()`, `.list()`, `.create()`, `.update()`, `.remove()` where applicable
+- `Info` schema with consistent shared fields (`id`, `timeCreated`, `timeUpdated`)
+- Derived input schemas (`.pick()`, `.shape`, `.partial()`, `.extend()`) for create/update operations
+- SQL table definition in a sibling `*.sql.ts` file using Drizzle
+- Consistent use of the `Actor` namespace for authorization context
+- Consistent use of `VisibleError` for client-safe errors
+
+**Questions to answer:**
+- Which domains follow all expected patterns? Which deviate and how?
+- Are there domains missing input schemas that downstream packages need?
+- Are shared fields (`id`, `tags`, `source`, `sourceId`, `timeCreated`) defined consistently, or do some add extra validation that others miss?
+- Are there circular imports or unexpected cross-domain dependencies within core?
+- Are there domain files that are unusually large or doing too many things?
+
+**Where to look:** All directories and TypeScript files under `packages/core/src/`.
+
+### Area 2: API Route Patterns (Functions)
+
+All Hono route handlers in `packages/functions` should follow consistent patterns.
+
+**Expected patterns:**
+- Routes use the `validator()` wrapper for request validation
+- Validators reuse core schemas (`Info.shape`, `*Input`) instead of inline `z.object()`
+- Consistent error handling via `VisibleError`
+- Auth middleware applied consistently
+- Response shapes are consistent (direct return vs wrapper)
+- OpenAPI metadata (`.meta()`) is present on validators
+
+**Questions to answer:**
+- Which routes follow all expected patterns? Which are outliers?
+- Are there inline validators that duplicate core schemas? Flag type mismatches (different constraints, optionality, enum values) as critical.
+- Is business logic living in route handlers that should be in core? (Route handlers should be thin — validate, call core, return)
+- Are there routes missing auth middleware or error handling?
+- Is the route file organization consistent (one file per domain, or mixed)?
+
+**Where to look:** All files under `packages/functions/src/`, especially `api/handler/` and middleware/common utilities.
+
+### Area 3: Remote Function Patterns (Console)
+
+The `*.remote.ts` files in `packages/console` define server-side functions (queries and commands) that call into core or the API.
+
+**Expected patterns:**
+- `query()` for read operations, `command()` for mutations
+- Input validators reuse core schemas instead of inline definitions
+- Consistent patterns for repository-scoped operations (organization + repoName params)
+- Error handling consistent across remote files
+
+**Questions to answer:**
+- Which remote files follow all expected patterns? Which are outliers?
+- Are there inline validators that duplicate core schemas? Especially repeated shapes like `{ organization, repoName }` that could be a shared type.
+- Is business logic living in remote functions that should be in core?
+- Are there remote functions that bypass core and query the database directly?
+- Are query/command separation rules followed (no mutations in queries)?
+
+**Where to look:** All `*.remote.ts` files under `packages/console/src/`.
+
+### Area 4: Cross-Package Architecture
+
+Evaluate how logic is distributed across the three packages and whether package boundaries are respected.
+
+**Expected layering:**
+```
+packages/core       → Domain models, business logic, DB access, shared types
+packages/functions   → HTTP API layer: validate, call core, return (thin handlers)
+packages/console     → Server functions: validate, call core or API, return (thin remote fns)
+```
+
+**Questions to answer:**
+- Is there business logic in functions or console that should be in core? (e.g., complex queries, data transformations, multi-step operations)
+- Do functions and console both implement the same operation differently? (Should be one implementation in core, called from both)
+- Are there direct database imports (`db`, `Bun.sql`, table schemas) in functions or console that bypass core's API?
+- Are import paths clean? Any `../../` chains that suggest misplaced files?
+- Are there shared types or utilities duplicated between packages instead of living in core?
+
+**Where to look:** Import statements across all three packages, comparing implementations of similar operations.
+
+### Area 5: Validator Reuse & Type Safety
+
+Cross-reference validators across all three packages to find duplication and type mismatches.
+
+**Questions to answer:**
+- Which core schema fields are re-defined inline in functions or console?
+- Are there type mismatches where inline definitions differ from core (missing constraints, different optionality, wrong enum values)? These are the highest severity — actual bug risk.
+- What new core input schemas would eliminate the most duplication?
+- Build a duplication matrix: `| Core Field | Core Type | Duplicated In | Inline Type | Match? |`
+
+**Where to look:** Compare validators in `packages/functions/src/api/handler/` and `packages/console/src/**/*.remote.ts` against schemas in `packages/core/src/`.
+
+## Finding Format
+
+Every finding MUST include all of these fields:
+
+```
+### [SEVERITY] Title
+
+**Evidence:** `file/path.ts:LINE` — description of what you found
+**Root cause:** Why this inconsistency/issue exists
+**Impact:** What breaks, drifts, or is harder to maintain because of this
+
+<details>
+<summary>Implementation plan</summary>
+
+**Before:**
+```ts
+// current code
+```
+
+**After:**
+```ts
+// proposed refactor
+```
+
+**Files to change:**
+- `path/to/file.ts` — what to change
+
+**Steps:**
+1. ...
+
+**Scope:** small / medium / large
+</details>
+```
+
+Severity levels:
+- **CRITICAL** — type mismatch between inline and core (bug risk), business logic in wrong layer causing divergence, missing auth/error handling
+- **IMPROVEMENT** — inconsistent patterns, inline duplication, logic that should move to core
+- **SUGGESTION** — missing core input schema, new shared abstraction, file reorganization
+
+## Report Structure
+
+Write `.agents/reports/audit-architecture.md` using **GitHub Flavored Markdown (GFM)** -- the report will be rendered as a GitHub issue body.
+
+Use GFM features for readability:
+- `- [ ]` / `- [x]` task list checkboxes for trackable findings
+- `<details><summary>...</summary>...</details>` for collapsible implementation plans
+- Tables with `| col | col |` syntax for inventories and matrices
+- Fenced code blocks with language tags (` ```ts `) for before/after code snippets
+- `**bold**` for severity labels and key terms
+
+```markdown
+# Architecture Audit — YYYY-MM-DD
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| Critical | N |
+| Improvement | N |
+| Suggestion | N |
+
+**Delta from previous audit:** N fixed, N still open, N new
+
+## Fixed Since Last Audit
+- [x] Description of what was fixed (was: previous finding title)
+
+## Core Domain Inventory
+Table of all domains, their patterns (Info, inputs, static methods, sql file), and deviations.
+
+## Open Findings
+
+### Core Domain Consistency
+- [ ] Finding title — one-line summary
+(full finding with implementation plan below)
+
+### API Route Patterns
+- [ ] ...
+
+### Remote Function Patterns
+- [ ] ...
+
+### Cross-Package Architecture
+- [ ] ...
+
+### Validator Reuse & Type Safety
+- [ ] ...
+
+## Duplication Matrix
+Table showing which core fields are duplicated inline across packages.
+
+## Pattern Compliance
+Summary of which domains/routes/remote files follow expected patterns and which are outliers.
+
+## Checklist
+All findings as a flat `- [ ]` list for tracking.
+```
