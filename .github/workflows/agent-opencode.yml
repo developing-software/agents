@@ -132,6 +132,7 @@ jobs:
         with:
           prefix: opencode
           issue_number: ${{ steps.issue.outputs.number }}
+          prompt: ${{ inputs.prompt }}
 
       - uses: ./actions/comment
         if: always()
