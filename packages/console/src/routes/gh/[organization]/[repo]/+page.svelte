@@ -3,6 +3,8 @@
   import { generateToken } from './repo.remote';
   import GitHubLink from '$lib/ui/GitHubLink.svelte';
   import Events from '$lib/events/repository/Feed.svelte';
+  import OverviewLinks from '$lib/agents/OverviewLinks.svelte';
+  import OverviewMetrics from '$lib/agents/OverviewMetrics.svelte';
 
 
   let { data }: PageProps = $props();
@@ -34,6 +36,14 @@
   <!-- RIGHT: Issues + PRs + Token -->
   <!-- ============================================================ -->
   <aside class="right-column">
+
+    <!-- Overview -->
+    <section class="panel overview-panel">
+      <h2 class="section-heading" style="margin-bottom: 10px;">Overview</h2>
+      <OverviewLinks organization={data.organization} repoName={data.repoName} />
+      <div class="metrics-divider"></div>
+      <OverviewMetrics organization={data.organization} repoName={data.repoName} />
+    </section>
 
     <!-- Issues -->
     <section class="panel">
@@ -314,6 +324,20 @@
   .branch-arrow {
     color: var(--color-dim);
     flex-shrink: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Overview panel */
+  /* ------------------------------------------------------------------ */
+  .overview-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .metrics-divider {
+    border-top: 1px solid var(--color-border);
+    margin: 10px 0;
   }
 
   /* ------------------------------------------------------------------ */
