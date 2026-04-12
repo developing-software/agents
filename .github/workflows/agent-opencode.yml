@@ -133,15 +133,6 @@ jobs:
           prefix: opencode
           issue_number: ${{ steps.issue.outputs.number }}
 
-      - name: Trigger SST deploy
-        if: always() && steps.pr.outputs.pr_number
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh workflow run sst.yml \
-            --ref "$DEV_AGENTS_BRANCH" \
-            -f pr_number="${{ steps.pr.outputs.pr_number }}"
-
       - uses: ./actions/comment
         if: always()
         with:
