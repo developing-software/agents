@@ -56,7 +56,7 @@
               pkgs.llm-agents.claude-code
               pkgs.llm-agents.codex
               pkgs.llm-agents.opencode
-              python313
+              # python313
               # pkgs.llm-agents.gemini-cli
             ];
 
@@ -64,9 +64,11 @@
             let
               pkgs = pkgsFor.${system};
               lib = pkgs.lib;
-              packageList = lib.concatMapStringsSep "\n" (p: "${p.pname or p.name}\t${p.version or ""}") packages;
+              fmt = list: lib.concatMapStringsSep "\n" (p: "${p.pname or p.name}\t\t v${p.version or ""}") list;
             in
             ''
+              echo ""
+              echo "═══════════════════════════════════════════════════"
               echo ""
               echo "▗▄▄▄ ▗▄▄▄▖▗▖  ▗▖     ▗▄▖  ▗▄▄▖▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖▗▄▄▖"
               echo "▐▌  █▐▌   ▐▌  ▐▌    ▐▌ ▐▌▐▌   ▐▌   ▐▛▚▖▐▌  █ ▐▌   "
@@ -74,8 +76,10 @@
               echo "▐▙▄▄▀▐▙▄▄▖ ▝▚▞▘     ▐▌ ▐▌▝▚▄▞▘▐▙▄▄▖▐▌  ▐▌  █ ▗▄▄▞▘"
               echo ""
 
-              echo "Packages Added by DEV SHELL"
-              echo "${packageList}" | column -t | ${lib.getExe pkgs.gum} style --border rounded --padding "0 1" --border-foreground 212
+              printf "%*s\n" $(( (50 + 22) / 2 )) "pkgs added by flake.nix"
+              echo "${fmt packages}" | column -t | ${lib.getExe pkgs.gum} style --border rounded --padding "0 1" --border-foreground 212 --width 50
+              echo ""
+              echo "═══════════════════════════════════════════════════"
 
               # bun install --frozen-lockfile
             '';
