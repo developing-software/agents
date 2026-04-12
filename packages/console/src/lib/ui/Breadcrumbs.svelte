@@ -4,6 +4,7 @@
     href?: string;
   }
 
+
   let { items }: { items: Breadcrumb[] } = $props();
 </script>
 
