@@ -36,15 +36,26 @@ export function capitalize(s: string): string {
 // ── Display helpers ─────────────────────────────────────────────────────
 
 export function eventDotColor(type: string): string {
-  if (type.startsWith("agent.")) return "var(--color-accent)";
-  if (type.startsWith("checks.")) return "var(--color-success)";
-  if (type.startsWith("tests.")) return "var(--color-success)";
-  if (type.startsWith("lint.")) return "var(--color-merged)";
-  if (type.startsWith("deploy.")) return "var(--color-merged)";
-  if (type.startsWith("github.issues.")) return "var(--color-success)";
-  if (type.startsWith("github.pull_request.")) return "var(--color-merged)";
-  if (type === "github.push") return "var(--color-dim)";
-  return "var(--color-warning)";
+  const prefix = typePrefix(type);
+  switch (prefix) {
+    case "agent":
+      return "var(--color-accent)";
+    case "plan":
+      return "var(--color-accent)";
+    case "checks":
+    case "tests":
+    case "audit":
+      return "var(--color-success)";
+    case "lint":
+    case "deploy":
+      return "var(--color-merged)";
+    case "github":
+      if (type.startsWith("github.issues.")) return "var(--color-success)";
+      if (type.startsWith("github.pull_request.")) return "var(--color-merged)";
+      return "var(--color-dim)";
+    default:
+      return "var(--color-warning)";
+  }
 }
 
 export function originBadgeStyle(origin: string): string {

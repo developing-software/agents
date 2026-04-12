@@ -7,15 +7,11 @@ export namespace PlanJudge {
   export const ReviewScores = z.object({
     adherence: z
       .number()
-      .min(1)
-      .max(10)
-      .describe("How well the implementation fulfills the plan requirements"),
-    quality: z.number().min(1).max(10).describe("Code quality, readability, and correctness"),
+      .describe("How well the implementation fulfills the plan requirements (1-10)"),
+    quality: z.number().describe("Code quality, readability, and correctness (1-10)"),
     completeness: z
       .number()
-      .min(1)
-      .max(10)
-      .describe("Coverage of plan requirements and test coverage"),
+      .describe("Coverage of plan requirements and test coverage (1-10)"),
   });
   export type ReviewScores = z.infer<typeof ReviewScores>;
 
@@ -26,7 +22,6 @@ export namespace PlanJudge {
     verdict: z.string().describe("Concise overall assessment, 1-2 sentences"),
     suggestions: z
       .array(z.string().describe("An actionable improvement"))
-      .max(3)
       .optional()
       .describe("Up to 3 actionable improvements, if any"),
   });

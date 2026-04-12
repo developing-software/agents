@@ -70,7 +70,7 @@
   {/if}
 
   <!-- Deploy details -->
-  {#if event.type.startsWith('deploy.')}
+  {#if event.type === 'deploy' || event.type.startsWith('deploy.')}
     {@const dep = DeployEvent.Completed.parse(event.data)}
     {@const conclusion = dep.workflow.conclusion ?? 'unknown'}
     {@const conclusionColor = conclusion === 'success'

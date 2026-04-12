@@ -350,6 +350,7 @@ export namespace Event {
           roots.push(node);
         }
       }
+      roots.reverse();
       return roots;
     });
   }
