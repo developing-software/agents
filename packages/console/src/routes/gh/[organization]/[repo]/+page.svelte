@@ -3,6 +3,8 @@
   import { generateToken } from './repo.remote';
   import GitHubLink from '$lib/ui/GitHubLink.svelte';
   import Events from '$lib/events/repository/Feed.svelte';
+  import OverviewLinks from '$lib/agents/OverviewLinks.svelte';
+  import OverviewMetrics from '$lib/agents/OverviewMetrics.svelte';
 
 
   let { data }: PageProps = $props();
@@ -20,6 +22,16 @@
     }
   }
 </script>
+
+<!-- Overview: Quick Links + Metrics (non-blocking) -->
+<section class="overview-card">
+  <div class="overview-links-row">
+    <OverviewLinks organization={data.organization} repoName={data.repoName} />
+  </div>
+  <div class="overview-metrics-row">
+    <OverviewMetrics organization={data.organization} repoName={data.repoName} />
+  </div>
+</section>
 
 <div class="page-grid">
   <!-- ============================================================ -->
@@ -135,6 +147,25 @@
 </div>
 
 <style>
+  /* ------------------------------------------------------------------ */
+  /* Overview card */
+  /* ------------------------------------------------------------------ */
+  .overview-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .overview-metrics-row {
+    border-top: 1px solid var(--color-border);
+    padding-top: 12px;
+  }
+
   /* ------------------------------------------------------------------ */
   /* Page grid */
   /* ------------------------------------------------------------------ */
