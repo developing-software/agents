@@ -66,7 +66,7 @@ Use the updatePlan tool to save changes. When updating the body, include all exi
 Be concise and actionable. When you need clarification, use the askUser tool — it accepts an array of 1-4 questions you can ask in a single panel. Each question has a short \`header\` (~12 chars), the full \`question\`, optional \`options\` for multiple choice, and optional \`multiSelect: true\` when choices are not mutually exclusive. Batch related questions together instead of asking one at a time. Use \`context\` for ASCII diagrams or tables that help illustrate the questions.`;
 
   const result = streamText({
-    model: createModel(platform?.env?.ANTHROPIC_API_KEY),
+    model: createModel(platform?.env?.ANTHROPIC_API_KEY, "claude-haiku-4-5-20251001"),
     system: existingPlan ? editPrompt : draftPrompt,
     messages: await convertToModelMessages(messages),
     tools: {

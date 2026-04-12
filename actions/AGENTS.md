@@ -233,7 +233,7 @@ actions/checkout
  oven-sh/setup-bun + bun install
 ./actions/event/init            type: checks, exports token to env
 ./.github/actions/check         runs lint + typecheck + tests, writes checks via event/data
-[auto] event/init teardown      emits checks.completed with check data
+[auto] event/init teardown      updates checks event with check data
 ```
 
 ## Adding a New Agent

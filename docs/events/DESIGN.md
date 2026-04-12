@@ -55,28 +55,24 @@ Events are the backbone of observability in this system. Every meaningful action
 
 ### Checks (CI)
 
-| Type               | Origin | Description                                         |
-| ------------------ | ------ | --------------------------------------------------- |
-| `checks.started`   | action | CI check workflow begins                            |
-| `checks.completed` | action | CI check workflow finishes, emits all check results |
+| Type     | Origin | Description                                                    |
+| -------- | ------ | -------------------------------------------------------------- |
+| `checks` | action | CI check event — created on setup, updated on teardown with results |
 
 Typed schema: `ChecksEvent.Completed.Data` in `packages/core/src/events/checks/index.ts`. Includes checks (with outcomes and summaries) and workflow metadata.
 
 ### Infrastructure
 
-| Type              | Origin | Description             |
-| ----------------- | ------ | ----------------------- |
-| `audit.started`   | action | Audit workflow begins   |
-| `audit.completed` | action | Audit workflow finishes |
+| Type    | Origin | Description   |
+| ------- | ------ | ------------- |
+| `audit` | action | Audit event   |
 
 ### Deployments
 
-| Type                      | Origin | Description                                             |
-| ------------------------- | ------ | ------------------------------------------------------- |
-| `deploy.started`          | action | Deploy workflow begins (SST, Terraform, etc.)           |
-| `deploy.completed`        | action | Deploy workflow finishes; emits outputs and PR metadata |
-| `deploy.remove.started`   | action | Teardown workflow begins                                |
-| `deploy.remove.completed` | action | Teardown finishes                                       |
+| Type            | Origin | Description                                                           |
+| --------------- | ------ | --------------------------------------------------------------------- |
+| `deploy`        | action | Deploy event — created on setup, updated on teardown with outputs/PR  |
+| `deploy.remove` | action | Teardown event — created on setup, updated on teardown                |
 
 Standard tags: `env:<stage>`, `tool:<name>` (e.g. `sst`), `gh:branch:<head>` and `gh:base:<base>` on PR runs, plus all auto-injected `gh:*` tags from `event/init`.
 
@@ -217,18 +213,9 @@ data: {
 }
 ```
 
-### deploy.started
+### deploy
 
-```ts
-data: {
-  runUrl: string,
-  trigger: string,
-  stage: string,
-  tool: string,
-}
-```
-
-### deploy.completed
+Created on setup with initial data, updated on teardown with full data.
 
 ```ts
 data: {
@@ -248,8 +235,8 @@ data: {
 }
 ```
 
-A PR comment with marker `<!-- deploy:<tool> -->` is upserted with a table of `outputs`. On `deploy.remove.completed`, the same comment is deleted.
+A PR comment with marker `<!-- deploy:<tool> -->` is upserted with a table of `outputs`. On `deploy.remove`, the same comment is deleted.
 
-### deploy.remove.started / deploy.remove.completed
+### deploy.remove
 
-Same shape as `deploy.*`, except `outputs` is omitted (no URLs post-teardown).
+Same shape as `deploy`, except `outputs` is omitted (no URLs post-teardown).
