@@ -1,6 +1,11 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
+  interface Breadcrumb {
+    label: string;
+    href?: string;
+  }
+
   namespace App {
     interface Platform {
       env: Env & { ANTHROPIC_API_KEY?: string };
@@ -13,7 +18,9 @@ declare global {
     interface Locals {
       userID: string | null;
     }
-    // interface PageData {}
+    interface PageData {
+      breadcrumbs?: Breadcrumb[];
+    }
     // interface PageState {}
   }
 }

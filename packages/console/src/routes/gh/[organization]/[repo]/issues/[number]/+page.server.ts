@@ -1,5 +1,14 @@
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
-  return { number: parseInt(params.number) };
+  const { organization, repo, number } = params;
+  const base = `/gh/${organization}/${repo}`;
+  return {
+    number: parseInt(number),
+    breadcrumbs: [
+      { label: `${organization}/${repo}`, href: base },
+      { label: "Issues", href: `${base}/issues` },
+      { label: `#${number}` },
+    ],
+  };
 };
