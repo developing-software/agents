@@ -15,6 +15,24 @@
     return '$' + usd.toFixed(2);
   }
 
+  function toolPreview(name: string, input: any): string | null {
+    if (!input || typeof input !== 'object') return null;
+    switch (name) {
+      case 'Bash': return input.command ?? input.cmd ?? null;
+      case 'Read': return input.file_path ?? null;
+      case 'Write': return input.file_path ?? null;
+      case 'Edit': return input.file_path ?? null;
+      case 'Grep': return input.pattern ? `/${input.pattern}/` + (input.path ? ` in ${input.path}` : '') : null;
+      case 'Glob': return input.pattern ? input.pattern + (input.path ? ` in ${input.path}` : '') : null;
+      case 'Agent': return input.description ?? null;
+      case 'WebSearch': return input.query ?? null;
+      case 'WebFetch': return input.url ?? null;
+      case 'LSP': return input.method ?? null;
+      case 'Skill': return input.skill ?? null;
+      default: return null;
+    }
+  }
+
   function getTextContent(content: unknown): string {
     if (typeof content === 'string') return content;
     if (Array.isArray(content)) {
@@ -163,6 +181,7 @@
           >{entry.text}</span>
         </button>
       {:else if entry.kind === 'tool-use'}
+        {@const preview = toolPreview(entry.name, entry.input)}
         <button
           type="button"
           class="row row-tool"
@@ -170,6 +189,9 @@
         >
           <span class="row-label label-tool">Tool</span>
           <span class="tool-pill">{entry.name}</span>
+          {#if preview}
+            <span class="tool-preview">{preview}</span>
+          {/if}
           <span class="expand-hint">{expandedRows.has(i) ? '\u25B4' : '\u25BE'}</span>
         </button>
         {#if expandedRows.has(i)}
@@ -335,6 +357,16 @@
     color: var(--color-warning);
     flex-shrink: 0;
     line-height: 1.6;
+  }
+
+  .tool-preview {
+    color: var(--color-muted);
+    font-size: 10px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .expand-hint {

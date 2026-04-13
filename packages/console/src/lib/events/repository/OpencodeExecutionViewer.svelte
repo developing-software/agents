@@ -15,6 +15,22 @@
     return '$' + usd.toFixed(2);
   }
 
+  function toolPreview(name: string, args: any): string | null {
+    if (!args || typeof args !== 'object') return null;
+    const n = name.toLowerCase();
+    // OpenCode tool names
+    if (n === 'shell' || n === 'bash') return args.command ?? args.cmd ?? null;
+    if (n === 'read_file' || n === 'read') return args.file_path ?? args.path ?? null;
+    if (n === 'write_file' || n === 'write') return args.file_path ?? args.path ?? null;
+    if (n === 'edit_file' || n === 'edit') return args.file_path ?? args.path ?? null;
+    if (n === 'grep' || n === 'search') return args.pattern ? `/${args.pattern}/` + (args.path ? ` in ${args.path}` : '') : null;
+    if (n === 'glob' || n === 'find') return args.pattern ? args.pattern + (args.path ? ` in ${args.path}` : '') : null;
+    if (n === 'web_search' || n === 'websearch') return args.query ?? null;
+    if (n === 'web_fetch' || n === 'webfetch') return args.url ?? null;
+    if (n === 'agent') return args.description ?? null;
+    return null;
+  }
+
   // ── Derived data ──────────────────────────────────────────────────────
 
   const messages: any[] = $derived(data?.messages ?? []);
@@ -182,6 +198,7 @@
           >{entry.text}</span>
         </button>
       {:else if entry.kind === 'tool-use'}
+        {@const preview = toolPreview(entry.name, entry.args)}
         <button
           type="button"
           class="row row-tool"
@@ -189,6 +206,9 @@
         >
           <span class="row-label label-tool">Tool</span>
           <span class="tool-pill">{entry.name}</span>
+          {#if preview}
+            <span class="tool-preview">{preview}</span>
+          {/if}
           <span class="expand-hint">{expandedRows.has(i) ? '\u25B4' : '\u25BE'}</span>
         </button>
         {#if expandedRows.has(i)}
@@ -359,6 +379,16 @@
     color: var(--color-warning);
     flex-shrink: 0;
     line-height: 1.6;
+  }
+
+  .tool-preview {
+    color: var(--color-muted);
+    font-size: 10px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .expand-hint {
