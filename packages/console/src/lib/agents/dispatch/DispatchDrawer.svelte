@@ -137,7 +137,7 @@
   }
 </script>
 
-<Drawer bind:open={isOpen} title={drawerTitle} onclose={close} width="720px">
+<Drawer bind:open={isOpen} title={drawerTitle} onclose={close} width="860px">
   <div class="drawer-content">
     {#if dispatchResults}
       <section class="section">
@@ -295,6 +295,8 @@
     flex-direction: column;
     gap: 6px;
     min-height: 0;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .col-config {
@@ -381,7 +383,7 @@
   .prompt-editor :global(.preview) {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    overflow: auto;
     font-size: 11px;
   }
 
