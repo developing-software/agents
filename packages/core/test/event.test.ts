@@ -281,4 +281,69 @@ describe("event", () => {
     const child = await Event.fromID(childId);
     expect(child?.parentEventId).toBe(explicitParentId);
   });
+
+  it("deploy event parents under agent with same PR tag", async () => {
+    const sourceId = testSourceId();
+    const repoTag = Tags.ghRepo("octocat/hello-world");
+    const prTag = Tags.ghPr(200);
+
+    // Webhook event (root)
+    const webhookId = await Event.create({
+      type: "github.pull_request.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags: [repoTag, prTag],
+    });
+
+    // Agent event (child of webhook, created the PR)
+    const agentId = await Event.create({
+      type: "agent",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags: [repoTag, prTag, Tags.ghBranch("claude/issue-200")],
+    });
+    const agent = await Event.fromID(agentId);
+    expect(agent?.parentEventId).toBe(webhookId);
+
+    // Deploy event should parent under the agent, not the webhook
+    const deployId = await Event.create({
+      type: "deploy",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags: [repoTag, prTag, "env:pr-200", "tool:sst"],
+    });
+
+    const deploy = await Event.fromID(deployId);
+    expect(deploy?.parentEventId).toBe(agentId);
+  });
+
+  it("deploy event falls back to webhook parent when no agent has PR tag", async () => {
+    const sourceId = testSourceId();
+    const repoTag = Tags.ghRepo("octocat/hello-world");
+    const prTag = Tags.ghPr(201);
+
+    // Webhook event (root, no agent with this PR)
+    const webhookId = await Event.create({
+      type: "github.pull_request.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId,
+      tags: [repoTag, prTag],
+    });
+
+    // Deploy event should fall back to the webhook parent
+    const deployId = await Event.create({
+      type: "deploy",
+      origin: "action",
+      source: "repository",
+      sourceId,
+      tags: [repoTag, prTag, "env:pr-201", "tool:sst"],
+    });
+
+    const deploy = await Event.fromID(deployId);
+    expect(deploy?.parentEventId).toBe(webhookId);
+  });
 });

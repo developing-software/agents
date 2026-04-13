@@ -59,6 +59,7 @@ jobs:
           tags: |
             env:${{ env.STAGE }}
             tool:sst
+            ${{ github.event_name == 'pull_request' && format('gh:pr:{0}', github.event.pull_request.number) || '' }}
             ${{ github.event_name == 'pull_request' && format('gh:branch:{0}', github.event.pull_request.head.ref) || '' }}
             ${{ github.event_name == 'pull_request' && format('gh:base:{0}', github.event.pull_request.base.ref) || '' }}
           data: >-

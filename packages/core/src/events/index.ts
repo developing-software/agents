@@ -1,4 +1,4 @@
-import { and, arrayContains, desc, eq, gte, inArray, isNull, lte, notLike, sql } from "drizzle-orm";
+import { and, arrayContains, desc, eq, gte, inArray, isNull, like, lte, notLike, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
@@ -238,6 +238,28 @@ export namespace Event {
     });
   }
 
+  /** Find the most recent event matching a type prefix and tags (no root constraint). */
+  export async function findByTypeAndTags(opts: {
+    typePrefix: string;
+    tags: string[];
+  }): Promise<string | undefined> {
+    return useTransaction(async (tx) => {
+      const row = await tx
+        .select({ id: eventTable.id })
+        .from(eventTable)
+        .where(
+          and(
+            like(eventTable.type, opts.typePrefix + "%"),
+            arrayContains(eventTable.tags, opts.tags),
+          ),
+        )
+        .orderBy(desc(eventTable.timeCreated))
+        .limit(1)
+        .then((r) => r[0]);
+      return row?.id;
+    });
+  }
+
   export async function inferParentEventId(opts: {
     source?: string;
     sourceId?: string;
@@ -265,6 +287,16 @@ export namespace Event {
 
     const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
     if (prTag) {
+      // For non-agent events (e.g. deploy), prefer parenting under the agent
+      // that created/owns the PR, so deploys nest under the implementation.
+      if (!opts.type?.startsWith("agent")) {
+        const agentId = await findByTypeAndTags({
+          typePrefix: "agent",
+          tags: [prTag],
+        }).catch(() => undefined);
+        if (agentId) return agentId;
+      }
+
       const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent" }).catch(
         () => undefined,
       );
