@@ -47,7 +47,7 @@ runs:
       if: always()
       shell: bash
       run: |
-        if bunx fallow health --hotspots --top 3 --format json --quiet \
+        if bunx fallow health --hotspots --top 25 --format json --quiet \
           > "$RUNNER_TEMP/fallow-health.json"; then
           outcome="success"
         else
