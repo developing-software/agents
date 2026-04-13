@@ -1,35 +1,51 @@
 <script lang="ts">
   import type { AgentCompat, AgentWorkflow } from '@agents/core/agent';
   import Drawer from '$lib/ui/Drawer.svelte';
-  import { previewPrompt, dispatchPlan, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
+  import { dispatch as dispatchAgents, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
+  import { updatePlan } from '$lib/agents/plans/plans.remote';
   import BranchSelect from '$lib/ui/BranchSelect.svelte';
-  import { statusDotColor, statusBadgeStyle, type PlanItem } from '$lib/agents/plans/plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import ModelSelector from './ModelSelector.svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
   let {
-    plan,
     organization,
     repoName,
     open = $bindable(false),
+    title = 'Dispatch',
+    prompt = '',
+    tags = [],
+    multi = true,
+    branch,
+    planId,
     ondispatched,
   }: {
-    plan: PlanItem;
     organization: string;
     repoName: string;
     open?: boolean;
-    ondispatched?: (planId: string) => void;
+    title?: string;
+    prompt?: string;
+    tags?: string[];
+    multi?: boolean;
+    branch?: string;
+    planId?: string;
+    ondispatched?: () => void;
   } = $props();
 
   let selectedModels = new SvelteSet<string>();
   let ref = $state('dev');
-  let promptPreview = $state<string | null>(null);
+  let promptValue = $state('');
   let promptExpanded = $state(false);
-  let loadingPreview = $state(false);
   let dispatching = $state(false);
   let dispatchError = $state<string | null>(null);
   let dispatchResults = $state<{ harness: string; status: string }[] | null>(null);
+
+  // Sync prompt prop → internal state when drawer opens
+  $effect(() => {
+    if (open) {
+      promptValue = prompt;
+    }
+  });
 
   type AgentConfig = {
     id: AgentWorkflow.Agent;
@@ -49,7 +65,6 @@
         return [a.id, models] as const;
       }),
     );
-    // Set default selection from the first agent's default model
     if (selectedModels.size === 0 && agents.length > 0) {
       selectedModels.add(`${agents[0].id}:${agents[0].defaultModel}`);
     }
@@ -65,27 +80,12 @@
   const dispatchPreview = $derived(
     Array.from(selectedModels).map((key) => {
       const [harness, ...rest] = key.split(':');
-      const modelId = rest.join(':');
-      return { key, harness, model: modelId };
+      return { key, harness, model: rest.join(':') };
     })
   );
 
-  async function loadPromptPreview() {
-    if (promptPreview !== null) {
-      promptExpanded = !promptExpanded;
-      return;
-    }
-    loadingPreview = true;
-    try {
-      promptPreview = await previewPrompt({ planId: plan.id });
-      promptExpanded = true;
-    } finally {
-      loadingPreview = false;
-    }
-  }
-
   async function handleDispatch() {
-    if (selectedModels.size === 0) return;
+    if (selectedModels.size === 0 || !promptValue.trim()) return;
     dispatching = true;
     dispatchError = null;
     dispatchResults = null;
@@ -95,16 +95,22 @@
         return { harness: harness as 'claude' | 'opencode' | 'codex', model: rest.join(':') };
       });
 
-      const results = await dispatchPlan({
-        planId: plan.id,
+      const results = await dispatchAgents({
         organization,
         repoName,
+        prompt: promptValue,
         agents: agentList,
-        ref,
+        ref: branch ?? ref,
+        tags,
+        branch,
       });
 
+      if (planId) {
+        await updatePlan({ id: planId, status: 'implementing' as any });
+      }
+
       dispatchResults = results;
-      ondispatched?.(plan.id);
+      ondispatched?.();
     } catch (err: unknown) {
       dispatchError = err instanceof Error ? err.message : 'Dispatch failed';
     } finally {
@@ -116,9 +122,7 @@
     open = false;
     dispatchResults = null;
     dispatchError = null;
-    promptPreview = null;
     promptExpanded = false;
-    // Re-initialize default selection from loaded config
     selectedModels.clear();
     agentDataPromise.then(({ agents }) => {
       if (agents.length > 0) selectedModels.add(`${agents[0].id}:${agents[0].defaultModel}`);
@@ -127,24 +131,16 @@
   }
 </script>
 
-<Drawer bind:open title="Dispatch Plan" onclose={close}>
+<Drawer bind:open {title} onclose={close}>
   <div class="drawer-content">
-    <!-- Plan Summary -->
-    <section class="section">
-      <div class="plan-summary">
-        <span class="dot" style="background: {statusDotColor(plan.status)}"></span>
-        <span class="plan-title">{plan.title}</span>
-        <span class="status-badge" style={statusBadgeStyle(plan.status)}>{plan.status}</span>
-      </div>
-      {#if plan.tags.length > 0}
-        <div class="plan-tags">
-          <TagList tags={plan.tags} limit={8} />
-        </div>
-      {/if}
-    </section>
+    {#if tags.length > 0}
+      <section class="section">
+        <div class="section-label">Tags</div>
+        <TagList {tags} limit={8} />
+      </section>
+    {/if}
 
     {#if dispatchResults}
-      <!-- Results -->
       <section class="section">
         <div class="section-label">Dispatched</div>
         <div class="results">
@@ -155,10 +151,28 @@
             </div>
           {/each}
         </div>
-        <div class="plan-note">Plan status updated to <strong>implementing</strong>.</div>
+        {#if planId}
+          <div class="plan-note">Plan status updated to <strong>implementing</strong>.</div>
+        {/if}
         <button type="button" class="close-after-btn" onclick={close}>Close</button>
       </section>
     {:else}
+      <!-- Prompt -->
+      <section class="section">
+        <div class="section-label">Prompt</div>
+        <textarea
+          class="prompt-textarea"
+          class:prompt-collapsed={!promptExpanded}
+          bind:value={promptValue}
+          placeholder="Enter prompt..."
+        ></textarea>
+        {#if promptValue.length > 0}
+          <button type="button" class="expand-toggle" onclick={() => { promptExpanded = !promptExpanded; }}>
+            {promptExpanded ? 'View less' : 'View more'}
+          </button>
+        {/if}
+      </section>
+
       <!-- Agent Selection -->
       <section class="section">
         <div class="section-label">Agents</div>
@@ -176,6 +190,7 @@
                   agentLabel={agent.label}
                   featuredModels={data.featuredModels[agent.id] ?? []}
                   selected={selectedModels}
+                  {multi}
                 />
               </div>
             {/each}
@@ -185,31 +200,16 @@
         {/await}
       </section>
 
-      <!-- Configuration -->
-      <section class="section">
-        <div class="section-label">Configuration</div>
-        <div class="config-grid">
-          <label class="config-label" for="ref-input">Branch</label>
-          <BranchSelect {organization} {repoName} bind:value={ref} />
-        </div>
-
-      </section>
-
-      <!-- Prompt Preview -->
-      <section class="section">
-        <button type="button" class="preview-toggle" onclick={loadPromptPreview}>
-          {#if loadingPreview}
-            Loading prompt...
-          {:else if promptExpanded}
-            &#9662; Prompt Preview
-          {:else}
-            &#9656; Prompt Preview
-          {/if}
-        </button>
-        {#if promptExpanded && promptPreview !== null}
-          <pre class="prompt-preview">{promptPreview}</pre>
-        {/if}
-      </section>
+      <!-- Branch (hidden when branch prop is set) -->
+      {#if !branch}
+        <section class="section">
+          <div class="section-label">Configuration</div>
+          <div class="config-grid">
+            <label class="config-label" for="ref-input">Branch</label>
+            <BranchSelect {organization} {repoName} bind:value={ref} />
+          </div>
+        </section>
+      {/if}
 
       <!-- Dispatch Preview -->
       {#if dispatchPreview.length > 0}
@@ -241,7 +241,7 @@
         <button
           type="button"
           class="dispatch-btn"
-          disabled={dispatching || selectedCount === 0}
+          disabled={dispatching || selectedCount === 0 || !promptValue.trim()}
           onclick={handleDispatch}
         >
           {#if dispatching}
@@ -275,44 +275,6 @@
     color: var(--color-dim);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-
-  .plan-summary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .plan-title {
-    font-size: 13px;
-    color: var(--color-text);
-    font-weight: 500;
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .status-badge {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-
-  .plan-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
   }
 
   .agent-list {
@@ -370,54 +332,9 @@
     white-space: nowrap;
   }
 
-  .config-select {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    padding: 3px 8px;
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    background: var(--color-elevated);
-    color: var(--color-text);
-    cursor: pointer;
-    outline: none;
-  }
-  .config-select:focus {
-    border-color: var(--color-accent);
-  }
+  /* ── Prompt ────────────────────────────────────────────────────────── */
 
-  .config-loading {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: var(--color-dim);
-  }
-
-  .config-input {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    padding: 3px 8px;
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    background: var(--color-elevated);
-    color: var(--color-text);
-  }
-  .config-input:focus {
-    outline: none;
-    border-color: var(--color-accent);
-  }
-
-  .preview-toggle {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    background: none;
-    border: none;
-    color: var(--color-muted);
-    cursor: pointer;
-    text-align: left;
-    padding: 0;
-  }
-  .preview-toggle:hover { color: var(--color-text); }
-
-  .prompt-preview {
+  .prompt-textarea {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     color: var(--color-muted);
@@ -427,10 +344,36 @@
     padding: 10px;
     white-space: pre-wrap;
     word-break: break-word;
-    max-height: 200px;
-    overflow-y: auto;
-    margin: 0;
+    resize: vertical;
+    line-height: 1.5;
+    min-height: 60px;
   }
+
+  .prompt-textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+
+  .prompt-collapsed {
+    max-height: 120px;
+    overflow: hidden;
+    resize: none;
+  }
+
+  .expand-toggle {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+  }
+  .expand-toggle:hover { text-decoration: underline; }
+
+  /* ── Preview list ──────────────────────────────────────────────────── */
 
   .preview-list {
     display: flex;
@@ -478,6 +421,8 @@
     color: var(--color-danger);
   }
 
+  /* ── Error ─────────────────────────────────────────────────────────── */
+
   .error-msg {
     font-size: 11px;
     color: var(--color-danger);
@@ -486,6 +431,8 @@
     border-radius: 3px;
     background: color-mix(in srgb, var(--color-danger) 8%, transparent);
   }
+
+  /* ── Footer ────────────────────────────────────────────────────────── */
 
   .drawer-footer {
     padding-top: 4px;
@@ -508,6 +455,8 @@
     opacity: 0.4;
     cursor: not-allowed;
   }
+
+  /* ── Results ───────────────────────────────────────────────────────── */
 
   .results {
     display: flex;

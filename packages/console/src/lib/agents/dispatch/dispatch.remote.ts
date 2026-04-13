@@ -55,75 +55,16 @@ export const previewPrompt = query(z.object({ planId: z.string() }), async ({ pl
   return Plan.toPrompt(plan);
 });
 
-export const dispatchPlan = command(
+export const previewFixPrompt = query(
   z.object({
     planId: z.string(),
-    organization: z.string(),
-    repoName: z.string(),
-    agents: z.array(
-      z.object({
-        harness: z.enum(AgentWorkflow.Agents),
-        model: z.string().optional(),
-      }),
-    ),
-    ref: z.string().default("dev"),
-  }),
-  async ({ planId, organization, repoName, agents, ref }) => {
-    const plan = await Plan.fromID(planId);
-    if (!plan) error(404, `Plan ${planId} not found`);
-
-    const prompt = await Plan.toPrompt(plan);
-    const baseTags = [`plan:${planId}`, ...plan.tags];
-
-    const results: { harness: string; status: string }[] = [];
-
-    for (const agent of agents) {
-      await AgentWorkflow.dispatch({
-        owner: organization,
-        repo: repoName,
-        agent: agent.harness,
-        prompt,
-        tags: baseTags,
-        model: agent.model,
-        ref,
-      });
-      results.push({ harness: agent.harness, status: "dispatched" });
-    }
-
-    await Plan.update(planId, {
-      status: "implementing",
-      data: {
-        ...plan.data,
-        dispatched: agents.map((a) => ({
-          harness: a.harness,
-          model: a.model,
-          timestamp: new Date().toISOString(),
-        })),
-      },
-    });
-
-    return results;
-  },
-);
-
-export const dispatchFix = command(
-  z.object({
-    planId: z.string(),
-    organization: z.string(),
-    repoName: z.string(),
     prNumber: z.number(),
-    reviewEventId: z.string(),
-    review: z.object({
-      verdict: z.string(),
-      suggestions: z.array(z.string()).default([]),
-    }),
-    agent: z.object({
-      harness: z.enum(AgentWorkflow.Agents),
-      model: z.string().optional(),
-    }),
-    ref: z.string().default("dev"),
+    organization: z.string(),
+    repoName: z.string(),
+    reviewVerdict: z.string(),
+    reviewSuggestions: z.array(z.string()).default([]),
   }),
-  async ({ planId, organization, repoName, prNumber, reviewEventId, review, agent, ref }) => {
+  async ({ planId, prNumber, organization, repoName, reviewVerdict, reviewSuggestions }) => {
     const plan = await Plan.fromID(planId);
     if (!plan) error(404, `Plan ${planId} not found`);
 
@@ -134,40 +75,63 @@ export const dispatchFix = command(
     const pr = await GithubPullRequest.get(repoRef, prNumber);
 
     const planPrompt = await Plan.toPrompt(plan);
-    const feedbackLines = [
-      `\n## Review Feedback (PR #${prNumber})\n`,
-      `**Verdict:** ${review.verdict}`,
-    ];
-    if (review.suggestions.length > 0) {
-      feedbackLines.push(`\n**Issues to fix:**`);
-      for (const s of review.suggestions) {
-        feedbackLines.push(`- ${s}`);
-      }
-    }
-    feedbackLines.push(
-      `\nFix the issues identified in the review. The code is already on branch \`${pr.headBranch}\`.`,
-      `Do NOT commit, push, or open a pull request — only modify the files.`,
-    );
-    const prompt = planPrompt + "\n" + feedbackLines.join("\n");
-
-    const tags = [
-      `plan:${planId}`,
-      `parent:${reviewEventId}`,
-      `gh:pr:${prNumber}`,
-      ...plan.tags,
-    ];
-
-    await AgentWorkflow.dispatch({
-      owner: organization,
-      repo: repoName,
-      agent: agent.harness,
-      prompt,
-      tags,
-      model: agent.model,
-      ref,
+    return {
+      prompt: buildFixPrompt(planPrompt, prNumber, reviewVerdict, reviewSuggestions),
       branch: pr.headBranch,
-    });
+    };
+  },
+);
 
-    return { harness: agent.harness, status: "dispatched", branch: pr.headBranch };
+function buildFixPrompt(
+  base: string,
+  prNumber: number,
+  verdict: string,
+  suggestions: string[],
+): string {
+  const lines = [`\n## Review Feedback (PR #${prNumber})\n`, `**Verdict:** ${verdict}`];
+  if (suggestions.length > 0) {
+    lines.push(`\n**Issues to fix:**`);
+    for (const s of suggestions) lines.push(`- ${s}`);
+  }
+  lines.push(
+    `\nFix the issues identified in the review.`,
+    `Do NOT commit, push, or open a pull request — only modify the files.`,
+  );
+  return base + "\n" + lines.join("\n");
+}
+
+export const dispatch = command(
+  z.object({
+    organization: z.string(),
+    repoName: z.string(),
+    prompt: z.string(),
+    agents: z.array(
+      z.object({
+        harness: z.enum(AgentWorkflow.Agents),
+        model: z.string().optional(),
+      }),
+    ),
+    ref: z.string().default("dev"),
+    tags: z.array(z.string()).default([]),
+    branch: z.string().optional(),
+  }),
+  async ({ organization, repoName, prompt, agents, ref, tags, branch }) => {
+    const results: { harness: string; status: string }[] = [];
+
+    for (const agent of agents) {
+      await AgentWorkflow.dispatch({
+        owner: organization,
+        repo: repoName,
+        agent: agent.harness,
+        prompt,
+        tags,
+        model: agent.model,
+        ref,
+        branch,
+      });
+      results.push({ harness: agent.harness, status: "dispatched" });
+    }
+
+    return results;
   },
 );

@@ -11,11 +11,13 @@
     agentLabel,
     featuredModels,
     selected,
+    multi = true,
   }: {
     agent: AgentWorkflow.Agent;
     agentLabel: string;
     featuredModels: AgentModelInfo[];
     selected: SvelteSet<string>;
+    multi?: boolean;
   } = $props();
 
   let activeTab = $state<'recommended' | 'all'>('recommended');
@@ -69,6 +71,9 @@
     if (selected.has(key)) {
       selected.delete(key);
     } else {
+      if (!multi) {
+        for (const k of selected) selected.delete(k);
+      }
       selected.add(key);
     }
   }

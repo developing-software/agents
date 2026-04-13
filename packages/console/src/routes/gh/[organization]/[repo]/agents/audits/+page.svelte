@@ -3,6 +3,7 @@
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { updateAudit, createPlanFromAudit } from './audits.remote';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
+  import { previewPrompt } from '$lib/agents/dispatch/dispatch.remote';
   import { relativeTime, type PlanItem } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
@@ -17,6 +18,7 @@
   let dispatched = $state<Record<string, boolean>>({});
   let drawerOpen = $state(false);
   let drawerPlan = $state<PlanItem | null>(null);
+  let drawerPrompt = $state('');
 
   function toggle(name: string, body: string) {
     if (expandedName === name) {
@@ -74,13 +76,14 @@
         timeCreated: now,
         timeUpdated: now,
       };
+      drawerPrompt = await previewPrompt({ planId: result.id });
       drawerOpen = true;
     } finally {
       creatingPlan[audit.name] = false;
     }
   }
 
-  function handleDispatched(planId: string) {
+  function handleDispatched() {
     if (drawerPlan) {
       const tag = drawerPlan.tags.find((t) => t.startsWith('type:audit-'));
       if (tag) {
@@ -305,10 +308,13 @@
 
 {#if drawerPlan}
   <DispatchDrawer
-    plan={drawerPlan}
     organization={data.organization}
     repoName={data.repoName}
     bind:open={drawerOpen}
+    title="Dispatch Audit"
+    prompt={drawerPrompt}
+    tags={[`plan:${drawerPlan.id}`, ...drawerPlan.tags]}
+    planId={drawerPlan.id}
     ondispatched={handleDispatched}
   />
 {/if}

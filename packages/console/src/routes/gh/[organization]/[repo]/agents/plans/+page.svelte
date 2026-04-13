@@ -5,6 +5,7 @@
   import PlanTree from '$lib/agents/plans/PlanTree.svelte';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
   import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
+  import { previewPrompt } from '$lib/agents/dispatch/dispatch.remote';
 
   let { data }: PageProps = $props();
 
@@ -14,19 +15,21 @@
 
   let drawerOpen = $state(false);
   let selectedPlan = $state<PlanItem | null>(null);
+  let drawerPrompt = $state('');
   let dispatched = $state(new Set<string>());
 
   let plannerOpen = $state(false);
   let plannerMode = $state<'draft' | 'edit'>('draft');
   let plannerPlan = $state<{ id: string; title: string; status: string } | undefined>(undefined);
 
-  function openDrawer(plan: PlanItem) {
+  async function openDrawer(plan: PlanItem) {
     selectedPlan = plan;
+    drawerPrompt = await previewPrompt({ planId: plan.id });
     drawerOpen = true;
   }
 
-  function handleDispatched(planId: string) {
-    dispatched = new Set([...dispatched, planId]);
+  function handleDispatched() {
+    if (selectedPlan) dispatched = new Set([...dispatched, selectedPlan.id]);
   }
 
   function openPlanner() {
@@ -68,10 +71,13 @@
 
 {#if selectedPlan}
   <DispatchDrawer
-    plan={selectedPlan}
     organization={data.organization}
     repoName={data.repoName}
     bind:open={drawerOpen}
+    title="Dispatch Plan"
+    prompt={drawerPrompt}
+    tags={[`plan:${selectedPlan.id}`, ...selectedPlan.tags]}
+    planId={selectedPlan.id}
     ondispatched={handleDispatched}
   />
 {/if}

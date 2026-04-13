@@ -6,7 +6,7 @@
   import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
   import PlanImplementations from '$lib/agents/ai/components/PlanImplementations.svelte';
   import { updatePlan } from '$lib/agents/plans/plans.remote';
-  import { dispatchFix } from '$lib/agents/dispatch/dispatch.remote';
+  import { previewPrompt, previewFixPrompt } from '$lib/agents/dispatch/dispatch.remote';
   import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
@@ -16,7 +16,12 @@
   let dispatched = $state(false);
   let statusValue = $state(data.plan?.status ?? 'draft');
   let plannerOpen = $state(false);
-  let fixDispatching = $state(false);
+
+  let drawerPrompt = $state('');
+  let drawerTags = $state<string[]>([]);
+  let drawerBranch = $state<string | undefined>(undefined);
+  let drawerMulti = $state(true);
+  let drawerTitle = $state('Dispatch Plan');
 
   async function handleStatusChange(e: Event) {
     if (!data.plan) return;
@@ -27,27 +32,37 @@
     invalidateAll();
   }
 
-  function handleDispatched(_planId: string) {
-    dispatched = true;
-    drawerOpen = false;
+  async function openDispatch() {
+    if (!data.plan) return;
+    drawerPrompt = await previewPrompt({ planId: data.plan.id });
+    drawerTags = [`plan:${data.plan.id}`, ...data.plan.tags];
+    drawerBranch = undefined;
+    drawerMulti = true;
+    drawerTitle = 'Dispatch Plan';
+    drawerOpen = true;
   }
 
   async function handleDispatchFix(prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) {
-    if (!data.plan || fixDispatching) return;
-    fixDispatching = true;
-    try {
-      await dispatchFix({
-        planId: data.plan.id,
-        organization: data.organization,
-        repoName: data.repoName,
-        prNumber,
-        reviewEventId,
-        review: { verdict: review.verdict, suggestions: review.suggestions ?? [] },
-        agent: { harness: 'claude' },
-      });
-    } finally {
-      fixDispatching = false;
-    }
+    if (!data.plan) return;
+    const result = await previewFixPrompt({
+      planId: data.plan.id,
+      prNumber,
+      organization: data.organization,
+      repoName: data.repoName,
+      reviewVerdict: review.verdict,
+      reviewSuggestions: review.suggestions ?? [],
+    });
+    drawerPrompt = result.prompt;
+    drawerBranch = result.branch;
+    drawerTags = [`plan:${data.plan.id}`, ...data.plan.tags, `gh:pr:${prNumber}`, `parent:${reviewEventId}`];
+    drawerMulti = false;
+    drawerTitle = `Fix PR #${prNumber}`;
+    drawerOpen = true;
+  }
+
+  function handleDispatched() {
+    dispatched = true;
+    drawerOpen = false;
   }
 </script>
 
@@ -83,7 +98,7 @@
       {#if dispatched}
         <span class="dispatched-badge">dispatched</span>
       {:else}
-        <button type="button" class="dispatch-btn" onclick={() => { drawerOpen = true; }}>Dispatch</button>
+        <button type="button" class="dispatch-btn" onclick={openDispatch}>Dispatch</button>
       {/if}
       <a href="/gh/{data.organization}/{data.repoName}/agents/plans/{data.plan.id}/edit" class="edit-link">Edit</a>
       <button type="button" class="planner-btn" onclick={() => { plannerOpen = true; }}>AI Planner</button>
@@ -114,10 +129,15 @@
   </div>
 
   <DispatchDrawer
-    plan={data.plan}
     organization={data.organization}
     repoName={data.repoName}
     bind:open={drawerOpen}
+    title={drawerTitle}
+    prompt={drawerPrompt}
+    tags={drawerTags}
+    multi={drawerMulti}
+    branch={drawerBranch}
+    planId={data.plan.id}
     ondispatched={handleDispatched}
   />
 
