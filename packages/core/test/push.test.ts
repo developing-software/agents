@@ -186,11 +186,11 @@ describe("push webhook handler", () => {
     expect(events.length).toBe(0);
   });
 
-  it("links push event to parent event on the same repo and branch", async () => {
+  it("push events skip parent inference (SKIP_PARENT_INFERENCE)", async () => {
     const webhook = createTestWebhook();
     const repoId = await createTestRepo("80000008", "octocat/push-test-8");
 
-    const rootId = await Event.create({
+    await Event.create({
       type: "github.issues.opened",
       origin: "webhook",
       source: "repository",
@@ -211,7 +211,7 @@ describe("push webhook handler", () => {
       sourceId: repoId,
       type: "github.push",
     });
-    expect(events[0]!.parentEventId).toBe(rootId);
+    expect(events[0]!.parentEventId).toBeNull();
   });
 
   it("creates a root push event when no prior event exists on the branch", async () => {
