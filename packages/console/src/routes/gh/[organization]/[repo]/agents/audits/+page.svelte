@@ -16,9 +16,8 @@
   // Run Audit state
   let creatingPlan = $state<Record<string, boolean>>({});
   let dispatched = $state<Record<string, boolean>>({});
-  let drawerOpen = $state(false);
+  let drawer = $state<DispatchDrawer>();
   let drawerPlan = $state<PlanItem | null>(null);
-  let drawerPrompt = $state('');
 
   function toggle(name: string, body: string) {
     if (expandedName === name) {
@@ -76,8 +75,13 @@
         timeCreated: now,
         timeUpdated: now,
       };
-      drawerPrompt = await previewPrompt({ planId: result.id });
-      drawerOpen = true;
+      const prompt = await previewPrompt({ planId: result.id });
+      drawer!.open({
+        title: 'Dispatch Audit',
+        prompt,
+        tags: [`plan:${result.id}`, ...drawerPlan.tags],
+        planId: result.id,
+      });
     } finally {
       creatingPlan[audit.name] = false;
     }
@@ -306,18 +310,12 @@
   </div>
 {/if}
 
-{#if drawerPlan}
-  <DispatchDrawer
-    organization={data.organization}
-    repoName={data.repoName}
-    bind:open={drawerOpen}
-    title="Dispatch Audit"
-    prompt={drawerPrompt}
-    tags={[`plan:${drawerPlan.id}`, ...drawerPlan.tags]}
-    planId={drawerPlan.id}
-    ondispatched={handleDispatched}
-  />
-{/if}
+<DispatchDrawer
+  bind:this={drawer}
+  organization={data.organization}
+  repoName={data.repoName}
+  ondispatched={handleDispatched}
+/>
 
 <style>
   /* ------------------------------------------------------------------ */

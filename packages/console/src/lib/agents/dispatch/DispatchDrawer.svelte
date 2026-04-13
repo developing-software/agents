@@ -5,47 +5,54 @@
   import { updatePlan } from '$lib/agents/plans/plans.remote';
   import BranchSelect from '$lib/ui/BranchSelect.svelte';
   import TagList from '$lib/ui/tag/TagList.svelte';
+  import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
   import ModelSelector from './ModelSelector.svelte';
   import { SvelteSet } from 'svelte/reactivity';
 
-  let {
-    organization,
-    repoName,
-    open = $bindable(false),
-    title = 'Dispatch',
-    prompt = '',
-    tags = [],
-    multi = true,
-    branch,
-    planId,
-    ondispatched,
-  }: {
-    organization: string;
-    repoName: string;
-    open?: boolean;
+  export type OpenParams = {
     title?: string;
     prompt?: string;
     tags?: string[];
     multi?: boolean;
     branch?: string;
     planId?: string;
+  };
+
+  let {
+    organization,
+    repoName,
+    ondispatched,
+  }: {
+    organization: string;
+    repoName: string;
     ondispatched?: () => void;
   } = $props();
+
+  let isOpen = $state(false);
+  let drawerTitle = $state('Dispatch');
+  let tags = $state<string[]>([]);
+  let multi = $state(true);
+  let branch = $state<string | undefined>(undefined);
+  let planId = $state<string | undefined>(undefined);
 
   let selectedModels = new SvelteSet<string>();
   let ref = $state('dev');
   let promptValue = $state('');
-  let promptExpanded = $state(false);
   let dispatching = $state(false);
   let dispatchError = $state<string | null>(null);
   let dispatchResults = $state<{ harness: string; status: string }[] | null>(null);
 
-  // Sync prompt prop → internal state when drawer opens
-  $effect(() => {
-    if (open) {
-      promptValue = prompt;
-    }
-  });
+  export function open(params: OpenParams = {}) {
+    drawerTitle = params.title ?? 'Dispatch';
+    promptValue = params.prompt ?? '';
+    tags = params.tags ?? [];
+    multi = params.multi ?? true;
+    branch = params.branch;
+    planId = params.planId;
+    dispatchResults = null;
+    dispatchError = null;
+    isOpen = true;
+  }
 
   type AgentConfig = {
     id: AgentWorkflow.Agent;
@@ -119,10 +126,9 @@
   }
 
   function close() {
-    open = false;
+    isOpen = false;
     dispatchResults = null;
     dispatchError = null;
-    promptExpanded = false;
     selectedModels.clear();
     agentDataPromise.then(({ agents }) => {
       if (agents.length > 0) selectedModels.add(`${agents[0].id}:${agents[0].defaultModel}`);
@@ -131,15 +137,8 @@
   }
 </script>
 
-<Drawer bind:open {title} onclose={close}>
+<Drawer bind:open={isOpen} title={drawerTitle} onclose={close} width="720px">
   <div class="drawer-content">
-    {#if tags.length > 0}
-      <section class="section">
-        <div class="section-label">Tags</div>
-        <TagList {tags} limit={8} />
-      </section>
-    {/if}
-
     {#if dispatchResults}
       <section class="section">
         <div class="section-label">Dispatched</div>
@@ -157,99 +156,99 @@
         <button type="button" class="close-after-btn" onclick={close}>Close</button>
       </section>
     {:else}
-      <!-- Prompt -->
-      <section class="section">
-        <div class="section-label">Prompt</div>
-        <textarea
-          class="prompt-textarea"
-          class:prompt-collapsed={!promptExpanded}
-          bind:value={promptValue}
-          placeholder="Enter prompt..."
-        ></textarea>
-        {#if promptValue.length > 0}
-          <button type="button" class="expand-toggle" onclick={() => { promptExpanded = !promptExpanded; }}>
-            {promptExpanded ? 'View less' : 'View more'}
-          </button>
-        {/if}
-      </section>
-
-      <!-- Agent Selection -->
-      <section class="section">
-        <div class="section-label">Agents</div>
-        {#await agentDataPromise}
-          <div class="models-loading">Loading models...</div>
-        {:then data}
-          <div class="agent-list">
-            {#each data.agents as agent (agent.id)}
-              <div class="agent-group" class:agent-active={hasAgent(agent.id)}>
-                <div class="agent-header">
-                  <span class="agent-name">{agent.label}</span>
-                </div>
-                <ModelSelector
-                  agent={agent.id}
-                  agentLabel={agent.label}
-                  featuredModels={data.featuredModels[agent.id] ?? []}
-                  selected={selectedModels}
-                  {multi}
-                />
-              </div>
-            {/each}
-          </div>
-        {:catch}
-          <div class="models-loading">Failed to load models</div>
-        {/await}
-      </section>
-
-      <!-- Branch (hidden when branch prop is set) -->
-      {#if !branch}
-        <section class="section">
-          <div class="section-label">Configuration</div>
-          <div class="config-grid">
-            <label class="config-label" for="ref-input">Branch</label>
-            <BranchSelect {organization} {repoName} bind:value={ref} />
-          </div>
+      {#if tags.length > 0}
+        <section class="section tags-row">
+          <div class="section-label">Tags</div>
+          <TagList {tags} limit={8} />
         </section>
       {/if}
 
-      <!-- Dispatch Preview -->
-      {#if dispatchPreview.length > 0}
-        <section class="section">
-          <div class="section-label">Will dispatch</div>
-          <div class="preview-list">
-            {#each dispatchPreview as item (item.key)}
-              <div class="preview-row">
-                <span class="preview-harness">{item.harness}</span>
-                <span class="preview-sep">/</span>
-                <span class="preview-model">{item.model}</span>
-                <button
-                  type="button"
-                  class="preview-remove"
-                  onclick={() => { selectedModels.delete(item.key); }}
-                >x</button>
-              </div>
-            {/each}
+      <div class="columns">
+        <!-- Left: Prompt (main focus) -->
+        <div class="col-prompt">
+          <div class="section-label">Prompt</div>
+          <div class="prompt-editor">
+            <MarkdownEditor bind:value={promptValue} placeholder="Enter prompt..." minHeight="100%" />
           </div>
-        </section>
-      {/if}
+        </div>
 
-      {#if dispatchError}
-        <div class="error-msg">{dispatchError}</div>
-      {/if}
+        <!-- Right: Agents, Config, Dispatch -->
+        <div class="col-config">
+          <section class="section">
+            <div class="section-label">Agents</div>
+            {#await agentDataPromise}
+              <div class="models-loading">Loading models...</div>
+            {:then data}
+              <div class="agent-list">
+                {#each data.agents as agent (agent.id)}
+                  <div class="agent-group" class:agent-active={hasAgent(agent.id)}>
+                    <div class="agent-header">
+                      <span class="agent-name">{agent.label}</span>
+                    </div>
+                    <ModelSelector
+                      agent={agent.id}
+                      agentLabel={agent.label}
+                      featuredModels={data.featuredModels[agent.id] ?? []}
+                      selected={selectedModels}
+                      {multi}
+                    />
+                  </div>
+                {/each}
+              </div>
+            {:catch}
+              <div class="models-loading">Failed to load models</div>
+            {/await}
+          </section>
 
-      <!-- Dispatch Button -->
-      <div class="drawer-footer">
-        <button
-          type="button"
-          class="dispatch-btn"
-          disabled={dispatching || selectedCount === 0 || !promptValue.trim()}
-          onclick={handleDispatch}
-        >
-          {#if dispatching}
-            Dispatching...
-          {:else}
-            Dispatch to {selectedCount} agent{selectedCount === 1 ? '' : 's'}
+          {#if !branch}
+            <section class="section">
+              <div class="section-label">Configuration</div>
+              <div class="config-grid">
+                <label class="config-label" for="ref-input">Branch</label>
+                <BranchSelect {organization} {repoName} bind:value={ref} />
+              </div>
+            </section>
           {/if}
-        </button>
+
+          {#if dispatchPreview.length > 0}
+            <section class="section">
+              <div class="section-label">Will dispatch</div>
+              <div class="preview-list">
+                {#each dispatchPreview as item (item.key)}
+                  <div class="preview-row">
+                    <span class="preview-harness">{item.harness}</span>
+                    <span class="preview-sep">/</span>
+                    <span class="preview-model">{item.model}</span>
+                    <button
+                      type="button"
+                      class="preview-remove"
+                      onclick={() => { selectedModels.delete(item.key); }}
+                    >x</button>
+                  </div>
+                {/each}
+              </div>
+            </section>
+          {/if}
+
+          {#if dispatchError}
+            <div class="error-msg">{dispatchError}</div>
+          {/if}
+
+          <div class="drawer-footer">
+            <button
+              type="button"
+              class="dispatch-btn"
+              disabled={dispatching || selectedCount === 0 || !promptValue.trim()}
+              onclick={handleDispatch}
+            >
+              {#if dispatching}
+                Dispatching...
+              {:else}
+                Dispatch to {selectedCount} agent{selectedCount === 1 ? '' : 's'}
+              {/if}
+            </button>
+          </div>
+        </div>
       </div>
     {/if}
   </div>
@@ -260,7 +259,9 @@
     padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
   }
 
   .section {
@@ -275,6 +276,34 @@
     color: var(--color-dim);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  .tags-row {
+    flex-shrink: 0;
+  }
+
+  .columns {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .col-prompt {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+  }
+
+  .col-config {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    min-height: 0;
   }
 
   .agent-list {
@@ -334,44 +363,27 @@
 
   /* ── Prompt ────────────────────────────────────────────────────────── */
 
-  .prompt-textarea {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: var(--color-muted);
-    background: var(--color-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    padding: 10px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    resize: vertical;
-    line-height: 1.5;
-    min-height: 60px;
+  .prompt-editor {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
-  .prompt-textarea:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    color: var(--color-text);
+  .prompt-editor :global(.editor) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
-  .prompt-collapsed {
-    max-height: 120px;
-    overflow: hidden;
-    resize: none;
+  .prompt-editor :global(.editor-textarea),
+  .prompt-editor :global(.preview) {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    font-size: 11px;
   }
-
-  .expand-toggle {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    background: none;
-    border: none;
-    color: var(--color-accent);
-    cursor: pointer;
-    text-align: left;
-    padding: 0;
-  }
-  .expand-toggle:hover { text-decoration: underline; }
 
   /* ── Preview list ──────────────────────────────────────────────────── */
 

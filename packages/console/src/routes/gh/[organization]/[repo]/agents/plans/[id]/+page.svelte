@@ -12,16 +12,10 @@
 
   let { data }: PageProps = $props();
 
-  let drawerOpen = $state(false);
+  let drawer = $state<DispatchDrawer>();
   let dispatched = $state(false);
   let statusValue = $state(data.plan?.status ?? 'draft');
   let plannerOpen = $state(false);
-
-  let drawerPrompt = $state('');
-  let drawerTags = $state<string[]>([]);
-  let drawerBranch = $state<string | undefined>(undefined);
-  let drawerMulti = $state(true);
-  let drawerTitle = $state('Dispatch Plan');
 
   async function handleStatusChange(e: Event) {
     if (!data.plan) return;
@@ -34,12 +28,13 @@
 
   async function openDispatch() {
     if (!data.plan) return;
-    drawerPrompt = await previewPrompt({ planId: data.plan.id });
-    drawerTags = [`plan:${data.plan.id}`, ...data.plan.tags];
-    drawerBranch = undefined;
-    drawerMulti = true;
-    drawerTitle = 'Dispatch Plan';
-    drawerOpen = true;
+    const prompt = await previewPrompt({ planId: data.plan.id });
+    drawer!.open({
+      title: 'Dispatch Plan',
+      prompt,
+      tags: [`plan:${data.plan.id}`, ...data.plan.tags],
+      planId: data.plan.id,
+    });
   }
 
   async function handleDispatchFix(prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) {
@@ -52,17 +47,18 @@
       reviewVerdict: review.verdict,
       reviewSuggestions: review.suggestions ?? [],
     });
-    drawerPrompt = result.prompt;
-    drawerBranch = result.branch;
-    drawerTags = [`plan:${data.plan.id}`, ...data.plan.tags, `gh:pr:${prNumber}`, `parent:${reviewEventId}`];
-    drawerMulti = false;
-    drawerTitle = `Fix PR #${prNumber}`;
-    drawerOpen = true;
+    drawer!.open({
+      title: `Fix PR #${prNumber}`,
+      prompt: result.prompt,
+      tags: [`plan:${data.plan.id}`, ...data.plan.tags, `gh:pr:${prNumber}`, `parent:${reviewEventId}`],
+      multi: false,
+      branch: result.branch,
+      planId: data.plan.id,
+    });
   }
 
   function handleDispatched() {
     dispatched = true;
-    drawerOpen = false;
   }
 </script>
 
@@ -129,15 +125,9 @@
   </div>
 
   <DispatchDrawer
+    bind:this={drawer}
     organization={data.organization}
     repoName={data.repoName}
-    bind:open={drawerOpen}
-    title={drawerTitle}
-    prompt={drawerPrompt}
-    tags={drawerTags}
-    multi={drawerMulti}
-    branch={drawerBranch}
-    planId={data.plan.id}
     ondispatched={handleDispatched}
   />
 

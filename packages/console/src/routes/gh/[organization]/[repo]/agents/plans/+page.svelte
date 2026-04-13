@@ -13,9 +13,8 @@
 
   type PlanItem = NonNullable<typeof data.plans>[number];
 
-  let drawerOpen = $state(false);
+  let drawer = $state<DispatchDrawer>();
   let selectedPlan = $state<PlanItem | null>(null);
-  let drawerPrompt = $state('');
   let dispatched = $state(new Set<string>());
 
   let plannerOpen = $state(false);
@@ -24,8 +23,13 @@
 
   async function openDrawer(plan: PlanItem) {
     selectedPlan = plan;
-    drawerPrompt = await previewPrompt({ planId: plan.id });
-    drawerOpen = true;
+    const prompt = await previewPrompt({ planId: plan.id });
+    drawer!.open({
+      title: 'Dispatch Plan',
+      prompt,
+      tags: [`plan:${plan.id}`, ...plan.tags],
+      planId: plan.id,
+    });
   }
 
   function handleDispatched() {
@@ -69,18 +73,12 @@
   {/if}
 </div>
 
-{#if selectedPlan}
-  <DispatchDrawer
-    organization={data.organization}
-    repoName={data.repoName}
-    bind:open={drawerOpen}
-    title="Dispatch Plan"
-    prompt={drawerPrompt}
-    tags={[`plan:${selectedPlan.id}`, ...selectedPlan.tags]}
-    planId={selectedPlan.id}
-    ondispatched={handleDispatched}
-  />
-{/if}
+<DispatchDrawer
+  bind:this={drawer}
+  organization={data.organization}
+  repoName={data.repoName}
+  ondispatched={handleDispatched}
+/>
 
 <PlannerDrawer
   bind:open={plannerOpen}
