@@ -1,5 +1,8 @@
 <script lang="ts">
   import { formatBytes, relativeTime } from '../helpers';
+  import ClaudeExecutionViewer from './ClaudeExecutionViewer.svelte';
+  import CodexExecutionViewer from './CodexExecutionViewer.svelte';
+  import OpencodeExecutionViewer from './OpencodeExecutionViewer.svelte';
 
   let {
     name,
@@ -12,6 +15,11 @@
     uploaded: string;
     contentUrl: string;
   } = $props();
+
+  const isClaudeExecution = $derived(name === 'claude_code_execution.json');
+  const isCodexExecution = $derived(name === 'codex_session.jsonl');
+  const isOpencodeExecution = $derived(name === 'opencode_session.json');
+  const hasStructuredViewer = $derived(isClaudeExecution || isCodexExecution || isOpencodeExecution);
 
   let expanded = $state(false);
   let content: string | null = $state(null);
@@ -85,7 +93,7 @@
       {:else if !isText || !content}
         <a class="download-link" href={contentUrl} download={name}>Download {name}</a>
       {:else}
-        {#if parsedJson}
+        {#if parsedJson || hasStructuredViewer}
           <div class="tabs">
             <button
               type="button"
@@ -101,7 +109,17 @@
             >Raw</button>
           </div>
           {#if view === 'report'}
-            <pre class="content-pre">{formattedJson}</pre>
+            {#if isClaudeExecution && Array.isArray(parsedJson)}
+              <ClaudeExecutionViewer data={parsedJson} />
+            {:else if isCodexExecution && content}
+              <CodexExecutionViewer {content} />
+            {:else if isOpencodeExecution && parsedJson}
+              <OpencodeExecutionViewer data={parsedJson} />
+            {:else if parsedJson}
+              <pre class="content-pre">{formattedJson}</pre>
+            {:else}
+              <pre class="content-pre">{content}</pre>
+            {/if}
           {:else}
             <pre class="content-pre">{content}</pre>
           {/if}

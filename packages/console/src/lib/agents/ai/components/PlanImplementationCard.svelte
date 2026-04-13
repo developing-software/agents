@@ -1,6 +1,7 @@
 <script lang="ts">
   import { reviewPR, humanReviewPR } from '$lib/agents/ai/judge.remote';
   import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
+  import ArtifactList from '$lib/events/repository/ArtifactList.svelte';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
 
   let {
@@ -36,7 +37,7 @@
     return prStatesPromise.then((states) => states[run.prNumber!] ?? null);
   });
 
-  let activeTab = $state<'overview' | 'diff' | 'judge'>('overview');
+  let activeTab = $state<'overview' | 'diff' | 'judge' | 'artifacts'>('overview');
 
   // -- Review state (owned by card) --
   let reviewLoading = $state(false);
@@ -178,6 +179,7 @@
     <button type="button" class="tab" class:tab-active={activeTab === 'overview'} onclick={() => { activeTab = 'overview'; }}>Overview</button>
     <button type="button" class="tab" class:tab-active={activeTab === 'diff'} onclick={() => { activeTab = 'diff'; }}>Diff</button>
     <button type="button" class="tab" class:tab-active={activeTab === 'judge'} onclick={() => { activeTab = 'judge'; }}>Judge</button>
+    <button type="button" class="tab" class:tab-active={activeTab === 'artifacts'} onclick={() => { activeTab = 'artifacts'; }}>Artifacts</button>
   </div>
 
   <!-- Scrollable body -->
@@ -214,6 +216,8 @@
       {:else}
         <div class="dim-placeholder">No PR yet</div>
       {/if}
+    {:else if activeTab === 'artifacts'}
+      <ArtifactList eventId={run.id} {organization} {repoName} />
     {:else if activeTab === 'judge'}
       {#if editing && run.prNumber != null}
         <!-- Human review form -->
