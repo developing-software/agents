@@ -8,15 +8,17 @@
     filterTags = [],
     compact = false,
     emptyText = 'No events',
+    rootEventId,
   }: {
     organization: string;
     repoName: string;
     filterTags?: string[];
     compact?: boolean;
     emptyText?: string;
+    rootEventId?: string;
   } = $props();
 
-  let view = $state<'list' | 'tree'>('list');
+  let view = $state<'list' | 'tree'>('tree');
 </script>
 
 <div class="header">
@@ -37,7 +39,7 @@
 {#if view === 'list'}
   <EventList {organization} {repoName} {filterTags} {compact} {emptyText} />
 {:else}
-  <EventTree {organization} {repoName} {filterTags} {emptyText} />
+  <EventTree {organization} {repoName} {filterTags} {emptyText} {rootEventId} />
 {/if}
 
 <style>

@@ -119,7 +119,7 @@
     <Events
       organization={data.organization}
       repoName={data.repoName}
-      filterTags={[`plan:${data.plan.id}`]}
+      rootEventId={data.plan.id}
       emptyText="No events linked to this plan"
     />
   </div>

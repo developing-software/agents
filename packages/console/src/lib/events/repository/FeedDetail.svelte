@@ -2,6 +2,7 @@
   import { originBadgeStyle, eventDotColor, formatDuration } from '../helpers';
   import { DeployEvent } from '@agents/core/events/deploy/index';
   import TagList from '$lib/ui/tag/TagList.svelte';
+  import ArtifactList from './ArtifactList.svelte';
 
   let {
     event,
@@ -68,6 +69,9 @@
       <TagList tags={event.tags} />
     </div>
   {/if}
+
+  <!-- Artifacts -->
+  <ArtifactList eventId={event.id} {organization} {repoName} />
 
   <!-- Deploy details -->
   {#if event.type === 'deploy' || event.type.startsWith('deploy.')}

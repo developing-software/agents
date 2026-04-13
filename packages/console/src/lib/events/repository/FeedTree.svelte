@@ -30,18 +30,20 @@
     repoName,
     filterTags = [],
     emptyText = 'No events',
+    rootEventId,
   }: {
     organization: string;
     repoName: string;
     filterTags?: string[];
     emptyText?: string;
+    rootEventId?: string;
   } = $props();
 
   let retryCount = $state(0);
 
   const treePromise = $derived.by(() => {
     void retryCount;
-    return listTree({ organization, repoName, tags: filterTags }) as Promise<TreeNode[]>;
+    return listTree({ organization, repoName, tags: filterTags, rootEventId }) as Promise<TreeNode[]>;
   });
 
   function retry() { retryCount += 1; }
@@ -49,6 +51,15 @@
   let selectedEventId = $state<string | null>(null);
   let selectedEventData = $state<Record<string, unknown> | null>(null);
   let loadingDetail = $state(false);
+  let collapsed = $state(new Set<string>());
+
+  function toggleCollapse(e: MouseEvent, nodeId: string) {
+    e.stopPropagation();
+    const next = new Set(collapsed);
+    if (next.has(nodeId)) next.delete(nodeId);
+    else next.add(nodeId);
+    collapsed = next;
+  }
 
   async function selectEvent(node: TreeNode) {
     if (selectedEventId === node.id) {
@@ -94,21 +105,35 @@
       {@const trigger = triggerTag(node.tags)}
       {@const other = otherTags(node.tags)}
       {@const hasMeta = env || svc || tool || branch || workflow !== null || trigger || other.length > 0}
+      {@const hasChildren = node.children.length > 0}
+      {@const isCollapsed = collapsed.has(node.id)}
       <div class="node" style="padding-left: {depth * 16}px;">
-        <button
-          type="button"
-          class="row-btn"
-          class:row-btn-selected={selectedEventId === node.id}
-          onclick={() => selectEvent(node)}
-        >
-          {#if depth > 0}
+        <div class="row-wrapper">
+          {#if hasChildren}
+            <button
+              type="button"
+              class="collapse-toggle"
+              class:collapse-open={!isCollapsed}
+              onclick={(e) => toggleCollapse(e, node.id)}
+              aria-label={isCollapsed ? 'Expand' : 'Collapse'}
+            >&#x25B6;</button>
+          {:else if depth > 0}
             <span class="connector">&#x2514;</span>
+          {:else}
+            <span class="collapse-spacer"></span>
           {/if}
-          <span class="dot" style="background:{eventDotColor(node.type)};"></span>
-          <span class="etype" class:etype-muted={depth > 0}>{node.type}</span>
-          <span class="badge" style={originBadgeStyle(node.origin)}>{node.origin}</span>
-          <span class="time">{relativeTime(node.timeCreated)}</span>
-        </button>
+          <button
+            type="button"
+            class="row-btn"
+            class:row-btn-selected={selectedEventId === node.id}
+            onclick={() => selectEvent(node)}
+          >
+            <span class="dot" style="background:{eventDotColor(node.type)};"></span>
+            <span class="etype" class:etype-muted={depth > 0}>{node.type}</span>
+            <span class="badge" style={originBadgeStyle(node.origin)}>{node.origin}</span>
+            <span class="time">{relativeTime(node.timeCreated)}</span>
+          </button>
+        </div>
         {#if hasMeta}
           <div class="meta" style="padding-left: {depth > 0 ? 29 : 13}px;">
             {#if env}
@@ -154,7 +179,7 @@
             />
           {/if}
         {/if}
-        {#if node.children.length > 0}
+        {#if hasChildren && !isCollapsed}
           <div class="branch">
             {#each node.children as child (child.id)}
               {@render renderNode(child, depth + 1)}
@@ -183,6 +208,33 @@
   .tree { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; }
 
   .node { display: flex; flex-direction: column; }
+
+  .row-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .collapse-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-dim);
+    font-size: 8px;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, color 0.1s;
+    border-radius: 2px;
+  }
+  .collapse-toggle:hover { color: var(--color-text); background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+  .collapse-open { transform: rotate(90deg); }
+
+  .collapse-spacer { width: 16px; flex-shrink: 0; }
 
   .row-btn {
     display: flex;

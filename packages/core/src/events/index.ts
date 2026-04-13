@@ -260,6 +260,12 @@ export namespace Event {
     });
   }
 
+  /**
+   * Event types that should never have a parent inferred.
+   * Add prefixes here — any event whose type starts with a listed prefix skips inference.
+   */
+  const SKIP_PARENT_INFERENCE: string[] = ["github.push"];
+
   export async function inferParentEventId(opts: {
     source?: string;
     sourceId?: string;
@@ -269,6 +275,10 @@ export namespace Event {
   }): Promise<string | undefined> {
     if (opts.parentEventId !== undefined && opts.parentEventId !== null) {
       return opts.parentEventId;
+    }
+
+    if (opts.type && SKIP_PARENT_INFERENCE.some((prefix) => opts.type!.startsWith(prefix))) {
+      return undefined;
     }
 
     // Explicit parent tag takes precedence over plan inference
@@ -337,18 +347,19 @@ export namespace Event {
     type?: string;
     from?: string;
     to?: string;
+    rootEventId?: string;
   }): Promise<TreeNode[]> {
     return useTransaction(async (tx) => {
       const rows = await tx.execute(sql`
         WITH RECURSIVE event_tree AS (
           SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags, data FROM ${eventTable}
-          WHERE parent_event_id IS NULL
+          WHERE ${opts.rootEventId ? sql`id = ${opts.rootEventId}` : sql`parent_event_id IS NULL
             ${opts.source ? sql`AND source = ${opts.source}` : sql``}
             ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
             ${opts.tags?.length ? sql`AND tags @> ${JSON.stringify(opts.tags)}::text[]` : sql``}
             ${opts.type ? sql`AND type = ${opts.type}` : sql``}
             ${opts.from ? sql`AND time_created >= ${opts.from}::timestamptz` : sql``}
-            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}
+            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}`}
           UNION ALL
           SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags, e.data FROM ${eventTable} e
           JOIN event_tree et ON e.parent_event_id = et.id
