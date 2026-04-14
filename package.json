@@ -9,7 +9,7 @@
       "hono": "^4.11.3",
       "ulid": "^3.0.2",
       "zod": "^4.3.5",
-      "sst": "4.6.11",
+      "sst": "4.7.3",
       "typescript": "^6"
     },
     "catalogs": {
@@ -56,9 +56,9 @@
   "devDependencies": {
     "@cloudflare/workers-types": "4.20260317.1",
     "@types/bun": "catalog:",
-    "fallow": "^2.14.0",
-    "oxfmt": "^0.42.0",
-    "oxlint": "^1.57.0"
+    "fallow": "^2.35.0",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60.0"
   },
   "peerDependencies": {
     "typescript": "catalog:"
