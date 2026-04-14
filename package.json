@@ -29,6 +29,7 @@
     "packages": [
       "packages/*",
       "packages/sdk/ts",
+      "apps/*",
       "actions/*",
       "actions/*/*",
       "scripts"

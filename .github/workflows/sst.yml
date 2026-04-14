@@ -83,7 +83,7 @@ jobs:
 
       - name: build console
         run: bun run build
-        working-directory: packages/console
+        working-directory: apps/console
 
       - name: Deploy
         id: deploy
