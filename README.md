@@ -238,7 +238,7 @@ Each PR is reviewed individually (by an LLM judge, a human, or both), then all r
 +----------------------------------------------------------------------+
 
   +-----------------------------+    +-----------------------------+
-  |     packages/console        |    |    packages/functions       |
+  |       apps/console          |    |    packages/functions       |
   |     (SvelteKit Dashboard)   |    |    (Hono API Server)        |
   |                             |    |                             |
   |  - Repo browser             |    |  - POST /events            |
@@ -285,12 +285,13 @@ Each PR is reviewed individually (by an LLM judge, a human, or both), then all r
 
 ```
 agents/
+  apps/
+    console/        SvelteKit dashboard (Cloudflare Workers)
+    cli/            CLI tool
   packages/
     core/           Shared business logic, DB schema, GitHub integration
     functions/      Hono API server (OpenAPI-documented endpoints)
-    console/        SvelteKit dashboard (Cloudflare Workers)
     workers/        Cloudflare Workers build/deployment
-    cli/            CLI tool
     sdk/ts/         TypeScript SDK (auto-generated from OpenAPI spec)
   actions/
     core/           Shared action utilities

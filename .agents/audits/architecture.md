@@ -3,7 +3,7 @@ title: Architecture Audit
 description: Code structure and patterns across backend packages
 ---
 
-Audit code structure and pattern consistency across `packages/core`, `packages/functions`, and `*.remote.ts` files in `packages/console`. Do NOT audit `.svelte` files or frontend UI code.
+Audit code structure and pattern consistency across `packages/core`, `packages/functions`, and `*.remote.ts` files in `apps/console`. Do NOT audit `.svelte` files or frontend UI code.
 
 ## What to check
 

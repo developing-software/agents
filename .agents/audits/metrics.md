@@ -3,7 +3,7 @@ title: Metrics Audit
 description: Tag system, metric pipeline, and console dashboard consistency
 ---
 
-Audit the metrics pipeline end-to-end: tag definitions in `packages/core`, tag production in `actions/` and webhook handlers, metric emission from agent harnesses, and console display in `packages/console`.
+Audit the metrics pipeline end-to-end: tag definitions in `packages/core`, tag production in `actions/` and webhook handlers, metric emission from agent harnesses, and console display in `apps/console`.
 
 ## What to check
 
