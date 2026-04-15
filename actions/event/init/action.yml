@@ -3,7 +3,7 @@ description: Auto-setup and auto-teardown for event lifecycle — creates result
 
 inputs:
   type:
-    description: "Event type prefix (e.g. agent, checks) — emits {type}.started / {type}.completed"
+    description: "Event type (e.g. agent, checks) — creates event on setup, updates on teardown"
     required: true
   token:
     description: Personal access token for posting events to the Agents API
@@ -16,7 +16,7 @@ inputs:
     description: "Extra tags to attach to events (one per line)"
     required: false
   data:
-    description: "Extra JSON data to include in the started event"
+    description: "Extra JSON data to include in the event"
     required: false
 
 runs:

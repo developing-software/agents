@@ -8,9 +8,9 @@ When proposing solutions, prefer the simplest approach that matches existing cod
 
 - `packages/core` — shared business logic, DB schema, GitHub integration, actor/context system
 - `packages/functions` — Hono API server (port 3000), OpenAPI-documented endpoints
-- `packages/console` — SvelteKit dashboard (Cloudflare Workers)
-- `packages/cli` — CLI tool
 - `packages/sdk/ts` — TypeScript SDK auto-generated from OpenAPI spec
+- `apps/console` — SvelteKit dashboard (Cloudflare Workers)
+- `apps/cli` — CLI tool
 - `actions/implement` — reusable GitHub Action for AI-driven implementation
 
 ## Runtime
@@ -34,8 +34,8 @@ Use **Bun** everywhere.
 **Actor context** — every operation runs under an actor (`user`, `system`, `token`, `public`):
 
 ```ts
-import { useActor } from "@agents/core/actor";
-const actor = useActor();
+import { Actor } from "@agents/core/actor";
+const userId= Actor.userID();
 ```
 
 **Errors** — use `VisibleError` for client-safe errors:

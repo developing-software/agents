@@ -3,7 +3,7 @@ import { GithubInstallation } from "../installation/index";
 import { User } from "../../user/index";
 import { Log } from "../../util/log";
 import { Event } from "../../events/index";
-import { Tags } from "../../tag";
+import { Tags } from "../../events/tag";
 import { Repository } from "../../repository/index";
 
 interface WebhookEmitter {
@@ -189,20 +189,12 @@ export function registerHandlers(webhook: WebhookEmitter) {
 
     const pushTags = [Tags.ghRepo(repo.fullName), Tags.ghBranch(branch)];
 
-    const parentEventId = await Event.findParent({
-      source: "repository",
-      sourceId: repo.id,
-      tags: [Tags.ghRepo(repo.fullName), Tags.ghBranch(branch)],
-      excludeTypePrefix: "agent.",
-    });
-
     await Event.create({
       source: "repository",
       sourceId: repo.id,
       origin: "webhook",
       type: "github.push",
       tags: pushTags,
-      parentEventId,
       data: {
         branch,
         commitCount,

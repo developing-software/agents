@@ -675,6 +675,64 @@ export type PostEventsResponses = {
 
 export type PostEventsResponse = PostEventsResponses[keyof PostEventsResponses];
 
+export type PatchEventsByIdData = {
+  body: {
+    /**
+     * Arbitrary event data.
+     */
+    data?: {
+      [key: string]: unknown;
+    };
+    /**
+     * Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.
+     */
+    tags?: Array<string>;
+  };
+  path: {
+    /**
+     * Unique object identifier.
+     * The format and length of IDs may change over time.
+     */
+    id: string;
+  };
+  query?: never;
+  url: "/events/{id}";
+};
+
+export type PatchEventsByIdErrors = {
+  /**
+   * Bad Request
+   */
+  400: ErrorResponse;
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Not Found
+   */
+  404: ErrorResponse;
+  /**
+   * Too Many Requests
+   */
+  429: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type PatchEventsByIdError = PatchEventsByIdErrors[keyof PatchEventsByIdErrors];
+
+export type PatchEventsByIdResponses = {
+  /**
+   * The updated event.
+   */
+  200: Event;
+};
+
+export type PatchEventsByIdResponse = PatchEventsByIdResponses[keyof PatchEventsByIdResponses];
+
 export type PostEventsByIdArtifactsData = {
   body?: never;
   path: {

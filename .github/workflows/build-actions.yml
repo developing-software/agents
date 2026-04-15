@@ -23,13 +23,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - uses: developing-software/agents/actions/event/emit@dev
-        with:
-          token: ${{ secrets.AGENTS_TOKEN }}
-          event_id_env: AGENTS_WORKFLOW_EVENT_ID
-          type: build.actions.started
-          tags: env:dev
-
       - name: Typecheck actions
         run: |
           bunx tsc --noEmit --project actions/event/emit/tsconfig.json
@@ -62,7 +55,7 @@ jobs:
         if: always()
         with:
           token: ${{ secrets.AGENTS_TOKEN }}
-          type: build.actions.completed
+          type: build.actions
           tags: env:dev
           data: >-
             {"changed":${{ steps.commit.outputs.changed == 'true' }}}

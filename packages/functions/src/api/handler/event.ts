@@ -3,7 +3,7 @@ import { describeRoute } from "hono-openapi";
 import { z } from "zod";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
-import { Event } from "@agents/core/events/index";
+import { Event } from "@agents/core/events";
 import { Result, validator, ErrorResponses, authRequired } from "../common";
 import { Examples } from "@agents/core/examples";
 
@@ -87,6 +87,58 @@ export namespace EventApi {
 
         const event = await Event.fromID(id);
         return c.json(event!, 200);
+      },
+    )
+    .patch(
+      "/:id",
+      describeRoute({
+        tags: ["Event"],
+        summary: "Update event",
+        description: "Update data and/or tags on an existing event.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(Event.Info),
+                example: Examples.Event,
+              },
+            },
+            description: "The updated event.",
+          },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
+        },
+      }),
+      authRequired,
+      validator(
+        "param",
+        z.object({
+          id: Event.Info.shape.id,
+        }),
+      ),
+      validator(
+        "json",
+        z.object({
+          data: Event.Info.shape.data.optional(),
+          tags: Event.Info.shape.tags.optional(),
+        }),
+      ),
+      async (c) => {
+        const { id } = c.req.valid("param");
+        const event = await Event.fromID(id);
+        if (!event) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            `Event ${id} not found`,
+          );
+        }
+        const body = c.req.valid("json");
+        await Event.update(id, { data: body.data, tags: body.tags });
+        return c.json((await Event.fromID(id))!, 200);
       },
     )
     .post(

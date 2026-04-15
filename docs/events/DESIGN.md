@@ -10,7 +10,7 @@ Events are the backbone of observability in this system. Every meaningful action
   parentEventId: string?   // Links to parent event (chain/tree)
   source: string?          // Entity type (e.g., "repository")
   sourceId: string?        // Entity ID (ULID reference, no FK)
-  type: string             // Event type (e.g., "agent.started")
+  type: string             // Event type (e.g., "agent")
   origin: OriginType       // Where the event came from
   tags: string[]           // Filterable, searchable labels
   data: Record<string, unknown>  // Arbitrary payload (open schema)
@@ -33,10 +33,9 @@ Events are the backbone of observability in this system. Every meaningful action
 
 ### Agent Lifecycle
 
-| Type              | Origin | Description                                 |
-| ----------------- | ------ | ------------------------------------------- |
-| `agent.started`   | action | Agent workflow begins                       |
-| `agent.completed` | action | Workflow finishes, emits all collected data |
+| Type    | Origin | Description                                                                 |
+| ------- | ------ | --------------------------------------------------------------------------- |
+| `agent` | action | Agent workflow event — created on setup, updated on teardown with full data |
 
 ### GitHub Webhooks
 
@@ -56,28 +55,24 @@ Events are the backbone of observability in this system. Every meaningful action
 
 ### Checks (CI)
 
-| Type               | Origin | Description                                         |
-| ------------------ | ------ | --------------------------------------------------- |
-| `checks.started`   | action | CI check workflow begins                            |
-| `checks.completed` | action | CI check workflow finishes, emits all check results |
+| Type     | Origin | Description                                                         |
+| -------- | ------ | ------------------------------------------------------------------- |
+| `checks` | action | CI check event — created on setup, updated on teardown with results |
 
 Typed schema: `ChecksEvent.Completed.Data` in `packages/core/src/events/checks/index.ts`. Includes checks (with outcomes and summaries) and workflow metadata.
 
 ### Infrastructure
 
-| Type              | Origin | Description             |
-| ----------------- | ------ | ----------------------- |
-| `audit.started`   | action | Audit workflow begins   |
-| `audit.completed` | action | Audit workflow finishes |
+| Type    | Origin | Description |
+| ------- | ------ | ----------- |
+| `audit` | action | Audit event |
 
 ### Deployments
 
-| Type                      | Origin | Description                                             |
-| ------------------------- | ------ | ------------------------------------------------------- |
-| `deploy.started`          | action | Deploy workflow begins (SST, Terraform, etc.)           |
-| `deploy.completed`        | action | Deploy workflow finishes; emits outputs and PR metadata |
-| `deploy.remove.started`   | action | Teardown workflow begins                                |
-| `deploy.remove.completed` | action | Teardown finishes                                       |
+| Type            | Origin | Description                                                          |
+| --------------- | ------ | -------------------------------------------------------------------- |
+| `deploy`        | action | Deploy event — created on setup, updated on teardown with outputs/PR |
+| `deploy.remove` | action | Teardown event — created on setup, updated on teardown               |
 
 Standard tags: `env:<stage>`, `tool:<name>` (e.g. `sst`), `gh:branch:<head>` and `gh:base:<base>` on PR runs, plus all auto-injected `gh:*` tags from `event/init`.
 
@@ -85,12 +80,7 @@ Typed schema: `DeployEvent.Completed.Data` in `packages/core/src/events/deploy/i
 
 ## Event Chains
 
-Events form trees via `parentEventId`. A typical agent run chain:
-
-```
-agent.started
-  └── agent.completed   (all collected data)
-```
+Events form trees via `parentEventId`. Agent events are single nodes — created at workflow start and updated at teardown with full data.
 
 Parent inference works via tag matching — when `parentEventId` isn't explicit, `Event.inferParentEventId()` finds existing events with matching `gh:pr:`, `gh:issue:`, or `gh:workflow:` tags.
 
@@ -153,7 +143,7 @@ Is it categorical AND you also need it in the payload for display?
 
 ## Data Convention
 
-Event data uses an **open schema**. Any action can write any key. The `{type}.completed` event's data is assembled from `data.json` files in the results directory — the teardown recursively walks the directory tree and builds a nested object.
+Event data uses an **open schema**. Any action can write any key. The event's data is assembled from `data.json` files in the results directory — the teardown recursively walks the directory tree and builds a nested object, then merges it into the event via `PATCH /events/:id`.
 
 These keys are conventions, not enforced schemas. Any action can write additional keys via `event/data`.
 
@@ -161,7 +151,7 @@ These keys are conventions, not enforced schemas. Any action can write additiona
 
 Event data schemas are defined as **self-contained Zod modules** in `packages/core/src/events/{type}/index.ts`. Each module exports a namespace following the `{Type}Event` convention, with subnamespaces per lifecycle phase:
 
-- `AgentEvent.Completed.Data` — full `agent.completed` event body schema
+- `AgentEvent.Completed.Data` — full `agent` event body schema
 - `AgentEvent.Completed.parse(raw)` — never throws, returns typed defaults for missing/invalid fields
 - `AgentEvent.resolveAgent(name)` — normalizes agent name aliases (e.g. `"claude"` → `"claude-code"`)
 
@@ -169,20 +159,13 @@ Event data schemas are defined as **self-contained Zod modules** in `packages/co
 
 **Constraints:** These modules import only `zod` — no DB, drizzle, or internal dependencies. This allows them to be used by both `@agents/core` consumers and GitHub Actions.
 
-**Source of truth:** See `packages/core/src/events/agent/index.ts` for the `agent.completed` schema, including agent/metrics/pricing/workflow/diff/pr/checks fields.
+**Source of truth:** See `packages/core/src/events/agent/index.ts` for the `agent` event schema, including agent/metrics/pricing/workflow/diff/pr/checks fields.
 
 ## Data Schemas by Event Type
 
-### agent.started
+### agent
 
-```ts
-data: {
-  runUrl: string,          // GitHub Actions run URL
-  // + any extra data passed via event/init data input
-}
-```
-
-### agent.completed
+Created on setup with initial data (`runUrl`, `trigger`), then updated on teardown with full data.
 
 Typed schema: `AgentEvent.Completed.Data` in `packages/core/src/events/agent/index.ts`. Includes agent info, metrics, pricing, workflow, diff, PR, and checks.
 
@@ -230,18 +213,9 @@ data: {
 }
 ```
 
-### deploy.started
+### deploy
 
-```ts
-data: {
-  runUrl: string,
-  trigger: string,
-  stage: string,
-  tool: string,
-}
-```
-
-### deploy.completed
+Created on setup with initial data, updated on teardown with full data.
 
 ```ts
 data: {
@@ -261,8 +235,8 @@ data: {
 }
 ```
 
-A PR comment with marker `<!-- deploy:<tool> -->` is upserted with a table of `outputs`. On `deploy.remove.completed`, the same comment is deleted.
+A PR comment with marker `<!-- deploy:<tool> -->` is upserted with a table of `outputs`. On `deploy.remove`, the same comment is deleted.
 
-### deploy.remove.started / deploy.remove.completed
+### deploy.remove
 
-Same shape as `deploy.*`, except `outputs` is omitted (no URLs post-teardown).
+Same shape as `deploy`, except `outputs` is omitted (no URLs post-teardown).

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Result, validator, ErrorResponses, authRequired } from "../common";
-import { User } from "@agents/core/user/index";
+import { User } from "@agents/core/user";
 import { Actor } from "@agents/core/actor";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";

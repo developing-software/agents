@@ -6,10 +6,21 @@
   "module": "index.ts",
   "exports": {
     "./*": [
-      "./src/*.ts",
-      "./src/*/index.ts"
+      "./src/*\/index.ts",
+      "./src/*.ts"
     ],
-    "./events/agent": "./src/events/agent/index.ts"
+    "./identifier": "./src/identifier.ts",
+    "./actor": "./src/actor.ts",
+    "./error": "./src/error.ts",
+    "./examples": "./src/examples.ts",
+    "./util/*": "./src/util/*.ts",
+    "./api/*": "./src/api/*.ts",
+    "./agent/*": "./src/agent/*.ts",
+    "./email/*": "./src/email/*.ts",
+    "./github/client": "./src/github/client.ts",
+    "./github/repo/*": "./src/github/repo/*.ts",
+    "./events/agent-metrics": "./src/events/agent-metrics.ts",
+    "./events/plan/*": "./src/events/plan/*.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

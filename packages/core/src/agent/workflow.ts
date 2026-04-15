@@ -30,6 +30,8 @@ export namespace AgentWorkflow {
     model?: string;
     /** Git ref to dispatch on (default: "dev") */
     ref?: string;
+    /** Existing branch to work on (for fix dispatches on open PRs) */
+    branch?: string;
   }
 
   /**
@@ -88,6 +90,7 @@ export namespace AgentWorkflow {
     };
     if (tags.length > 0) workflowInputs.tags = tags.join("\n");
     if (input.model) workflowInputs.model = input.model;
+    if (input.branch) workflowInputs.branch = input.branch;
 
     const ref = input.ref ?? "dev";
     await GithubWorkflow.dispatch(repository, workflowFile, ref, workflowInputs);

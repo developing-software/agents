@@ -4,7 +4,7 @@ import { CodeProvider } from "@openauthjs/openauth/provider/code";
 import { CodeUI } from "@openauthjs/openauth/ui/code";
 import { subjects } from "./subject";
 import { THEME_OPENAUTH } from "@openauthjs/openauth/ui/theme";
-import { User } from "@agents/core/user/index";
+import { User } from "@agents/core/user";
 import { GitHub } from "@agents/core/github";
 import { Api } from "@agents/core/api/api";
 import { logger } from "hono/logger";

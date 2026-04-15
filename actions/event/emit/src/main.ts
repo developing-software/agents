@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import { createApiClient, readContextTags } from "@agents/actions-core";
-import { createID } from "@agents/core/util/id";
+import { Identifier } from "@agents/core/identifier";
 
 function readTags(raw: string) {
   return [
@@ -82,7 +82,7 @@ async function run() {
 
   const { data: event, error } = await sdk.postEvents({
     eventIngestInput: {
-      id: createID("event"),
+      id: Identifier.create("event"),
       repoFullName,
       parentEventId: parentEventId || undefined,
       origin,

@@ -1,6 +1,6 @@
 import { beforeAll, expect, test as _test, mock } from "bun:test";
 import { app } from "../../src/api/routes";
-import { User } from "@agents/core/user/index";
+import { User } from "@agents/core/user";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
 import { z } from "zod";
@@ -13,17 +13,7 @@ export function setupApiTest() {
   let pat: string;
 
   const withContext = async <T>(fn: () => T | Promise<T>): Promise<T> => {
-    return Actor.Context.provide(
-      { type: "user", properties: { userID, clientID: "test-client" } },
-      fn,
-    );
-    // return ProductFilter.provide(
-    //   {
-    //     region: "na",
-    //   },
-    //   () => {
-    //   },
-    // );
+    return Actor.provide("user", { userID, clientID: "test-client" }, fn);
   };
 
   beforeAll(async () => {

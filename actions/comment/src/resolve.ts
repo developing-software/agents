@@ -2,28 +2,29 @@ import * as core from "@actions/core";
 import { extractIssueFromTags, extractPrFromTags, readContextTags } from "@agents/actions-core";
 
 /**
- * Resolve the target issue/PR number to comment on.
+ * Resolve all target issue/PR numbers to comment on.
  *
- * Priority:
- * 1. gh:issue:N tag (the originating issue)
- * 2. gh:pr:N tag (created PR)
- * 3. issue_number input (explicit override)
+ * Collects unique targets from:
+ * - gh:issue:N tag (the originating issue)
+ * - gh:pr:N tag (created PR)
+ * - issue_number input (explicit override)
  *
- * Returns null if no target can be resolved.
+ * Returns empty array if no targets can be resolved.
  */
-export function resolveTarget(): number | null {
+export function resolveTargets(): number[] {
   const tags = readContextTags();
+  const targets = new Set<number>();
 
   const issueNumber = extractIssueFromTags(tags);
   if (issueNumber != null) {
     core.info(`Resolved comment target from gh:issue tag: #${issueNumber}`);
-    return issueNumber;
+    targets.add(issueNumber);
   }
 
   const prNumber = extractPrFromTags(tags);
   if (prNumber != null) {
     core.info(`Resolved comment target from gh:pr tag: #${prNumber}`);
-    return prNumber;
+    targets.add(prNumber);
   }
 
   const inputNumber = core.getInput("issue_number");
@@ -31,9 +32,9 @@ export function resolveTarget(): number | null {
     const parsed = parseInt(inputNumber, 10);
     if (!Number.isNaN(parsed)) {
       core.info(`Resolved comment target from issue_number input: #${parsed}`);
-      return parsed;
+      targets.add(parsed);
     }
   }
 
-  return null;
+  return Array.from(targets);
 }

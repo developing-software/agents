@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 export * from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import pg from "postgres";
-import { createContext } from "../context";
+import { Context } from "../context";
 // import { Resource } from "sst/resource";
 
 const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
@@ -18,16 +18,16 @@ function createDb(url: string): PostgresJsDatabase {
     logger:
       process.env.DRIZZLE_LOG === "true"
         ? {
-            logQuery(query, params) {
-              log.info("query", { query });
-              log.info("params", { params });
-            },
-          }
+          logQuery(query, params) {
+            log.info("query", { query });
+            log.info("params", { params });
+          },
+        }
         : undefined,
   });
 }
 
-const DatabaseContext = createContext<{ db: PostgresJsDatabase }>();
+const DatabaseContext = Context.create<{ db: PostgresJsDatabase }>();
 
 /** Wrap a request handler — worker calls this once per request */
 export function withDatabase<T>(url: string, fn: () => T): T {

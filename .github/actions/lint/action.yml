@@ -25,11 +25,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - id: lint-started
-      uses: developing-software/agents/actions/event/emit@dev
-      with:
-        type: lint.started
-
     - name: Setup Bun
       if: ${{ inputs.install != 'false' }}
       uses: oven-sh/setup-bun@v2
@@ -81,7 +76,6 @@ runs:
     - uses: developing-software/agents/actions/event/emit@dev
       if: always()
       with:
-        parent_event_id: ${{ steps.lint-started.outputs.event_id }}
-        type: lint.completed
+        type: lint
         data: >-
           {"outcome":${{ toJSON(steps.run-lint.outputs.outcome) }}}

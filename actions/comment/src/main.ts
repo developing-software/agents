@@ -3,17 +3,17 @@ import * as github from "@actions/github";
 import { buildProgressBody } from "./body/progress";
 import { buildSummaryBody } from "./body/summary";
 import { readResultsDir } from "./results";
-import { resolveTarget } from "./resolve";
+import { resolveTargets } from "./resolve";
 import type { CommentPhase, ResultsData } from "./types";
 import { findExistingComment, upsertComment } from "./upsert";
 
 async function run(): Promise<void> {
   const phase = core.getInput("phase", { required: true }) as CommentPhase;
 
-  // Resolve which issue/PR to comment on
-  const issueNumber = resolveTarget();
-  if (issueNumber == null) {
-    core.info("No issue/PR target resolved from tags or inputs -- skipping comment.");
+  // Resolve which issue/PRs to comment on
+  const targets = resolveTargets();
+  if (targets.length === 0) {
+    core.info("No issue/PR targets resolved from tags or inputs -- skipping comment.");
     return;
   }
 
@@ -40,24 +40,28 @@ async function run(): Promise<void> {
         `https://github.com/${owner}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID ?? ""}`,
       branch: process.env.DEV_AGENTS_BRANCH || null,
     });
-    await upsertComment({ octokit, owner, repo, issueNumber, body });
+    for (const issueNumber of targets) {
+      await upsertComment({ octokit, owner, repo, issueNumber, body });
+    }
   } else {
-    // Summary phase
+    // Summary phase — post to each target independently (each has its own run history)
     const resultsDir = process.env.DEV_AGENTS_RESULTS_DIR;
     const results: ResultsData = resultsDir
       ? readResultsDir(resultsDir)
       : { agent: null, diff: null, pr: null, checks: null };
 
-    const existing = await findExistingComment({ octokit, owner, repo, issueNumber });
+    for (const issueNumber of targets) {
+      const existing = await findExistingComment({ octokit, owner, repo, issueNumber });
 
-    const body = buildSummaryBody({
-      results,
-      existingBody: existing?.body ?? null,
-      runUrl: process.env.DEV_AGENTS_RUN_URL || "",
-      consoleUrl: core.getInput("console_url") || null,
-      eventId: process.env.DEV_AGENTS_EVENT_ID || null,
-    });
-    await upsertComment({ octokit, owner, repo, issueNumber, body });
+      const body = buildSummaryBody({
+        results,
+        existingBody: existing?.body ?? null,
+        runUrl: process.env.DEV_AGENTS_RUN_URL || "",
+        consoleUrl: core.getInput("console_url") || null,
+        eventId: process.env.DEV_AGENTS_EVENT_ID || null,
+      });
+      await upsertComment({ octokit, owner, repo, issueNumber, body });
+    }
   }
 }
 

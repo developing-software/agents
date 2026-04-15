@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "umenu",
   "private": true,
   "workspaces": {
@@ -9,7 +10,7 @@
       "hono": "^4.11.3",
       "ulid": "^3.0.2",
       "zod": "^4.3.5",
-      "sst": "4.6.11",
+      "sst": "4.7.3",
       "typescript": "^6"
     },
     "catalogs": {
@@ -20,15 +21,27 @@
       },
       "build": {},
       "frontend": {
+        "@sveltejs/adapter-cloudflare": "^7.2.6",
+        "@sveltejs/kit": "^2.50.2",
+        "@sveltejs/vite-plugin-svelte": "^6.2.4",
         "@tailwindcss/vite": "^4.1.18",
+        "runed": "^0.37.1",
         "daisyui": "^5.0.0",
-        "tailwindcss": "^4.1.18"
+        "svelte": "^5.51.0",
+        "svelte-check": "^4.4.2",
+        "tailwindcss": "^4.1.18",
+        "vite": "^7.3.1",
+        "vite-plugin-devtools-json": "^1.0.0"
       },
-      "testing": {}
+      "testing": {
+        "@happy-dom/global-registrator": "^20.8.9",
+        "@testing-library/svelte": "^5.3.1"
+      }
     },
     "packages": [
       "packages/*",
       "packages/sdk/ts",
+      "apps/*",
       "actions/*",
       "actions/*/*",
       "scripts"
@@ -55,9 +68,9 @@
   "devDependencies": {
     "@cloudflare/workers-types": "4.20260317.1",
     "@types/bun": "catalog:",
-    "fallow": "^2.14.0",
-    "oxfmt": "^0.42.0",
-    "oxlint": "^1.57.0"
+    "fallow": "^2.38.0",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60.0"
   },
   "peerDependencies": {
     "typescript": "catalog:"

@@ -34,15 +34,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - id: audit-started
-      uses: developing-software/agents/actions/event/emit@dev
-      if: inputs.token != ''
-      with:
-        token: ${{ inputs.token }}
-        url: ${{ inputs.url }}
-        type: audit.started
-        tags: "type:audit-${{ inputs.audit_name }}"
-
     - name: Fetch previous audit context
       shell: bash
       env:
@@ -115,7 +106,6 @@ runs:
       with:
         token: ${{ inputs.token }}
         url: ${{ inputs.url }}
-        parent_event_id: ${{ steps.audit-started.outputs.event_id }}
-        type: audit.completed
+        type: audit
         tags: "type:audit-${{ inputs.audit_name }}"
         data: '{"outcome":"${{ steps.claude.outcome }}"}'

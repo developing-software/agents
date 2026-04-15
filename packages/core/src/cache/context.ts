@@ -1,8 +1,8 @@
-import { createContext } from "../context";
+import { Context } from "../context";
 import type { CacheAdapter } from "./cache";
 import { CacheClient, type CacheClientOptions } from "./client";
 
-const CacheContext = createContext<CacheClient>();
+const CacheContext = Context.create<CacheClient>();
 
 export function withCacheContext<R>(
   adapter: CacheAdapter,

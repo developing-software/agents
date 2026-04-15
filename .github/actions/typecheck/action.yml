@@ -25,11 +25,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - id: typecheck-started
-      uses: developing-software/agents/actions/event/emit@dev
-      with:
-        type: typecheck.started
-
     - name: Setup Bun
       if: ${{ inputs.install != 'false' }}
       uses: oven-sh/setup-bun@v2
@@ -80,7 +75,6 @@ runs:
     - uses: developing-software/agents/actions/event/emit@dev
       if: always()
       with:
-        parent_event_id: ${{ steps.typecheck-started.outputs.event_id }}
-        type: typecheck.completed
+        type: typecheck
         data: >-
           {"outcome":${{ toJSON(steps.run-typecheck.outputs.outcome) }}}

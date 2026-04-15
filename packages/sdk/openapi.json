@@ -1530,6 +1530,158 @@
         }
       }
     },
+    "/events/{id}": {
+      "patch": {
+        "operationId": "patchEventsById",
+        "tags": ["Event"],
+        "summary": "Update event",
+        "description": "Update data and/or tags on an existing event.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                },
+                "example": {
+                  "id": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "parentEventId": null,
+                  "source": "repository",
+                  "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "origin": "webhook",
+                  "type": "github.issues.opened",
+                  "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+                  "data": {
+                    "action": "opened"
+                  },
+                  "timeCreated": "2024-01-01T00:00:00.000Z"
+                }
+              }
+            },
+            "description": "The updated event."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "rate_limit",
+                  "code": "too_many_requests",
+                  "message": "Rate limit exceeded"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            },
+            "required": true,
+            "description": "Unique object identifier.\nThe format and length of IDs may change over time."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {},
+                    "description": "Arbitrary event data.",
+                    "example": {
+                      "action": "opened"
+                    }
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+                    "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/events/{id}/artifacts": {
       "post": {
         "operationId": "postEventsByIdArtifacts",

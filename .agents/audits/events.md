@@ -1,175 +1,43 @@
 ---
 title: Event System Audit
-description: Event design, tag/data correctness, chain completeness, and inference opportunities
+description: Event design, tag/data correctness, chain completeness, and data quality
 ---
 
-You are running an event system audit of this repository.
+Audit the event system against its design docs. Read these first — they define what correct looks like:
 
-Your job: evaluate how events are designed, whether tags and data fields are used correctly, whether the event chain is complete, and what metrics can be inferred from existing event data -- then produce an actionable report with implementation plans for each finding.
+- `docs/events/DESIGN.md` — schema, types, tags vs data rules
+- `docs/events/INFERENCE.md` — derivable metrics and gaps
 
-Read the event system documentation first:
-- `docs/events/DESIGN.md` — event schema, types, tags vs data rules
-- `docs/events/INFERENCE.md` — derivable metrics, chain inference, gaps
+## What to check
 
-These docs define what GOOD looks like. Your audit checks reality against them.
+1. **Tags vs data** — Check every event emission point against the design doc rules. Tags must be small/categorical/deterministic. Flag: long strings as tags, filterable values buried in data only, numeric metrics as tags, duplication between tags and data.
+2. **Event chain** — Does the `agent` event link correctly to its plan/issue/PR parent via `parentEventId` or tag-based inference? Is information lost between setup and teardown updates? Any silent failure paths with no event emitted? Any undocumented event types?
+3. **Data quality** — Do all three harnesses (claude, codex, opencode) emit the same metric fields? Any dead fields (always null/same value)? Does the teardown update faithfully carry forward the harness-emitted metrics into `data.agent.metrics`?
 
-## Previous Audit
+## Rules
 
-Read `.agents/context/previous-audit-events.md` first. This contains the previous audit report.
-Track what was fixed since then, what is still open, and what is new.
-
-## Constraints
-
-- Do NOT create GitHub issues or PRs -- the workflow handles that.
-- Do NOT modify any source files -- this is a read-only audit.
-- Do NOT use shell commands beyond `ls`, `find`, and `wc`.
+- Read-only. Do not modify source files.
 - Only write to `.agents/reports/audit-events.md`.
-- Fill every section with real findings. No placeholders or template text.
+- Read `.agents/context/previous-audit-events.md` first — skip anything already fixed.
+- **Report at most 10 findings.** Prefer fewer, higher-impact items. Cut anything cosmetic or speculative.
 
-## Audit Areas
+## Output
 
-Use subagents (Agent tool) to research these areas in parallel (one subagent per area). Each subagent should read the design docs first, then explore its area, discover relevant files, and return structured findings. Then you compile the final report.
-
-### Area 1: Tags vs Data Correctness
-
-Check every event emission point in the codebase against the rules in `docs/events/DESIGN.md`.
-
-**Tags should be:** small, categorical, deterministic — single words, short identifiers, numbers, enum values. Used for filtering and grouping.
-- GOOD: `gh:repo:owner/name`, `gh:issue:42`, `model:claude-sonnet-4-20250514`, `harness:claude`, `scope:small`
-- BAD: long strings, error messages, URLs, numeric measurements, nested data
-
-**Data should be:** everything that is NOT small and simple — long strings, nested objects, arrays, numeric measurements.
-- GOOD: `finalMessage`, `errorMessage`, `durationMs`, `checks[]`, `metrics{}`
-- BAD: filterable categorical values that belong in tags
-
-**Anti-patterns to flag:**
-- Long strings stored as tags (error messages, final messages, URLs)
-- Filterable/categorical values only in `data` but not in `tags` (can't query by them)
-- Numeric metrics stored as tags instead of data fields
-- Unintentional duplication between tags and data fields
-
-**Where to look:** All event emission points — `actions/agent/workflow/src/start.ts`, `actions/agent/workflow/src/finish.ts`, harness action files under `actions/agent/*/`, webhook handlers in `packages/core/src/github/webhook/`, console remote functions that emit events, and `actions/event/emit/`.
-
-### Area 2: Event Chain Completeness
-
-Check whether the event lifecycle is complete — no information lost between steps, proper parent/child linking, all event types documented.
-
-**Questions to answer:**
-- Do all `agent.result` and `agent.completed` events correctly reference their `agent.started` parent?
-- Are there metrics or context values in `agent.result` that don't make it into `agent.completed`, causing information loss in the chain?
-- Do webhook events properly chain to agent events via tag inference?
-- Are there error/failure paths where no event is emitted (silent failures)?
-- Does every event type in the codebase match what's documented in `docs/events/DESIGN.md`? Are there undocumented event types?
-- Are `parentEventId` relationships correctly set, or do some events rely solely on tag inference when explicit linking would be more reliable?
-
-**Where to look:** Event emission code in `actions/agent/workflow/src/`, parent inference logic in `packages/core/src/events/index.ts`, webhook handlers, console event emission.
-
-### Area 3: Event Data Quality
-
-Check whether event data fields are well-structured, consistent across harnesses, and useful for downstream analysis.
-
-**Questions to answer:**
-- Do all three harnesses (claude, codex, opencode) emit the same metric fields in `agent.result`? Which fields are null/missing for which harnesses?
-- Is the `data` field well-structured for each event type, or is it a grab-bag of unrelated fields?
-- Are there fields in event data that are always null or always the same value (dead fields)?
-- Does `agent.completed` faithfully carry forward metrics from `agent.result`, or is data lost/transformed?
-- Are event data schemas documented and do they match reality?
-
-**Where to look:** Harness action files for metric extraction logic, `finish.ts` for how it reads and re-emits metrics, `EventMetrics` type and `extractMetrics()` in console code.
-
-### Area 4: Inference Opportunities
-
-Using `docs/events/INFERENCE.md` as a reference, check which derivable metrics are actually implemented and which are still missing.
-
-**Questions to answer:**
-- Which metrics from the "Not Yet Computed" section in INFERENCE.md are still unimplemented?
-- Are there NEW inference opportunities not listed in the docs? (Look at what data is available and think about what's useful)
-- Which "Gaps That Block Inference" from the docs still exist?
-- Are the "Currently Computed" metrics in the console correct and complete?
-- Could any existing event data be restructured to enable better inference without adding new events?
-
-**Where to look:** Console query functions in `packages/console/src/lib/events/events.remote.ts`, event helpers, dashboard components that display metrics.
-
-## Finding Format
-
-Every finding MUST include all of these fields:
+Write `.agents/reports/audit-events.md`. For each finding:
 
 ```
-### [SEVERITY] Title
+### [CRITICAL|IMPROVEMENT|SUGGESTION] Title
 
-**Evidence:** `file/path.ts:LINE` — description of what you found
-**Root cause:** Why this issue exists
-**Impact:** What breaks, misleads, or is blocked because of this
+**Evidence:** `file:line` — what you found
+**Impact:** what breaks or is missing
 
-<details>
-<summary>Implementation plan</summary>
+<details><summary>Fix</summary>
 
-**Files to change:**
-- `path/to/file.ts` — what to change
+- `file` — change needed
 
-**Steps:**
-1. Step with code sketch if applicable
-2. ...
-
-**Scope:** small / medium / large
+Scope: small / medium / large
 </details>
 ```
 
-Severity levels:
-- **CRITICAL** — data loss, broken event chain, wrong tag/data placement that prevents querying
-- **IMPROVEMENT** — missing inference, inconsistent data across harnesses, undocumented event type
-- **SUGGESTION** — new derivable metric, restructuring for better analysis
-
-## Report Structure
-
-Write `.agents/reports/audit-events.md` using **GitHub Flavored Markdown (GFM)** -- the report will be rendered as a GitHub issue body.
-
-Use GFM features for readability:
-- `- [ ]` / `- [x]` task list checkboxes for trackable findings
-- `<details><summary>...</summary>...</details>` for collapsible implementation plans
-- Tables with `| col | col |` syntax for structured data
-- Fenced code blocks with language tags (` ```ts `) for code snippets
-- `**bold**` for severity labels and key terms
-
-```markdown
-# Event System Audit — YYYY-MM-DD
-
-## Summary
-
-| Severity | Count |
-|---|---|
-| Critical | N |
-| Improvement | N |
-| Suggestion | N |
-
-**Delta from previous audit:** N fixed, N still open, N new
-
-## Fixed Since Last Audit
-- [x] Description of what was fixed (was: previous finding title)
-
-## Open Findings
-
-### Tags vs Data
-- [ ] Finding title — one-line summary
-(full finding with implementation plan below)
-
-### Event Chain
-- [ ] ...
-
-### Data Quality
-- [ ] ...
-
-### Inference Opportunities
-- [ ] ...
-
-## Event Type Inventory
-Table of all event types found, their tags, data fields, and emission points.
-Flag any that differ from docs/events/DESIGN.md.
-
-## Harness Consistency Matrix
-Table showing which metric fields each harness emits (claude, codex, opencode).
-Flag nulls and mismatches.
-
-## Checklist
-All findings as a flat `- [ ]` list for tracking.
-```
+Include a harness consistency matrix (which fields each harness emits, flag mismatches).
+End with "Top 3 Opportunities" — unimplemented inferences from INFERENCE.md, ordered by impact.

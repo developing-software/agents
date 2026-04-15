@@ -4,6 +4,21 @@ Platform-orchestrated AI development lifecycle for brownfield projects. Agents i
 
 Inspired by the [AIDLC](https://github.com/awslabs/aidlc-workflows) framework, adapted for monorepo workflows, atomic tasks, and external platform control.
 
+## Human-in-the-Loop Design
+
+Every phase transition requires a human decision. Agents never act autonomously — the platform orchestrates, but humans approve.
+
+| Gate | Who decides | What happens |
+|------|------------|--------------|
+| Plan approval | Human | `draft → review → approved` — no agent runs without this |
+| Dispatch | Human | Selects agents, models, and triggers execution from the console |
+| Review | Human and/or LLM | Scores each PR on adherence, quality, completeness |
+| Fix dispatch | Human | Sends agent back to fix issues on the same PR branch with feedback |
+| Winner selection | Human and/or LLM judge | Picks which competing PR to merge |
+| Merge | Human | Merges winner, closes losers, completes the plan |
+
+The **review/fix loop** is the core iteration cycle: after an agent submits a PR, the reviewer (human or LLM) evaluates it. If issues are found, the human dispatches a fix — the same agent receives the original plan prompt plus review feedback and works on the same branch. This repeats until the PR passes review. Only then does it enter winner comparison.
+
 ## Vision
 
 ```
@@ -39,7 +54,7 @@ Inspired by the [AIDLC](https://github.com/awslabs/aidlc-workflows) framework, a
 
 ### Phase 1: Inception (Platform-Orchestrated)
 
-Issues are triaged, validated, and grouped into plans. Plans can be authored by humans, drafted by an LLM agent, or both. Nothing reaches an implementation agent without an approved plan.
+Issues are triaged, validated, and grouped into plans. Plans can be authored by humans, drafted by an LLM agent, or both. **Nothing reaches an implementation agent without an approved plan.** The plan lifecycle enforces this: `draft → review → approved → implementing → completed | rejected`. Only humans can move a plan to `approved`.
 
 ```
 +----------------------------------------------------------------------+
@@ -76,33 +91,37 @@ Issues are triaged, validated, and grouped into plans. Plans can be authored by 
                         |
                         v
               +----------------------+
-              |    HUMAN REVIEW      |
+              |  ★ HUMAN APPROVAL ★  |
+              |    (Required Gate)   |
               |                      |
               |  - Edit draft        |
-              |  - Approve / reject  |
               |  - Refine scope      |
-              +----------------------+
-                        |
-                        | approved
-                        v
-              +----------------------+
-              |   APPROVED PLAN      |
-              |                      |
-              |  - Linked issues     |
-              |  - Clear scope       |
-              |  - Acceptance        |
+              |  - Set acceptance    |
               |    criteria          |
-              |  - Agent-ready       |
-              |    prompt            |
+              |  - Approve / reject  |
               +----------------------+
-                        |
-                        v
-                  CONSTRUCTION -->
+                      |         |
+               approved      rejected
+                  |              |
+                  v              v
+        +----------------+    (end)
+        | APPROVED PLAN  |
+        |                |
+        | - Linked issues|
+        | - Clear scope  |
+        | - Acceptance   |
+        |   criteria     |
+        | - Agent-ready  |
+        |   prompt       |
+        +----------------+
+                  |
+                  v
+            CONSTRUCTION -->
 ```
 
 ### Phase 2: Construction (Agent-Executed)
 
-The platform dispatches one or more agents to implement the same plan. Each agent works on its own branch, producing a PR with collected metrics. Multiple agents can compete on the same plan ("merge war") to evaluate different implementations.
+The platform dispatches one or more agents to implement the same approved plan. Each agent works on its own branch, producing a PR with collected metrics. Multiple agents can compete on the same plan ("merge war") to evaluate different implementations.
 
 ```
 +----------------------------------------------------------------------+
@@ -114,9 +133,11 @@ The platform dispatches one or more agents to implement the same plan. Each agen
                     v
           +------------------+
           |  AGENT DISPATCH  |
-          |  (Platform)      |
+          |  (Human triggers |
+          |   from Console)  |
           |                  |
           |  - Select agents |
+          |  - Select models |
           |  - Create branch |
           |  - Build prompt  |
           |  - Emit started  |
@@ -145,7 +166,7 @@ The platform dispatches one or more agents to implement the same plan. Each agen
 
 ### Phase 3: Review (LLM + Humans)
 
-An LLM judge analyzes all competing implementations, summarizes differences, and recommends a preferred PR. The human reviewer uses this analysis alongside their own judgment to approve and merge.
+Each PR is reviewed individually (by an LLM judge, a human, or both), then all reviews are compared to pick a winner. If a review finds issues, the human can dispatch a fix — sending the agent back to the same PR branch with review feedback appended to its prompt. This creates an iterative review/fix loop until the human is satisfied.
 
 ```
 +----------------------------------------------------------------------+
@@ -155,40 +176,57 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
       PR #1          PR #2          PR #3
       (Agent A)      (Agent B)      (Agent C)
         |              |              |
-        +--------------+--------------+
+        v              v              v
+  +-----------------------------------------------+
+  |              PER-PR REVIEW                     |
+  |                                                |
+  |  LLM Review: auto-scores adherence, quality,   |
+  |              completeness (1-10 each)          |
+  |        OR                                      |
+  |  Human Review: manual scores + verdict         |
+  |        OR                                      |
+  |  Both                                          |
+  +-----------------------------------------------+
+        |              |              |
+        v              v              v
+  +-----------+  +-----------+  +-----------+
+  | Passes?   |  | Passes?   |  | Passes?   |
+  +-----+-----+  +-----+-----+  +-----+-----+
+    Yes | No        Yes | No        Yes | No
+        |   |           |   |           |   |
+        |   v           |   v           |   v
+        | +----------+  | +----------+  | +----------+
+        | |FIX LOOP  |  | |FIX LOOP  |  | |FIX LOOP  |
+        | |          |  | |          |  | |          |
+        | | Human    |  | | Human    |  | | Human    |
+        | | dispatches  | | dispatches  | | dispatches
+        | | fix with |  | | fix with |  | | fix with |
+        | | feedback |  | | feedback |  | | feedback |
+        | +----+-----+  | +----+-----+  | +----+-----+
+        |      |         |      |         |      |
+        |      v         |      v         |      v
+        | Agent fixes    | Agent fixes    | Agent fixes
+        | same branch    | same branch    | same branch
+        |      |         |      |         |      |
+        |  (re-review)   |  (re-review)   |  (re-review)
+        |                |                |
+        v                v                v
+  +-----------------------------------------------+
+  |             COMPARE & PICK WINNER              |
+  |                                                |
+  |  LLM Judge: ranks all PRs, recommends winner   |
+  |        OR                                      |
+  |  Human Pick: manual selection with reasoning   |
+  +-----------------------------------------------+
                        |
                        v
              +--------------------+
-             |    LLM JUDGE       |
+             |   HUMAN MERGES     |
              |                    |
-             |  - Compare all PRs |
-             |  - Diff analysis   |
-             |  - Quality scoring |
-             |  - Recommend pick  |
-             +--------------------+
-                       |
-                       | summary + recommendation
-                       v
-             +--------------------+
-             |   HUMAN REVIEWER   |
-             |                    |
-             |  - Review code     |
-             |  - Read LLM summary|
-             |  - Final decision  |
-             |  - Merge winner    |
-             +--------------------+
-                       |
-                       | merged
-                       v
-             +--------------------+
-             |    POST-MERGE      |
-             |                    |
-             |  - Close linked    |
-             |    issues          |
-             |  - Close losing PRs|
+             |  - Merge winner PR |
+             |  - Close loser PRs |
+             |  - Plan → completed|
              |  - Emit events     |
-             |  - Collect final   |
-             |    metrics         |
              +--------------------+
 ```
 
@@ -200,7 +238,7 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
 +----------------------------------------------------------------------+
 
   +-----------------------------+    +-----------------------------+
-  |     packages/console        |    |    packages/functions       |
+  |       apps/console          |    |    packages/functions       |
   |     (SvelteKit Dashboard)   |    |    (Hono API Server)        |
   |                             |    |                             |
   |  - Repo browser             |    |  - POST /events            |
@@ -247,12 +285,13 @@ An LLM judge analyzes all competing implementations, summarizes differences, and
 
 ```
 agents/
+  apps/
+    console/        SvelteKit dashboard (Cloudflare Workers)
+    cli/            CLI tool
   packages/
     core/           Shared business logic, DB schema, GitHub integration
     functions/      Hono API server (OpenAPI-documented endpoints)
-    console/        SvelteKit dashboard (Cloudflare Workers)
     workers/        Cloudflare Workers build/deployment
-    cli/            CLI tool
     sdk/ts/         TypeScript SDK (auto-generated from OpenAPI spec)
   actions/
     core/           Shared action utilities

@@ -2,7 +2,7 @@ import { join } from "path";
 import { mkdirSync, writeFileSync } from "fs";
 import * as core from "@actions/core";
 import { createApiClient, uniqueTags } from "@agents/actions-core";
-import { createID } from "@agents/core/util/id";
+import { Identifier } from "@agents/core/identifier";
 
 function slugify(tag: string): string {
   // Extract the key portion (everything before the last :value segment for known patterns)
@@ -123,10 +123,10 @@ async function run() {
       const sdk = createApiClient(agentsToken, apiUrl);
       const { data } = await sdk.postEvents({
         eventIngestInput: {
-          id: createID("event"),
+          id: Identifier.create("event"),
           repoFullName: repository,
           origin: "action",
-          type: `${eventType}.started`,
+          type: eventType,
           tags: allTags,
           data: {
             runUrl,
@@ -156,7 +156,7 @@ async function run() {
         core.exportVariable("DEV_AGENTS_ARTIFACT_URL", `${base}/events/${data.id}/artifacts`);
       }
     } catch (err) {
-      core.warning(`Failed to post ${eventType}.started event: ${err}`);
+      core.warning(`Failed to post ${eventType} event: ${err}`);
     }
   }
 }

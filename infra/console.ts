@@ -5,11 +5,11 @@ import { domain } from './stage.ts'
 export const r2 = new sst.cloudflare.Bucket("Artifacts");
 
 const console = new sst.cloudflare.Worker("Console", {
-  handler: "./packages/console/.svelte-kit/cloudflare/_worker.js",
+  handler: "./apps/console/.svelte-kit/cloudflare/_worker.js",
   url: true,
   domain,
   assets: {
-    directory: "./packages/console/.svelte-kit/cloudflare",
+    directory: "./apps/console/.svelte-kit/cloudflare",
   },
   build: {
 

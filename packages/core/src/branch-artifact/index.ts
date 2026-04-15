@@ -61,7 +61,7 @@ export namespace BranchArtifact {
   ): Promise<Info[]> {
     const prefix = branchPrefix(owner, repo, branch);
     const listed = await bucket.list({ prefix });
-    return listed.objects.map((o: { key: string; size: number; uploaded: Date }) => ({
+    return listed.objects.map((o) => ({
       key: o.key,
       size: o.size,
       uploaded: o.uploaded.toISOString(),

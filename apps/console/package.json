@@ -1,0 +1,46 @@
+{
+  "name": "console",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "bun check",
+    "test": "bun test",
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "gen": "wrangler types"
+  },
+  "dependencies": {
+    "@agents/core": "workspace:*",
+    "@agents/functions": "workspace:*",
+    "@agents/sdk": "workspace:*",
+    "@ai-sdk/anthropic": "^3.0.64",
+    "@ai-sdk/svelte": "^4.0.142",
+    "@openauthjs/openauth": "^0.4.3",
+    "ai": "^6.0.142",
+    "marked": "^17.0.5",
+    "runed": "catalog:frontend",
+    "sst": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "catalog:testing",
+    "@sveltejs/adapter-cloudflare": "catalog:frontend",
+    "@sveltejs/kit": "catalog:frontend",
+    "@sveltejs/vite-plugin-svelte": "catalog:frontend",
+    "@tailwindcss/vite": "catalog:frontend",
+    "@testing-library/svelte": "catalog:testing",
+    "@types/bun": "catalog:",
+    "svelte": "catalog:frontend",
+    "svelte-check": "catalog:frontend",
+    "tailwindcss": "catalog:frontend",
+    "typescript": "catalog:",
+    "vite": "catalog:frontend",
+    "vite-plugin-devtools-json": "catalog:frontend",
+    "wrangler": "^4.63.0"
+  }
+}

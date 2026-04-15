@@ -27,6 +27,8 @@ import type {
   GetTokenByIdResponses,
   GetTokenErrors,
   GetTokenResponses,
+  PatchEventsByIdErrors,
+  PatchEventsByIdResponses,
   PostAppErrors,
   PostAppResponses,
   PostBranchArtifactsByOwnerByRepoByBranchResponses,
@@ -349,6 +351,50 @@ export class DevAgentSdk extends HeyApiClient {
     >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/events",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    });
+  }
+
+  /**
+   * Update event
+   *
+   * Update data and/or tags on an existing event.
+   */
+  public patchEventsById<ThrowOnError extends boolean = false>(
+    parameters: {
+      id: string;
+      data?: {
+        [key: string]: unknown;
+      };
+      tags?: Array<string>;
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "id" },
+            { in: "body", key: "data" },
+            { in: "body", key: "tags" },
+          ],
+        },
+      ],
+    );
+    return (options?.client ?? this.client).patch<
+      PatchEventsByIdResponses,
+      PatchEventsByIdErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/events/{id}",
       ...options,
       ...params,
       headers: {

@@ -1,7 +1,7 @@
-import { and, arrayContains, desc, eq, gte, inArray, isNull, lte, notLike, sql } from "drizzle-orm";
+import { and, arrayContains, desc, eq, gte, inArray, isNull, like, lte, notLike, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
-import { createID } from "../util/id";
+import { Identifier } from "../identifier";
 import { fn } from "../util/fn";
 import { Log } from "../util/log";
 import { Common } from "../common";
@@ -120,7 +120,7 @@ export namespace Event {
     }),
     async (input) => {
       return createTransaction(async (tx) => {
-        const id = input.id ?? createID("event");
+        const id = input.id ?? Identifier.create("event");
         const parentEventId = await inferParentEventId(input);
         log.info("create", {
           id,
@@ -146,6 +146,32 @@ export namespace Event {
       });
     },
   );
+
+  export async function update(
+    id: string,
+    patch: {
+      data?: Record<string, unknown>;
+      tags?: string[];
+    },
+  ): Promise<void> {
+    return createTransaction(async (tx) => {
+      const values: Record<string, unknown> = { timeUpdated: new Date() };
+      if (patch.data) {
+        const row = await tx
+          .select({ data: eventTable.data })
+          .from(eventTable)
+          .where(eq(eventTable.id, id))
+          .then((r) => r[0]);
+        if (!row) return;
+        values.data = { ...(row.data as Record<string, unknown>), ...patch.data };
+      }
+      if (patch.tags) {
+        values.tags = patch.tags;
+      }
+      log.info("update", { id, fields: Object.keys(values) });
+      await tx.update(eventTable).set(values).where(eq(eventTable.id, id));
+    });
+  }
 
   export const fromID = fn(Info.shape.id, async (id) => {
     return useTransaction(async (tx) => {
@@ -212,6 +238,34 @@ export namespace Event {
     });
   }
 
+  /** Find the most recent event matching a type prefix and tags (no root constraint). */
+  export async function findByTypeAndTags(opts: {
+    typePrefix: string;
+    tags: string[];
+  }): Promise<string | undefined> {
+    return useTransaction(async (tx) => {
+      const row = await tx
+        .select({ id: eventTable.id })
+        .from(eventTable)
+        .where(
+          and(
+            like(eventTable.type, opts.typePrefix + "%"),
+            arrayContains(eventTable.tags, opts.tags),
+          ),
+        )
+        .orderBy(desc(eventTable.timeCreated))
+        .limit(1)
+        .then((r) => r[0]);
+      return row?.id;
+    });
+  }
+
+  /**
+   * Event types that should never have a parent inferred.
+   * Add prefixes here — any event whose type starts with a listed prefix skips inference.
+   */
+  const SKIP_PARENT_INFERENCE: string[] = ["github.push"];
+
   export async function inferParentEventId(opts: {
     source?: string;
     sourceId?: string;
@@ -223,9 +277,37 @@ export namespace Event {
       return opts.parentEventId;
     }
 
+    if (opts.type && SKIP_PARENT_INFERENCE.some((prefix) => opts.type!.startsWith(prefix))) {
+      return undefined;
+    }
+
+    // Explicit parent tag takes precedence over plan inference
+    const parentTag = opts.tags?.find((tag) => tag.startsWith("parent:"));
+    if (parentTag) {
+      const parentId = parentTag.slice("parent:".length);
+      if (parentId) return parentId;
+    }
+
+    // Plan tag — the plan ID IS the event ID, so use it directly as parent
+    const planTag = opts.tags?.find((tag) => tag.startsWith("plan:"));
+    if (planTag) {
+      const planId = planTag.slice("plan:".length);
+      if (planId) return planId;
+    }
+
     const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
     if (prTag) {
-      const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent." }).catch(
+      // For non-agent events (e.g. deploy), prefer parenting under the agent
+      // that created/owns the PR, so deploys nest under the implementation.
+      if (!opts.type?.startsWith("agent")) {
+        const agentId = await findByTypeAndTags({
+          typePrefix: "agent",
+          tags: [prTag],
+        }).catch(() => undefined);
+        if (agentId) return agentId;
+      }
+
+      const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent" }).catch(
         () => undefined,
       );
       if (parentEventId) {
@@ -237,7 +319,7 @@ export namespace Event {
     if (workflowTag) {
       const parentEventId = await findParent({
         tags: [workflowTag],
-        excludeTypePrefix: "agent.",
+        excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;
@@ -248,7 +330,7 @@ export namespace Event {
     if (issueTag) {
       const parentEventId = await findParent({
         tags: [issueTag],
-        excludeTypePrefix: "agent.",
+        excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {
         return parentEventId;
@@ -265,20 +347,21 @@ export namespace Event {
     type?: string;
     from?: string;
     to?: string;
+    rootEventId?: string;
   }): Promise<TreeNode[]> {
     return useTransaction(async (tx) => {
       const rows = await tx.execute(sql`
         WITH RECURSIVE event_tree AS (
-          SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags FROM ${eventTable}
-          WHERE parent_event_id IS NULL
+          SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags, data FROM ${eventTable}
+          WHERE ${opts.rootEventId ? sql`id = ${opts.rootEventId}` : sql`parent_event_id IS NULL
             ${opts.source ? sql`AND source = ${opts.source}` : sql``}
             ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
             ${opts.tags?.length ? sql`AND tags @> ${JSON.stringify(opts.tags)}::text[]` : sql``}
             ${opts.type ? sql`AND type = ${opts.type}` : sql``}
             ${opts.from ? sql`AND time_created >= ${opts.from}::timestamptz` : sql``}
-            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}
+            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}`}
           UNION ALL
-          SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags FROM ${eventTable} e
+          SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags, e.data FROM ${eventTable} e
           JOIN event_tree et ON e.parent_event_id = et.id
         )
         SELECT * FROM event_tree
@@ -302,7 +385,7 @@ export namespace Event {
           type: row.type,
           origin: row.origin,
           tags: row.tags ?? [],
-          data: {},
+          data: (row.data as Record<string, unknown>) ?? {},
           timeCreated: new Date(row.time_created).toISOString(),
           children: [],
         };
@@ -317,6 +400,7 @@ export namespace Event {
           roots.push(node);
         }
       }
+      roots.reverse();
       return roots;
     });
   }

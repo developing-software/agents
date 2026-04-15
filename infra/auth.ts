@@ -1,6 +1,6 @@
 import { database } from "./database.ts";
 import { environment } from "./secrets";
-import { baseDomain, domain } from './stage.ts'
+import { baseDomain, subdomain } from './stage.ts'
 
 
 if ($app.stage === "prod") {
@@ -9,7 +9,7 @@ if ($app.stage === "prod") {
 
   const auth = new sst.cloudflare.Worker("AuthWorker", {
     handler: "./packages/workers/src/auth.ts",
-    domain: $interpolate`auth.${domain}`,
+    domain: subdomain(`auth`),
     url: true,
     placement: {
       region: "aws:sa-east-1",

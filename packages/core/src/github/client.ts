@@ -1,6 +1,6 @@
 import { Octokit } from "@octokit/rest";
 import { App } from "@octokit/app";
-import { createContext } from "../context";
+import { Context } from "../context";
 import { VisibleError } from "../error";
 
 export namespace GitHub {
@@ -10,7 +10,7 @@ export namespace GitHub {
     webhookSecret?: string;
   }
 
-  const Context = createContext<Octokit>();
+  const ctx = Context.create<Octokit>();
 
   export function fromToken(token: string): Octokit {
     return new Octokit({ auth: token });
@@ -39,10 +39,10 @@ export namespace GitHub {
   }
 
   export function provide<R>(client: Octokit, fn: () => R): R {
-    return Context.provide(client, fn);
+    return ctx.provide(client, fn);
   }
 
   export function use(): Octokit {
-    return Context.use();
+    return ctx.use();
   }
 }

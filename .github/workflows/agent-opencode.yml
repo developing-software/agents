@@ -17,6 +17,10 @@ on:
         description: "Model override"
         required: false
         type: string
+      branch:
+        description: "Existing branch to work on (skips branch creation)"
+        required: false
+        type: string
     secrets:
       AGENTS_TOKEN:
         required: true
@@ -37,6 +41,10 @@ on:
         description: "Model override"
         required: false
         type: string
+      branch:
+        description: "Existing branch to work on (skips branch creation)"
+        required: false
+        type: string
 
 jobs:
   implement:
@@ -47,7 +55,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      actions: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,6 +85,7 @@ jobs:
         with:
           prefix: opencode
           issue_number: ${{ steps.issue.outputs.number }}
+          existing_branch: ${{ inputs.branch }}
 
       - uses: ./actions/comment
         with:
@@ -127,10 +136,12 @@ jobs:
           issue_number: ${{ steps.issue.outputs.number }}
 
       - uses: ./actions/git/pr
+        id: pr
         if: always()
         with:
           prefix: opencode
           issue_number: ${{ steps.issue.outputs.number }}
+          prompt: ${{ inputs.prompt }}
 
       - uses: ./actions/comment
         if: always()
