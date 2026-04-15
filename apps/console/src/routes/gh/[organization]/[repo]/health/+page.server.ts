@@ -4,7 +4,7 @@ import { ChecksEvent } from "@agents/core/events/checks";
 
 export const load: PageServerLoad = async ({ parent, url }) => {
   const { repo, organization, repoName } = await parent();
-  const defaultBranch = repo?.defaultBranch ?? "main";
+  const defaultBranch = repo?.defaultBranch ?? "dev";
   const branch = url.searchParams.get("branch") || defaultBranch;
 
   if (!repo) {
