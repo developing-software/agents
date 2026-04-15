@@ -1,8 +1,8 @@
-import { prefixes } from "./util/id";
+import { Identifier } from "./identifier";
 
 export namespace Examples {
-  export const Id = (prefix: keyof typeof prefixes) =>
-    `${prefixes[prefix]}_XXXXXXXXXXXXXXXXXXXXXXXXX`;
+  export const Id = (prefix: Identifier.Prefix) =>
+    `${Identifier.prefixes[prefix]}_XXXXXXXXXXXXXXXXXXXXXXXXX`;
 
   export const Repository = {
     id: Id("repository"),

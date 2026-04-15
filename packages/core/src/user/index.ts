@@ -2,7 +2,7 @@ import { eq, and, isNull, asc, inArray } from "drizzle-orm";
 import { userTable } from "./user.sql";
 import { z } from "zod";
 import { fn } from "../util/fn";
-import { createID } from "../util/id";
+import { Identifier } from "../identifier";
 import { createTransaction, afterTx, useTransaction } from "../drizzle/transaction";
 import { Common } from "../common";
 import { Examples } from "../examples";
@@ -44,7 +44,7 @@ export namespace User {
       avatarUrl: true,
     }),
     async (input) => {
-      const id = createID("user");
+      const id = Identifier.create("user");
       await createTransaction(async (tx) => {
         await tx.insert(userTable).values({
           id,

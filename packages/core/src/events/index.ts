@@ -1,7 +1,7 @@
 import { and, arrayContains, desc, eq, gte, inArray, isNull, like, lte, notLike, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
-import { createID } from "../util/id";
+import { Identifier } from "../identifier";
 import { fn } from "../util/fn";
 import { Log } from "../util/log";
 import { Common } from "../common";
@@ -120,7 +120,7 @@ export namespace Event {
     }),
     async (input) => {
       return createTransaction(async (tx) => {
-        const id = input.id ?? createID("event");
+        const id = input.id ?? Identifier.create("event");
         const parentEventId = await inferParentEventId(input);
         log.info("create", {
           id,

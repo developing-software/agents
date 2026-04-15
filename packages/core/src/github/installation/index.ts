@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { createTransaction, useTransaction } from "../../drizzle/transaction";
-import { createID } from "../../util/id";
+import { Identifier } from "../../identifier";
 import { Log } from "../../util/log";
 import { githubInstallationTable } from "./installation.sql";
 
@@ -34,7 +34,7 @@ export namespace GithubInstallation {
         return existing.id;
       }
 
-      const id = createID("githubInstallation");
+      const id = Identifier.create("githubInstallation");
       log.info("upsert installation", { installationId: input.installationId, owner: input.owner });
       await tx.insert(githubInstallationTable).values({
         id,

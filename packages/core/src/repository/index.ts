@@ -5,7 +5,7 @@ import { Common } from "../common";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { Examples } from "../examples";
 import { githubInstallationTable } from "../github/installation/installation.sql";
-import { createID } from "../util/id";
+import { Identifier } from "../identifier";
 import { Log } from "../util/log";
 import { repositoryTable } from "./repository.sql";
 
@@ -135,7 +135,7 @@ export namespace Repository {
         return existing.id;
       }
 
-      const id = createID("repository");
+      const id = Identifier.create("repository");
       log.info("upsert repository", {
         source: input.source,
         sourceId: input.sourceId,

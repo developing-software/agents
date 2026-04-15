@@ -2,7 +2,7 @@ import { z } from "zod";
 import { fn } from "../util/fn";
 import { and, eq, isNull } from "../drizzle";
 import { apiClientTable, apiPersonalTokenTable } from "./api.sql";
-import { createID } from "../util/id";
+import { Identifier } from "../identifier";
 import { Actor } from "../actor";
 import { randomBytes } from "crypto";
 // import { Resource } from "sst";
@@ -46,8 +46,8 @@ export namespace Api {
         redirectURI: true,
       }),
       async (input) => {
-        const id = createID("apiClient");
-        const secret = createID("apiSecret");
+        const id = Identifier.create("apiClient");
+        const secret = Identifier.create("apiSecret");
         await useTransaction((tx) =>
           tx.insert(apiClientTable).values({
             id,
@@ -163,7 +163,7 @@ export namespace Api {
     export type Info = z.infer<typeof Info>;
 
     export async function create() {
-      const id = createID("apiPersonal");
+      const id = Identifier.create("apiPersonal");
       // const prefix = Resource.App.stage === "production" ? "live" : "test";
       const prefix = process.env.NODE_ENV === "production" ? "live" : "test";
       const token = `tok_${prefix}_` + randomBytes(10).toString("hex");

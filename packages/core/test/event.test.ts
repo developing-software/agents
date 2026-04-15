@@ -1,10 +1,10 @@
 import { describe, it, expect } from "bun:test";
 import { Event } from "../src/events";
 import { Tags } from "../src/events/tag";
-import { createID } from "../src/util/id";
+import { Identifier } from "../src/identifier";
 
 function testSourceId() {
-  return createID("repository");
+  return Identifier.create("repository");
 }
 
 describe("event", () => {
