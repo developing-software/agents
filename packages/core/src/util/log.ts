@@ -1,7 +1,7 @@
-import { createContext } from "../context";
+import { Context } from "../context";
 
 export namespace Log {
-  const ctx = createContext<{
+  const ctx = Context.create<{
     tags: Record<string, any>;
   }>();
 

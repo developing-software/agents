@@ -6,7 +6,7 @@ import {
 } from "drizzle-orm/pg-core";
 import type { ExtractTablesWithRelations } from "drizzle-orm/relations";
 import { useDatabase } from ".";
-import { createContext } from "../context";
+import { Context } from "../context";
 
 export type Transaction = PgAsyncTransaction<
   PgQueryResultHKT,
@@ -16,7 +16,7 @@ export type Transaction = PgAsyncTransaction<
 
 type TxOrDb = Transaction | ReturnType<typeof useDatabase>;
 
-const TransactionContext = createContext<{
+const TransactionContext = Context.create<{
   tx: Transaction;
   effects: (() => void | Promise<void>)[];
 }>();

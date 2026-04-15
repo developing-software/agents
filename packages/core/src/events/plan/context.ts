@@ -1,5 +1,5 @@
 import { AgentSkill } from "../../agent/skill";
-import { createContext } from "../../context";
+import { Context } from "../../context";
 import { GithubContent } from "../../github/repo/content";
 import { GithubIssue } from "../../github/repo/issue";
 import { Repository } from "../../repository/index";
@@ -15,7 +15,7 @@ interface PlanContextState {
   issue: (n: number) => Promise<GithubIssue.Info | null>;
 }
 
-const PlanContextStorage = createContext<PlanContextState>();
+const PlanContextStorage = Context.create<PlanContextState>();
 
 function makeState(plan: Plan.Info): PlanContextState {
   const repo = lazy(() =>

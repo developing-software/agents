@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createContext } from "./context";
+import { Context } from "./context";
 import { useTransaction } from "./drizzle/transaction";
 import { UserFlags, userTable } from "./user/user.sql";
 import { ErrorCodes, VisibleError } from "./error";
@@ -36,10 +36,11 @@ export namespace Actor {
 
   export type Info = User | Public | Token | System;
 
-  export const Context = createContext<Info>();
+  export const ctx = Context.create<Info>();
+  // const log = Log.create().tag("namespace", "actor");
 
   export function userID() {
-    const actor = Context.use();
+    const actor = ctx.use();
     if ("userID" in actor.properties) return actor.properties.userID;
     throw new VisibleError(
       "authentication",
@@ -87,7 +88,7 @@ export namespace Actor {
 
   export function use() {
     try {
-      return Context.use();
+      return ctx.use();
     } catch {
       return { type: "public", properties: {} } as Public;
     }
@@ -109,7 +110,7 @@ export namespace Actor {
     properties: Extract<Info, { type: T }>["properties"],
     fn: Next,
   ): ReturnType<Next> {
-    return Context.provide({ type, properties } as any, () =>
+    return ctx.provide({ type, properties } as any, () =>
       Log.provide(
         {
           actor: type,
