@@ -13,17 +13,7 @@ export function setupApiTest() {
   let pat: string;
 
   const withContext = async <T>(fn: () => T | Promise<T>): Promise<T> => {
-    return Actor.Context.provide(
-      { type: "user", properties: { userID, clientID: "test-client" } },
-      fn,
-    );
-    // return ProductFilter.provide(
-    //   {
-    //     region: "na",
-    //   },
-    //   () => {
-    //   },
-    // );
+    return Actor.provide("user", { userID, clientID: "test-client" }, fn);
   };
 
   beforeAll(async () => {

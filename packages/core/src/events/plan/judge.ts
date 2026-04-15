@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Prompt } from "../../util/prompt";
+import { EventRegistry } from "../registry";
 import REVIEW_TEMPLATE from "./prompts/review.txt?raw";
 import COMPARE_TEMPLATE from "./prompts/compare.txt?raw";
 import type { Plan } from "./index";
@@ -29,6 +30,10 @@ export namespace PlanJudge {
       .describe("Up to 3 actionable improvements, if any"),
   });
   export type ReviewResult = z.infer<typeof ReviewResult>;
+  /** `github.pull_request.reviewed` — ReviewResult payload per reviewed PR. */
+  export const ReviewedDef = EventRegistry.define("github.pull_request.reviewed", ReviewResult);
+
+
 
   export const CompareRanking = z.object({
     rank: z.number().describe("Rank position, 1 being the best"),
@@ -50,6 +55,23 @@ export namespace PlanJudge {
   });
   export type CompareResult = z.infer<typeof CompareResult>;
 
+  /** `plan.evaluated` — CompareResult payload written when a plan is judged. */
+  export const EvaluatedDef = EventRegistry.define("plan.evaluated", CompareResult);
+
+  /** Payload written when a plan's winning PR is merged and losers are closed. */
+  export const CompletedData = z
+    .object({
+      winnerPr: z.number().describe("Pull request number of the merged winner"),
+      winnerAgent: z.string().nullable().describe("Name of the winning agent, if known"),
+      closedPrs: z.array(z.number()).describe("Pull request numbers that were closed"),
+    })
+    .passthrough();
+  export type CompletedData = z.infer<typeof CompletedData>;
+
+  // -- Registry --
+
+  /** `plan.completed` — written when the winner is merged and losers are closed. */
+  export const CompletedDef = EventRegistry.define("plan.completed", CompletedData);
   // -- Types for prompt inputs --
 
   export interface RunMetrics {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EventRegistry } from "../registry";
 
 export namespace AgentEvent {
   // Agent name aliases → canonical ID
@@ -133,4 +134,6 @@ export namespace AgentEvent {
       return data;
     }
   }
+
+  export const Def = EventRegistry.define("agent", Completed.Data);
 }

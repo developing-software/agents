@@ -1,5 +1,5 @@
-import { Event } from "./index";
 import { AgentEvent } from "./agent/index";
+import { EventRegistry } from "./registry";
 
 function flattenChecks(
   raw: Record<string, Record<string, { outcome: string }>> | undefined,
@@ -30,8 +30,7 @@ export namespace AgentMetrics {
   }
 
   export async function summary(repoId: string, limit = 200): Promise<SummaryResult> {
-    const events = await Event.list({
-      type: "agent",
+    const events = await EventRegistry.list(AgentEvent.Def, {
       source: "repository",
       sourceId: repoId,
       limit,
@@ -139,8 +138,7 @@ export namespace AgentMetrics {
   }
 
   export async function comparison(repoId: string, limit = 500): Promise<ComparisonAgent[]> {
-    const events = await Event.list({
-      type: "agent",
+    const events = await EventRegistry.list(AgentEvent.Def, {
       source: "repository",
       sourceId: repoId,
       limit,
@@ -232,8 +230,7 @@ export namespace AgentMetrics {
   }
 
   export async function agentStats(repoId: string, limit = 200): Promise<AgentStatsEntry[]> {
-    const events = await Event.list({
-      type: "agent",
+    const events = await EventRegistry.list(AgentEvent.Def, {
       source: "repository",
       sourceId: repoId,
       limit,
