@@ -1,6 +1,6 @@
 import type { LayoutServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
-import { Repository } from "@agents/core/repository/index";
+import { Repository } from "@agents/core/repository";
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
   if (!locals.userID) throw redirect(302, "/");

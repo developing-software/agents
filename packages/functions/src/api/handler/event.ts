@@ -3,7 +3,7 @@ import { describeRoute } from "hono-openapi";
 import { z } from "zod";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
-import { Event } from "@agents/core/events/index";
+import { Event } from "@agents/core/events";
 import { Result, validator, ErrorResponses, authRequired } from "../common";
 import { Examples } from "@agents/core/examples";
 

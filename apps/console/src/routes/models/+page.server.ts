@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import { Models } from "@agents/core/models/index";
+import { Models } from "@agents/core/models";
 
 export const load: PageServerLoad = async () => {
   const [models, providerList] = await Promise.all([Models.allModels(), Models.providers()]);

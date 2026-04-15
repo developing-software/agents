@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { z } from "zod";
-import { Models } from "@agents/core/models/index";
+import { Models } from "@agents/core/models";
 import { authRequired, validator, Result, ErrorResponses } from "../common";
 
 export namespace ModelsApi {

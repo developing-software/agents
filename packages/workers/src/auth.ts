@@ -1,4 +1,4 @@
-import { withDatabase } from "@agents/core/drizzle/index";
+import { withDatabase } from "@agents/core/drizzle";
 import { createAuth } from "@agents/functions/src/auth";
 import type { KVNamespace, ExecutionContext } from "@cloudflare/workers-types";
 import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare";

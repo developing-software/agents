@@ -65,7 +65,7 @@ export const routes = app
 
 app.get("/healthz", async (c) => {
   const runtime = getRuntimeKey();
-  const { healthcheck } = await import("@agents/core/drizzle/index");
+  const { healthcheck } = await import("@agents/core/drizzle");
   const dbCheck = await healthcheck();
   return c.json(
     { status: dbCheck.status, runtime, db: dbCheck.message },

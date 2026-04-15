@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from "./$types";
-import { Repository } from "@agents/core/repository/index";
+import { Repository } from "@agents/core/repository";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   if (!locals.userID) return { userID: null, sidebarOrgs: [] };

@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { Event } from "@agents/core/events/index";
+import { Event } from "@agents/core/events";
 
 export type TriageContext = {
   owner: string;

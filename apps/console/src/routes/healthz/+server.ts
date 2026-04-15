@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { healthcheck, withDatabase } from "@agents/core/drizzle/index";
+import { healthcheck, withDatabase } from "@agents/core/drizzle";
 
 export const GET = async ({ platform }: { platform: App.Platform | undefined }) => {
   const runtime = platform ? "worker" : "node";

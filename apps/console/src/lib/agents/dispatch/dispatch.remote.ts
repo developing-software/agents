@@ -3,8 +3,8 @@ import { z } from "zod";
 import { AgentWorkflow, AgentCompat } from "@agents/core/agent";
 import { GithubBranch } from "@agents/core/github/repo/branch";
 import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
-import { Plan } from "@agents/core/events/plan/index";
-import { Repository } from "@agents/core/repository/index";
+import { Plan } from "@agents/core/events/plan";
+import { Repository } from "@agents/core/repository";
 import { error } from "@sveltejs/kit";
 
 export const listAgentConfigs = query(z.object({}), async () => {

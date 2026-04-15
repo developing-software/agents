@@ -1,6 +1,6 @@
 import type { PageServerLoad } from "./$types";
 import { AgentAudit } from "@agents/core/agent/audit";
-import { Event } from "@agents/core/events/index";
+import { Event } from "@agents/core/events";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const { repo } = await parent();

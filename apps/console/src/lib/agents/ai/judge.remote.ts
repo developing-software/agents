@@ -1,10 +1,10 @@
 import { command, query, getRequestEvent } from "$app/server";
 import { z } from "zod";
 import { generateText, Output } from "ai";
-import { Repository } from "@agents/core/repository/index";
-import { Event } from "@agents/core/events/index";
+import { Repository } from "@agents/core/repository";
+import { Event } from "@agents/core/events";
 import { AgentEvent } from "@agents/core/events/agent";
-import { Plan } from "@agents/core/events/plan/index";
+import { Plan } from "@agents/core/events/plan";
 import { PlanJudge } from "@agents/core/events/plan/judge";
 import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
 import { createModel } from "./model";

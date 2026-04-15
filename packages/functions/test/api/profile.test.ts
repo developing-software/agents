@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test";
 import { setupApiTest } from "./util";
 import { Examples } from "@agents/core/examples";
-import { User } from "@agents/core/user/index";
+import { User } from "@agents/core/user";
 
 const { test, validateOpenAPIRoute } = setupApiTest();
 

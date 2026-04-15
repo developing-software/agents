@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll } from "bun:test";
 import { app } from "@agents/functions/src/api/routes";
-import { User } from "@agents/core/user/index";
+import { User } from "@agents/core/user";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
 import { DevAgentSdk } from "@agents/sdk";

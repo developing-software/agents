@@ -1,7 +1,7 @@
 import { streamText, stepCountIs, convertToModelMessages, type UIMessage } from "ai";
 import type { RequestHandler } from "./$types";
-import { Repository } from "@agents/core/repository/index";
-import { Plan } from "@agents/core/events/plan/index";
+import { Repository } from "@agents/core/repository";
+import { Plan } from "@agents/core/events/plan";
 import { createModel } from "$lib/agents/ai/model";
 import { githubTools } from "$lib/agents/ai/tools/github-tools";
 import { planTools } from "$lib/agents/ai/tools/plan-tools";

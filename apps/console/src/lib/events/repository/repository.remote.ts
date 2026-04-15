@@ -1,7 +1,7 @@
 import { query } from "$app/server";
 import { z } from "zod";
-import { Repository } from "@agents/core/repository/index";
-import { Event } from "@agents/core/events/index";
+import { Repository } from "@agents/core/repository";
+import { Event } from "@agents/core/events";
 
 const input = z.object({
   organization: z.string(),

@@ -1,6 +1,6 @@
 import { query } from "$app/server";
 import { z } from "zod";
-import { Repository } from "@agents/core/repository/index";
+import { Repository } from "@agents/core/repository";
 import { GithubIssue } from "@agents/core/github/repo/issue";
 import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
 

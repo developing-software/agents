@@ -1,6 +1,6 @@
 import { beforeAll, expect, test as _test, mock } from "bun:test";
 import { app } from "../../src/api/routes";
-import { User } from "@agents/core/user/index";
+import { User } from "@agents/core/user";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
 import { z } from "zod";

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from "./$types";
-import { Event } from "@agents/core/events/index";
-import { ChecksEvent } from "@agents/core/events/checks/index";
+import { Event } from "@agents/core/events";
+import { ChecksEvent } from "@agents/core/events/checks";
 
 export const load: PageServerLoad = async ({ parent, url }) => {
   const { repo, organization, repoName } = await parent();

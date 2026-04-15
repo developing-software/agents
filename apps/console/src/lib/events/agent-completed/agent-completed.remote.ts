@@ -1,10 +1,10 @@
 import { query, command } from "$app/server";
 import { z } from "zod";
-import { Repository } from "@agents/core/repository/index";
-import { Event } from "@agents/core/events/index";
+import { Repository } from "@agents/core/repository";
+import { Event } from "@agents/core/events";
 import { AgentEvent } from "@agents/core/events/agent";
 import { AgentMetrics } from "@agents/core/events/agent-metrics";
-import { withCache, useCache } from "@agents/core/cache/index";
+import { withCache, useCache } from "@agents/core/cache";
 import { flattenChecks } from "../helpers";
 
 const repoInput = z.object({ organization: z.string(), repoName: z.string() });

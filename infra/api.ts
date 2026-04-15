@@ -1,12 +1,12 @@
 import { database } from "./database.ts";
 import { environment } from "./secrets.ts";
 import { r2 } from "./console.ts";
-import { domain } from './stage.ts'
+import { subdomain } from './stage.ts'
 
 
 const api = new sst.cloudflare.Worker("Api", {
   handler: "./packages/workers/src/api.ts",
-  domain: $interpolate`api.${domain}`,
+  domain: subdomain(`api`),
   url: true,
   placement: {
     region: "aws:sa-east-1",

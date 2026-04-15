@@ -5,8 +5,8 @@ import { VisibleError } from "@agents/core/error";
 import { dev } from "$app/environment";
 import { Actor } from "@agents/core/actor";
 import { sequence } from "@sveltejs/kit/hooks";
-import { withDatabase } from "@agents/core/drizzle/index";
-import { withCacheContext, CacheApiAdapter } from "@agents/core/cache/index";
+import { withDatabase } from "@agents/core/drizzle";
+import { withCacheContext, CacheApiAdapter } from "@agents/core/cache";
 
 const log = Log.create({ namespace: "console.hooks.server" });
 

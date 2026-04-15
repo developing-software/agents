@@ -1,6 +1,6 @@
 <script lang="ts">
   import { originBadgeStyle, eventDotColor, formatDuration } from '../helpers';
-  import { DeployEvent } from '@agents/core/events/deploy/index';
+  import { DeployEvent } from '@agents/core/events/deploy';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import ArtifactList from './ArtifactList.svelte';
 

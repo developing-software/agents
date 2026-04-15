@@ -18,7 +18,7 @@
     extractMetrics,
     formatMetricValue,
   } from '../helpers';
-  import { DeployEvent } from '@agents/core/events/deploy/index';
+  import { DeployEvent } from '@agents/core/events/deploy';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
 
   type EventItem = {

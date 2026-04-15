@@ -1,7 +1,7 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
-import { Plan } from "@agents/core/events/plan/index";
-import { Repository } from "@agents/core/repository/index";
+import { Plan } from "@agents/core/events/plan";
+import { Repository } from "@agents/core/repository";
 import type { PlanStatus } from "./plan-helpers";
 
 export const listPlans = query(

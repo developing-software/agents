@@ -1,6 +1,6 @@
 import type { PageServerLoad } from "./$types";
-import { Plan } from "@agents/core/events/plan/index";
-import { Event } from "@agents/core/events/index";
+import { Plan } from "@agents/core/events/plan";
+import { Event } from "@agents/core/events";
 
 export const load: PageServerLoad = async ({ params }) => {
   const plan = await Plan.fromID(params.id);

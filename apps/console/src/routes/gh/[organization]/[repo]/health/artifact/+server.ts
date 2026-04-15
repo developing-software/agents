@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import type { R2Bucket } from "@cloudflare/workers-types";
-import { BranchArtifact } from "@agents/core/branch-artifact/index";
+import { BranchArtifact } from "@agents/core/branch-artifact";
 
 export const GET: RequestHandler = async ({ url, params, locals, platform }) => {
   if (!locals.userID) {

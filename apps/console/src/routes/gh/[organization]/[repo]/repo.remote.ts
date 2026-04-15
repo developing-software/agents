@@ -4,7 +4,7 @@ import { GithubWorkflow } from "@agents/core/github/repo/workflow";
 import { AgentWorkflow } from "@agents/core/agent";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
-import { Repository } from "@agents/core/repository/index";
+import { Repository } from "@agents/core/repository";
 import { error } from "@sveltejs/kit";
 
 export const dispatchAgent = command(

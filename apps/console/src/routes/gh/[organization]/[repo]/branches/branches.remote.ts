@@ -1,6 +1,6 @@
 import { command } from "$app/server";
 import { z } from "zod";
-import { Repository } from "@agents/core/repository/index";
+import { Repository } from "@agents/core/repository";
 import { GithubBranch } from "@agents/core/github/repo/branch";
 import { error } from "@sveltejs/kit";
 

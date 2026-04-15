@@ -1,10 +1,10 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
-import { Repository } from "@agents/core/repository/index";
+import { Repository } from "@agents/core/repository";
 import { AgentAudit } from "@agents/core/agent/audit";
 import { GithubContent } from "@agents/core/github/repo/content";
-import { Event } from "@agents/core/events/index";
-import { Plan } from "@agents/core/events/plan/index";
+import { Event } from "@agents/core/events";
+import { Plan } from "@agents/core/events/plan";
 import { error } from "@sveltejs/kit";
 
 const repoInput = z.object({ organization: z.string(), repoName: z.string() });

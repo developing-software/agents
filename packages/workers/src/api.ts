@@ -1,4 +1,4 @@
-import { withDatabase } from "@agents/core/drizzle/index";
+import { withDatabase } from "@agents/core/drizzle";
 import { routes } from "@agents/functions/src/api/routes";
 import type { ExecutionContext, R2Bucket } from "@cloudflare/workers-types";
 // import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare";
