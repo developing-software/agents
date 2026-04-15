@@ -17,7 +17,7 @@ export namespace AuthApi {
         });
         if (!verified.err && verified.tokens) {
           await setTokens(c, verified.tokens.access, verified.tokens.refresh);
-          log.info("login", { userId: verified.subject.properties.userID });
+          log.info("login", { accountID: verified.subject.properties.accountID });
           return c.redirect("/");
         }
       }

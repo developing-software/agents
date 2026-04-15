@@ -1,6 +1,8 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { redirect, error } from "@sveltejs/kit";
-import { authClient, setTokens } from "$lib/auth";
+import { authClient } from "$lib/auth";
+import { addAccountToSession } from "$lib/session";
+import { subjects } from "@agents/functions/src/auth/subject";
 
 export const GET: RequestHandler = async (event) => {
   const code = event.url.searchParams.get("code");
@@ -12,6 +14,12 @@ export const GET: RequestHandler = async (event) => {
   const exchanged = await authClient.exchange(code, `${event.url.origin}/callback`);
   if (exchanged.err) error(400, String(exchanged.err));
 
-  setTokens(event, exchanged.tokens.access, exchanged.tokens.refresh);
-  redirect(302, "/");
+  const decoded = await authClient.verify(subjects, exchanged.tokens.access);
+  if (decoded.err) error(400, String(decoded.err));
+  if (decoded.subject.type !== "account") error(400, "unexpected subject");
+
+  const { accountID, email } = decoded.subject.properties;
+  await addAccountToSession(event, accountID, email);
+
+  redirect(302, "/auth");
 };

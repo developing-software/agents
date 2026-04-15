@@ -8,7 +8,7 @@ const log = Log.create({ namespace: "github.installation" });
 
 export namespace GithubInstallation {
   export interface UpsertInput {
-    userId?: string;
+    accountId?: string;
     installationId: number;
     owner: string;
   }
@@ -25,7 +25,7 @@ export namespace GithubInstallation {
         await tx
           .update(githubInstallationTable)
           .set({
-            userId: input.userId,
+            accountId: input.accountId,
             owner: input.owner,
             timeDeleted: null,
             timeUpdated: new Date(),
@@ -38,7 +38,7 @@ export namespace GithubInstallation {
       log.info("upsert installation", { installationId: input.installationId, owner: input.owner });
       await tx.insert(githubInstallationTable).values({
         id,
-        userId: input.userId,
+        accountId: input.accountId,
         installationId: input.installationId,
         owner: input.owner,
       });

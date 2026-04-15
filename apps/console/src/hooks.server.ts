@@ -1,5 +1,4 @@
 import type { Handle, HandleServerError } from "@sveltejs/kit";
-import { verifyUser } from "$lib/auth";
 import { Log } from "@agents/core/util/log";
 import { VisibleError } from "@agents/core/error";
 import { dev } from "$app/environment";
@@ -7,32 +6,32 @@ import { Actor } from "@agents/core/actor";
 import { sequence } from "@sveltejs/kit/hooks";
 import { withDatabase } from "@agents/core/drizzle";
 import { withCacheContext, CacheApiAdapter } from "@agents/core/cache";
+import { readSession } from "$lib/session";
 
 const log = Log.create({ namespace: "console.hooks.server" });
 
 const handleAuth: Handle = async ({ event, resolve }) => {
   if (event.isSubRequest) return resolve(event);
-  try {
-    const user = await verifyUser(event);
-    if (user) {
-      event.locals.userID = user.userID;
-    }
-  } catch (err) {
-    log.warn("auth verification failed", { error: String(err) });
+  event.locals.workspaceActors = new Map();
+
+  const session = await readSession(event).catch(() => null);
+  const current = session?.current;
+  const account = current ? session!.accounts[current] : undefined;
+
+  if (account && current) {
+    event.locals.actor = {
+      type: "account",
+      properties: { accountID: current, email: account.email },
+    };
+  } else {
+    event.locals.actor = { type: "public", properties: {} };
   }
 
-  if (event.locals.userID) {
-    return await Actor.provide(
-      "user",
-      {
-        userID: event.locals.userID,
-        clientID: "console",
-      },
-      () => resolve(event),
-    );
-  }
-
-  return await Actor.provide("public", {}, () => resolve(event));
+  return await Actor.provide(
+    event.locals.actor.type,
+    event.locals.actor.properties,
+    () => resolve(event),
+  );
 };
 
 const handleDb: Handle = async ({ event, resolve }) => {

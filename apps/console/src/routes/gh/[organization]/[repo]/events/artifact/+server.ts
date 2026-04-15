@@ -4,7 +4,7 @@ import type { R2Bucket } from "@cloudflare/workers-types";
 import { Event } from "@agents/core/events";
 
 export const GET: RequestHandler = async ({ url, locals, platform }) => {
-  if (!locals.userID) {
+  if (locals.actor.type !== "account") {
     return error(401, "Unauthorized");
   }
 

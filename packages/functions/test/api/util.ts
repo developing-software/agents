@@ -1,6 +1,6 @@
 import { beforeAll, expect, test as _test, mock } from "bun:test";
 import { app } from "../../src/api/routes";
-import { User } from "@agents/core/user";
+import { Account } from "@agents/core/account";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
 import { z } from "zod";
@@ -9,21 +9,20 @@ import { z } from "zod";
  * Setup API test environment with authentication and utility functions
  */
 export function setupApiTest() {
-  let userID: string;
+  let accountID: string;
   let pat: string;
 
   const withContext = async <T>(fn: () => T | Promise<T>): Promise<T> => {
-    return Actor.provide("user", { userID, clientID: "test-client" }, fn);
+    return Actor.provide("account", { accountID, email: "test@example.com" }, fn);
   };
 
   beforeAll(async () => {
-    // console.debug = mock();
     console.log = mock();
     console.info = mock();
     console.warn = mock();
     console.error = mock();
 
-    userID = await User.create({ email: "test@example.com" });
+    accountID = await Account.create({});
     await withContext(async () => {
       pat = await Api.Personal.create().then((r) => r.token);
     });

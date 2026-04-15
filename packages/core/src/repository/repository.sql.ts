@@ -1,14 +1,14 @@
 import { pgTable as table, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { id, timestamps, ulid } from "../drizzle/types";
 import { githubInstallationTable } from "../github/installation/installation.sql";
-import { userTable } from "../user/user.sql";
+import { accountTable } from "../account/account.sql";
 
 export const repositoryTable = table(
   "repository",
   {
     ...id,
     ...timestamps,
-    userId: ulid("user_id").references(() => userTable.id),
+    accountId: ulid("account_id").references(() => accountTable.id),
     source: varchar("source", { length: 32 }).notNull(),
     sourceId: varchar("source_id", { length: 255 }).notNull(),
     connectionId: ulid("connection_id")

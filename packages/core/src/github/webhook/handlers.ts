@@ -1,6 +1,5 @@
 import type { EmitterWebhookEventName, EmitterWebhookEvent } from "@octokit/webhooks";
 import { GithubInstallation } from "../installation/index";
-import { User } from "../../user/index";
 import { Log } from "../../util/log";
 import { Event } from "../../events/index";
 import { Tags } from "../../events/tag";
@@ -21,16 +20,12 @@ export function registerHandlers(webhook: WebhookEmitter) {
     const account = payload.installation.account;
     const owner = account && "login" in account ? account.login : "";
     log.info("installation created", { installationId: payload.installation.id, owner });
-    const users = await User.fromUsername(payload.sender.login);
-    const userId = users[0]?.id;
     const connectionId = await GithubInstallation.upsert({
-      userId,
       installationId: payload.installation.id,
       owner,
     });
     for (const r of payload.repositories ?? []) {
       await Repository.upsert({
-        userId,
         source: "github",
         sourceId: String(r.id),
         connectionId,
@@ -55,16 +50,12 @@ export function registerHandlers(webhook: WebhookEmitter) {
       installationId: payload.installation.id,
       count: payload.repositories_added.length,
     });
-    const users = await User.fromUsername(payload.sender.login);
-    const userId = users[0]?.id;
     const connectionId = await GithubInstallation.upsert({
-      userId,
       installationId: payload.installation.id,
       owner,
     });
     for (const r of payload.repositories_added) {
       await Repository.upsert({
-        userId,
         source: "github",
         sourceId: String(r.id),
         connectionId,

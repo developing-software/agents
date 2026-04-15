@@ -5,7 +5,6 @@ import { apiClientTable, apiPersonalTokenTable } from "./api.sql";
 import { Identifier } from "../identifier";
 import { Actor } from "../actor";
 import { randomBytes } from "crypto";
-// import { Resource } from "sst";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { useTransaction } from "../drizzle/transaction";
@@ -54,7 +53,7 @@ export namespace Api {
             secret,
             name: input.name,
             redirectURI: input.redirectURI,
-            userID: Actor.userID(),
+            accountID: Actor.accountID(),
           }),
         );
         return {
@@ -90,7 +89,12 @@ export namespace Api {
         tx
           .select()
           .from(apiClientTable)
-          .where(and(eq(apiClientTable.userID, Actor.userID()), isNull(apiClientTable.timeDeleted)))
+          .where(
+            and(
+              eq(apiClientTable.accountID, Actor.accountID()),
+              isNull(apiClientTable.timeDeleted),
+            ),
+          )
           .then((rows) => rows.map(serialize)),
       );
     }
@@ -99,7 +103,7 @@ export namespace Api {
       useTransaction(async (tx) => {
         const response = await tx
           .delete(apiClientTable)
-          .where(and(eq(apiClientTable.id, input), eq(apiClientTable.userID, Actor.userID())))
+          .where(and(eq(apiClientTable.id, input), eq(apiClientTable.accountID, Actor.accountID())))
           .returning({ id: apiClientTable.id });
         if (response.length === 0) {
           throw new VisibleError(
@@ -131,7 +135,7 @@ export namespace Api {
         const rows = await tx
           .select()
           .from(apiClientTable)
-          .where(and(eq(apiClientTable.id, id), eq(apiClientTable.userID, Actor.userID())))
+          .where(and(eq(apiClientTable.id, id), eq(apiClientTable.accountID, Actor.accountID())))
           .limit(1);
         return rows.map(serialize).at(0);
       }),
@@ -164,14 +168,13 @@ export namespace Api {
 
     export async function create() {
       const id = Identifier.create("apiPersonal");
-      // const prefix = Resource.App.stage === "production" ? "live" : "test";
       const prefix = process.env.NODE_ENV === "production" ? "live" : "test";
       const token = `tok_${prefix}_` + randomBytes(10).toString("hex");
       await useTransaction((tx) =>
         tx.insert(apiPersonalTokenTable).values({
           id,
           token,
-          userID: Actor.userID(),
+          accountID: Actor.accountID(),
         }),
       );
 
@@ -188,7 +191,7 @@ export namespace Api {
           .where(
             and(
               eq(apiPersonalTokenTable.id, input),
-              eq(apiPersonalTokenTable.userID, Actor.userID()),
+              eq(apiPersonalTokenTable.accountID, Actor.accountID()),
             ),
           )
           .returning({ id: apiPersonalTokenTable.id });
@@ -209,7 +212,7 @@ export namespace Api {
           .from(apiPersonalTokenTable)
           .where(
             and(
-              eq(apiPersonalTokenTable.userID, Actor.userID()),
+              eq(apiPersonalTokenTable.accountID, Actor.accountID()),
               isNull(apiPersonalTokenTable.timeDeleted),
             ),
           )
@@ -237,7 +240,10 @@ export namespace Api {
           .select()
           .from(apiPersonalTokenTable)
           .where(
-            and(eq(apiPersonalTokenTable.id, id), eq(apiPersonalTokenTable.userID, Actor.userID())),
+            and(
+              eq(apiPersonalTokenTable.id, id),
+              eq(apiPersonalTokenTable.accountID, Actor.accountID()),
+            ),
           )
           .limit(1);
         return rows.map(serialize).at(0);
@@ -249,7 +255,7 @@ export namespace Api {
         tx
           .select({
             id: apiPersonalTokenTable.id,
-            userID: apiPersonalTokenTable.userID,
+            accountID: apiPersonalTokenTable.accountID,
           })
           .from(apiPersonalTokenTable)
           .where(eq(apiPersonalTokenTable.token, token))

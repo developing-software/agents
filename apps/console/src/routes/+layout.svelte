@@ -14,7 +14,7 @@
       : null
   );
 
-  const showSidebar = $derived(!!data.userID && data.sidebarOrgs.length > 0);
+  const showSidebar = $derived(!!data.accountID && data.sidebarOrgs.length > 0);
 
   const sidebarPinned = new PersistedState('sidebar-pinned', false);
   let hovered = $state(false);
@@ -54,7 +54,7 @@
 
     <div class="topbar-actions">
       <a href="/models" class="topbar-link">Models</a>
-      {#if data.userID}
+      {#if data.accountID}
         <a href="/logout" class="signout-link">Sign out</a>
       {:else}
         <a href="/login" class="signin-btn">

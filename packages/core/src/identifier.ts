@@ -4,6 +4,9 @@ import { z } from "zod";
 export namespace Identifier {
   export const prefixes = {
     user: "usr",
+    account: "acc",
+    workspace: "wsp",
+    auth: "aut",
     event: "evt",
     plan: "pln",
     apiPersonal: "pat",

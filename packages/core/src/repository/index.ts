@@ -60,7 +60,7 @@ export namespace Repository {
   export type Info = z.infer<typeof Info>;
 
   export interface UpsertInput {
-    userId?: string;
+    accountId?: string;
     source: Source;
     sourceId: string;
     connectionId: string;
@@ -120,7 +120,7 @@ export namespace Repository {
         await tx
           .update(repositoryTable)
           .set({
-            userId: input.userId,
+            accountId: input.accountId,
             source: input.source,
             sourceId: input.sourceId,
             connectionId: input.connectionId,
@@ -143,7 +143,7 @@ export namespace Repository {
       });
       await tx.insert(repositoryTable).values({
         id,
-        userId: input.userId,
+        accountId: input.accountId,
         source: input.source,
         sourceId: input.sourceId,
         connectionId: input.connectionId,
@@ -204,7 +204,7 @@ export namespace Repository {
   }
 
   export async function findByID(id: string): Promise<Info | null> {
-    const userID = Actor.userID();
+    const accountId = Actor.accountID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
@@ -216,7 +216,7 @@ export namespace Repository {
         .where(
           and(
             eq(repositoryTable.id, id),
-            eq(repositoryTable.userId, userID),
+            eq(repositoryTable.accountId, accountId),
             isNull(repositoryTable.timeDeleted),
           ),
         )
@@ -225,7 +225,7 @@ export namespace Repository {
   }
 
   export async function findByFullName(fullName: string): Promise<Info | null> {
-    const userID = Actor.userID();
+    const accountId = Actor.accountID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
@@ -237,7 +237,7 @@ export namespace Repository {
         .where(
           and(
             eq(repositoryTable.fullName, fullName),
-            eq(repositoryTable.userId, userID),
+            eq(repositoryTable.accountId, accountId),
             isNull(repositoryTable.timeDeleted),
           ),
         )
@@ -260,7 +260,7 @@ export namespace Repository {
   }
 
   export async function list(): Promise<Info[]> {
-    const userID = Actor.userID();
+    const accountId = Actor.accountID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
@@ -269,13 +269,13 @@ export namespace Repository {
           githubInstallationTable,
           eq(repositoryTable.connectionId, githubInstallationTable.id),
         )
-        .where(and(eq(repositoryTable.userId, userID), isNull(repositoryTable.timeDeleted)))
+        .where(and(eq(repositoryTable.accountId, accountId), isNull(repositoryTable.timeDeleted)))
         .then((rows) => rows.map(serialize)),
     );
   }
 
   export async function listByOwner(owner: string): Promise<Info[]> {
-    const userID = Actor.userID();
+    const accountId = Actor.accountID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
@@ -287,7 +287,7 @@ export namespace Repository {
         .where(
           and(
             eq(repositoryTable.owner, owner),
-            eq(repositoryTable.userId, userID),
+            eq(repositoryTable.accountId, accountId),
             isNull(repositoryTable.timeDeleted),
           ),
         )

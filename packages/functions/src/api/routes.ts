@@ -3,7 +3,6 @@ import { logger } from "hono/logger";
 import { HTTPException } from "hono/http-exception";
 import { VisibleError, ErrorCodes, type ErrorResponseType } from "@agents/core/error";
 import { Log } from "@agents/core/util/log";
-import { ProfileApi } from "./handler/profile";
 import { getRuntimeKey } from "hono/adapter";
 import { AppApi } from "./handler/app";
 import { TokenApi } from "./handler/token";
@@ -28,7 +27,6 @@ app
 
 export const routes = app
   .route("/", AuthApi.route)
-  .route("/profile", ProfileApi.route)
   .route("/app", AppApi.route)
   .route("/token", TokenApi.route)
   .route("/events", EventApi.route)

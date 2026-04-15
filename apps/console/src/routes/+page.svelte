@@ -5,7 +5,7 @@
   let { data }: PageProps = $props();
 
   const dashboardPromise = $derived.by(() => {
-    if (!data.userID) return null;
+    if (!data.accountID) return null;
     return getDashboardSummary({});
   });
 
@@ -68,7 +68,7 @@
       </a>
     </div>
   </div>
-{:else if !data.userID}
+{:else if !data.accountID}
   <div class="login">
     <h1 class="login-title">agents</h1>
     <a href="/login" class="login-btn">

@@ -9,7 +9,7 @@ import { triageTools } from "$lib/agents/ai/tools/triage-tools";
 import { askUserTool } from "$lib/agents/ai/tools/ask-user-tool";
 
 export const POST: RequestHandler = async ({ request, params, locals, platform }) => {
-  if (!locals.userID) {
+  if (locals.actor.type !== "account") {
     return new Response("Unauthorized", { status: 401 });
   }
 

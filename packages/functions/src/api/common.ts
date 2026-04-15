@@ -3,7 +3,6 @@ import { ErrorResponse, ErrorCodes, VisibleError } from "@agents/core/error";
 import { validator as zodValidator, resolver } from "hono-openapi";
 import type { MiddlewareHandler, ValidationTargets } from "hono";
 import { Actor } from "@agents/core/actor";
-import { getTokens } from "./auth";
 
 export function Result<T extends z.ZodType>(schema: T) {
   return resolver(schema);
@@ -11,16 +10,14 @@ export function Result<T extends z.ZodType>(schema: T) {
 
 export const noop: MiddlewareHandler = (_c, next) => next();
 
-export const authRequired: MiddlewareHandler = async (c, next) => {
-  const hasAuthHeader = !!c.req.header("authorization");
-  const cookies = await getTokens(c);
-  if (!hasAuthHeader && !cookies.access)
+export const authRequired: MiddlewareHandler = async (_c, next) => {
+  const actor = Actor.use();
+  if (actor.type === "public")
     throw new VisibleError(
       "authentication",
       ErrorCodes.Authentication.UNAUTHORIZED,
       "Authentication required",
     );
-  Actor.userID();
   return next();
 };
 
