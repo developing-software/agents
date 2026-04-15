@@ -9,7 +9,7 @@ Audit the metrics pipeline end-to-end: tag definitions in `packages/core`, tag p
 
 1. **Tag consistency** — Are all produced tags defined in core types? Do all prefixes have console styling? Any orphaned builders or missing prefixes?
 2. **Metric pipeline** — Do all harnesses emit the same metric fields? Are emitted metrics represented in EventMetrics/METRIC_KEYS? Any fields emitted but never displayed?
-3. **Console coverage** — What `agent.completed` payload fields aren't shown in any UI? Any TODO/FIXME/HACK in the files you read?
+3. **Console coverage** — What `agent` event payload fields aren't shown in any UI? Any TODO/FIXME/HACK in the files you read?
 
 ## Rules
 

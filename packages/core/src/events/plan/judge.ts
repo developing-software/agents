@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { Prompt } from "../../util/prompt";
+import REVIEW_TEMPLATE from "./prompts/review.txt?raw";
+import COMPARE_TEMPLATE from "./prompts/compare.txt?raw";
 import type { Plan } from "./index";
 
 export namespace PlanJudge {
@@ -107,73 +110,40 @@ export namespace PlanJudge {
     return match?.[1]?.trim() ?? null;
   }
 
-  /**
-   * Plan-aware review prompt. Evaluates the PR against plan requirements
-   * with dimensional scoring.
-   */
-  export function composeReviewPrompt(input: ReviewInput): string {
-    const criteria = extractAcceptanceCriteria(input.plan.body);
-
-    return `You are a senior code reviewer. Evaluate this pull request against the plan it implements.
-
-## Plan: ${input.plan.title}
-
-${input.plan.body}
-
-${criteria ? `## Acceptance Criteria\n${criteria}` : ""}
-
-## Implementation by ${input.agent} (PR #${input.prNumber})
-
-### Metrics
-${formatMetrics(input.metrics)}
-
-### Check Results
-${formatChecks(input.checks)}
-
-### Diff
-\`\`\`diff
-${truncateDiff(input.diff)}
-\`\`\`
-
-## Instructions
-
-Score this implementation on three dimensions (1-10 each):
-- **adherence**: How well does this fulfill the plan requirements and acceptance criteria?
-- **quality**: Code quality, readability, correctness, and potential bugs.
-- **completeness**: Coverage of all plan requirements and test coverage based on check results.
-
-Provide a concise verdict (1-2 sentences). Only include suggestions if there are clear, actionable improvements (max 3).`;
+  function criteriaBlock(body: string): string {
+    const criteria = extractAcceptanceCriteria(body);
+    return criteria ? `## Acceptance Criteria\n${criteria}` : "";
   }
 
-  /**
-   * Comparison prompt that synthesizes individual reviews to rank implementations.
-   * Uses review data instead of re-reading diffs.
-   */
-  export function composeComparePrompt(input: CompareInput): string {
-    const criteria = extractAcceptanceCriteria(input.plan.body);
+  export function composeReviewPrompt(input: ReviewInput): string {
+    return Prompt.render(REVIEW_TEMPLATE, {
+      planTitle: input.plan.title,
+      planBody: input.plan.body,
+      criteriaBlock: criteriaBlock(input.plan.body),
+      agent: input.agent,
+      prNumber: input.prNumber,
+      metrics: formatMetrics(input.metrics),
+      checks: formatChecks(input.checks),
+      diff: truncateDiff(input.diff),
+    });
+  }
 
-    const reviewSections = input.reviews.map((r, i) => {
-      const avg = ((r.scores.adherence + r.scores.quality + r.scores.completeness) / 3).toFixed(1);
-      const suggestions = r.suggestions?.length ? `\nSuggestions: ${r.suggestions.join("; ")}` : "";
-      return `### ${i + 1}. ${r.agent} (PR #${r.prNumber})
+  export function composeComparePrompt(input: CompareInput): string {
+    const reviewSections = input.reviews
+      .map((r, i) => {
+        const avg = ((r.scores.adherence + r.scores.quality + r.scores.completeness) / 3).toFixed(1);
+        const suggestions = r.suggestions?.length ? `\nSuggestions: ${r.suggestions.join("; ")}` : "";
+        return `### ${i + 1}. ${r.agent} (PR #${r.prNumber})
 Scores: adherence=${r.scores.adherence}, quality=${r.scores.quality}, completeness=${r.scores.completeness} (avg ${avg})
 Verdict: ${r.verdict}${suggestions}`;
+      })
+      .join("\n\n");
+
+    return Prompt.render(COMPARE_TEMPLATE, {
+      planTitle: input.plan.title,
+      planBody: input.plan.body,
+      criteriaBlock: criteriaBlock(input.plan.body),
+      reviewSections,
     });
-
-    return `You are a senior engineering lead comparing multiple implementations of the same plan. Rank them and pick a winner.
-
-## Plan: ${input.plan.title}
-
-${input.plan.body}
-
-${criteria ? `## Acceptance Criteria\n${criteria}` : ""}
-
-## Reviews
-
-${reviewSections.join("\n\n")}
-
-## Instructions
-
-Based on the reviews above, rank the implementations and identify the winner. For each ranking, provide the three dimension scores and an optional brief note. Explain your reasoning concisely.`;
   }
 }

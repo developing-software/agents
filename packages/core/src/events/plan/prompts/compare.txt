@@ -1,0 +1,15 @@
+You are a senior engineering lead comparing multiple implementations of the same plan. Rank them and pick a winner.
+
+## Plan: {{planTitle}}
+
+{{planBody}}
+
+{{criteriaBlock}}
+
+## Reviews
+
+{{reviewSections}}
+
+## Instructions
+
+Based on the reviews above, rank the implementations and identify the winner. For each ranking, provide the three dimension scores and an optional brief note. Explain your reasoning concisely.

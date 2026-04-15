@@ -11,8 +11,8 @@ Audit the event system against its design docs. Read these first — they define
 ## What to check
 
 1. **Tags vs data** — Check every event emission point against the design doc rules. Tags must be small/categorical/deterministic. Flag: long strings as tags, filterable values buried in data only, numeric metrics as tags, duplication between tags and data.
-2. **Event chain** — Do `agent.result`/`agent.completed` events reference their `agent.started` parent? Is information lost between chain steps? Any silent failure paths with no event emitted? Any undocumented event types?
-3. **Data quality** — Do all three harnesses (claude, codex, opencode) emit the same metric fields? Any dead fields (always null/same value)? Does `agent.completed` faithfully carry forward `agent.result` metrics?
+2. **Event chain** — Does the `agent` event link correctly to its plan/issue/PR parent via `parentEventId` or tag-based inference? Is information lost between setup and teardown updates? Any silent failure paths with no event emitted? Any undocumented event types?
+3. **Data quality** — Do all three harnesses (claude, codex, opencode) emit the same metric fields? Any dead fields (always null/same value)? Does the teardown update faithfully carry forward the harness-emitted metrics into `data.agent.metrics`?
 
 ## Rules
 
