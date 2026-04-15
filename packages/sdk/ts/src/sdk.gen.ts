@@ -36,8 +36,6 @@ import type {
   PostEventsByIdArtifactsResponses,
   PostEventsErrors,
   PostEventsResponses,
-  PostGithubDispatchErrors,
-  PostGithubDispatchResponses,
   PostModelsCostErrors,
   PostModelsCostResponses,
   PostTokenErrors,
@@ -426,58 +424,6 @@ export class DevAgentSdk extends HeyApiClient {
       url: "/events/{id}/artifacts",
       ...options,
       ...params,
-    });
-  }
-
-  /**
-   * Dispatch agent workflow
-   *
-   * Trigger an agent workflow via GitHub Actions workflow_dispatch. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).
-   */
-  public postGithubDispatch<ThrowOnError extends boolean = false>(
-    parameters: {
-      owner: string;
-      repo: string;
-      agent: "claude" | "opencode" | "codex";
-      prompt?: string;
-      issue_number?: number;
-      tags?: Array<string>;
-      model?: string;
-      ref?: string;
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "body", key: "owner" },
-            { in: "body", key: "repo" },
-            { in: "body", key: "agent" },
-            { in: "body", key: "prompt" },
-            { in: "body", key: "issue_number" },
-            { in: "body", key: "tags" },
-            { in: "body", key: "model" },
-            { in: "body", key: "ref" },
-          ],
-        },
-      ],
-    );
-    return (options?.client ?? this.client).post<
-      PostGithubDispatchResponses,
-      PostGithubDispatchErrors,
-      ThrowOnError
-    >({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/github/dispatch",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
     });
   }
 

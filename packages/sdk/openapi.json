@@ -71,7 +71,13 @@
             "example": "https://avatars.githubusercontent.com/u/1"
           }
         },
-        "required": ["id", "name", "email", "username", "avatarUrl"],
+        "required": [
+          "id",
+          "name",
+          "email",
+          "username",
+          "avatarUrl"
+        ],
         "description": "A user.",
         "example": {
           "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -86,7 +92,9 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": ["user"],
+        "required": [
+          "user"
+        ],
         "description": "Updated user profile information.",
         "example": {
           "user": {
@@ -110,28 +118,45 @@
               "internal"
             ],
             "description": "The error type category",
-            "examples": ["validation", "authentication"]
+            "examples": [
+              "validation",
+              "authentication"
+            ]
           },
           "code": {
             "type": "string",
             "description": "Machine-readable error code identifier",
-            "examples": ["invalid_parameter", "missing_required_field", "unauthorized"]
+            "examples": [
+              "invalid_parameter",
+              "missing_required_field",
+              "unauthorized"
+            ]
           },
           "message": {
             "type": "string",
             "description": "Human-readable error message",
-            "examples": ["The request was invalid", "Authentication required"]
+            "examples": [
+              "The request was invalid",
+              "Authentication required"
+            ]
           },
           "param": {
             "description": "The parameter that caused the error (if applicable)",
-            "examples": ["email", "user_id"],
+            "examples": [
+              "email",
+              "user_id"
+            ],
             "type": "string"
           },
           "details": {
             "description": "Additional error context information"
           }
         },
-        "required": ["type", "code", "message"],
+        "required": [
+          "type",
+          "code",
+          "message"
+        ],
         "description": "Permission error"
       },
       "App": {
@@ -158,7 +183,12 @@
             "example": "sec_******XXXX"
           }
         },
-        "required": ["id", "name", "redirectURI", "secret"],
+        "required": [
+          "id",
+          "name",
+          "redirectURI",
+          "secret"
+        ],
         "description": "App.",
         "example": {
           "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -188,7 +218,11 @@
             "example": "pat_test_******XXXX"
           }
         },
-        "required": ["id", "created", "token"],
+        "required": [
+          "id",
+          "created",
+          "token"
+        ],
         "description": "Personal access token.",
         "example": {
           "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -247,7 +281,14 @@
           },
           "origin": {
             "type": "string",
-            "enum": ["api", "webhook", "action", "console", "cli", "cron"],
+            "enum": [
+              "api",
+              "webhook",
+              "action",
+              "console",
+              "cli",
+              "cron"
+            ],
             "description": "What triggered this event.",
             "example": "webhook"
           },
@@ -257,7 +298,10 @@
               "type": "string"
             },
             "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
-            "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+            "example": [
+              "gh:repo:octocat/hello-world",
+              "gh:issue:42"
+            ]
           },
           "data": {
             "type": "object",
@@ -295,7 +339,10 @@
           "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "origin": "webhook",
           "type": "github.issues.opened",
-          "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+          "tags": [
+            "gh:repo:octocat/hello-world",
+            "gh:issue:42"
+          ],
           "data": {
             "action": "opened"
           },
@@ -315,7 +362,9 @@
                     "example": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX"
                   }
                 },
-                "required": ["repositoryId"]
+                "required": [
+                  "repositoryId"
+                ]
               },
               {
                 "type": "object",
@@ -326,7 +375,9 @@
                     "example": "octocat/hello-world"
                   }
                 },
-                "required": ["repoFullName"]
+                "required": [
+                  "repoFullName"
+                ]
               }
             ],
             "description": "Source identifier — provide one of `repositoryId` or `repoFullName`."
@@ -353,7 +404,14 @@
               },
               "origin": {
                 "type": "string",
-                "enum": ["api", "webhook", "action", "console", "cli", "cron"],
+                "enum": [
+                  "api",
+                  "webhook",
+                  "action",
+                  "console",
+                  "cli",
+                  "cron"
+                ],
                 "description": "What triggered this event.",
                 "example": "webhook"
               },
@@ -368,7 +426,10 @@
                   "type": "string"
                 },
                 "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
-                "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+                "example": [
+                  "gh:repo:octocat/hello-world",
+                  "gh:issue:42"
+                ]
               },
               "data": {
                 "type": "object",
@@ -382,7 +443,10 @@
                 }
               }
             },
-            "required": ["origin", "type"]
+            "required": [
+              "origin",
+              "type"
+            ]
           }
         ],
         "description": "Event payload submitted by external producers.",
@@ -390,7 +454,10 @@
           "repoFullName": "octocat/hello-world",
           "origin": "webhook",
           "type": "github.issues.opened",
-          "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+          "tags": [
+            "gh:repo:octocat/hello-world",
+            "gh:issue:42"
+          ],
           "data": {
             "action": "opened"
           }
@@ -422,7 +489,12 @@
             "example": "2024-01-01T00:00:00.000Z"
           }
         },
-        "required": ["key", "name", "size", "uploaded"],
+        "required": [
+          "key",
+          "name",
+          "size",
+          "uploaded"
+        ],
         "description": "An artifact stored in R2 associated with an event.",
         "example": {
           "key": "events/evt_XXXXXXXXXXXXXXXXXXXXXXXXX/artifacts/execution.json",
@@ -452,7 +524,9 @@
     "/profile": {
       "get": {
         "operationId": "getProfile",
-        "tags": ["Profile"],
+        "tags": [
+          "Profile"
+        ],
         "summary": "Get profile",
         "description": "Get the current user's profile.",
         "responses": {
@@ -522,7 +596,9 @@
       },
       "put": {
         "operationId": "putProfile",
-        "tags": ["Profile"],
+        "tags": [
+          "Profile"
+        ],
         "summary": "Update profile",
         "description": "Update the current user's profile.",
         "responses": {
@@ -621,7 +697,10 @@
                     "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                   }
                 },
-                "required": ["name", "email"],
+                "required": [
+                  "name",
+                  "email"
+                ],
                 "description": "The user's updated profile information.",
                 "example": {
                   "name": "John Doe",
@@ -636,7 +715,9 @@
     "/app": {
       "get": {
         "operationId": "getApp",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "List apps",
         "description": "List the current user's registered apps.",
         "responses": {
@@ -719,7 +800,9 @@
       },
       "post": {
         "operationId": "postApp",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "Create app",
         "description": "Create an app.",
         "responses": {
@@ -740,7 +823,10 @@
                       "example": "sec_******XXXX"
                     }
                   },
-                  "required": ["id", "secret"]
+                  "required": [
+                    "id",
+                    "secret"
+                  ]
                 },
                 "example": {
                   "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -826,7 +912,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["name", "redirectURI"],
+                "required": [
+                  "name",
+                  "redirectURI"
+                ],
                 "description": "Basic app information.",
                 "example": {
                   "name": "Example App",
@@ -841,7 +930,9 @@
     "/app/{id}": {
       "get": {
         "operationId": "getAppById",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "Get app",
         "description": "Get the app with the given ID.",
         "responses": {
@@ -937,7 +1028,9 @@
       },
       "delete": {
         "operationId": "deleteAppById",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "Delete app",
         "description": "Delete the app with the given ID.",
         "responses": {
@@ -1062,7 +1155,9 @@
     "/token": {
       "get": {
         "operationId": "getToken",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "List tokens",
         "description": "List the current user's personal access tokens.",
         "responses": {
@@ -1143,7 +1238,9 @@
       },
       "post": {
         "operationId": "postToken",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "Create token",
         "description": "Create a personal access token.",
         "responses": {
@@ -1164,7 +1261,10 @@
                       "example": "pat_test_******XXXX"
                     }
                   },
-                  "required": ["id", "token"]
+                  "required": [
+                    "id",
+                    "token"
+                  ]
                 },
                 "example": {
                   "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -1225,7 +1325,9 @@
     "/token/{id}": {
       "get": {
         "operationId": "getTokenById",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "Get token",
         "description": "Get the personal access token with the given ID.",
         "responses": {
@@ -1320,7 +1422,9 @@
       },
       "delete": {
         "operationId": "deleteTokenById",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "Delete token",
         "description": "Delete the personal access token with the given ID.",
         "responses": {
@@ -1414,7 +1518,9 @@
     "/events": {
       "post": {
         "operationId": "postEvents",
-        "tags": ["Event"],
+        "tags": [
+          "Event"
+        ],
         "summary": "Create event",
         "description": "Record an event linked to a repository.",
         "responses": {
@@ -1431,7 +1537,10 @@
                   "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "origin": "webhook",
                   "type": "github.issues.opened",
-                  "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+                  "tags": [
+                    "gh:repo:octocat/hello-world",
+                    "gh:issue:42"
+                  ],
                   "data": {
                     "action": "opened"
                   },
@@ -1533,7 +1642,9 @@
     "/events/{id}": {
       "patch": {
         "operationId": "patchEventsById",
-        "tags": ["Event"],
+        "tags": [
+          "Event"
+        ],
         "summary": "Update event",
         "description": "Update data and/or tags on an existing event.",
         "responses": {
@@ -1550,7 +1661,10 @@
                   "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "origin": "webhook",
                   "type": "github.issues.opened",
-                  "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+                  "tags": [
+                    "gh:repo:octocat/hello-world",
+                    "gh:issue:42"
+                  ],
                   "data": {
                     "action": "opened"
                   },
@@ -1673,7 +1787,10 @@
                       "type": "string"
                     },
                     "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
-                    "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+                    "example": [
+                      "gh:repo:octocat/hello-world",
+                      "gh:issue:42"
+                    ]
                   }
                 }
               }
@@ -1685,7 +1802,9 @@
     "/events/{id}/artifacts": {
       "post": {
         "operationId": "postEventsByIdArtifacts",
-        "tags": ["Event"],
+        "tags": [
+          "Event"
+        ],
         "summary": "Upload artifact",
         "description": "Upload a file artifact associated with an event.",
         "responses": {
@@ -1796,151 +1915,12 @@
         ]
       }
     },
-    "/github/dispatch": {
-      "post": {
-        "operationId": "postGithubDispatch",
-        "tags": ["GitHub"],
-        "summary": "Dispatch agent workflow",
-        "description": "Trigger an agent workflow via GitHub Actions workflow_dispatch. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": ["ok"]
-                }
-              }
-            },
-            "description": "Workflow dispatched successfully."
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "validation",
-                  "code": "invalid_parameter",
-                  "message": "The request was invalid",
-                  "param": "email"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "authentication",
-                  "code": "unauthorized",
-                  "message": "Authentication required"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "not_found",
-                  "code": "resource_not_found",
-                  "message": "The requested resource could not be found"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "internal",
-                  "code": "internal_error",
-                  "message": "Internal server error"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "owner": {
-                    "type": "string",
-                    "description": "Repository owner",
-                    "example": "my-org"
-                  },
-                  "repo": {
-                    "type": "string",
-                    "description": "Repository name",
-                    "example": "my-repo"
-                  },
-                  "agent": {
-                    "type": "string",
-                    "enum": ["claude", "opencode", "codex"],
-                    "description": "Agent to dispatch"
-                  },
-                  "prompt": {
-                    "description": "Task/instructions for the agent. Required if issue_number is not provided.",
-                    "type": "string"
-                  },
-                  "issue_number": {
-                    "description": "Issue number to implement. Auto-fetches title/body to build prompt and adds gh:issue tag.",
-                    "type": "integer",
-                    "exclusiveMinimum": 0,
-                    "maximum": 9007199254740991
-                  },
-                  "tags": {
-                    "description": "Additional tags for event linking (e.g. gh:issue:42)",
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "model": {
-                    "description": "Model override",
-                    "type": "string"
-                  },
-                  "ref": {
-                    "default": "dev",
-                    "description": "Git ref to dispatch on",
-                    "type": "string"
-                  }
-                },
-                "required": ["owner", "repo", "agent"]
-              }
-            }
-          }
-        }
-      }
-    },
     "/models/pricing": {
       "get": {
         "operationId": "getModelsPricing",
-        "tags": ["Models"],
+        "tags": [
+          "Models"
+        ],
         "summary": "List all model pricing",
         "description": "Returns pricing data for all models. Costs are in dollars per 1M tokens.",
         "responses": {
@@ -2019,12 +1999,18 @@
                             "description": "Model pricing in USD per 1M tokens"
                           }
                         },
-                        "required": ["model", "provider", "cost"],
+                        "required": [
+                          "model",
+                          "provider",
+                          "cost"
+                        ],
                         "description": "Pricing record for a model"
                       }
                     }
                   },
-                  "required": ["models"]
+                  "required": [
+                    "models"
+                  ]
                 }
               }
             },
@@ -2102,7 +2088,9 @@
             "description": "Provider ID to filter pricing lookup (e.g. anthropic, openai)"
           }
         ],
-        "tags": ["Models"],
+        "tags": [
+          "Models"
+        ],
         "summary": "Get pricing for a model",
         "description": "Looks up pricing for a model ID using exact match, then longest-prefix-match. Costs are in dollars per 1M tokens.",
         "responses": {
@@ -2178,7 +2166,11 @@
                               "description": "Model pricing in USD per 1M tokens"
                             }
                           },
-                          "required": ["model", "provider", "cost"],
+                          "required": [
+                            "model",
+                            "provider",
+                            "cost"
+                          ],
                           "description": "Pricing record for a model"
                         },
                         {
@@ -2187,7 +2179,9 @@
                       ]
                     }
                   },
-                  "required": ["pricing"]
+                  "required": [
+                    "pricing"
+                  ]
                 }
               }
             },
@@ -2297,16 +2291,24 @@
                         "maximum": 9007199254740991
                       }
                     },
-                    "required": ["input", "output"],
+                    "required": [
+                      "input",
+                      "output"
+                    ],
                     "description": "Token counts from model usage"
                   }
                 },
-                "required": ["model", "tokens"]
+                "required": [
+                  "model",
+                  "tokens"
+                ]
               }
             }
           }
         },
-        "tags": ["Models"],
+        "tags": [
+          "Models"
+        ],
         "summary": "Calculate cost for model usage",
         "description": "Given a model ID and token counts, resolves pricing via longest-prefix-match and returns the calculated cost in USD.",
         "responses": {
@@ -2382,7 +2384,11 @@
                               "description": "Model pricing in USD per 1M tokens"
                             }
                           },
-                          "required": ["model", "provider", "cost"],
+                          "required": [
+                            "model",
+                            "provider",
+                            "cost"
+                          ],
                           "description": "Pricing record for a model"
                         },
                         {
@@ -2403,7 +2409,10 @@
                       "example": 0.225
                     }
                   },
-                  "required": ["pricing", "cost_usd"]
+                  "required": [
+                    "pricing",
+                    "cost_usd"
+                  ]
                 }
               }
             },

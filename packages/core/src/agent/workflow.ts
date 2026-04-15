@@ -1,17 +1,11 @@
 import { GithubIssue } from "../github/repo/issue";
-import { GithubWorkflow } from "../github/repo/workflow";
 import { Repository } from "../repository/index";
 import { VisibleError } from "../error";
+import { AgentEngine } from "./engine";
 
 export namespace AgentWorkflow {
   export const Agents = ["claude", "opencode", "codex"] as const;
   export type Agent = (typeof Agents)[number];
-
-  const WORKFLOW_FILES: Record<Agent, string> = {
-    claude: "agent-claude.yml",
-    opencode: "agent-opencode.yml",
-    codex: "agent-codex.yml",
-  };
 
   export interface DispatchInput {
     /** Repository owner */
@@ -32,6 +26,8 @@ export namespace AgentWorkflow {
     ref?: string;
     /** Existing branch to work on (for fix dispatches on open PRs) */
     branch?: string;
+    /** Engine to dispatch on (default: "github") */
+    engine?: AgentEngine.Id;
   }
 
   /**
@@ -52,10 +48,10 @@ export namespace AgentWorkflow {
   }
 
   /**
-   * Dispatch an agent workflow on a repository.
+   * Dispatch an agent on the selected engine.
    *
    * Resolves the repository, optionally fetches the issue to build a prompt,
-   * and triggers the corresponding GitHub Actions workflow.
+   * and delegates execution to the chosen engine (default: GitHub Actions).
    */
   export async function dispatch(input: DispatchInput) {
     if (!input.prompt && !input.issueNumber) {
@@ -84,15 +80,15 @@ export namespace AgentWorkflow {
       }
     }
 
-    const workflowFile = WORKFLOW_FILES[input.agent];
-    const workflowInputs: Record<string, string> = {
+    const engine = AgentEngine.resolve(input.engine ?? "github");
+    await engine.dispatch({
+      repository,
+      agent: input.agent,
       prompt: prompt!,
-    };
-    if (tags.length > 0) workflowInputs.tags = tags.join("\n");
-    if (input.model) workflowInputs.model = input.model;
-    if (input.branch) workflowInputs.branch = input.branch;
-
-    const ref = input.ref ?? "dev";
-    await GithubWorkflow.dispatch(repository, workflowFile, ref, workflowInputs);
+      tags,
+      model: input.model,
+      branch: input.branch,
+      ref: input.ref,
+    });
   }
 }
