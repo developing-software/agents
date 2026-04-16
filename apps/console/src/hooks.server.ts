@@ -27,10 +27,8 @@ const handleAuth: Handle = async ({ event, resolve }) => {
     event.locals.actor = { type: "public", properties: {} };
   }
 
-  return await Actor.provide(
-    event.locals.actor.type,
-    event.locals.actor.properties,
-    () => resolve(event),
+  return await Actor.provide(event.locals.actor.type, event.locals.actor.properties, () =>
+    resolve(event),
   );
 };
 

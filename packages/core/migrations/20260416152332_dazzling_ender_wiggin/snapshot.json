@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "a0c7d1bd-d52b-47c9-91a0-322cf7c42575",
-  "prevIds": [
-    "e5c666eb-38fc-44f0-a06e-ce5dde6bc2e3"
-  ],
+  "prevIds": ["e5c666eb-38fc-44f0-a06e-ce5dde6bc2e3"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -1525,14 +1523,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "account_id"
-      ],
+      "columns": ["account_id"],
       "schemaTo": "public",
       "tableTo": "account",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "api_client_account_id_account_id_fkey",
@@ -1542,14 +1536,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "api_personal_token_user_id_user_id_fkey",
@@ -1559,14 +1549,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "account_id"
-      ],
+      "columns": ["account_id"],
       "schemaTo": "public",
       "tableTo": "account",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "auth_account_id_account_id_fkey",
@@ -1576,14 +1562,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "parent_event_id"
-      ],
+      "columns": ["parent_event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "event_parent_event_id_event_id_fkey",
@@ -1593,14 +1575,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "workspace_id"
-      ],
+      "columns": ["workspace_id"],
       "schemaTo": "public",
       "tableTo": "workspace",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "installations_workspace_id_workspace_id_fkey",
@@ -1610,14 +1588,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "workspace_id"
-      ],
+      "columns": ["workspace_id"],
       "schemaTo": "public",
       "tableTo": "workspace",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "repository_workspace_id_workspace_id_fkey",
@@ -1627,14 +1601,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "installation_id"
-      ],
+      "columns": ["installation_id"],
       "schemaTo": "public",
       "tableTo": "installations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "repository_installation_id_installations_id_fkey",
@@ -1644,14 +1614,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "workspace_id"
-      ],
+      "columns": ["workspace_id"],
       "schemaTo": "public",
       "tableTo": "workspace",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "user_workspace_id_workspace_id_fkey",
@@ -1661,14 +1627,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "account_id"
-      ],
+      "columns": ["account_id"],
       "schemaTo": "public",
       "tableTo": "account",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "user_account_id_account_id_fkey",
@@ -1677,9 +1639,7 @@
       "table": "user"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "account_pkey",
       "schema": "public",
@@ -1687,9 +1647,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "api_client_pkey",
       "schema": "public",
@@ -1697,9 +1655,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "api_personal_token_pkey",
       "schema": "public",
@@ -1707,9 +1663,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "auth_pkey",
       "schema": "public",
@@ -1717,9 +1671,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "event_pkey",
       "schema": "public",
@@ -1727,9 +1679,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "installations_pkey",
       "schema": "public",
@@ -1737,9 +1687,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "repository_pkey",
       "schema": "public",
@@ -1747,9 +1695,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_pkey",
       "schema": "public",
@@ -1757,9 +1703,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "workspace_pkey",
       "schema": "public",
@@ -1768,10 +1712,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "provider",
-        "provider_account_id"
-      ],
+      "columns": ["provider", "provider_account_id"],
       "nullsNotDistinct": false,
       "name": "installations_provider_provider_account_id_key",
       "entityType": "uniques",

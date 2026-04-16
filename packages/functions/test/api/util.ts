@@ -27,10 +27,8 @@ export function setupApiTest() {
     console.error = mock();
 
     accountID = await Account.create({});
-    workspaceID = await Actor.provide(
-      "account",
-      { accountID, email: "test@example.com" },
-      () => Workspace.create({ name: "API Test Workspace" }),
+    workspaceID = await Actor.provide("account", { accountID, email: "test@example.com" }, () =>
+      Workspace.create({ name: "API Test Workspace" }),
     );
     const user = await User.fromAccount({ accountID, workspaceID });
     if (!user) throw new Error("Failed to create test user");

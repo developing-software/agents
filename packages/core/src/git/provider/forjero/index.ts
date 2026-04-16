@@ -31,9 +31,7 @@ export const forjeroProvider: GitProvider = {
   repos: {
     async list(installationRef) {
       const sdk = sdkForToken(installationRef);
-      const data = unwrap(
-        await sdk.userCurrentListRepos({ limit: 50 }),
-      );
+      const data = unwrap(await sdk.userCurrentListRepos({ limit: 50 }));
       return (data ?? []).map(mapRepo);
     },
 
@@ -59,9 +57,7 @@ export const forjeroProvider: GitProvider = {
     async getBlob(fullName, ref, path) {
       const { owner, repo } = splitFullName(fullName);
       const sdk = await sdkFor(fullName);
-      const meta = unwrap(
-        await sdk.repoGetContents({ owner, repo, filepath: path, ref }),
-      );
+      const meta = unwrap(await sdk.repoGetContents({ owner, repo, filepath: path, ref }));
       if (!meta || meta.type !== "file") {
         throw new VisibleError("validation", "not_a_file", `${path} is not a file`);
       }
@@ -159,9 +155,7 @@ export const forjeroProvider: GitProvider = {
     async get(fullName, number) {
       const { owner, repo } = splitFullName(fullName);
       const sdk = await sdkFor(fullName);
-      const data = unwrapOrNull(
-        await sdk.issueGetIssue({ owner, repo, index: number }),
-      );
+      const data = unwrapOrNull(await sdk.issueGetIssue({ owner, repo, index: number }));
       return data ? mapIssue(data) : null;
     },
 
@@ -271,9 +265,7 @@ export const forjeroProvider: GitProvider = {
     async get(fullName, number) {
       const { owner, repo } = splitFullName(fullName);
       const sdk = await sdkFor(fullName);
-      const data = unwrapOrNull(
-        await sdk.repoGetPullRequest({ owner, repo, index: number }),
-      );
+      const data = unwrapOrNull(await sdk.repoGetPullRequest({ owner, repo, index: number }));
       return data ? mapPullRequest(data) : null;
     },
 
@@ -343,9 +335,7 @@ export const forjeroProvider: GitProvider = {
     async readFile(fullName, path, ref) {
       const { owner, repo } = splitFullName(fullName);
       const sdk = await sdkFor(fullName);
-      const meta = unwrapOrNull(
-        await sdk.repoGetContents({ owner, repo, filepath: path, ref }),
-      );
+      const meta = unwrapOrNull(await sdk.repoGetContents({ owner, repo, filepath: path, ref }));
       if (!meta || meta.type !== "file") return null;
       const raw = meta.content
         ? meta.encoding === "base64"
@@ -358,9 +348,7 @@ export const forjeroProvider: GitProvider = {
     async listDir(fullName, path, ref) {
       const { owner, repo } = splitFullName(fullName);
       const sdk = await sdkFor(fullName);
-      const data = unwrapOrNull(
-        await sdk.repoGetContentsList({ owner, repo, ref }),
-      );
+      const data = unwrapOrNull(await sdk.repoGetContentsList({ owner, repo, ref }));
       if (!data || !Array.isArray(data)) return null;
       const prefix = path.replace(/\/$/, "");
       const filtered = prefix
@@ -487,9 +475,7 @@ export const forjeroProvider: GitProvider = {
     async list(fullName) {
       const sdk = await sdkFor(fullName);
       const { owner, repo } = splitFullName(fullName);
-      const data = unwrapOrNull(
-        await sdk.repoGetContentsList({ owner, repo, ref: undefined }),
-      );
+      const data = unwrapOrNull(await sdk.repoGetContentsList({ owner, repo, ref: undefined }));
       if (!data || !Array.isArray(data)) return [];
       // Forjero stores Actions workflows under .forgejo/workflows/* (or .gitea/workflows/*).
       // The flat contents list returns top-level entries only, so we need a recursive walk.

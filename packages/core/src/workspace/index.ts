@@ -32,9 +32,7 @@ export namespace Workspace {
       const account = Actor.assert("account");
       const id = Identifier.create("workspace");
       await createTransaction(async (tx) => {
-        await tx
-          .insert(workspaceTable)
-          .values({ id, name: input.name, slug: input.slug ?? null });
+        await tx.insert(workspaceTable).values({ id, name: input.name, slug: input.slug ?? null });
         await tx.insert(userTable).values({
           id: Identifier.create("user"),
           workspaceID: id,

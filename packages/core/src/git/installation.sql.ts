@@ -1,11 +1,4 @@
-import {
-  boolean,
-  index,
-  jsonb,
-  pgTable as table,
-  unique,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable as table, unique, varchar } from "drizzle-orm/pg-core";
 import { id, timestamp, timestamps, ulid } from "../drizzle/types";
 import { workspaceTable } from "../workspace/workspace.sql";
 

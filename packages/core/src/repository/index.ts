@@ -15,12 +15,10 @@ import { repositoryTable } from "./repository.sql";
 const log = Log.create({ namespace: "repository" });
 
 export namespace Repository {
-  export const Source = z
-    .enum(["github", "gitlab", "bitbucket", "gitea", "forjero"])
-    .meta({
-      description: "Repository source provider.",
-      example: "github",
-    });
+  export const Source = z.enum(["github", "gitlab", "bitbucket", "gitea", "forjero"]).meta({
+    description: "Repository source provider.",
+    example: "github",
+  });
 
   export type Source = z.infer<typeof Source>;
 
@@ -52,8 +50,7 @@ export namespace Repository {
         example: Examples.Repository.defaultBranch,
       }),
       installationRef: z.string().meta({
-        description:
-          "Provider-specific installation reference used to access this repository.",
+        description: "Provider-specific installation reference used to access this repository.",
         example: Examples.Repository.installationRef,
       }),
     })
@@ -296,10 +293,7 @@ export namespace Repository {
         .from(repositoryTable)
         .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
         .where(
-          and(
-            eq(repositoryTable.workspaceId, workspaceId),
-            isNull(repositoryTable.timeDeleted),
-          ),
+          and(eq(repositoryTable.workspaceId, workspaceId), isNull(repositoryTable.timeDeleted)),
         )
         .then((rows) => rows.map(serialize)),
     );

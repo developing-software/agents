@@ -23,7 +23,8 @@ export const load: PageServerLoad = async (event) => {
       pendingInviteCount: members.filter((member) => !member.accountID).length,
       adminCount: members.filter((member) => member.role === "admin").length,
       installationCount: installations.length,
-      inactiveInstallationCount: installations.filter((installation) => !installation.active).length,
+      inactiveInstallationCount: installations.filter((installation) => !installation.active)
+        .length,
     };
   });
 };

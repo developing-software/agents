@@ -1,11 +1,7 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
 import { error } from "@sveltejs/kit";
-import {
-  getProvider,
-  isReservedBranch,
-  type NormalizedPullRequest,
-} from "@agents/core/git";
+import { getProvider, isReservedBranch, type NormalizedPullRequest } from "@agents/core/git";
 import { AgentWorkflow } from "@agents/core/agent";
 import { withRequestRepoActor } from "$lib/repository.server";
 

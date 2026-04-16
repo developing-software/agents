@@ -22,10 +22,8 @@ export function withTestWorkspace(
     await Actor.provide("account", { accountID, email }, async () => {
       const workspaceID = await Workspace.create({ name: "Test" });
       const { userID, role } = await Workspace.assertMember({ accountID, workspaceID });
-      await Actor.provide(
-        "user",
-        { accountID, workspaceID, userID, role },
-        async () => cb({ accountID, workspaceID, userID }),
+      await Actor.provide("user", { accountID, workspaceID, userID, role }, async () =>
+        cb({ accountID, workspaceID, userID }),
       );
     });
   });

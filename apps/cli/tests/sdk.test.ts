@@ -27,10 +27,8 @@ beforeAll(async () => {
   if (!user) throw new Error("Failed to create SDK test user");
   userID = user.id;
 
-  const pat = await Actor.provide(
-    "user",
-    { accountID, workspaceID, userID, role: "admin" },
-    () => Api.Personal.create({}),
+  const pat = await Actor.provide("user", { accountID, workspaceID, userID, role: "admin" }, () =>
+    Api.Personal.create({}),
   );
   token = pat.token;
 

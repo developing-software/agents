@@ -51,7 +51,8 @@ export function gitTools(ctx: RepoContext) {
       execute: async ({ number, add, remove }) => {
         if (add?.length) await provider.issues.addLabels(ctx.fullName, number, add);
         if (remove?.length) {
-          for (const label of remove) await provider.issues.removeLabel(ctx.fullName, number, label);
+          for (const label of remove)
+            await provider.issues.removeLabel(ctx.fullName, number, label);
         }
         return { number, added: add ?? [], removed: remove ?? [] };
       },

@@ -41,9 +41,12 @@ export async function createInstallationToken(
 ): Promise<{ token: string; expiresAt: Date }> {
   const app = createApp();
   const id = Number(installationRef);
-  const { data } = await app.octokit.request("POST /app/installations/{installation_id}/access_tokens", {
-    installation_id: id,
-  });
+  const { data } = await app.octokit.request(
+    "POST /app/installations/{installation_id}/access_tokens",
+    {
+      installation_id: id,
+    },
+  );
   return { token: data.token, expiresAt: new Date(data.expires_at) };
 }
 

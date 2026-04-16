@@ -13,7 +13,8 @@ import type {
 } from "../interface";
 
 type RepoGetData = RestEndpointMethodTypes["repos"]["get"]["response"]["data"];
-type InstallationRepo = RestEndpointMethodTypes["apps"]["listReposAccessibleToInstallation"]["response"]["data"]["repositories"][number];
+type InstallationRepo =
+  RestEndpointMethodTypes["apps"]["listReposAccessibleToInstallation"]["response"]["data"]["repositories"][number];
 type TreeEntry = RestEndpointMethodTypes["git"]["getTree"]["response"]["data"]["tree"][number];
 type ContentItem = Extract<
   RestEndpointMethodTypes["repos"]["getContent"]["response"]["data"],
@@ -26,8 +27,10 @@ type IssueItem = RestEndpointMethodTypes["issues"]["listForRepo"]["response"]["d
 type IssueDetail = RestEndpointMethodTypes["issues"]["get"]["response"]["data"];
 type PullListItem = RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number];
 type PullDetail = RestEndpointMethodTypes["pulls"]["get"]["response"]["data"];
-type WorkflowItem = RestEndpointMethodTypes["actions"]["listRepoWorkflows"]["response"]["data"]["workflows"][number];
-type WorkflowRun = RestEndpointMethodTypes["actions"]["listWorkflowRuns"]["response"]["data"]["workflow_runs"][number];
+type WorkflowItem =
+  RestEndpointMethodTypes["actions"]["listRepoWorkflows"]["response"]["data"]["workflows"][number];
+type WorkflowRun =
+  RestEndpointMethodTypes["actions"]["listWorkflowRuns"]["response"]["data"]["workflow_runs"][number];
 
 export function mapRepo(data: RepoGetData | InstallationRepo): NormalizedRepo {
   const [ownerFromName, repoFromName] = data.full_name.split("/") as [string, string];

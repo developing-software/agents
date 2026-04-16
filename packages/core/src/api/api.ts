@@ -264,10 +264,7 @@ export namespace Api {
           .select()
           .from(apiPersonalTokenTable)
           .where(
-            and(
-              eq(apiPersonalTokenTable.id, id),
-              eq(apiPersonalTokenTable.userID, Actor.userID()),
-            ),
+            and(eq(apiPersonalTokenTable.id, id), eq(apiPersonalTokenTable.userID, Actor.userID())),
           )
           .limit(1);
         return rows.map(serialize).at(0);

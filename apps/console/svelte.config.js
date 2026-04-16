@@ -1,5 +1,5 @@
 import adapter from "@sveltejs/adapter-cloudflare";
-import * as child_process from 'node:child_process';
+import * as child_process from "node:child_process";
 
 const gitRevision = (() => {
   try {
@@ -18,7 +18,7 @@ const config = {
     },
     version: {
       name: gitRevision,
-    }
+    },
   },
   compilerOptions: {
     experimental: {

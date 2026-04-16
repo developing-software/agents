@@ -161,11 +161,7 @@ export function unwrap<T>(result: SdkResult<T>): T {
         : result.error
           ? JSON.stringify(result.error)
           : `HTTP ${status}`;
-    throw new VisibleError(
-      "internal",
-      "internal_error",
-      `Forjero API error (${status}): ${body}`,
-    );
+    throw new VisibleError("internal", "internal_error", `Forjero API error (${status}): ${body}`);
   }
   return result.data as T;
 }

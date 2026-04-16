@@ -26,7 +26,11 @@ function makeState(plan: Plan.Info): PlanContextState {
     if (!p) {
       p = (async () => {
         const r = await repo();
-        return r ? getProvider(r.source).issues.get(r.fullName, n).catch(() => null) : null;
+        return r
+          ? getProvider(r.source)
+              .issues.get(r.fullName, n)
+              .catch(() => null)
+          : null;
       })();
       issueCache.set(n, p);
     }

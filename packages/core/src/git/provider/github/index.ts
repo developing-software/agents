@@ -22,11 +22,7 @@ function getWebhooks(): Webhooks {
   if (webhooksInstance) return webhooksInstance;
   const secret = process.env.GITHUB_WEBHOOK_SECRET;
   if (!secret) {
-    throw new VisibleError(
-      "internal",
-      "internal_error",
-      "GITHUB_WEBHOOK_SECRET is not configured",
-    );
+    throw new VisibleError("internal", "internal_error", "GITHUB_WEBHOOK_SECRET is not configured");
   }
   webhooksInstance = new Webhooks({ secret });
   registerGithubWebhookHandlers(webhooksInstance);
@@ -60,8 +56,9 @@ export const githubProvider: GitProvider = {
         recursive: "1",
       });
       return data.tree
-        .filter((entry): entry is typeof entry & { path: string } =>
-          !!entry.path && (!path || entry.path.startsWith(path)),
+        .filter(
+          (entry): entry is typeof entry & { path: string } =>
+            !!entry.path && (!path || entry.path.startsWith(path)),
         )
         .map(mapTreeEntry);
     },
@@ -423,8 +420,7 @@ export const githubProvider: GitProvider = {
         repo,
         title: input.prTitle ?? input.message,
         body:
-          input.prBody ??
-          `Files changed:\n${input.files.map((f) => `- \`${f.path}\``).join("\n")}`,
+          input.prBody ?? `Files changed:\n${input.files.map((f) => `- \`${f.path}\``).join("\n")}`,
         head: branchName,
         base,
       });
@@ -531,4 +527,3 @@ export function verifyAndReceive(params: {
       throw error;
     });
 }
-

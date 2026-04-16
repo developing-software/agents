@@ -6,10 +6,8 @@ import {
 
 export namespace ForjeroApi {
   export const route = new Hono().post("/webhook", async (c) => {
-    const eventName =
-      c.req.header("x-forgejo-event") ?? c.req.header("x-gitea-event");
-    const signature =
-      c.req.header("x-forgejo-signature") ?? c.req.header("x-gitea-signature");
+    const eventName = c.req.header("x-forgejo-event") ?? c.req.header("x-gitea-event");
+    const signature = c.req.header("x-forgejo-signature") ?? c.req.header("x-gitea-signature");
 
     if (!eventName) {
       return c.json({ ok: false, message: "Missing X-Forgejo-Event header" }, 400);
@@ -24,8 +22,8 @@ export namespace ForjeroApi {
       return c.json({ ok: false, message: "Invalid JSON body" }, 400);
     }
 
-    const repoFullName = (parsed as { repository?: { full_name?: string } } | null)
-      ?.repository?.full_name;
+    const repoFullName = (parsed as { repository?: { full_name?: string } } | null)?.repository
+      ?.full_name;
 
     const resolved = await resolveAndVerifyForjeroDelivery({
       rawBody,

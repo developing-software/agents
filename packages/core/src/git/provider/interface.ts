@@ -130,11 +130,7 @@ export interface CommitFilesResult {
 export interface RepoOps {
   list(installationRef: string): Promise<NormalizedRepo[]>;
   get(fullName: string): Promise<NormalizedRepo>;
-  getTree(
-    fullName: string,
-    ref: string,
-    path?: string,
-  ): Promise<NormalizedTreeEntry[]>;
+  getTree(fullName: string, ref: string, path?: string): Promise<NormalizedTreeEntry[]>;
   getBlob(fullName: string, ref: string, path: string): Promise<NormalizedBlob>;
   getCommits(
     fullName: string,
@@ -142,9 +138,7 @@ export interface RepoOps {
     opts?: { page?: number; perPage?: number; path?: string },
   ): Promise<NormalizedCommit[]>;
   getCommit(fullName: string, sha: string): Promise<NormalizedCommit>;
-  getInstallationToken(
-    installationRef: string,
-  ): Promise<{ token: string; expiresAt: Date }>;
+  getInstallationToken(installationRef: string): Promise<{ token: string; expiresAt: Date }>;
 }
 
 export interface BranchOps {
@@ -227,11 +221,7 @@ export interface ContentOps {
     path: string,
     ref?: string,
   ): Promise<{ content: string; sha: string } | null>;
-  listDir(
-    fullName: string,
-    path: string,
-    ref?: string,
-  ): Promise<NormalizedDirEntry[] | null>;
+  listDir(fullName: string, path: string, ref?: string): Promise<NormalizedDirEntry[] | null>;
   writeFile(
     fullName: string,
     input: {

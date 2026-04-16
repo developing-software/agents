@@ -45,4 +45,5 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # .claude
 # .agents
 # .paper
+.agents/plans
 examples

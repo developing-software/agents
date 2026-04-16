@@ -42,10 +42,7 @@ function makePushPayload(overrides: Record<string, any> = {}) {
 
 describe("forjero push webhook handler", () => {
   it("creates a forjero.push event with correct type and data", async () => {
-    const { repoId, installationId } = await createTestRepo(
-      "81000001",
-      "octocat/forjero-push-1",
-    );
+    const { repoId, installationId } = await createTestRepo("81000001", "octocat/forjero-push-1");
 
     await handleForjeroWebhook({
       installationId,
@@ -70,10 +67,7 @@ describe("forjero push webhook handler", () => {
   });
 
   it("tags the event with repo and branch", async () => {
-    const { repoId, installationId } = await createTestRepo(
-      "81000002",
-      "octocat/forjero-push-2",
-    );
+    const { repoId, installationId } = await createTestRepo("81000002", "octocat/forjero-push-2");
 
     await handleForjeroWebhook({
       installationId,
@@ -105,10 +99,7 @@ describe("forjero push webhook handler", () => {
   });
 
   it("dispatches issues opened events with parent inference", async () => {
-    const { repoId, installationId } = await createTestRepo(
-      "81000003",
-      "octocat/forjero-issues-1",
-    );
+    const { repoId, installationId } = await createTestRepo("81000003", "octocat/forjero-issues-1");
 
     await handleForjeroWebhook({
       installationId,

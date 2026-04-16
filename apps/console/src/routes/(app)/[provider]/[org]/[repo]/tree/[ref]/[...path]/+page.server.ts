@@ -9,11 +9,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const path = params.path ?? "";
   const ref = params.ref;
 
-  const entries = await getProvider(repo.source).content.listDir(
-    repo.fullName,
-    path,
-    ref,
-  );
+  const entries = await getProvider(repo.source).content.listDir(repo.fullName, path, ref);
   if (!entries) error(404, "Path not found");
 
   const sorted = [...entries].sort((a, b) => {

@@ -22,14 +22,11 @@ export namespace Account {
     });
   export type Info = z.infer<typeof Info>;
 
-  export const create = fn(
-    z.object({ id: z.string().optional() }).default({}),
-    async (input) => {
-      const id = Identifier.create("account", input.id);
-      await useTransaction((tx) => tx.insert(accountTable).values({ id }));
-      return id;
-    },
-  );
+  export const create = fn(z.object({ id: z.string().optional() }).default({}), async (input) => {
+    const id = Identifier.create("account", input.id);
+    await useTransaction((tx) => tx.insert(accountTable).values({ id }));
+    return id;
+  });
 
   export const fromID = fn(Info.shape.id, (id) =>
     useTransaction((tx) =>

@@ -132,7 +132,10 @@ export namespace AgentSkill {
     branch?: string,
   ): Promise<void> {
     const provider = getProvider(repo.source);
-    const file = await provider.content.readFile(repo.fullName, `.agents/skills/${skillId}/SKILL.md`);
+    const file = await provider.content.readFile(
+      repo.fullName,
+      `.agents/skills/${skillId}/SKILL.md`,
+    );
     if (!file) throw new Error(`Skill '${skillId}' not found in .agents/skills/`);
 
     await provider.content.writeFile(repo.fullName, {

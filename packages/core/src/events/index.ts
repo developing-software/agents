@@ -1,4 +1,16 @@
-import { and, arrayContains, desc, eq, gte, inArray, isNull, like, lte, notLike, sql } from "drizzle-orm";
+import {
+  and,
+  arrayContains,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  like,
+  lte,
+  notLike,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { Identifier } from "../identifier";
@@ -353,13 +365,17 @@ export namespace Event {
       const rows = await tx.execute(sql`
         WITH RECURSIVE event_tree AS (
           SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags, data FROM ${eventTable}
-          WHERE ${opts.rootEventId ? sql`id = ${opts.rootEventId}` : sql`parent_event_id IS NULL
+          WHERE ${
+            opts.rootEventId
+              ? sql`id = ${opts.rootEventId}`
+              : sql`parent_event_id IS NULL
             ${opts.source ? sql`AND source = ${opts.source}` : sql``}
             ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
             ${opts.tags?.length ? sql`AND tags @> ${JSON.stringify(opts.tags)}::text[]` : sql``}
             ${opts.type ? sql`AND type = ${opts.type}` : sql``}
             ${opts.from ? sql`AND time_created >= ${opts.from}::timestamptz` : sql``}
-            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}`}
+            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}`
+          }
           UNION ALL
           SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags, e.data FROM ${eventTable} e
           JOIN event_tree et ON e.parent_event_id = et.id
