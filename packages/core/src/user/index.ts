@@ -146,8 +146,9 @@ export namespace User {
 
   export const update = fn(
     z.object({ id: z.string(), name: z.string().optional(), avatarUrl: z.string().optional() }),
-    (input) =>
-      useTransaction(async (tx) => {
+    (input) => {
+      const actor = Actor.assert("user");
+      return useTransaction(async (tx) => {
         await tx
           .update(userTable)
           .set({
@@ -155,8 +156,14 @@ export namespace User {
             avatarUrl: input.avatarUrl,
             timeUpdated: new Date(),
           })
-          .where(eq(userTable.id, input.id));
-      }),
+          .where(
+            and(
+              eq(userTable.id, input.id),
+              eq(userTable.workspaceID, actor.properties.workspaceID),
+            ),
+          );
+      });
+    },
   );
 
   export const listForWorkspace = fn(z.string(), (workspaceID) =>

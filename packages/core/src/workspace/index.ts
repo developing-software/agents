@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { useTransaction, createTransaction } from "../drizzle/transaction";
 import { fn } from "../util/fn";
@@ -101,6 +101,7 @@ export namespace Workspace {
           .where(
             and(
               eq(userTable.workspaceID, workspaceID),
+              isNotNull(userTable.accountID),
               inArray(userTable.accountID, accountIDs),
               isNull(userTable.timeDeleted),
             ),

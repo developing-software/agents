@@ -89,12 +89,6 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       const accountID = existing ?? (await Account.create({}));
       await Auth.upsertPair({ accountID, provider: response.provider, subject, email });
 
-      await Actor.provide("account", { accountID, email }, async () => {
-        await User.joinInvitedWorkspaces();
-        const workspaces = await Workspace.forAccount(accountID);
-        if (workspaces.length === 0) await Workspace.create({ name: "Default" });
-      });
-
       return ctx.subject("account", { accountID, email });
     },
   }).use(logger());

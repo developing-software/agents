@@ -5,6 +5,8 @@ import { fn } from "../util/fn";
 import { Identifier } from "../identifier";
 import { ErrorCodes, VisibleError } from "../error";
 import { authTable } from "./auth.sql";
+import { userTable } from "../user/user.sql";
+import { accountTable } from "../account/account.sql";
 
 export namespace Auth {
   export const Provider = z.enum(["github", "google", "email", "code"]);
@@ -79,24 +81,23 @@ export namespace Auth {
   );
 
   /**
-   * Move all auth rows from `fromAccountID` to `toAccountID`. Used when a user
-   * adds a second provider via the link flow — the issuer created (or matched) a
-   * scratch account for the new provider, which must be merged into the
-   * session's existing account. Skips rows whose (provider, subject) already
-   * belong to `toAccountID`, then deletes the source account.
+   * Move all auth rows and user rows from `fromAccountID` to `toAccountID`,
+   * then delete the source account. Used when a user adds a second provider
+   * via the link flow — the issuer created (or matched) a scratch account for
+   * the new provider, which must be merged into the session's existing account.
    */
   export const transfer = fn(
     z.object({ fromAccountID: z.string(), toAccountID: z.string() }),
     async ({ fromAccountID, toAccountID }) => {
       if (fromAccountID === toAccountID) return;
       await useTransaction(async (tx) => {
-        const targetExisting = await tx
+        const targetAuth = await tx
           .select({ provider: authTable.provider, subject: authTable.subject })
           .from(authTable)
           .where(eq(authTable.accountID, toAccountID));
-        const owned = new Set(targetExisting.map((r) => `${r.provider}:${r.subject}`));
+        const ownedAuth = new Set(targetAuth.map((r) => `${r.provider}:${r.subject}`));
 
-        const source = await tx
+        const sourceAuth = await tx
           .select({
             id: authTable.id,
             provider: authTable.provider,
@@ -105,8 +106,8 @@ export namespace Auth {
           .from(authTable)
           .where(eq(authTable.accountID, fromAccountID));
 
-        for (const row of source) {
-          if (owned.has(`${row.provider}:${row.subject}`)) {
+        for (const row of sourceAuth) {
+          if (ownedAuth.has(`${row.provider}:${row.subject}`)) {
             await tx.delete(authTable).where(eq(authTable.id, row.id));
           } else {
             await tx
@@ -115,6 +116,30 @@ export namespace Auth {
               .where(eq(authTable.id, row.id));
           }
         }
+
+        const targetWorkspaces = await tx
+          .select({ workspaceID: userTable.workspaceID })
+          .from(userTable)
+          .where(eq(userTable.accountID, toAccountID));
+        const ownedWorkspaces = new Set(targetWorkspaces.map((r) => r.workspaceID));
+
+        const sourceUsers = await tx
+          .select({ id: userTable.id, workspaceID: userTable.workspaceID })
+          .from(userTable)
+          .where(eq(userTable.accountID, fromAccountID));
+
+        for (const row of sourceUsers) {
+          if (ownedWorkspaces.has(row.workspaceID)) {
+            await tx.delete(userTable).where(eq(userTable.id, row.id));
+          } else {
+            await tx
+              .update(userTable)
+              .set({ accountID: toAccountID })
+              .where(eq(userTable.id, row.id));
+          }
+        }
+
+        await tx.delete(accountTable).where(eq(accountTable.id, fromAccountID));
       });
     },
   );

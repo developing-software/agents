@@ -139,14 +139,10 @@ export namespace Actor {
     properties: Extract<Info, { type: T }>["properties"],
     fn: Next,
   ): ReturnType<Next> {
-    return ctx.provide({ type, properties } as any, () =>
-      Log.provide(
-        {
-          actor: type,
-          ...properties,
-        },
-        fn,
-      ),
-    );
+    return ctx.provide({ type, properties } as any, () => {
+      const logProps = { ...properties } as Record<string, unknown>;
+      delete logProps.email;
+      return Log.provide({ actor: type, ...logProps }, fn);
+    });
   }
 }

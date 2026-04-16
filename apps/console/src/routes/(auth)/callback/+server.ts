@@ -4,6 +4,9 @@ import { authClient } from "$lib/auth";
 import { addAccountToSession, readSession } from "$lib/session";
 import { subjects } from "@agents/functions/src/auth/subject";
 import { Auth } from "@agents/core/auth";
+import { Actor } from "@agents/core/actor";
+import { User } from "@agents/core/user";
+import { Workspace } from "@agents/core/workspace";
 
 export const GET: RequestHandler = async (event) => {
   const code = event.url.searchParams.get("code");
@@ -28,11 +31,17 @@ export const GET: RequestHandler = async (event) => {
   if (link) {
     const session = await readSession(event);
     const target = session.current;
-    if (target) {
+    if (target && target !== accountID) {
       await Auth.transfer({ fromAccountID: accountID, toAccountID: target });
       redirect(302, "/account/providers");
     }
   }
+
+  await Actor.provide("account", { accountID, email }, async () => {
+    await User.joinInvitedWorkspaces();
+    const workspaces = await Workspace.forAccount(accountID);
+    if (workspaces.length === 0) await Workspace.create({ name: "Default" });
+  });
 
   await addAccountToSession(event, accountID, email);
   redirect(302, "/auth");

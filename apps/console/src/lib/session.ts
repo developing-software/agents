@@ -1,4 +1,5 @@
 import type { RequestEvent } from "@sveltejs/kit";
+import { dev } from "$app/environment";
 
 export interface AuthSession {
   accounts: Record<string, { email: string }>;
@@ -8,10 +9,11 @@ export interface AuthSession {
 const COOKIE_NAME = "auth";
 const COOKIE_OPTS = {
   httpOnly: true,
-  sameSite: "lax",
+  sameSite: "lax" as const,
+  secure: !dev,
   path: "/",
   maxAge: 60 * 60 * 24 * 365,
-} as const;
+};
 
 const encoder = new TextEncoder();
 
@@ -64,13 +66,20 @@ export async function readSession(event: RequestEvent): Promise<AuthSession> {
   const raw = event.cookies.get(COOKIE_NAME);
   if (!raw) return { ...EMPTY };
   const [payload, sig] = raw.split(".");
-  if (!payload || !sig) return { ...EMPTY };
-  if (!(await verify(payload, sig))) return { ...EMPTY };
+  if (!payload || !sig) {
+    event.cookies.delete(COOKIE_NAME, { path: "/" });
+    return { ...EMPTY };
+  }
+  if (!(await verify(payload, sig))) {
+    event.cookies.delete(COOKIE_NAME, { path: "/" });
+    return { ...EMPTY };
+  }
   try {
     const json = new TextDecoder().decode(b64urlDecode(payload));
     const parsed = JSON.parse(json) as AuthSession;
     return { accounts: parsed.accounts ?? {}, current: parsed.current };
   } catch {
+    event.cookies.delete(COOKIE_NAME, { path: "/" });
     return { ...EMPTY };
   }
 }
