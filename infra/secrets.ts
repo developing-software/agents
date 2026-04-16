@@ -9,6 +9,8 @@ export const GitHubAppPrivateKey = new sst.Secret("GitHubAppPrivateKey");
 
 export const AnthropicApiKey = new sst.Secret("AntropicApiKey");
 
+export const SessionSecret = new sst.Secret("SessionSecret");
+
 
 export const environment = {
   AUTH_URL: $interpolate`https://auth.agents.developing.company`,
@@ -20,5 +22,6 @@ export const environment = {
   GITHUB_WEBHOOK_SECRET: GitHubWebhookSecret.value,
   GITHUB_APP_ID: GitHubAppId.value,
   GITHUB_APP_PRIVATE_KEY: GitHubAppPrivateKey.value,
-  ANTHROPIC_API_KEY: AnthropicApiKey.value
+  ANTHROPIC_API_KEY: AnthropicApiKey.value,
+  SESSION_SECRET: SessionSecret.value,
 };

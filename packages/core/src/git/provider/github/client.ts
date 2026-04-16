@@ -6,7 +6,7 @@ import { Repository } from "../../../repository";
 function readConfig() {
   const appId = process.env.GITHUB_APP_ID;
   const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
-  const webhookSecret = process.env.GITHUB_APP_WEBHOOK_SECRET;
+  const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
   if (!appId || !privateKey) {
     throw new VisibleError("internal", "internal_error", "GitHub App credentials not configured");
   }

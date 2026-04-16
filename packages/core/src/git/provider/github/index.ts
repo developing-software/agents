@@ -20,12 +20,12 @@ import { registerGithubWebhookHandlers } from "./webhook";
 let webhooksInstance: Webhooks | undefined;
 function getWebhooks(): Webhooks {
   if (webhooksInstance) return webhooksInstance;
-  const secret = process.env.GITHUB_APP_WEBHOOK_SECRET;
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
   if (!secret) {
     throw new VisibleError(
       "internal",
       "internal_error",
-      "GITHUB_APP_WEBHOOK_SECRET is not configured",
+      "GITHUB_WEBHOOK_SECRET is not configured",
     );
   }
   webhooksInstance = new Webhooks({ secret });
