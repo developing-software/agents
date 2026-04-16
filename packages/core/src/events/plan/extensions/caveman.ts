@@ -102,7 +102,11 @@ Example — "Explain database connection pooling."
 };
 
 export function cavemanPrompt(level: CavemanLevel): string {
-  return [HEADER, LEVEL_BODY[level], FOOTER].join("\n\n");
+  return [
+    HEADER,
+    LEVEL_BODY[level],
+    // FOOTER
+    ].join("\n\n");
 }
 
 export function renderCaveman(level: CavemanLevel): () => Promise<string | null> {
