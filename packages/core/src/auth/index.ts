@@ -78,6 +78,47 @@ export namespace Auth {
     },
   );
 
+  /**
+   * Move all auth rows from `fromAccountID` to `toAccountID`. Used when a user
+   * adds a second provider via the link flow — the issuer created (or matched) a
+   * scratch account for the new provider, which must be merged into the
+   * session's existing account. Skips rows whose (provider, subject) already
+   * belong to `toAccountID`, then deletes the source account.
+   */
+  export const transfer = fn(
+    z.object({ fromAccountID: z.string(), toAccountID: z.string() }),
+    async ({ fromAccountID, toAccountID }) => {
+      if (fromAccountID === toAccountID) return;
+      await useTransaction(async (tx) => {
+        const targetExisting = await tx
+          .select({ provider: authTable.provider, subject: authTable.subject })
+          .from(authTable)
+          .where(eq(authTable.accountID, toAccountID));
+        const owned = new Set(targetExisting.map((r) => `${r.provider}:${r.subject}`));
+
+        const source = await tx
+          .select({
+            id: authTable.id,
+            provider: authTable.provider,
+            subject: authTable.subject,
+          })
+          .from(authTable)
+          .where(eq(authTable.accountID, fromAccountID));
+
+        for (const row of source) {
+          if (owned.has(`${row.provider}:${row.subject}`)) {
+            await tx.delete(authTable).where(eq(authTable.id, row.id));
+          } else {
+            await tx
+              .update(authTable)
+              .set({ accountID: toAccountID })
+              .where(eq(authTable.id, row.id));
+          }
+        }
+      });
+    },
+  );
+
   export const listByAccount = fn(z.string(), (accountID) =>
     useTransaction((tx) =>
       tx

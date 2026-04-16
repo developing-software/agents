@@ -5,6 +5,7 @@ import { fn } from "../util/fn";
 import { Identifier } from "../identifier";
 import { useTransaction } from "../drizzle/transaction";
 import { Actor } from "../actor";
+import { Account } from "../account";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { ErrorCodes, VisibleError } from "../error";
@@ -71,7 +72,8 @@ export namespace User {
 
   /**
    * Under an account actor, claim any user rows that were invited by email but
-   * not yet linked to an account (accountID IS NULL, email matches).
+   * not yet linked to an account (accountID IS NULL, email matches). The email
+   * column stays populated as a per-seat snapshot of the invited address.
    */
   export async function joinInvitedWorkspaces() {
     const account = Actor.assert("account");
@@ -89,6 +91,25 @@ export namespace User {
     );
   }
 
+  export const pendingByEmail = fn(
+    z.object({ workspaceID: z.string(), email: z.string() }),
+    ({ workspaceID, email }) =>
+      useTransaction((tx) =>
+        tx
+          .select()
+          .from(userTable)
+          .where(
+            and(
+              eq(userTable.workspaceID, workspaceID),
+              eq(userTable.email, email),
+              isNull(userTable.accountID),
+              isNull(userTable.timeDeleted),
+            ),
+          )
+          .then((rows) => rows.map(serialize).at(0) ?? null),
+      ),
+  );
+
   export const invite = fn(
     z.object({ email: z.email(), role: Role.default("member") }),
     async (input) => {
@@ -99,11 +120,22 @@ export namespace User {
           ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
           "Only admins can invite users",
         );
+      const workspaceID = actor.properties.workspaceID;
+
+      const account = await Account.fromEmail(input.email);
+      if (account) {
+        const existing = await fromAccount({ accountID: account.id, workspaceID });
+        if (existing) return existing.id;
+      }
+
+      const pending = await pendingByEmail({ workspaceID, email: input.email });
+      if (pending) return pending.id;
+
       const id = Identifier.create("user");
       await useTransaction((tx) =>
         tx.insert(userTable).values({
           id,
-          workspaceID: actor.properties.workspaceID,
+          workspaceID,
           email: input.email,
           role: input.role,
         }),

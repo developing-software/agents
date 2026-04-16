@@ -3,9 +3,11 @@ import { redirect } from "@sveltejs/kit";
 import { authClient } from "$lib/auth";
 
 export const GET: RequestHandler = async (event) => {
-  if (event.locals.actor.type === "account") redirect(302, "/auth");
+  const link = event.url.searchParams.get("link") === "1";
+  if (!link && event.locals.actor.type === "account") redirect(302, "/auth");
 
-  const redirectUri = `${event.url.origin}/callback`;
-  const { url: authUrl } = await authClient.authorize(redirectUri, "code");
+  const callback = new URL("/callback", event.url.origin);
+  if (link) callback.searchParams.set("link", "1");
+  const { url: authUrl } = await authClient.authorize(callback.toString(), "code");
   redirect(302, authUrl);
 };
