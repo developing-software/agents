@@ -45,7 +45,16 @@ export namespace GitHubApi {
       }
 
       const rawBody = await c.req.text();
-      await verifyAndReceive({ id, name, rawBody, signature });
+      try {
+        await verifyAndReceive({ id, name, rawBody, signature });
+      } catch (err) {
+        console.error("github webhook failed", {
+          id,
+          name,
+          err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
+        });
+        throw err;
+      }
       return c.json({ ok: true }, 200);
     })
     .post(
