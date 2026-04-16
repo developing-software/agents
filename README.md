@@ -123,6 +123,8 @@ Issues are triaged, validated, and grouped into plans. Plans can be authored by 
 
 The platform dispatches one or more agents to implement the same approved plan. Each agent works on its own branch, producing a PR with collected metrics. Multiple agents can compete on the same plan ("merge war") to evaluate different implementations.
 
+**Agent:** Claude Sonnet 4.6 (`claude-sonnet-4-6`)
+
 ```
 +----------------------------------------------------------------------+
 |                   CONSTRUCTION PHASE (Agent-Executed)                 |
