@@ -48,6 +48,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "SessionSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
   }
 }
 // cloudflare 
