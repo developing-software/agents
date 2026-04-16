@@ -230,6 +230,18 @@ Each PR is reviewed individually (by an LLM judge, a human, or both), then all r
              +--------------------+
 ```
 
+## Agents
+
+Three implementation agents are available, each dispatched via GitHub Actions workflow:
+
+| Agent | Workflow | Branch Prefix |
+| ----- | -------- | ------------- |
+| Claude | `agent-claude.yml` | `claude/` |
+| Codex | `agent-codex.yml` | `codex/` |
+| OpenCode | `agent-opencode.yml` | `opencode/` |
+
+Each agent receives the same approved plan prompt and works on its own branch, producing a PR with collected metrics.
+
 ## Platform Architecture
 
 ```
