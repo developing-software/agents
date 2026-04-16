@@ -3,7 +3,9 @@
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { updateAudit, createPlanFromAudit } from './audits.remote';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
+  import DispatchOptions from '$lib/agents/dispatch/DispatchOptions.svelte';
   import { previewPrompt } from '$lib/agents/dispatch/dispatch.remote';
+  import type { Plan } from '@agents/core/events/plan';
   import { relativeTime, type PlanItem } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
@@ -17,7 +19,9 @@
   let creatingPlan = $state<Record<string, boolean>>({});
   let dispatched = $state<Record<string, boolean>>({});
   let drawer = $state<DispatchDrawer>();
+  let options = $state<DispatchOptions>();
   let drawerPlan = $state<PlanItem | null>(null);
+  let pendingAudit = $state<{ planId: string; tags: string[] } | null>(null);
 
   function toggle(name: string, body: string) {
     if (expandedName === name) {
@@ -75,20 +79,31 @@
         timeCreated: now,
         timeUpdated: now,
       };
-      const prompt = await previewPrompt({
-        organization: data.organization,
-        repoName: data.repoName,
+      pendingAudit = {
         planId: result.id,
-      });
-      drawer!.open({
-        title: 'Dispatch Audit',
-        prompt,
         tags: [`plan:${result.id}`, ...drawerPlan.tags],
-        planId: result.id,
-      });
+      };
+      options!.open();
     } finally {
       creatingPlan[audit.name] = false;
     }
+  }
+
+  async function handleGenerate(options: Plan.ToPromptOptions) {
+    if (!pendingAudit) return;
+    const { planId, tags } = pendingAudit;
+    const prompt = await previewPrompt({
+      organization: data.organization,
+      repoName: data.repoName,
+      planId,
+      options,
+    });
+    drawer!.open({
+      title: 'Dispatch Audit',
+      prompt,
+      tags,
+      planId,
+    });
   }
 
   function handleDispatched() {
@@ -313,6 +328,12 @@
     {/each}
   </div>
 {/if}
+
+<DispatchOptions
+  bind:this={options}
+  title="Prepare Audit Dispatch"
+  onconfirm={handleGenerate}
+/>
 
 <DispatchDrawer
   bind:this={drawer}

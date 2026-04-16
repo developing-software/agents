@@ -48,11 +48,17 @@ export const listBranches = query(
     ),
 );
 
-export const previewPrompt = repoQuery({ planId: z.string() }, async ({ planId }) => {
-  const plan = await Plan.fromID(planId);
-  if (!plan) error(404, `Plan ${planId} not found`);
-  return Plan.toPrompt(plan);
-});
+export const previewPrompt = repoQuery(
+  {
+    planId: z.string(),
+    options: Plan.ToPromptOptions.optional(),
+  },
+  async ({ planId, options }) => {
+    const plan = await Plan.fromID(planId);
+    if (!plan) error(404, `Plan ${planId} not found`);
+    return Plan.toPrompt(plan, options);
+  },
+);
 
 export const previewFixPrompt = query(
   z.object({

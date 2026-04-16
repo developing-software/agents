@@ -11,11 +11,9 @@ import type { PlanEventData } from "./plan.sql";
 const log = Log.create({ service: "plan" });
 
 export namespace Plan {
-  export const ToPromptOptions = z
-    .object({
-      includeIssueDetails: z.boolean().optional(),
-    })
-    .default({});
+  export const ToPromptOptions = z.object({
+    includeIssueDetails: z.boolean().optional(),
+  });
 
   export type ToPromptOptions = z.input<typeof ToPromptOptions>;
 
@@ -166,7 +164,7 @@ export namespace Plan {
   }
 
   export async function toPrompt(plan: Info, opts: ToPromptOptions = {}): Promise<string> {
-    const options = ToPromptOptions.parse(opts);
+    const options = ToPromptOptions.parse(opts ?? {});
     return renderContext(plan, options);
   }
 

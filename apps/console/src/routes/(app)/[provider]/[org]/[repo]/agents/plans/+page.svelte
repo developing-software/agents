@@ -4,8 +4,10 @@
   import PlanKanban from '$lib/agents/plans/PlanKanban.svelte';
   import PlanTree from '$lib/agents/plans/PlanTree.svelte';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
+  import DispatchOptions from '$lib/agents/dispatch/DispatchOptions.svelte';
   import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
   import { previewPrompt } from '$lib/agents/dispatch/dispatch.remote';
+  import type { Plan } from '@agents/core/events/plan';
 
   let { data }: PageProps = $props();
 
@@ -14,6 +16,7 @@
   type PlanItem = NonNullable<typeof data.plans>[number];
 
   let drawer = $state<DispatchDrawer>();
+  let options = $state<DispatchOptions>();
   let selectedPlan = $state<PlanItem | null>(null);
   let dispatched = $state(new Set<string>());
 
@@ -21,12 +24,19 @@
   let plannerMode = $state<'draft' | 'edit'>('draft');
   let plannerPlan = $state<{ id: string; title: string; status: string } | undefined>(undefined);
 
-  async function openDrawer(plan: PlanItem) {
+  function openDrawer(plan: PlanItem) {
     selectedPlan = plan;
+    options!.open();
+  }
+
+  async function handleGenerate(options: Plan.ToPromptOptions) {
+    const plan = selectedPlan;
+    if (!plan) return;
     const prompt = await previewPrompt({
       organization: data.organization,
       repoName: data.repoName,
       planId: plan.id,
+      options,
     });
     drawer!.open({
       title: 'Dispatch Plan',
@@ -76,6 +86,12 @@
     <PlanTree />
   {/if}
 </div>
+
+<DispatchOptions
+  bind:this={options}
+  title="Prepare Plan Dispatch"
+  onconfirm={handleGenerate}
+/>
 
 <DispatchDrawer
   bind:this={drawer}

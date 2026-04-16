@@ -3,16 +3,19 @@
   import PlanDetail from '$lib/agents/plans/PlanDetail.svelte';
   import Events from '$lib/events/repository/Feed.svelte';
   import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
+  import DispatchOptions from '$lib/agents/dispatch/DispatchOptions.svelte';
   import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
   import PlanImplementations from '$lib/agents/ai/components/PlanImplementations.svelte';
   import { updatePlan } from '$lib/agents/plans/plans.remote';
   import { previewPrompt, previewFixPrompt } from '$lib/agents/dispatch/dispatch.remote';
+  import type { Plan } from '@agents/core/events/plan';
   import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
   let { data }: PageProps = $props();
 
   let drawer = $state<DispatchDrawer>();
+  let options = $state<DispatchOptions>();
   let dispatched = $state(false);
   let statusValue = $state(data.plan?.status ?? 'draft');
   let plannerOpen = $state(false);
@@ -26,18 +29,25 @@
     invalidateAll();
   }
 
-  async function openDispatch() {
+  function openDispatch() {
     if (!data.plan) return;
+    options!.open();
+  }
+
+  async function handleGenerate(options: Plan.ToPromptOptions) {
+    if (!data.plan) return;
+    const planId = data.plan.id;
     const prompt = await previewPrompt({
       organization: data.organization,
       repoName: data.repoName,
-      planId: data.plan.id,
+      planId,
+      options,
     });
     drawer!.open({
       title: 'Dispatch Plan',
       prompt,
-      tags: [`plan:${data.plan.id}`, ...data.plan.tags],
-      planId: data.plan.id,
+      tags: [`plan:${planId}`, ...data.plan.tags],
+      planId,
     });
   }
 
@@ -123,6 +133,12 @@
       emptyText="No events linked to this plan"
     />
   </div>
+
+  <DispatchOptions
+    bind:this={options}
+    title="Prepare Plan Dispatch"
+    onconfirm={handleGenerate}
+  />
 
   <DispatchDrawer
     bind:this={drawer}

@@ -1,7 +1,7 @@
 import { AgentSkill } from "../../agent/skill";
 import { Context } from "../../context";
 import { getProvider } from "../../git";
-import type { NormalizedDirEntry, NormalizedIssue } from "../../git/provider/interface";
+import type { NormalizedIssue } from "../../git/provider/interface";
 import { Repository } from "../../repository/index";
 import { lazy } from "../../util/lazy";
 import type { Plan } from "./index";
@@ -11,7 +11,6 @@ export type SectionRenderer = () => Promise<string | null>;
 interface PlanContextState {
   plan: Plan.Info;
   repo: () => Promise<Repository.Info | null>;
-  rootListing: () => Promise<NormalizedDirEntry[] | null>;
   issue: (n: number) => Promise<NormalizedIssue | null>;
 }
 
@@ -21,10 +20,6 @@ function makeState(plan: Plan.Info): PlanContextState {
   const repo = lazy(() =>
     plan.sourceId ? Repository.findByID(plan.sourceId) : Promise.resolve(null),
   );
-  const rootListing = lazy(async () => {
-    const r = await repo();
-    return r ? getProvider(r.source).content.listDir(r.fullName, "") : null;
-  });
   const issueCache = new Map<number, Promise<NormalizedIssue | null>>();
   const issue = (n: number) => {
     let p = issueCache.get(n);
@@ -37,7 +32,7 @@ function makeState(plan: Plan.Info): PlanContextState {
     }
     return p;
   };
-  return { plan, repo, rootListing, issue };
+  return { plan, repo, issue };
 }
 
 export function withPlanContext<R>(plan: Plan.Info, fn: () => R): R {
@@ -50,10 +45,6 @@ export function usePlan(): Plan.Info {
 
 export function useRepo(): Promise<Repository.Info | null> {
   return PlanContextStorage.use().repo();
-}
-
-export function useRepoRoot(): Promise<NormalizedDirEntry[] | null> {
-  return PlanContextStorage.use().rootListing();
 }
 
 export function useIssue(n: number): Promise<NormalizedIssue | null> {
@@ -113,37 +104,11 @@ async function renderSkills(): Promise<string | null> {
   const skills = wanted.size > 0 ? all.filter((s) => wanted.has(s.id)) : all;
   if (skills.length === 0) return null;
 
-  return ["## Skills", ...skills.map((s) => `### ${s.name}\n\n${s.body}`)].join("\n\n");
-}
-
-// AGENTS.md and CLAUDE.md are almost always symlinks to one another. Reading
-// both would either duplicate the same content or — for the symlink side —
-// depend on the raw endpoint resolving the link. We use the parent directory
-// listing (cached via useRepoRoot) to detect the source file and read only
-// that one. If both are real files (intentional divergence), we merge them
-// in listing order.
-async function renderInstructions(): Promise<string | null> {
-  const repo = await useRepo();
-  if (!repo) return null;
-
-  const root = await useRepoRoot();
-  if (!root) return null;
-
-  const candidates = root.filter((e) => e.name === "AGENTS.md" || e.name === "CLAUDE.md");
-  if (candidates.length === 0) return null;
-
-  const realFiles = candidates.filter((e) => e.type === "file");
-  const toRead = realFiles.length > 0 ? realFiles : candidates.slice(0, 1);
-
-  const content = getProvider(repo.source).content;
-  const contents = (
-    await Promise.all(
-      toRead.map((e) => content.readFile(repo.fullName, e.path).then((r) => r?.content ?? null).catch(() => null)),
-    )
-  ).filter((c): c is string => Boolean(c));
-
-  if (contents.length === 0) return null;
-  return `## Instructions\n\n${contents.join("\n\n")}`;
+  const lines = skills.map((s) => {
+    const desc = s.description ? ` — ${s.description}` : "";
+    return `- \`${s.id}\`${desc}`;
+  });
+  return ["## Skills", ...lines].join("\n");
 }
 
 async function renderFileScope(): Promise<string | null> {
@@ -158,22 +123,17 @@ async function renderFileScope(): Promise<string | null> {
 
 // --- Pipeline ---
 
-export interface RenderOptions {
-  includeIssueDetails?: boolean;
-}
-
-function renderers(opts: RenderOptions): SectionRenderer[] {
+function renderers(opts: Plan.ToPromptOptions): SectionRenderer[] {
   return [
     renderTitle,
     renderBody,
-    ...(opts.includeIssueDetails !== false ? [renderLinkedIssues] : []),
+    ...(opts.includeIssueDetails ? [renderLinkedIssues] : []),
     renderSkills,
-    renderInstructions,
     renderFileScope,
   ];
 }
 
-export async function render(plan: Plan.Info, opts: RenderOptions = {}): Promise<string> {
+export async function render(plan: Plan.Info, opts: Plan.ToPromptOptions = {}): Promise<string> {
   return withPlanContext(plan, async () => {
     const sections = await Promise.all(renderers(opts).map((r) => r()));
     return sections.filter((s): s is string => Boolean(s)).join("\n\n");

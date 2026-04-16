@@ -61,7 +61,7 @@
     filtered.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE)
   );
 
-  const rangeStart = $derived((safeCurrentPage - 1) * PAGE_SIZE + 1);
+  const rangeStart = $derived(filtered.length === 0 ? 0 : (safeCurrentPage - 1) * PAGE_SIZE + 1);
   const rangeEnd = $derived(Math.min(safeCurrentPage * PAGE_SIZE, filtered.length));
 
   function formatTokens(n: number | undefined): string {
@@ -91,10 +91,19 @@
   );
 </script>
 
-<div>
-  <!-- Header -->
-  <div class="header">
-    <span class="title">Models</span>
+<svelte:head>
+  <title>Models</title>
+</svelte:head>
+
+<div class="page">
+  <header class="page-header">
+    <div class="header-text">
+      <p class="eyebrow">catalog</p>
+      <h1>Models</h1>
+      <p class="muted">
+        {data.models.length} models · {data.providers.length} providers
+      </p>
+    </div>
     <input
       type="text"
       placeholder="Search models..."
@@ -102,13 +111,13 @@
       oninput={handleSearchInput}
       class="search-input"
     />
-  </div>
+  </header>
 
-  <!-- Filter pills -->
-  <div class="filters-row">
+  <div class="toolbar">
     <div class="capability-filters">
       {#each capabilityFilters as cap (cap.key)}
         <button
+          type="button"
           class="filter-pill"
           class:filter-pill-active={activeFilters.has(cap.key)}
           onclick={() => toggleFilter(cap.key)}
@@ -130,82 +139,75 @@
     </select>
   </div>
 
-  <!-- Table -->
   {#if filtered.length === 0}
     <div class="empty-state">
-      <span>No models found.</span>
+      <p>No models match your filters.</p>
     </div>
   {:else}
-    <div class="table-container">
-      <!-- Table header -->
+    <div class="table-wrapper">
       <div class="table-header">
         <span class="col-provider">Provider</span>
         <span class="col-model">Model</span>
         <span class="col-family">Family</span>
         <span class="col-context">Context</span>
-        <span class="col-cost">Cost (per 1M tokens)</span>
+        <span class="col-cost">Cost · 1M tokens</span>
         <span class="col-caps">Capabilities</span>
       </div>
 
-      <!-- Table rows -->
-      {#each paginated as model (model.id + model.providerId)}
-        <div class="table-row" role="listitem">
-          <!-- Provider -->
-          <span class="col-provider">
-            <img
-              src="https://models.dev/logos/{model.providerId}.svg"
-              alt=""
-              width="16"
-              height="16"
-              class="provider-logo"
-              onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-            />
-            <span class="provider-name">{model.providerName}</span>
-          </span>
+      <div class="table-body">
+        {#each paginated as model (model.id + model.providerId)}
+          <div class="table-row">
+            <span class="col-provider">
+              <img
+                src="https://models.dev/logos/{model.providerId}.svg"
+                alt=""
+                width="14"
+                height="14"
+                class="provider-logo"
+                onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              <span class="provider-name">{model.providerName}</span>
+            </span>
 
-          <!-- Model name -->
-          <span class="col-model model-name">{model.name}</span>
+            <span class="col-model model-name">{model.name}</span>
 
-          <!-- Family -->
-          <span class="col-family family-text">{model.family ?? '\u2014'}</span>
+            <span class="col-family family-text">{model.family ?? '\u2014'}</span>
 
-          <!-- Context window -->
-          <span class="col-context context-text">{formatTokens(model.limit?.context)}</span>
+            <span class="col-context context-text">{formatTokens(model.limit?.context)}</span>
 
-          <!-- Cost -->
-          <span class="col-cost cost-text">
-            {formatCost(model.cost?.input)} / {formatCost(model.cost?.output)}
-          </span>
+            <span class="col-cost cost-text">
+              {formatCost(model.cost?.input)} / {formatCost(model.cost?.output)}
+            </span>
 
-          <!-- Capabilities -->
-          <span class="col-caps">
-            {#if model.reasoning}
-              <span class="cap-badge cap-reasoning" title="Reasoning">R</span>
-            {/if}
-            {#if model.tool_call}
-              <span class="cap-badge cap-tool" title="Tool Use">T</span>
-            {/if}
-            {#if model.structured_output}
-              <span class="cap-badge cap-struct" title="Structured Output">S</span>
-            {/if}
-            {#if model.open_weights}
-              <span class="cap-badge cap-open" title="Open Weights">O</span>
-            {/if}
-            {#if hasVision(model)}
-              <span class="cap-badge cap-vision" title="Vision">V</span>
-            {/if}
-          </span>
-        </div>
-      {/each}
+            <span class="col-caps">
+              {#if model.reasoning}
+                <span class="cap-badge cap-reasoning" title="Reasoning">R</span>
+              {/if}
+              {#if model.tool_call}
+                <span class="cap-badge cap-tool" title="Tool Use">T</span>
+              {/if}
+              {#if model.structured_output}
+                <span class="cap-badge cap-struct" title="Structured Output">S</span>
+              {/if}
+              {#if model.open_weights}
+                <span class="cap-badge cap-open" title="Open Weights">O</span>
+              {/if}
+              {#if hasVision(model)}
+                <span class="cap-badge cap-vision" title="Vision">V</span>
+              {/if}
+            </span>
+          </div>
+        {/each}
+      </div>
     </div>
 
-    <!-- Pagination -->
     <div class="pagination">
       <span class="pagination-info">
-        Showing {rangeStart}–{rangeEnd} of {filtered.length}
+        {rangeStart}–{rangeEnd} of {filtered.length}
       </span>
       <div class="pagination-controls">
         <button
+          type="button"
           class="page-btn"
           disabled={safeCurrentPage <= 1}
           onclick={() => { page = safeCurrentPage - 1; }}
@@ -214,6 +216,7 @@
         </button>
         <span class="page-indicator">{safeCurrentPage} / {totalPages}</span>
         <button
+          type="button"
           class="page-btn"
           disabled={safeCurrentPage >= totalPages}
           onclick={() => { page = safeCurrentPage + 1; }}
@@ -226,23 +229,61 @@
 </div>
 
 <style>
-  .header {
+  .page {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    box-sizing: border-box;
+    min-height: 0;
   }
 
-  .title {
-    font-size: 14px;
-    font-weight: 500;
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
     color: var(--color-text);
+  }
+
+  .muted {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 12px;
+    font-family: "JetBrains Mono", monospace;
   }
 
   .search-input {
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-size: 12px;
-    padding: 5px 10px;
+    padding: 6px 10px;
     border-radius: 4px;
     border: 1px solid var(--color-border);
     background: var(--color-elevated);
@@ -250,6 +291,7 @@
     width: 260px;
     outline: none;
     transition: border-color 0.1s;
+    flex-shrink: 0;
   }
   .search-input::placeholder {
     color: var(--color-dim);
@@ -258,12 +300,12 @@
     border-color: var(--color-accent);
   }
 
-  .filters-row {
+  .toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 12px;
+    flex-shrink: 0;
   }
 
   .capability-filters {
@@ -274,15 +316,17 @@
 
   .filter-pill {
     font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 12px;
+    font-size: 10px;
+    padding: 4px 9px;
+    border-radius: 3px;
     border: 1px solid var(--color-border);
-    background: var(--color-surface);
+    background: var(--color-bg);
     color: var(--color-muted);
     cursor: pointer;
-    transition: all 0.1s;
-    line-height: 1.5;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: border-color 0.1s, color 0.1s, background 0.1s;
+    line-height: 1.4;
   }
   .filter-pill:hover {
     border-color: var(--color-border-bright);
@@ -301,7 +345,7 @@
   .provider-select {
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-size: 11px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     border-radius: 4px;
     border: 1px solid var(--color-border);
     background: var(--color-elevated);
@@ -314,7 +358,11 @@
     border-color: var(--color-accent);
   }
 
-  .table-container {
+  .table-wrapper {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--color-border);
     border-radius: 6px;
     background: var(--color-surface);
@@ -332,7 +380,14 @@
     font-size: 10px;
     color: var(--color-dim);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  .table-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .table-row {
@@ -340,7 +395,7 @@
     align-items: center;
     gap: 8px;
     padding: 6px 12px;
-    min-height: 36px;
+    min-height: 34px;
     border-top: 1px solid var(--color-border);
     transition: background 0.08s;
   }
@@ -352,7 +407,7 @@
   }
 
   .col-provider {
-    width: 160px;
+    width: 150px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -388,7 +443,7 @@
   }
 
   .col-family {
-    width: 100px;
+    width: 110px;
     flex-shrink: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -426,7 +481,7 @@
   }
 
   .col-caps {
-    width: 100px;
+    width: 110px;
     flex-shrink: 0;
     display: flex;
     gap: 3px;
@@ -451,26 +506,28 @@
   }
 
   .cap-tool {
-    background: rgba(92, 143, 204, 0.15);
-    color: #5c8fcc;
+    background: var(--color-accent-dim);
+    color: var(--color-accent);
   }
 
   .cap-struct {
-    background: rgba(78, 182, 135, 0.15);
-    color: #4eb687;
+    background: var(--color-success-dim);
+    color: var(--color-success);
   }
 
   .cap-open {
-    background: rgba(220, 170, 70, 0.15);
-    color: #dcaa46;
+    background: var(--color-warning-dim);
+    color: var(--color-warning);
   }
 
   .cap-vision {
-    background: rgba(220, 100, 100, 0.15);
-    color: #dc6464;
+    background: var(--color-danger-dim);
+    color: var(--color-danger);
   }
 
   .empty-state {
+    flex: 1 1 0;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -482,13 +539,16 @@
     border-radius: 6px;
     background: var(--color-surface);
   }
+  .empty-state p {
+    margin: 0;
+  }
 
   .pagination {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 12px;
-    padding: 0 4px;
+    padding: 0 2px;
+    flex-shrink: 0;
   }
 
   .pagination-info {
@@ -506,13 +566,13 @@
   .page-btn {
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-size: 11px;
-    padding: 3px 10px;
+    padding: 4px 10px;
     border-radius: 4px;
     border: 1px solid var(--color-border);
     background: var(--color-elevated);
     color: var(--color-muted);
     cursor: pointer;
-    transition: all 0.1s;
+    transition: border-color 0.1s, color 0.1s;
   }
   .page-btn:hover:not(:disabled) {
     border-color: var(--color-border-bright);
@@ -529,5 +589,39 @@
     color: var(--color-dim);
     min-width: 50px;
     text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .page {
+      padding: 16px;
+    }
+
+    .page-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .search-input {
+      width: 100%;
+    }
+
+    .toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .provider-select {
+      width: 100%;
+    }
+
+    .col-family,
+    .col-context {
+      display: none;
+    }
+
+    .col-provider {
+      width: 120px;
+    }
   }
 </style>
