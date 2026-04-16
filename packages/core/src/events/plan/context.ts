@@ -1,5 +1,4 @@
 import { AgentSkill } from "../../agent/skill";
-import { Context } from "../../context";
 import { getProvider } from "../../git";
 import type { NormalizedIssue } from "../../git/provider/interface";
 import { Repository } from "../../repository/index";
@@ -8,17 +7,15 @@ import { Tags } from "../tag";
 import { renderCaveman } from "./extensions/caveman";
 import type { Plan } from "./index";
 
-export type SectionRenderer = () => Promise<string | null>;
-
-interface PlanContextState {
+export interface PlanCtx {
   plan: Plan.Info;
   repo: () => Promise<Repository.Info | null>;
   issue: (n: number) => Promise<NormalizedIssue | null>;
 }
 
-const PlanContextStorage = Context.create<PlanContextState>();
+export type SectionRenderer = (ctx: PlanCtx) => Promise<string | null>;
 
-function makeState(plan: Plan.Info): PlanContextState {
+function makeCtx(plan: Plan.Info): PlanCtx {
   const repo = lazy(() =>
     plan.sourceId ? Repository.fromID(plan.sourceId) : Promise.resolve(null),
   );
@@ -41,40 +38,21 @@ function makeState(plan: Plan.Info): PlanContextState {
   return { plan, repo, issue };
 }
 
-export function withPlanContext<R>(plan: Plan.Info, fn: () => R): R {
-  return PlanContextStorage.provide(makeState(plan), fn);
-}
-
-export function usePlan(): Plan.Info {
-  return PlanContextStorage.use().plan;
-}
-
-export function useRepo(): Promise<Repository.Info | null> {
-  return PlanContextStorage.use().repo();
-}
-
-export function useIssue(n: number): Promise<NormalizedIssue | null> {
-  return PlanContextStorage.use().issue(n);
-}
-
 // --- Section renderers ---
 
-async function renderTitle(): Promise<string | null> {
-  const plan = usePlan();
-  return `# Plan: ${plan.title}`;
+async function renderTitle(ctx: PlanCtx): Promise<string | null> {
+  return `# Plan: ${ctx.plan.title}`;
 }
 
-async function renderBody(): Promise<string | null> {
-  const plan = usePlan();
-  return plan.body || null;
+async function renderBody(ctx: PlanCtx): Promise<string | null> {
+  return ctx.plan.body || null;
 }
 
-async function renderLinkedIssues(): Promise<string | null> {
-  const plan = usePlan();
-  const issueNumbers = Tags.Git.collect(plan.tags, "issue").map((tag) => tag.number);
+async function renderLinkedIssues(ctx: PlanCtx): Promise<string | null> {
+  const issueNumbers = Tags.Git.collect(ctx.plan.tags, "issue").map((tag) => tag.number);
   if (issueNumbers.length === 0) return null;
 
-  const issues = (await Promise.all(issueNumbers.map(useIssue))).filter(
+  const issues = (await Promise.all(issueNumbers.map(ctx.issue))).filter(
     (i): i is NormalizedIssue => i !== null,
   );
   if (issues.length === 0) return null;
@@ -87,16 +65,15 @@ async function renderLinkedIssues(): Promise<string | null> {
   return sections.join("\n\n");
 }
 
-async function renderSkills(): Promise<string | null> {
-  const plan = usePlan();
+async function renderSkills(ctx: PlanCtx): Promise<string | null> {
   const wanted = new Set(
-    plan.tags
+    ctx.plan.tags
       .filter((t) => t.startsWith("skill:"))
       .map((t) => t.slice("skill:".length))
       .filter(Boolean),
   );
 
-  const repo = await useRepo();
+  const repo = await ctx.repo();
   if (!repo) return null;
 
   const all = await AgentSkill.listAgentsSkills({ source: repo.source, fullName: repo.fullName });
@@ -111,9 +88,8 @@ async function renderSkills(): Promise<string | null> {
   return sections.join("\n\n");
 }
 
-async function renderFileScope(): Promise<string | null> {
-  const plan = usePlan();
-  const files = plan.tags
+async function renderFileScope(ctx: PlanCtx): Promise<string | null> {
+  const files = ctx.plan.tags
     .filter((t) => t.startsWith("file:"))
     .map((t) => t.slice("file:".length))
     .filter(Boolean);
@@ -135,10 +111,9 @@ function renderers(opts: Plan.ToPromptOptions): SectionRenderer[] {
 }
 
 export async function render(plan: Plan.Info, opts: Plan.ToPromptOptions = {}): Promise<string> {
-  return withPlanContext(plan, async () => {
-    const sections = await Promise.all(renderers(opts).map((r) => r()));
-    return sections.filter((s): s is string => Boolean(s)).join("\n\n");
-  });
+  const ctx = makeCtx(plan);
+  const sections = await Promise.all(renderers(opts).map((r) => r(ctx)));
+  return sections.filter((s): s is string => Boolean(s)).join("\n\n");
 }
 
 // Token estimation lives next to context — same module, same input.
