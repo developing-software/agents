@@ -97,7 +97,7 @@
   async function handleGenerate(options: Plan.ToPromptOptions) {
     if (!pendingAudit) return;
     const { planId, tags } = pendingAudit;
-    const prompt = await previewPrompt({
+    const { prompt, tags: extTags } = await previewPrompt({
       organization: data.organization,
       repoName: data.repoName,
       planId,
@@ -106,7 +106,7 @@
     drawer!.open({
       title: 'Dispatch Audit',
       prompt,
-      tags,
+      tags: [...tags, ...extTags],
       planId,
     });
   }

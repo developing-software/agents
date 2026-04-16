@@ -25,6 +25,7 @@
   let includeIssueDetails = $state(false);
   let includeSkillSummary = $state(false);
   let includeFileScope = $state(false);
+  let karpathy = $state(false);
   let caveman = $state<CavemanLevel | ''>('');
   let working = $state(false);
   let errorMsg = $state<string | null>(null);
@@ -36,6 +37,7 @@
     includeIssueDetails = false;
     includeSkillSummary = false;
     includeFileScope = false;
+    karpathy = false;
     caveman = '';
     working = false;
     errorMsg = null;
@@ -56,6 +58,7 @@
         includeIssueDetails,
         includeSkillSummary,
         includeFileScope,
+        karpathy,
         caveman: caveman || undefined,
       });
       isOpen = false;
@@ -99,6 +102,17 @@
         <div class="opt-text">
           <span class="opt-label">Include file scope</span>
           <span class="opt-hint">List files tagged on the plan.</span>
+        </div>
+      </label>
+
+      <label class="opt-row">
+        <input type="checkbox" bind:checked={karpathy} disabled={working} />
+        <div class="opt-text">
+          <span class="opt-label">Karpathy guidelines</span>
+          <span class="opt-hint">
+            Prepend behavioral rules (think-first, simplicity, surgical changes). Derived from
+            <a href="https://x.com/karpathy/status/2015883857489522876" target="_blank" rel="noopener noreferrer">Karpathy's observations</a>.
+          </span>
         </div>
       </label>
 

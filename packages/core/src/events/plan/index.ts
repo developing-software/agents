@@ -17,9 +17,17 @@ export namespace Plan {
     includeSkillSummary: z.boolean().optional(),
     includeFileScope: z.boolean().optional(),
     caveman: z.enum(CAVEMAN_LEVELS).optional(),
+    karpathy: z.boolean().optional(),
   });
 
   export type ToPromptOptions = z.input<typeof ToPromptOptions>;
+
+  export function extensionTags(opts: ToPromptOptions = {}): string[] {
+    const tags: string[] = [];
+    if (opts.caveman) tags.push(`plan:ext:caveman:${opts.caveman}`);
+    if (opts.karpathy) tags.push("plan:ext:karpathy");
+    return tags;
+  }
 
   export const Info = z
     .object({

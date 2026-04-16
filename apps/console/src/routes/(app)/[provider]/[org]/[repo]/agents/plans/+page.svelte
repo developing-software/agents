@@ -32,7 +32,7 @@
   async function handleGenerate(options: Plan.ToPromptOptions) {
     const plan = selectedPlan;
     if (!plan) return;
-    const prompt = await previewPrompt({
+    const { prompt, tags: extTags } = await previewPrompt({
       organization: data.organization,
       repoName: data.repoName,
       planId: plan.id,
@@ -41,7 +41,7 @@
     drawer!.open({
       title: 'Dispatch Plan',
       prompt,
-      tags: [`plan:${plan.id}`, ...plan.tags],
+      tags: [`plan:${plan.id}`, ...plan.tags, ...extTags],
       planId: plan.id,
     });
   }

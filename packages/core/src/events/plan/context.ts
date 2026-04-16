@@ -5,6 +5,7 @@ import { Repository } from "../../repository/index";
 import { lazy } from "../../util/lazy";
 import { Tags } from "../tag";
 import { renderCaveman } from "./extensions/caveman";
+import { renderKarpathy } from "./extensions/karpathy";
 import type { Plan } from "./index";
 
 export interface PlanCtx {
@@ -102,6 +103,7 @@ async function renderFileScope(ctx: PlanCtx): Promise<string | null> {
 function renderers(opts: Plan.ToPromptOptions): SectionRenderer[] {
   return [
     ...(opts.caveman ? [renderCaveman(opts.caveman)] : []),
+    ...(opts.karpathy ? [renderKarpathy()] : []),
     renderTitle,
     renderBody,
     ...(opts.includeIssueDetails ? [renderLinkedIssues] : []),

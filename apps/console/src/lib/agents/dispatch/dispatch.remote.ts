@@ -56,7 +56,10 @@ export const previewPrompt = repoQuery(
   async ({ planId, options }) => {
     const plan = await Plan.fromID(planId);
     if (!plan) error(404, `Plan ${planId} not found`);
-    return Plan.toPrompt(plan, options);
+    return {
+      prompt: await Plan.toPrompt(plan, options),
+      tags: Plan.extensionTags(options),
+    };
   },
 );
 
