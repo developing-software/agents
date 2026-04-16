@@ -12,12 +12,18 @@
 
   let isOpen = $state(false);
   let includeIssueDetails = $state(false);
+  let includeSkillSummary = $state(false);
+  let includeFileScope = $state(false);
+  let caveman = $state(false);
   let working = $state(false);
   let errorMsg = $state<string | null>(null);
   let dialog = $state<HTMLElement>();
 
   export function open() {
     includeIssueDetails = false;
+    includeSkillSummary = false;
+    includeFileScope = false;
+    caveman = false;
     working = false;
     errorMsg = null;
     isOpen = true;
@@ -33,7 +39,7 @@
     working = true;
     errorMsg = null;
     try {
-      await onconfirm({ includeIssueDetails });
+      await onconfirm({ includeIssueDetails, includeSkillSummary, includeFileScope, caveman });
       isOpen = false;
     } catch (err: unknown) {
       errorMsg = err instanceof Error ? err.message : 'Failed to prepare dispatch';
@@ -59,6 +65,30 @@
         <div class="opt-text">
           <span class="opt-label">Include issue details</span>
           <span class="opt-hint">Embed linked GitHub issue bodies in the prompt.</span>
+        </div>
+      </label>
+
+      <label class="opt-row">
+        <input type="checkbox" bind:checked={includeSkillSummary} disabled={working} />
+        <div class="opt-text">
+          <span class="opt-label">Include skill summary</span>
+          <span class="opt-hint">Embed SKILL.md bodies for each linked skill.</span>
+        </div>
+      </label>
+
+      <label class="opt-row">
+        <input type="checkbox" bind:checked={includeFileScope} disabled={working} />
+        <div class="opt-text">
+          <span class="opt-label">Include file scope</span>
+          <span class="opt-hint">List files tagged on the plan.</span>
+        </div>
+      </label>
+
+      <label class="opt-row">
+        <input type="checkbox" bind:checked={caveman} disabled={working} />
+        <div class="opt-text">
+          <span class="opt-label">Caveman mode</span>
+          <span class="opt-hint">Prepend terse-response directive to cut output tokens.</span>
         </div>
       </label>
 

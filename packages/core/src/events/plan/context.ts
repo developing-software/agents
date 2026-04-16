@@ -5,6 +5,7 @@ import type { NormalizedIssue } from "../../git/provider/interface";
 import { Repository } from "../../repository/index";
 import { lazy } from "../../util/lazy";
 import { Tags } from "../tag";
+import { renderCaveman } from "./extensions/caveman";
 import type { Plan } from "./index";
 
 export type SectionRenderer = () => Promise<string | null>;
@@ -87,12 +88,6 @@ async function renderLinkedIssues(): Promise<string | null> {
 }
 
 async function renderSkills(): Promise<string | null> {
-  const repo = await useRepo();
-  if (!repo) return null;
-
-  const all = await AgentSkill.listAgentsSkills({ source: repo.source, fullName: repo.fullName });
-  if (all.length === 0) return null;
-
   const plan = usePlan();
   const wanted = new Set(
     plan.tags
@@ -100,14 +95,20 @@ async function renderSkills(): Promise<string | null> {
       .map((t) => t.slice("skill:".length))
       .filter(Boolean),
   );
+
+  const repo = await useRepo();
+  if (!repo) return null;
+
+  const all = await AgentSkill.listAgentsSkills({ source: repo.source, fullName: repo.fullName });
   const skills = wanted.size > 0 ? all.filter((s) => wanted.has(s.id)) : all;
   if (skills.length === 0) return null;
 
-  const lines = skills.map((s) => {
-    const desc = s.description ? ` — ${s.description}` : "";
-    return `- \`${s.id}\`${desc}`;
-  });
-  return ["## Skills", ...lines].join("\n");
+  const sections = ["## Skills"];
+  for (const s of skills) {
+    sections.push(`### \`${s.id}\`${s.description ? ` — ${s.description}` : ""}`);
+    if (s.body.trim()) sections.push(s.body.trim());
+  }
+  return sections.join("\n\n");
 }
 
 async function renderFileScope(): Promise<string | null> {
@@ -124,11 +125,12 @@ async function renderFileScope(): Promise<string | null> {
 
 function renderers(opts: Plan.ToPromptOptions): SectionRenderer[] {
   return [
+    ...(opts.caveman ? [renderCaveman] : []),
     renderTitle,
     renderBody,
     ...(opts.includeIssueDetails ? [renderLinkedIssues] : []),
-    renderSkills,
-    renderFileScope,
+    ...(opts.includeSkillSummary ? [renderSkills] : []),
+    ...(opts.includeFileScope ? [renderFileScope] : []),
   ];
 }
 

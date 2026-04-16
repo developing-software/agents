@@ -13,6 +13,9 @@ const log = Log.create({ service: "plan" });
 export namespace Plan {
   export const ToPromptOptions = z.object({
     includeIssueDetails: z.boolean().optional(),
+    includeSkillSummary: z.boolean().optional(),
+    includeFileScope: z.boolean().optional(),
+    caveman: z.boolean().optional(),
   });
 
   export type ToPromptOptions = z.input<typeof ToPromptOptions>;
