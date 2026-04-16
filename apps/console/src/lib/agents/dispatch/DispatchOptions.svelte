@@ -233,6 +233,12 @@
     cursor: default;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+  }
+
+  .opt-select .opt-text {
+    flex: 1;
+    min-width: 0;
   }
 
   .level-select {
@@ -244,6 +250,8 @@
     background: var(--color-elevated);
     color: var(--color-text);
     cursor: pointer;
+    flex-shrink: 0;
+    max-width: 55%;
   }
   .level-select:disabled {
     opacity: 0.5;
