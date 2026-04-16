@@ -5,10 +5,10 @@
   let { data, form }: PageProps & { form: ActionData } = $props();
 </script>
 
-<section class="page">
-  <header class="header">
-    <div>
-      <p class="eyebrow">workspace / members</p>
+<div class="page">
+  <header class="page-header">
+    <div class="header-text">
+      <p class="eyebrow">workspace · members</p>
       <h1>{data.workspace?.name ?? "Workspace members"}</h1>
       <p class="muted">Manage the people who can access this workspace.</p>
     </div>
@@ -20,184 +20,199 @@
   />
 
   {#if form?.success}
-    <p class="notice success">Invitation recorded for {form.invitedEmail}.</p>
+    <p class="notice notice-success">Invitation recorded for {form.invitedEmail}.</p>
   {:else if form?.message}
-    <p class="notice error">{form.message}</p>
+    <p class="notice notice-error">{form.message}</p>
   {/if}
 
-  {#if data.role === 'admin'}
-    <section class="card">
-      <div class="card-header">
-        <div>
-          <h2>Invite someone</h2>
-          <p class="muted">Invited emails appear immediately and are claimed when that account signs in.</p>
-        </div>
-      </div>
+  {#if data.role === "admin"}
+    <section class="panel">
+      <h2 class="section-heading">Invite someone</h2>
+      <p class="muted small">Invited emails appear immediately and are claimed when that account signs in.</p>
 
       <form method="POST" action="?/invite" class="invite-form">
-        <label class="field field-wide">
+        <label class="field field-email">
           <span>Email</span>
           <input name="email" type="email" placeholder="teammate@example.com" required />
         </label>
-        <label class="field">
+        <label class="field field-role">
           <span>Role</span>
           <select name="role">
             <option value="member">Member</option>
             <option value="admin">Admin</option>
           </select>
         </label>
-        <button type="submit">Send invite</button>
+        <button type="submit" class="btn-primary">Send invite</button>
       </form>
     </section>
   {/if}
 
-  <section class="card">
-    <div class="card-header">
-      <div>
-        <h2>Members</h2>
-        <p class="muted">Active users and pending invitations for this workspace.</p>
-      </div>
-    </div>
+  <section class="panel">
+    <h2 class="section-heading">Members</h2>
 
-    <ul class="member-list">
-      {#each data.members as member (member.id)}
-        <li class="member-row">
-          <div class="member-main">
-            <p class="member-name">{member.name ?? member.email ?? member.id}</p>
-            <p class="member-meta">
-              <span>{member.email ?? "No email"}</span>
-              {#if member.accountID}
-                <span>joined</span>
-              {:else}
-                <span>invited</span>
+    {#if data.members.length === 0}
+      <p class="empty-text">No members yet.</p>
+    {:else}
+      <ul class="member-list">
+        {#each data.members as member (member.id)}
+          <li class="member-row">
+            <div class="member-main">
+              <p class="member-name">{member.name ?? member.email ?? member.id}</p>
+              <p class="member-meta">
+                <span>{member.email ?? "No email"}</span>
+                <span class="sep">·</span>
+                <span>{member.accountID ? "joined" : "invited"}</span>
+              </p>
+            </div>
+            <div class="member-side">
+              <span class="role-chip">{member.role}</span>
+              {#if !member.accountID}
+                <span class="chip chip-warning">pending</span>
               {/if}
-            </p>
-          </div>
-          <div class="member-side">
-            <span class="role">{member.role}</span>
-            {#if !member.accountID}
-              <span class="pending">pending</span>
-            {/if}
-          </div>
-        </li>
-      {/each}
-    </ul>
+            </div>
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </section>
-</section>
+</div>
 
 <style>
   .page {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.5rem;
-    max-width: 60rem;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 32px;
   }
 
-  .header,
-  .card,
-  .invite-form,
-  .field {
-    display: grid;
-    gap: 0.75rem;
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
-  .eyebrow,
-  .role,
-  .pending {
+  .eyebrow {
     margin: 0;
-    color: var(--color-dim);
     font-family: "JetBrains Mono", monospace;
-    font-size: 0.75rem;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  h1,
-  h2,
-  .member-name {
-    margin: 0;
-    color: var(--color-text);
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
   }
 
   h1 {
-    font-size: 1.5rem;
-  }
-
-  h2 {
-    font-size: 1rem;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
   }
 
   .muted {
     margin: 0;
     color: var(--color-muted);
+    font-size: 12px;
+  }
+
+  .small {
+    font-size: 11px;
+    margin-top: -6px;
+    margin-bottom: 4px;
+  }
+
+  .section-heading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   .notice {
     margin: 0;
-    padding: 0.75rem 0.9rem;
+    padding: 8px 12px;
     border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-  }
-
-  .notice.success {
-    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
-  }
-
-  .notice.error {
-    border-color: color-mix(in srgb, #c84c4c 45%, var(--color-border));
-  }
-
-  .card {
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    padding: 1rem;
+    border-radius: 5px;
+    font-size: 12px;
     background: var(--color-surface);
   }
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: start;
+  .notice-success {
+    border-color: color-mix(in srgb, var(--color-success) 50%, var(--color-border));
+    background: var(--color-success-dim);
+  }
+
+  .notice-error {
+    border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
+    background: var(--color-danger-dim);
+  }
+
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 14px 16px;
   }
 
   .invite-form {
-    grid-template-columns: minmax(0, 1.8fr) minmax(10rem, 0.8fr) auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(120px, 0.8fr) auto;
+    gap: 8px;
     align-items: end;
+    margin-top: 8px;
   }
 
-  .field-wide {
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     min-width: 0;
   }
 
-  .field span {
-    font-size: 0.85rem;
-    color: var(--color-text);
+  .field > span {
+    font-size: 11px;
+    color: var(--color-muted);
   }
 
-  input,
-  select {
+  .invite-form input,
+  .invite-form select {
     width: 100%;
-    min-height: 2.6rem;
-    padding: 0.7rem 0.8rem;
-    border-radius: 0.65rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-bg);
-    color: var(--color-text);
-    font: inherit;
   }
 
-  button {
-    min-height: 2.6rem;
-    padding: 0 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
+  .btn-primary {
+    min-height: 28px;
+    padding: 0 14px;
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
     background: var(--color-accent);
-    color: var(--color-bg);
-    font: inherit;
-    font-weight: 600;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
+    transition: opacity 0.1s;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .empty-text {
+    margin: 0;
+    color: var(--color-dim);
+    font-size: 12px;
   }
 
   .member-list {
@@ -206,18 +221,19 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
   }
 
   .member-row {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
     align-items: center;
-    padding: 0.9rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.65rem;
-    background: var(--color-bg);
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .member-row:last-child {
+    border-bottom: none;
   }
 
   .member-main {
@@ -225,45 +241,87 @@
   }
 
   .member-name {
-    font-weight: 600;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .member-meta {
-    margin: 0.2rem 0 0;
+    margin: 2px 0 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 6px;
     color: var(--color-muted);
-    font-size: 0.85rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+  }
+
+  .sep {
+    color: var(--color-dim);
   }
 
   .member-side {
     display: flex;
-    flex-direction: column;
-    align-items: end;
-    gap: 0.3rem;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
-  .pending {
-    color: #c84c4c;
+  .role-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-muted);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .chip-warning {
+    background: var(--color-warning-dim);
+    color: var(--color-warning);
   }
 
   @media (max-width: 720px) {
+    .page {
+      padding: 16px;
+    }
+
     .invite-form {
       grid-template-columns: 1fr;
     }
 
-    button {
+    .btn-primary {
       width: 100%;
+      min-height: 32px;
     }
 
     .member-row {
-      align-items: start;
       flex-direction: column;
+      align-items: flex-start;
     }
 
     .member-side {
-      align-items: start;
+      align-items: flex-start;
     }
   }
 </style>

@@ -12,140 +12,121 @@
     {
       href: `/w/${workspaceID}/settings`,
       label: "Overview",
-      match: "/settings",
       exact: true,
     },
     {
       href: `/w/${workspaceID}/settings/integrations`,
       label: "Integrations",
-      match: "/settings/integrations",
       exact: false,
     },
     {
       href: `/w/${workspaceID}/settings/members`,
       label: "Members",
-      match: "/settings/members",
       exact: false,
     },
   ]);
 </script>
 
-<section class="settings-shell" aria-label="Workspace settings navigation">
-  <div class="settings-head">
-    <a href={`/w/${workspaceID}`} class="back-link">Workspace</a>
-    <div>
-      <p class="eyebrow">settings</p>
-      <p class="workspace-name">{workspaceName ?? workspaceID}</p>
-    </div>
-  </div>
-
-  <nav class="settings-nav" aria-label="Workspace settings">
+<nav class="settings-nav" aria-label="Workspace settings">
+  <a href={`/w/${workspaceID}`} class="back-link" title={workspaceName ?? workspaceID}>
+    <span class="back-arrow">←</span>
+    <span class="back-label">{workspaceName ?? workspaceID}</span>
+  </a>
+  <div class="nav-sep"></div>
+  <div class="nav-links">
     {#each items as item (item.href)}
       {@const isActive = item.exact
         ? page.url.pathname === item.href
         : page.url.pathname.startsWith(item.href)}
       <a
         href={item.href}
-        class="settings-link"
-        class:settings-link-active={isActive}
+        class="nav-link"
+        class:nav-link-active={isActive}
+        aria-current={isActive ? "page" : undefined}
       >
         {item.label}
       </a>
     {/each}
-  </nav>
-</section>
+  </div>
+</nav>
 
 <style>
-  .settings-shell {
-    display: grid;
-    gap: 0.75rem;
-    padding: 0.95rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.85rem;
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 40%),
-      var(--color-surface);
-  }
-
-  .settings-head {
+  .settings-nav {
     display: flex;
-    justify-content: space-between;
-    gap: 1rem;
     align-items: center;
-  }
-
-  .back-link,
-  .eyebrow,
-  .workspace-name {
-    font-family: "JetBrains Mono", monospace;
+    gap: 10px;
+    padding: 0 2px;
+    border-bottom: 1px solid var(--color-border);
+    overflow-x: auto;
   }
 
   .back-link {
     display: inline-flex;
     align-items: center;
-    min-height: 2rem;
-    padding: 0 0.8rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    text-decoration: none;
+    gap: 6px;
+    padding: 8px 4px;
     color: var(--color-muted);
-    background: var(--color-bg);
-    font-size: 0.78rem;
+    text-decoration: none;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    white-space: nowrap;
+    transition: color 0.1s;
   }
 
   .back-link:hover {
     color: var(--color-text);
-    background: var(--color-elevated);
   }
 
-  .eyebrow {
-    margin: 0 0 0.15rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  .back-arrow {
     color: var(--color-dim);
   }
 
-  .workspace-name {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--color-text);
+  .back-label {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .settings-nav {
+  .nav-sep {
+    width: 1px;
+    height: 16px;
+    background: var(--color-border);
+    flex-shrink: 0;
+  }
+
+  .nav-links {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 2px;
   }
 
-  .settings-link {
+  .nav-link {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    min-height: 2.1rem;
-    padding: 0 0.8rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-surface);
+    padding: 8px 10px;
+    font-size: 12px;
     color: var(--color-muted);
     text-decoration: none;
-    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: color 0.1s;
   }
 
-  .settings-link:hover {
+  .nav-link:hover {
     color: var(--color-text);
-    background: var(--color-elevated);
   }
 
-  .settings-link-active {
+  .nav-link-active {
     color: var(--color-text);
-    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
-    background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
   }
 
-  @media (max-width: 640px) {
-    .settings-head {
-      align-items: start;
-      flex-direction: column;
-    }
+  .nav-link-active::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: -1px;
+    height: 2px;
+    background: var(--color-accent);
+    border-radius: 1px 1px 0 0;
   }
 </style>

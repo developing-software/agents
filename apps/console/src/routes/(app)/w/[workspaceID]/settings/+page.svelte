@@ -5,14 +5,14 @@
   let { data }: PageProps = $props();
 </script>
 
-<section class="page">
-  <header class="header">
-    <div>
-      <p class="eyebrow">workspace / settings</p>
+<div class="page">
+  <header class="page-header">
+    <div class="header-text">
+      <p class="eyebrow">workspace · settings</p>
       <h1>{data.workspace?.name ?? "Settings"}</h1>
-      <p class="muted">Workspace-level access, integrations, and team administration live here.</p>
+      <p class="muted">Workspace-level access, integrations, and team administration.</p>
     </div>
-    <span class="role">{data.role}</span>
+    <span class="role-chip">{data.role}</span>
   </header>
 
   <WorkspaceSettingsNav
@@ -20,139 +20,172 @@
     workspaceName={data.workspace?.name ?? null}
   />
 
-  <section class="overview-grid">
-      <a href={`/w/${data.workspaceID}/settings/integrations`} class="overview-card">
-        <div class="overview-top">
-          <p class="card-label">Integrations</p>
-          <p class="card-value">{data.installationCount}</p>
-        </div>
-        <p class="card-desc">Manage linked Git providers and installation claim flow.</p>
-        <p class="card-meta">
-          {#if data.inactiveInstallationCount > 0}
-            {data.inactiveInstallationCount} inactive
-          {:else}
-            all active
-          {/if}
-        </p>
-      </a>
+  <div class="card-grid">
+    <a href={`/w/${data.workspaceID}/settings/integrations`} class="card">
+      <div class="card-top">
+        <p class="card-label">Integrations</p>
+        <p class="card-value">{data.installationCount}</p>
+      </div>
+      <p class="card-desc">Manage linked Git providers and installation claim flow.</p>
+      <p class="card-meta">
+        {#if data.inactiveInstallationCount > 0}
+          {data.inactiveInstallationCount} inactive
+        {:else}
+          all active
+        {/if}
+      </p>
+    </a>
 
-      <a href={`/w/${data.workspaceID}/settings/members`} class="overview-card">
-        <div class="overview-top">
-          <p class="card-label">Members</p>
-          <p class="card-value">{data.memberCount}</p>
-        </div>
-        <p class="card-desc">Review membership, invite teammates, and manage workspace access.</p>
-        <p class="card-meta">
-          {#if data.pendingInviteCount > 0}
-            {data.pendingInviteCount} pending
-          {:else}
-            {data.adminCount} admins
-          {/if}
-        </p>
-      </a>
-  </section>
-</section>
+    <a href={`/w/${data.workspaceID}/settings/members`} class="card">
+      <div class="card-top">
+        <p class="card-label">Members</p>
+        <p class="card-value">{data.memberCount}</p>
+      </div>
+      <p class="card-desc">Review membership, invite teammates, and manage access.</p>
+      <p class="card-meta">
+        {#if data.pendingInviteCount > 0}
+          {data.pendingInviteCount} pending
+        {:else}
+          {data.adminCount} admin{data.adminCount === 1 ? "" : "s"}
+        {/if}
+      </p>
+    </a>
+  </div>
+</div>
 
 <style>
   .page {
-    display: grid;
-    gap: 1rem;
-    padding: 1.5rem;
-    max-width: 60rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 32px;
   }
 
-  .header {
+  .page-header {
     display: flex;
     justify-content: space-between;
-    align-items: start;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 16px;
   }
 
-  .eyebrow,
-  .role,
-  .card-label,
-  .card-meta {
-    font-family: "JetBrains Mono", monospace;
+  .header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
   }
 
-  .eyebrow,
-  .card-label,
-  .card-meta {
+  .eyebrow {
     margin: 0;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.07em;
     color: var(--color-dim);
   }
 
-  h1,
-  .card-value {
+  h1 {
     margin: 0;
+    font-size: 18px;
+    font-weight: 600;
     color: var(--color-text);
   }
 
-  h1 {
-    font-size: 1.6rem;
-  }
-
-  .muted,
-  .card-desc {
+  .muted {
     margin: 0;
     color: var(--color-muted);
+    font-size: 12px;
   }
 
-  .role {
+  .role-chip {
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    min-height: 2rem;
-    padding: 0 0.75rem;
-    border-radius: 999px;
+    padding: 4px 8px;
+    border-radius: 3px;
     border: 1px solid var(--color-border);
     background: var(--color-surface);
-    color: var(--color-text);
-    font-size: 0.75rem;
+    color: var(--color-muted);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
-  .overview-grid {
+  .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    gap: 0.9rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
   }
 
-  .overview-card {
-    display: grid;
-    gap: 0.6rem;
-    padding: 1rem;
-    border-radius: 0.85rem;
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
     border: 1px solid var(--color-border);
-    background:
-      linear-gradient(160deg, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 45%),
-      var(--color-surface);
+    border-radius: 6px;
+    background: var(--color-surface);
     text-decoration: none;
+    color: var(--color-text);
+    transition: border-color 0.1s, background 0.1s;
   }
 
-  .overview-card:hover {
-    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  .card:hover {
+    border-color: var(--color-border-bright);
     background: var(--color-elevated);
   }
 
-  .overview-top {
+  .card-top {
     display: flex;
-    align-items: end;
+    align-items: flex-end;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 12px;
+  }
+
+  .card-label {
+    margin: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
   }
 
   .card-value {
-    font-size: 2rem;
-    line-height: 1;
+    margin: 0;
+    font-size: 22px;
     font-weight: 600;
+    line-height: 1;
+    color: var(--color-text);
+  }
+
+  .card-desc {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .card-meta {
+    margin: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-dim);
   }
 
   @media (max-width: 640px) {
-    .header {
+    .page {
+      padding: 16px;
+    }
+
+    .page-header {
       flex-direction: column;
+      align-items: flex-start;
     }
   }
 </style>

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { PageProps } from './$types';
-  import WorkspaceSettingsNav from '$lib/workspace/WorkspaceSettingsNav.svelte';
+  import type { PageProps } from "./$types";
+  import WorkspaceSettingsNav from "$lib/workspace/WorkspaceSettingsNav.svelte";
 
   let { data }: PageProps = $props();
 
@@ -11,15 +11,15 @@
   );
 </script>
 
-<section class="page">
-  <header class="header">
-    <div>
-      <p class="eyebrow">workspace / integrations</p>
+<div class="page">
+  <header class="page-header">
+    <div class="header-text">
+      <p class="eyebrow">workspace · integrations</p>
       <h1>GitHub</h1>
       <p class="muted">Link GitHub App installations to this workspace.</p>
     </div>
     {#if installUrl}
-      <a class="install-link" href={installUrl}>Install GitHub App</a>
+      <a class="btn-secondary" href={installUrl}>Install GitHub App</a>
     {/if}
   </header>
 
@@ -29,113 +29,165 @@
   />
 
   {#if data.linked}
-    <p class="notice success">Linked {data.linked} to this workspace.</p>
+    <p class="notice notice-success">Linked {data.linked} to this workspace.</p>
   {/if}
 
-  {#if data.error === 'already_linked'}
-    <p class="notice error">{data.org ?? 'This installation'} is already linked to another workspace.</p>
-  {:else if data.error === 'installation_not_ready'}
-    <p class="notice error">The installation webhook has not been processed yet. Retry from this page in a moment.</p>
+  {#if data.error === "already_linked"}
+    <p class="notice notice-error">
+      {data.org ?? "This installation"} is already linked to another workspace.
+    </p>
+  {:else if data.error === "installation_not_ready"}
+    <p class="notice notice-error">
+      The installation webhook has not been processed yet. Retry from this page in a moment.
+    </p>
   {/if}
 
-  <section class="card">
-    <h2>Claimed installations</h2>
+  <section class="panel">
+    <h2 class="section-heading">Claimed installations</h2>
+
     {#if data.installations.length === 0}
-      <p class="muted">No Git installations are linked to this workspace yet.</p>
+      <p class="empty-text">No Git installations are linked to this workspace yet.</p>
     {:else}
       <ul class="installation-list">
         {#each data.installations as installation (installation.id)}
           <li class="installation-row">
-            <div>
-              <div class="login">{installation.providerAccountLogin}</div>
-              <div class="meta">
+            <div class="installation-main">
+              <p class="installation-login">{installation.providerAccountLogin}</p>
+              <p class="installation-meta">
                 <span>{installation.provider}</span>
+                <span class="sep">·</span>
                 <span>{installation.accountType}</span>
-                {#if !installation.active}
-                  <span class="status">inactive</span>
-                {/if}
-              </div>
+              </p>
             </div>
+            {#if !installation.active}
+              <span class="chip chip-danger">inactive</span>
+            {:else}
+              <span class="chip chip-success">active</span>
+            {/if}
           </li>
         {/each}
       </ul>
     {/if}
   </section>
-</section>
+</div>
 
 <style>
   .page {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.5rem;
-    max-width: 56rem;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 32px;
   }
 
-  .header {
+  .page-header {
     display: flex;
-    align-items: flex-start;
     justify-content: space-between;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
   }
 
   .eyebrow {
-    margin: 0 0 0.25rem 0;
-    color: var(--color-dim);
+    margin: 0;
     font-family: "JetBrains Mono", monospace;
-    font-size: 0.75rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
   }
 
   h1 {
     margin: 0;
-    font-size: 1.5rem;
-  }
-
-  h2 {
-    margin: 0 0 0.75rem 0;
-    font-size: 1rem;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
   }
 
   .muted {
+    margin: 0;
     color: var(--color-muted);
+    font-size: 12px;
   }
 
-  .install-link {
+  .btn-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.625rem 0.9rem;
+    min-height: 28px;
+    padding: 0 12px;
     border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    text-decoration: none;
-    color: var(--color-text);
+    border-radius: 4px;
     background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 12px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.1s, border-color 0.1s;
   }
 
-  .install-link:hover {
-    background: var(--color-elevated);
+  .btn-secondary:hover {
+    background: var(--color-hover);
+    border-color: var(--color-border-bright);
+  }
+
+  .section-heading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   .notice {
     margin: 0;
-    padding: 0.75rem 0.9rem;
-    border-radius: 0.5rem;
+    padding: 8px 12px;
     border: 1px solid var(--color-border);
-  }
-
-  .notice.success {
-    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
-  }
-
-  .notice.error {
-    border-color: color-mix(in srgb, #c84c4c 45%, var(--color-border));
-  }
-
-  .card {
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    padding: 1rem;
+    border-radius: 5px;
+    font-size: 12px;
     background: var(--color-surface);
+  }
+
+  .notice-success {
+    border-color: color-mix(in srgb, var(--color-success) 50%, var(--color-border));
+    background: var(--color-success-dim);
+  }
+
+  .notice-error {
+    border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
+    background: var(--color-danger-dim);
+  }
+
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .empty-text {
+    margin: 0;
+    color: var(--color-dim);
+    font-size: 12px;
   }
 
   .installation-list {
@@ -144,39 +196,75 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
   }
 
   .installation-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.625rem;
-    background: var(--color-bg);
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
   }
 
-  .login {
-    font-weight: 600;
+  .installation-row:last-child {
+    border-bottom: none;
   }
 
-  .meta {
+  .installation-main {
+    min-width: 0;
+  }
+
+  .installation-login {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .installation-meta {
+    margin: 2px 0 0;
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 6px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
     color: var(--color-muted);
-    font-size: 0.85rem;
   }
 
-  .status {
-    color: #c84c4c;
+  .sep {
+    color: var(--color-dim);
+  }
+
+  .chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .chip-success {
+    background: var(--color-success-dim);
+    color: var(--color-success);
+  }
+
+  .chip-danger {
+    background: var(--color-danger-dim);
+    color: var(--color-danger);
   }
 
   @media (max-width: 640px) {
-    .header {
+    .page {
+      padding: 16px;
+    }
+
+    .page-header {
       flex-direction: column;
+      align-items: stretch;
     }
   }
 </style>

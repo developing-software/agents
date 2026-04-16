@@ -9,38 +9,31 @@
 </svelte:head>
 
 <div class="page">
-  <header class="hero">
-    <div>
-      <p class="eyebrow">workspace switcher</p>
-      <h1>Choose a workspace</h1>
-      <p class="muted">Pick where you want to work, or create a new workspace for a new team.</p>
-    </div>
+  <header class="page-header">
+    <p class="eyebrow">workspaces</p>
+    <h1>Choose a workspace</h1>
+    <p class="muted">Pick where you want to work, or create a new workspace for a new team.</p>
   </header>
 
   {#if form?.message}
-    <p class="notice error">{form.message}</p>
+    <p class="notice notice-error">{form.message}</p>
   {/if}
 
   <section class="panel">
-    <div class="section-header">
-      <div>
-        <p class="section-eyebrow">Available workspaces</p>
-        <h2>Your memberships</h2>
-      </div>
-    </div>
+    <h2 class="section-heading">Your memberships</h2>
 
     {#if data.workspaces.length === 0}
-      <p class="muted">This session is not attached to any workspaces yet. Create one below.</p>
+      <p class="empty-text">This session is not attached to any workspaces yet. Create one below.</p>
     {:else}
       <div class="workspace-grid">
         {#each data.workspaces as workspace (workspace.id)}
           <a class="workspace-card" href={`/w/${workspace.id}`}>
-            <div>
+            <div class="workspace-main">
               <p class="workspace-name">{workspace.name}</p>
               <p class="workspace-meta">{workspace.slug ?? workspace.id}</p>
             </div>
             {#if data.lastSeenWorkspaceID === workspace.id}
-              <span class="badge">recent</span>
+              <span class="chip">recent</span>
             {/if}
           </a>
         {/each}
@@ -49,180 +42,220 @@
   </section>
 
   <section class="panel">
-    <div class="section-header">
-      <div>
-        <p class="section-eyebrow">New workspace</p>
-        <h2>Create a workspace</h2>
-      </div>
-    </div>
+    <h2 class="section-heading">Create a workspace</h2>
 
     <form method="POST" action="?/create" class="create-form">
-      <label>
+      <label class="field">
         <span>Workspace name</span>
         <input name="name" type="text" placeholder="Acme Engineering" required />
       </label>
-      <button type="submit">Create workspace</button>
+      <button type="submit" class="btn-primary">Create workspace</button>
     </form>
   </section>
 </div>
 
 <style>
   .page {
-    max-width: 72rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 1.75rem 1.25rem 3rem;
-    display: grid;
-    gap: 1rem;
+    padding: 20px 24px 32px;
   }
 
-  .hero,
-  .panel,
-  .create-form,
-  label {
-    display: grid;
-    gap: 0.75rem;
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
-  .eyebrow,
-  .section-eyebrow,
-  .workspace-meta,
-  .badge {
+  .eyebrow {
+    margin: 0;
     font-family: "JetBrains Mono", monospace;
-    font-size: 0.72rem;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .eyebrow,
-  .section-eyebrow,
-  .workspace-meta {
+    letter-spacing: 0.07em;
     color: var(--color-dim);
-    margin: 0;
-  }
-
-  h1,
-  h2,
-  .workspace-name {
-    margin: 0;
-    color: var(--color-text);
   }
 
   h1 {
-    font-size: 2rem;
-    line-height: 1;
-  }
-
-  h2 {
-    font-size: 1.05rem;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
   }
 
   .muted {
     margin: 0;
     color: var(--color-muted);
-    max-width: 56ch;
+    font-size: 12px;
+  }
+
+  .section-heading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--color-border);
   }
 
   .notice {
     margin: 0;
-    padding: 0.8rem 0.9rem;
+    padding: 8px 12px;
     border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
+    border-radius: 5px;
     background: var(--color-surface);
+    font-size: 12px;
   }
 
-  .notice.error {
-    border-color: color-mix(in srgb, #c84c4c 45%, var(--color-border));
+  .notice-error {
+    border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
+    background: var(--color-danger-dim);
+    color: var(--color-text);
   }
 
   .panel {
-    padding: 1.1rem;
-    border-radius: 0.9rem;
-    border: 1px solid var(--color-border);
     background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 14px 16px;
   }
 
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: start;
+  .empty-text {
+    margin: 0;
+    color: var(--color-dim);
+    font-size: 12px;
   }
 
   .workspace-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    gap: 0.85rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
   }
 
   .workspace-card {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    align-items: start;
-    padding: 1rem;
-    border-radius: 0.8rem;
+    gap: 10px;
+    padding: 10px 12px;
     border: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-surface) 88%, white 12%);
+    border-radius: 5px;
+    background: var(--color-bg);
     text-decoration: none;
+    color: var(--color-text);
+    transition: border-color 0.1s, background 0.1s;
   }
 
   .workspace-card:hover {
-    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+    border-color: var(--color-border-bright);
     background: var(--color-elevated);
   }
 
+  .workspace-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   .workspace-name {
-    font-size: 1rem;
-    font-weight: 600;
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 1.7rem;
-    padding: 0 0.55rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  label span {
-    font-size: 0.85rem;
-    color: var(--color-text);
+  .workspace-meta {
+    margin: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--color-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  input {
+  .chip {
+    flex-shrink: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--color-accent-dim);
+    color: var(--color-accent);
+  }
+
+  .create-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .field > span {
+    font-size: 11px;
+    color: var(--color-muted);
+  }
+
+  .create-form input {
     width: 100%;
-    min-height: 2.7rem;
-    padding: 0.75rem 0.85rem;
-    border-radius: 0.75rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-bg);
-    color: var(--color-text);
-    font: inherit;
   }
 
-  button {
-    justify-self: start;
-    min-height: 2.5rem;
-    padding: 0 0.95rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
+  .btn-primary {
+    min-height: 28px;
+    padding: 0 14px;
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
     background: var(--color-accent);
-    color: var(--color-bg);
-    font: inherit;
-    font-weight: 600;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
+    transition: opacity 0.1s;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
   }
 
   @media (max-width: 640px) {
     .page {
-      padding-inline: 0.9rem;
+      padding: 16px;
     }
 
-    button {
+    .create-form {
+      grid-template-columns: 1fr;
+    }
+
+    .btn-primary {
       width: 100%;
-      justify-self: stretch;
+      min-height: 32px;
     }
   }
 </style>

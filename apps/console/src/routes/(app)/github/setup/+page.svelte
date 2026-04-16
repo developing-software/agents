@@ -1,7 +1,42 @@
 <script lang="ts">
-  import type { ActionData, PageProps } from "./$types";
+  import type { PageProps } from "./$types";
+  import { untrack } from "svelte";
+  import { claimInstallation, createWorkspaceAndClaim } from "./setup.remote";
 
-  let { data, form }: PageProps & { form: ActionData } = $props();
+  let { data }: PageProps = $props();
+
+  let workspaceName = $state(untrack(() => data.suggestedWorkspaceName));
+  let submitting = $state<string | null>(null);
+  let message = $state<string | null>(null);
+
+  async function linkExisting(workspaceID: string) {
+    submitting = workspaceID;
+    message = null;
+    try {
+      await claimInstallation({
+        workspaceID,
+        installationRef: data.installationRef,
+      });
+    } catch (err) {
+      message = err instanceof Error ? err.message : "Failed to link installation.";
+      submitting = null;
+    }
+  }
+
+  async function createAndLink(event: SubmitEvent) {
+    event.preventDefault();
+    submitting = "__create__";
+    message = null;
+    try {
+      await createWorkspaceAndClaim({
+        name: workspaceName,
+        installationRef: data.installationRef,
+      });
+    } catch (err) {
+      message = err instanceof Error ? err.message : "Failed to create workspace.";
+      submitting = null;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -17,8 +52,8 @@
     </p>
   </section>
 
-  {#if form?.message}
-    <p class="notice error">{form.message}</p>
+  {#if message}
+    <p class="notice error">{message}</p>
   {/if}
 
   {#if data.stateNeedsSelection}
@@ -46,14 +81,19 @@
     {:else}
       <div class="workspace-list">
         {#each data.workspaces as workspace (workspace.id)}
-          <form method="POST" action="?/claim" class="workspace-card">
-            <input type="hidden" name="workspaceID" value={workspace.id} />
+          <div class="workspace-card">
             <div>
               <p class="workspace-name">{workspace.name}</p>
               <p class="workspace-meta">{workspace.slug ?? workspace.id}</p>
             </div>
-            <button type="submit" disabled={!data.installation}>Link here</button>
-          </form>
+            <button
+              type="button"
+              onclick={() => linkExisting(workspace.id)}
+              disabled={!data.installation || submitting !== null}
+            >
+              {submitting === workspace.id ? "Linking…" : "Link here"}
+            </button>
+          </div>
         {/each}
       </div>
     {/if}
@@ -67,18 +107,20 @@
       </div>
     </div>
 
-    <form method="POST" action="?/createWorkspace" class="create-form">
+    <form onsubmit={createAndLink} class="create-form">
       <label>
         <span>Workspace name</span>
         <input
           name="name"
           type="text"
-          value={data.suggestedWorkspaceName}
+          bind:value={workspaceName}
           placeholder="Workspace name"
           required
         />
       </label>
-      <button type="submit" disabled={!data.installation}>Create workspace and link</button>
+      <button type="submit" disabled={!data.installation || submitting !== null}>
+        {submitting === "__create__" ? "Creating…" : "Create workspace and link"}
+      </button>
     </form>
   </section>
 </div>

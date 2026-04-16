@@ -8,50 +8,50 @@
   <title>{data.workspace?.name ?? "Workspace"}</title>
 </svelte:head>
 
-<section class="page">
-  <header class="hero">
-    <div>
+<div class="page">
+  <header class="page-header">
+    <div class="header-text">
       <p class="eyebrow">workspace</p>
       <h1>{data.workspace?.name ?? data.workspaceID}</h1>
       <p class="muted">Choose a provider view or jump into workspace settings.</p>
     </div>
-    <a href={`/w/${data.workspaceID}/settings`} class="settings-link">Open settings</a>
+    <a href={`/w/${data.workspaceID}/settings`} class="btn-secondary">Settings</a>
   </header>
 
-  <section class="summary-grid">
-    <article class="summary-card">
-      <p class="summary-label">Repositories</p>
-      <p class="summary-value">{data.repoCount}</p>
-    </article>
-    <article class="summary-card">
-      <p class="summary-label">Providers</p>
-      <p class="summary-value">{data.providers.length}</p>
-    </article>
-  </section>
+  <div class="stats">
+    <div class="stat">
+      <p class="stat-label">Repositories</p>
+      <p class="stat-value">{data.repoCount}</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">Providers</p>
+      <p class="stat-value">{data.providers.length}</p>
+    </div>
+  </div>
 
   <section class="panel">
-    <div class="panel-head">
-      <div>
-        <p class="panel-eyebrow">Providers</p>
-        <h2>Repository views</h2>
-      </div>
-    </div>
+    <h2 class="section-heading">Providers</h2>
 
     {#if data.providers.length === 0}
-      <p class="muted">No repositories are linked to this workspace yet.</p>
-      <a href={`/w/${data.workspaceID}/settings/integrations`} class="empty-link">
-        Set up integrations
-      </a>
+      <div class="empty">
+        <p class="empty-text">No repositories are linked to this workspace yet.</p>
+        <a href={`/w/${data.workspaceID}/settings/integrations`} class="btn-secondary">
+          Set up integrations
+        </a>
+      </div>
     {:else}
-      <div class="provider-grid">
+      <div class="card-grid">
         {#each data.providers as provider (provider.provider)}
-          <a href={`/w/${data.workspaceID}/${provider.provider}`} class="provider-card">
-            <div class="provider-top">
-              <p class="provider-name">{provider.provider}</p>
-              <span class="provider-arrow">›</span>
+          <a href={`/w/${data.workspaceID}/${provider.provider}`} class="card">
+            <div class="card-top">
+              <p class="card-title">{provider.provider}</p>
+              <span class="card-arrow">→</span>
             </div>
-            <p class="provider-meta">{provider.repoCount} repos</p>
-            <p class="provider-meta">{provider.orgCount} orgs</p>
+            <p class="card-meta">
+              <span>{provider.repoCount} repos</span>
+              <span class="sep">·</span>
+              <span>{provider.orgCount} orgs</span>
+            </p>
           </a>
         {/each}
       </div>
@@ -59,179 +59,238 @@
   </section>
 
   <section class="panel">
-    <div class="panel-head">
-      <div>
-        <p class="panel-eyebrow">Settings</p>
-        <h2>Workspace administration</h2>
-      </div>
-    </div>
+    <h2 class="section-heading">Administration</h2>
 
-    <div class="settings-grid">
-      <a href={`/w/${data.workspaceID}/settings`} class="settings-card">
-        <p class="settings-name">Overview</p>
-        <p class="settings-desc">See workspace-level summaries and admin entry points.</p>
+    <div class="card-grid">
+      <a href={`/w/${data.workspaceID}/settings`} class="card">
+        <p class="card-title">Overview</p>
+        <p class="card-desc">Workspace-level summaries and admin entry points.</p>
       </a>
-      <a href={`/w/${data.workspaceID}/settings/integrations`} class="settings-card">
-        <p class="settings-name">Integrations</p>
-        <p class="settings-desc">Connect providers and manage installation linking.</p>
+      <a href={`/w/${data.workspaceID}/settings/integrations`} class="card">
+        <p class="card-title">Integrations</p>
+        <p class="card-desc">Connect providers and manage installation linking.</p>
       </a>
-      <a href={`/w/${data.workspaceID}/settings/members`} class="settings-card">
-        <p class="settings-name">Members</p>
-        <p class="settings-desc">Invite teammates and review access for this workspace.</p>
+      <a href={`/w/${data.workspaceID}/settings/members`} class="card">
+        <p class="card-title">Members</p>
+        <p class="card-desc">Invite teammates and review workspace access.</p>
       </a>
     </div>
   </section>
-</section>
+</div>
 
 <style>
   .page {
-    display: grid;
-    gap: 1rem;
-    padding: 1.5rem;
-    max-width: 60rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 32px;
   }
 
-  .hero {
+  .page-header {
     display: flex;
     justify-content: space-between;
-    align-items: start;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 16px;
   }
 
-  .eyebrow,
-  .panel-eyebrow,
-  .summary-label,
-  .provider-meta {
+  .header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .eyebrow {
     margin: 0;
     font-family: "JetBrains Mono", monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.07em;
     color: var(--color-dim);
-  }
-
-  h1,
-  h2,
-  .summary-value,
-  .provider-name,
-  .settings-name {
-    margin: 0;
-    color: var(--color-text);
   }
 
   h1 {
-    font-size: 1.6rem;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
   }
 
-  h2 {
-    font-size: 1rem;
-  }
-
-  .muted,
-  .settings-desc {
+  .muted {
     margin: 0;
     color: var(--color-muted);
+    font-size: 12px;
   }
 
-  .settings-link,
-  .empty-link {
+  .section-heading {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .btn-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.4rem;
-    padding: 0 0.9rem;
+    min-height: 28px;
+    padding: 0 12px;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
+    border-radius: 4px;
     background: var(--color-surface);
     color: var(--color-text);
+    font-size: 12px;
     text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.1s, border-color 0.1s;
   }
 
-  .settings-link:hover,
-  .empty-link:hover {
-    background: var(--color-elevated);
+  .btn-secondary:hover {
+    background: var(--color-hover);
+    border-color: var(--color-border-bright);
   }
 
-  .summary-grid,
-  .provider-grid,
-  .settings-grid {
+  .stats {
     display: grid;
-    gap: 0.9rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
   }
 
-  .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .summary-card,
-  .panel,
-  .provider-card,
-  .settings-card {
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
     border: 1px solid var(--color-border);
+    border-radius: 6px;
     background: var(--color-surface);
   }
 
-  .summary-card {
-    padding: 1rem;
-    border-radius: 0.8rem;
+  .stat-label {
+    margin: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-dim);
   }
 
-  .summary-value {
-    font-size: 2rem;
-    line-height: 1;
+  .stat-value {
+    margin: 0;
+    font-size: 22px;
     font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.1;
   }
 
   .panel {
-    border-radius: 0.85rem;
-    padding: 1rem;
-    display: grid;
-    gap: 0.9rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 14px 16px;
   }
 
-  .provider-grid,
-  .settings-grid {
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  .empty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
-  .provider-card,
-  .settings-card {
+  .empty-text {
+    margin: 0;
+    color: var(--color-dim);
+    font-size: 12px;
+  }
+
+  .card-grid {
     display: grid;
-    gap: 0.55rem;
-    padding: 1rem;
-    border-radius: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-bg);
     text-decoration: none;
+    color: var(--color-text);
+    transition: border-color 0.1s, background 0.1s;
   }
 
-  .provider-card:hover,
-  .settings-card:hover {
-    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  .card:hover {
+    border-color: var(--color-border-bright);
     background: var(--color-elevated);
   }
 
-  .provider-top {
+  .card-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    gap: 8px;
   }
 
-  .provider-arrow {
+  .card-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+    text-transform: capitalize;
+  }
+
+  .card-arrow {
     color: var(--color-dim);
-    font-size: 1.2rem;
+    font-size: 12px;
   }
 
-  .settings-name {
-    font-weight: 600;
+  .card-meta {
+    margin: 0;
+    display: flex;
+    gap: 6px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-muted);
+  }
+
+  .sep {
+    color: var(--color-dim);
+  }
+
+  .card-desc {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 12px;
+    line-height: 1.4;
   }
 
   @media (max-width: 640px) {
-    .hero {
-      flex-direction: column;
+    .page {
+      padding: 16px;
     }
 
-    .summary-grid {
-      grid-template-columns: 1fr;
+    .page-header {
+      flex-direction: column;
+      align-items: stretch;
     }
   }
 </style>
