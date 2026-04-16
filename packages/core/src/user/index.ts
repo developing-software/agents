@@ -1,9 +1,9 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { userTable } from "./user.sql";
 import { z } from "zod";
+import { Database } from "../drizzle";
 import { fn } from "../util/fn";
 import { Identifier } from "../identifier";
-import { useTransaction } from "../drizzle/transaction";
 import { Actor } from "../actor";
 import { Account } from "../account";
 import { Common } from "../common";
@@ -34,7 +34,7 @@ export namespace User {
   export type Info = z.infer<typeof Info>;
 
   export const fromID = fn(Info.shape.id, (id) =>
-    useTransaction((tx) =>
+    Database.use((tx) =>
       tx
         .select()
         .from(userTable)
@@ -46,7 +46,7 @@ export namespace User {
   export const fromAccount = fn(
     z.object({ accountID: z.string(), workspaceID: z.string() }),
     ({ accountID, workspaceID }) =>
-      useTransaction((tx) =>
+      Database.use((tx) =>
         tx
           .select()
           .from(userTable)
@@ -62,7 +62,7 @@ export namespace User {
   );
 
   export const touchSeen = fn(z.string(), (userID) =>
-    useTransaction((tx) =>
+    Database.use((tx) =>
       tx
         .update(userTable)
         .set({ timeSeen: new Date(), timeUpdated: new Date() })
@@ -77,7 +77,7 @@ export namespace User {
    */
   export async function joinInvitedWorkspaces() {
     const account = Actor.assert("account");
-    await useTransaction((tx) =>
+    await Database.use((tx) =>
       tx
         .update(userTable)
         .set({ accountID: account.properties.accountID, timeUpdated: new Date() })
@@ -94,7 +94,7 @@ export namespace User {
   export const pendingByEmail = fn(
     z.object({ workspaceID: z.string(), email: z.string() }),
     ({ workspaceID, email }) =>
-      useTransaction((tx) =>
+      Database.use((tx) =>
         tx
           .select()
           .from(userTable)
@@ -132,7 +132,7 @@ export namespace User {
       if (pending) return pending.id;
 
       const id = Identifier.create("user");
-      await useTransaction((tx) =>
+      await Database.use((tx) =>
         tx.insert(userTable).values({
           id,
           workspaceID,
@@ -148,7 +148,7 @@ export namespace User {
     z.object({ id: z.string(), name: z.string().optional(), avatarUrl: z.string().optional() }),
     (input) => {
       const actor = Actor.assert("user");
-      return useTransaction(async (tx) => {
+      return Database.use(async (tx) => {
         await tx
           .update(userTable)
           .set({
@@ -167,7 +167,7 @@ export namespace User {
   );
 
   export const listForWorkspace = fn(z.string(), (workspaceID) =>
-    useTransaction((tx) =>
+    Database.use((tx) =>
       tx
         .select()
         .from(userTable)

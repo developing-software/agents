@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
-import { useTransaction, createTransaction } from "../drizzle/transaction";
+import { Database } from "../drizzle";
 import { fn } from "../util/fn";
 import { Identifier } from "../identifier";
 import { Actor } from "../actor";
@@ -31,7 +31,7 @@ export namespace Workspace {
     async (input) => {
       const account = Actor.assert("account");
       const id = Identifier.create("workspace");
-      await createTransaction(async (tx) => {
+      await Database.transaction(async (tx) => {
         await tx.insert(workspaceTable).values({ id, name: input.name, slug: input.slug ?? null });
         await tx.insert(userTable).values({
           id: Identifier.create("user"),
@@ -46,7 +46,7 @@ export namespace Workspace {
   );
 
   export const fromID = fn(Info.shape.id, (id) =>
-    useTransaction((tx) =>
+    Database.use((tx) =>
       tx
         .select()
         .from(workspaceTable)
@@ -58,7 +58,7 @@ export namespace Workspace {
   export const assertMember = fn(
     z.object({ accountID: z.string(), workspaceID: z.string() }),
     ({ accountID, workspaceID }) =>
-      useTransaction(async (tx) => {
+      Database.use(async (tx) => {
         const row = await tx
           .select({ id: userTable.id, role: userTable.role })
           .from(userTable)
@@ -88,7 +88,7 @@ export namespace Workspace {
   export const findMember = fn(
     z.object({ accountIDs: z.array(z.string()).min(1), workspaceID: z.string() }),
     ({ accountIDs, workspaceID }) =>
-      useTransaction((tx) =>
+      Database.use((tx) =>
         tx
           .select({
             userID: userTable.id,
@@ -110,7 +110,7 @@ export namespace Workspace {
   );
 
   export const forAccount = fn(z.string(), (accountID) =>
-    useTransaction((tx) =>
+    Database.use((tx) =>
       tx
         .select({
           id: workspaceTable.id,
@@ -130,7 +130,7 @@ export namespace Workspace {
   );
 
   export const lastSeenID = fn(z.string(), (accountID) =>
-    useTransaction((tx) =>
+    Database.use((tx) =>
       tx
         .select({ workspaceID: userTable.workspaceID })
         .from(userTable)

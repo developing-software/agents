@@ -1,12 +1,11 @@
 import { z } from "zod";
 import { fn } from "../util/fn";
-import { and, eq, isNull } from "../drizzle";
+import { Database, and, eq, isNull } from "../drizzle";
 import { apiClientTable, apiPersonalTokenTable } from "./api.sql";
 import { Identifier } from "../identifier";
 import { Actor } from "../actor";
 import { Common } from "../common";
 import { Examples } from "../examples";
-import { useTransaction } from "../drizzle/transaction";
 import { ErrorCodes, VisibleError } from "../error";
 import { randomHex, sha256 } from "../util/crypto";
 
@@ -47,7 +46,7 @@ export namespace Api {
       async (input) => {
         const id = Identifier.create("apiClient");
         const secret = Identifier.create("apiSecret");
-        await useTransaction((tx) =>
+        await Database.use((tx) =>
           tx.insert(apiClientTable).values({
             id,
             secret,
@@ -69,7 +68,7 @@ export namespace Api {
         redirectURI: true,
       }),
       async (input) => {
-        const match = await useTransaction((tx) =>
+        const match = await Database.use((tx) =>
           tx
             .select({ id: apiClientTable.id })
             .from(apiClientTable)
@@ -85,7 +84,7 @@ export namespace Api {
     );
 
     export async function list(): Promise<Info[]> {
-      return useTransaction((tx) =>
+      return Database.use((tx) =>
         tx
           .select()
           .from(apiClientTable)
@@ -100,7 +99,7 @@ export namespace Api {
     }
 
     export const remove = fn(Info.shape.id, (input) =>
-      useTransaction(async (tx) => {
+      Database.use(async (tx) => {
         const response = await tx
           .delete(apiClientTable)
           .where(and(eq(apiClientTable.id, input), eq(apiClientTable.accountID, Actor.accountID())))
@@ -131,7 +130,7 @@ export namespace Api {
     }
 
     export const fromID = fn(Info.shape.id, (id) =>
-      useTransaction(async (tx) => {
+      Database.use(async (tx) => {
         const rows = await tx
           .select()
           .from(apiClientTable)
@@ -187,7 +186,7 @@ export namespace Api {
       const prefix = `tok_${env}_${body.slice(0, 4)}_${body.slice(-4)}`;
       const tokenHash = await sha256(token);
 
-      await useTransaction((tx) =>
+      await Database.use((tx) =>
         tx.insert(apiPersonalTokenTable).values({
           id,
           userID: Actor.userID(),
@@ -205,7 +204,7 @@ export namespace Api {
     });
 
     export const remove = fn(Info.shape.id, (input) =>
-      useTransaction(async (tx) => {
+      Database.use(async (tx) => {
         const response = await tx
           .delete(apiPersonalTokenTable)
           .where(
@@ -226,7 +225,7 @@ export namespace Api {
     );
 
     export async function list(): Promise<Info[]> {
-      return useTransaction((tx) =>
+      return Database.use((tx) =>
         tx
           .select()
           .from(apiPersonalTokenTable)
@@ -259,7 +258,7 @@ export namespace Api {
     }
 
     export const fromID = fn(Info.shape.id, (id) =>
-      useTransaction(async (tx) => {
+      Database.use(async (tx) => {
         const rows = await tx
           .select()
           .from(apiPersonalTokenTable)
@@ -272,7 +271,7 @@ export namespace Api {
     );
 
     export async function fromTokenHash(token: string) {
-      return useTransaction((tx) =>
+      return Database.use((tx) =>
         tx
           .select({
             id: apiPersonalTokenTable.id,
@@ -288,7 +287,7 @@ export namespace Api {
     }
 
     export async function touchLastUsed(id: string) {
-      return useTransaction((tx) =>
+      return Database.use((tx) =>
         tx
           .update(apiPersonalTokenTable)
           .set({ lastUsedAt: new Date(), timeUpdated: new Date() })

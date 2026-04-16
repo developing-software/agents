@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { Context } from "./context";
-import { useTransaction } from "./drizzle/transaction";
+import { Database } from "./drizzle";
 import { UserFlags, userTable } from "./user/user.sql";
 import { ErrorCodes, VisibleError } from "./error";
 import { Log } from "./util/log";
@@ -71,7 +71,7 @@ export namespace Actor {
   }
 
   export async function assertFlag(flag: keyof UserFlags) {
-    return useTransaction((tx) =>
+    return Database.use((tx) =>
       tx
         .select({ flags: userTable.flags })
         .from(userTable)
@@ -89,7 +89,7 @@ export namespace Actor {
   }
 
   export async function getFlag<F extends keyof UserFlags>(flag: F): Promise<UserFlags[F]> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const flags = await tx
         .select({ flags: userTable.flags })
         .from(userTable)

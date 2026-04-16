@@ -1,7 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { ForjeroSdk } from "forjero-sdk";
 import { createClient } from "forjero-sdk/client";
-import { useTransaction } from "../../../drizzle/transaction";
+import { Database } from "../../../drizzle";
 import { VisibleError } from "../../../error";
 import { repositoryTable } from "../../../repository/repository.sql";
 import { installationsTable } from "../../installation.sql";
@@ -33,7 +33,7 @@ function readMeta(meta: unknown): { baseUrl?: string; webhookSecret?: string } {
 }
 
 export async function resolveInstallation(fullName: string): Promise<ResolvedInstallation> {
-  const row = await useTransaction((tx) =>
+  const row = await Database.use((tx) =>
     tx
       .select({
         installationRef: installationsTable.installationRef,
@@ -96,7 +96,7 @@ export interface RepoAndInstallation {
 export async function findRepoAndInstallationByFullName(
   fullName: string,
 ): Promise<RepoAndInstallation | null> {
-  const row = await useTransaction((tx) =>
+  const row = await Database.use((tx) =>
     tx
       .select({
         repoId: repositoryTable.id,

@@ -2,7 +2,7 @@ import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { Actor } from "../actor";
 import { Common } from "../common";
-import { createTransaction, useTransaction } from "../drizzle/transaction";
+import { Database } from "../drizzle";
 import { ErrorCodes, VisibleError } from "../error";
 import { Examples } from "../examples";
 import { installationsTable } from "../git/installation.sql";
@@ -128,7 +128,7 @@ export namespace Repository {
   }
 
   export async function upsert(input: UpsertInput) {
-    return createTransaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       const installation = await tx
         .select({ workspaceId: installationsTable.workspaceId })
         .from(installationsTable)
@@ -195,7 +195,7 @@ export namespace Repository {
   }
 
   export async function removeByInstallationId(installationId: string) {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .update(repositoryTable)
         .set({ timeDeleted: new Date(), timeUpdated: new Date() })
@@ -204,7 +204,7 @@ export namespace Repository {
   }
 
   export async function removeBySourceId(source: Source, sourceId: string) {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .update(repositoryTable)
         .set({ timeDeleted: new Date(), timeUpdated: new Date() })
@@ -213,7 +213,7 @@ export namespace Repository {
   }
 
   export async function removeByFullName(fullName: string) {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .update(repositoryTable)
         .set({ timeDeleted: new Date(), timeUpdated: new Date() })
@@ -222,7 +222,7 @@ export namespace Repository {
   }
 
   export async function findBySourceId(source: Source, sourceId: string): Promise<Info | null> {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select(infoSelection)
         .from(repositoryTable)
@@ -240,7 +240,7 @@ export namespace Repository {
 
   export async function fromID(id: string): Promise<Info | null> {
     const workspaceId = Actor.workspaceID();
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select(infoSelection)
         .from(repositoryTable)
@@ -258,7 +258,7 @@ export namespace Repository {
 
   export async function findByFullName(fullName: string): Promise<Info | null> {
     const workspaceId = Actor.workspaceID();
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select(infoSelection)
         .from(repositoryTable)
@@ -275,7 +275,7 @@ export namespace Repository {
   }
 
   export async function findByFullNameForWebhook(fullName: string): Promise<Info | null> {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select(infoSelection)
         .from(repositoryTable)
@@ -287,7 +287,7 @@ export namespace Repository {
 
   export async function list(): Promise<Info[]> {
     const workspaceId = Actor.workspaceID();
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select(infoSelection)
         .from(repositoryTable)
@@ -301,7 +301,7 @@ export namespace Repository {
 
   export async function listByOwner(owner: string): Promise<Info[]> {
     const workspaceId = Actor.workspaceID();
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select(infoSelection)
         .from(repositoryTable)
@@ -324,7 +324,7 @@ export namespace Repository {
       fullName: z.string(),
     }),
     async ({ accountIDs, source, fullName }): Promise<Accessible | null> => {
-      const rows = await useTransaction(async (tx) =>
+      const rows = await Database.use(async (tx) =>
         tx
           .select({
             ...infoSelection,
@@ -363,7 +363,7 @@ export namespace Repository {
       accountIDs: z.array(z.string()).min(1),
     }),
     async ({ accountIDs }): Promise<Accessible[]> => {
-      const rows = await useTransaction(async (tx) =>
+      const rows = await Database.use(async (tx) =>
         tx
           .select({
             ...infoSelection,

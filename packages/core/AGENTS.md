@@ -30,5 +30,5 @@
 - SQL schemas live next to the module they belong to (`user/user.sql.ts`,
   `git/installation/installation.sql.ts`).
 - **Documentation**: Use OpenAPI annotations with Zod schemas
-- **Database**: Use Drizzle ORM with explicit transactions via `useTransaction` and `createTransaction`
+- **Database**: Use Drizzle ORM via `Database.use()` for shared db/tx access and `Database.transaction()` when you need an explicit transaction
 - **Validation**: Use `fn()` utility for input validation and schema definition

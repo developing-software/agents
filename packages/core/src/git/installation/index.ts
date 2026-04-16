@@ -2,7 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { Actor } from "../../actor";
 import { Common } from "../../common";
-import { createTransaction, useTransaction } from "../../drizzle/transaction";
+import { Database } from "../../drizzle";
 import { Examples } from "../../examples";
 import { ErrorCodes, VisibleError } from "../../error";
 import { Identifier } from "../../identifier";
@@ -61,7 +61,7 @@ export namespace Installation {
   }
 
   export async function upsert(input: UpsertInput) {
-    return createTransaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       const existing = await tx
         .select({
           id: installationsTable.id,
@@ -116,7 +116,7 @@ export namespace Installation {
 
   export async function fromID(id: string): Promise<Info | null> {
     const workspaceId = Actor.workspaceID();
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select()
         .from(installationsTable)
@@ -132,7 +132,7 @@ export namespace Installation {
   }
 
   export async function fromIDForWebhook(id: string): Promise<Info | null> {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select()
         .from(installationsTable)
@@ -145,7 +145,7 @@ export namespace Installation {
     provider: Provider,
     installationRef: string,
   ): Promise<Info | null> {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select()
         .from(installationsTable)
@@ -164,7 +164,7 @@ export namespace Installation {
     provider: Provider,
     providerAccountId: string,
   ): Promise<Info | null> {
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select()
         .from(installationsTable)
@@ -181,7 +181,7 @@ export namespace Installation {
 
   export async function listForWorkspace(): Promise<Info[]> {
     const workspaceId = Actor.workspaceID();
-    return useTransaction(async (tx) =>
+    return Database.use(async (tx) =>
       tx
         .select()
         .from(installationsTable)
@@ -200,7 +200,7 @@ export namespace Installation {
     installationRef: string;
     workspaceId: string;
   }) {
-    return createTransaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       const existing = await tx
         .select()
         .from(installationsTable)
@@ -254,7 +254,7 @@ export namespace Installation {
     installationRef: string,
     suspended: boolean,
   ) {
-    return createTransaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       const existing = await tx
         .select({ id: installationsTable.id })
         .from(installationsTable)
@@ -280,7 +280,7 @@ export namespace Installation {
   }
 
   export async function remove(provider: Provider, installationRef: string) {
-    return createTransaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       const existing = await tx
         .select()
         .from(installationsTable)

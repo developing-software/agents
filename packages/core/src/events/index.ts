@@ -12,7 +12,7 @@ import {
   sql,
 } from "drizzle-orm";
 import { z } from "zod";
-import { createTransaction, useTransaction } from "../drizzle/transaction";
+import { Database } from "../drizzle";
 import { Identifier } from "../identifier";
 import { fn } from "../util/fn";
 import { Log } from "../util/log";
@@ -131,7 +131,7 @@ export namespace Event {
       data: z.record(z.string(), z.unknown()).optional(),
     }),
     async (input) => {
-      return createTransaction(async (tx) => {
+      return Database.transaction(async (tx) => {
         const id = input.id ?? Identifier.create("event");
         const parentEventId = await inferParentEventId(input);
         log.info("create", {
@@ -166,7 +166,7 @@ export namespace Event {
       tags?: string[];
     },
   ): Promise<void> {
-    return createTransaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       const values: Record<string, unknown> = { timeUpdated: new Date() };
       if (patch.data) {
         const row = await tx
@@ -186,7 +186,7 @@ export namespace Event {
   }
 
   export const fromID = fn(Info.shape.id, async (id) => {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const row = await tx
         .select()
         .from(eventTable)
@@ -206,7 +206,7 @@ export namespace Event {
     from?: string;
     to?: string;
   }): Promise<Info[]> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const conditions = [];
       if (opts.source) conditions.push(eq(eventTable.source, opts.source));
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
@@ -231,7 +231,7 @@ export namespace Event {
     tags?: string[];
     excludeTypePrefix?: string;
   }): Promise<string | undefined> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const conditions = [];
       if (opts.source) conditions.push(eq(eventTable.source, opts.source));
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
@@ -255,7 +255,7 @@ export namespace Event {
     typePrefix: string;
     tags: string[];
   }): Promise<string | undefined> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const row = await tx
         .select({ id: eventTable.id })
         .from(eventTable)
@@ -361,7 +361,7 @@ export namespace Event {
     to?: string;
     rootEventId?: string;
   }): Promise<TreeNode[]> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const rows = await tx.execute(sql`
         WITH RECURSIVE event_tree AS (
           SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags, data FROM ${eventTable}

@@ -1,6 +1,6 @@
 import { and, eq, or } from "drizzle-orm";
 import { z } from "zod";
-import { useTransaction } from "../drizzle/transaction";
+import { Database } from "../drizzle";
 import { fn } from "../util/fn";
 import { Identifier } from "../identifier";
 import { ErrorCodes, VisibleError } from "../error";
@@ -30,7 +30,7 @@ export namespace Auth {
   export const findByProviderOrEmail = fn(
     z.object({ provider: Provider, subject: z.string(), email: z.string() }),
     ({ provider, subject, email }) =>
-      useTransaction(async (tx) => {
+      Database.use(async (tx) => {
         const matches = await tx
           .select({ provider: authTable.provider, accountID: authTable.accountID })
           .from(authTable)
@@ -58,7 +58,7 @@ export namespace Auth {
       email: z.string(),
     }),
     async ({ accountID, provider, subject, email }) => {
-      await useTransaction(async (tx) => {
+      await Database.use(async (tx) => {
         await tx
           .insert(authTable)
           .values({ id: Identifier.create("auth"), provider, subject, accountID })
@@ -79,7 +79,7 @@ export namespace Auth {
   );
 
   export const listByAccount = fn(z.string(), (accountID) =>
-    useTransaction((tx) =>
+    Database.use((tx) =>
       tx
         .select({
           id: authTable.id,
@@ -99,7 +99,7 @@ export namespace Auth {
   export const remove = fn(
     z.object({ id: z.string(), accountID: z.string() }),
     async ({ id, accountID }) => {
-      await useTransaction(async (tx) => {
+      await Database.use(async (tx) => {
         const rows = await tx
           .select({ id: authTable.id, provider: authTable.provider })
           .from(authTable)
