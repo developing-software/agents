@@ -12,10 +12,12 @@ import { repositoryTable } from "./repository.sql";
 const log = Log.create({ namespace: "repository" });
 
 export namespace Repository {
-  export const Source = z.enum(["github", "gitlab", "bitbucket", "gitea"]).meta({
-    description: "Repository source provider.",
-    example: "github",
-  });
+  export const Source = z
+    .enum(["github", "gitlab", "bitbucket", "gitea", "forjero"])
+    .meta({
+      description: "Repository source provider.",
+      example: "github",
+    });
 
   export type Source = z.infer<typeof Source>;
 

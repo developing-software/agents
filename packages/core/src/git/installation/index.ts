@@ -10,7 +10,7 @@ import { installationsTable } from "../installation.sql";
 const log = Log.create({ namespace: "git.installation" });
 
 export namespace Installation {
-  export const Provider = z.enum(["github", "gitlab", "bitbucket", "gitea"]).meta({
+  export const Provider = z.enum(["github", "gitlab", "bitbucket", "gitea", "forjero"]).meta({
     description: "Git provider identifier.",
     example: "github",
   });

@@ -5,6 +5,7 @@ const BASE_URLS: Record<ProviderType, string> = {
   gitlab: "https://gitlab.com",
   bitbucket: "https://bitbucket.org",
   gitea: "",
+  forjero: "https://codeberg.org",
 };
 
 export function providerBaseUrl(provider: ProviderType): string {
@@ -33,6 +34,9 @@ export function branchUrl(
       return `${base}/${owner}/${repo}/-/tree/${encoded}`;
     case "bitbucket":
       return `${base}/${owner}/${repo}/src/${encoded}`;
+    case "forjero":
+    case "gitea":
+      return `${base}/${owner}/${repo}/src/branch/${encoded}`;
     default:
       return "";
   }
@@ -48,5 +52,7 @@ export function providerLabel(provider: ProviderType): string {
       return "Bitbucket";
     case "gitea":
       return "Gitea";
+    case "forjero":
+      return "Forgejo";
   }
 }

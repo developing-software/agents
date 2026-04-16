@@ -1,9 +1,11 @@
 import { VisibleError } from "../../error";
+import { forjeroProvider } from "./forjero";
 import { githubProvider } from "./github";
 import type { GitProvider, ProviderType } from "./interface";
 
 const providers: Partial<Record<ProviderType, GitProvider>> = {
   github: githubProvider,
+  forjero: forjeroProvider,
 };
 
 export function getProvider(type: ProviderType | string): GitProvider {

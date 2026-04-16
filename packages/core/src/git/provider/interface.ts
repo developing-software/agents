@@ -1,4 +1,4 @@
-export type ProviderType = "github" | "gitlab" | "bitbucket" | "gitea";
+export type ProviderType = "github" | "gitlab" | "bitbucket" | "gitea" | "forjero";
 
 // ── Normalized resource shapes ────────────────────────────────────────────
 

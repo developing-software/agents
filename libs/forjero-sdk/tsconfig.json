@@ -1,13 +1,16 @@
 {
   "compilerOptions": {
     // Environment setup & latest features
-    "lib": ["ESNext", "DOM"],
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "bun"
+    ],
     "target": "ESNext",
-    "types": ["bun"],
     "module": "Preserve",
     "moduleDetection": "force",
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
     "allowJs": true,
     // Bundler mode
     "moduleResolution": "bundler",

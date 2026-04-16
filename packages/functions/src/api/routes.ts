@@ -8,6 +8,7 @@ import { AppApi } from "./handler/app";
 import { TokenApi } from "./handler/token";
 import { AuthApi } from "./handler/auth";
 import { EventApi } from "./handler/event";
+import { ForjeroApi } from "./handler/forjero";
 import { GitHubApi } from "./handler/github";
 import { ModelsApi } from "./handler/models";
 import { BranchArtifactApi } from "./handler/branch-artifact";
@@ -31,6 +32,7 @@ export const routes = app
   .route("/token", TokenApi.route)
   .route("/events", EventApi.route)
   .route("/github", GitHubApi.route)
+  .route("/forjero", ForjeroApi.route)
   .route("/models", ModelsApi.route)
   .route("/branch-artifacts", BranchArtifactApi.route)
   .onError((error, c) => {
