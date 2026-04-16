@@ -39,6 +39,56 @@ function providerAccountId(installation: { id: number; account: unknown }): stri
   return String(installation.id);
 }
 
+type WebhookRepoPayload = {
+  installation?: { id?: number } | null;
+  repository?: {
+    id?: number;
+    name?: string;
+    full_name?: string;
+    owner?: { id?: number | string; login?: string; type?: string } | null;
+  } | null;
+};
+
+async function ensureRepo(payload: WebhookRepoPayload): Promise<Repository.Info | null> {
+  const pr = payload.repository;
+  if (!pr?.id) return null;
+
+  const sourceId = String(pr.id);
+  const existing = await Repository.findBySourceId("github", sourceId);
+  if (existing) return existing;
+
+  const installationRef = payload.installation?.id;
+  const owner = pr.owner;
+  if (!installationRef || !owner?.id || !owner.login || !pr.name || !pr.full_name) {
+    log.warn("missing required fields for repo", { installationRef, owner, pr });
+    return null;
+  }
+
+  log.info("auto-upsert repo from webhook", {
+    installationRef,
+    fullName: pr.full_name,
+  });
+
+  const installationId = await Installation.upsert({
+    provider: "github",
+    providerAccountId: String(owner.id),
+    providerAccountLogin: owner.login,
+    installationRef: String(installationRef),
+    accountType: owner.type === "User" ? "User" : "Organization",
+  });
+
+  await Repository.upsert({
+    source: "github",
+    sourceId,
+    installationId,
+    owner: owner.login,
+    repo: pr.name,
+    fullName: pr.full_name,
+  });
+
+  return Repository.findBySourceId("github", sourceId);
+}
+
 export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
   webhook.on("installation.created", async ({ payload }) => {
     const login = accountLogin(payload.installation.account);
@@ -111,9 +161,7 @@ export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
       repo: payload.repository.full_name,
       number: payload.issue.number,
     });
-    const repo =
-      (await Repository.findBySourceId("github", String(payload.repository.id))) ??
-      (await Repository.findByFullNameForWebhook(payload.repository.full_name));
+    const repo = await ensureRepo(payload);
     if (!repo) return;
 
     const issueTags = [Tags.ghRepo(repo.fullName), Tags.ghIssue(payload.issue.number)];
@@ -146,16 +194,13 @@ export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
   });
 
   webhook.on("pull_request", async ({ payload }) => {
-    const repo =
-      (await Repository.findBySourceId("github", String(payload.repository.id))) ??
-      (await Repository.findByFullNameForWebhook(payload.repository.full_name));
-
     log.info("pull_request event", {
       action: payload.action,
       repo: payload.repository.full_name,
       number: payload.pull_request.number,
     });
 
+    const repo = await ensureRepo(payload);
     if (!repo) return;
 
     const prTags = [
@@ -190,9 +235,7 @@ export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
   });
 
   webhook.on("push", async ({ payload }) => {
-    const repo =
-      (await Repository.findBySourceId("github", String(payload.repository.id))) ??
-      (await Repository.findByFullNameForWebhook(payload.repository.full_name));
+    const repo = await ensureRepo(payload);
     if (!repo) return;
 
     const branch = payload.ref.replace("refs/heads/", "");
