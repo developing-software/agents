@@ -58,6 +58,7 @@
       {/if}
       <a href="/models" class="topbar-link">Models</a>
       {#if data.accountID}
+        <a href="/account/providers" class="topbar-link">Account</a>
         <a href="/logout" class="signout-link">Sign out</a>
       {:else}
         <a href="/login" class="signin-btn">

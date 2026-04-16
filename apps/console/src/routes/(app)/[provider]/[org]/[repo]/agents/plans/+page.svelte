@@ -23,7 +23,11 @@
 
   async function openDrawer(plan: PlanItem) {
     selectedPlan = plan;
-    const prompt = await previewPrompt({ planId: plan.id });
+    const prompt = await previewPrompt({
+      organization: data.organization,
+      repoName: data.repoName,
+      planId: plan.id,
+    });
     drawer!.open({
       title: 'Dispatch Plan',
       prompt,

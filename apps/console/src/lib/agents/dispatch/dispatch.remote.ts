@@ -5,6 +5,7 @@ import { getProvider } from "@agents/core/git";
 import { Plan } from "@agents/core/events/plan";
 import { error } from "@sveltejs/kit";
 import { withRequestRepoActor } from "$lib/repository.server";
+import { repoQuery } from "$lib/repo-remote";
 
 export const listAgentConfigs = query(z.object({}), async () => {
   return AgentWorkflow.Agents.map((id) => {
@@ -47,7 +48,7 @@ export const listBranches = query(
     ),
 );
 
-export const previewPrompt = query(z.object({ planId: z.string() }), async ({ planId }) => {
+export const previewPrompt = repoQuery({ planId: z.string() }, async ({ planId }) => {
   const plan = await Plan.fromID(planId);
   if (!plan) error(404, `Plan ${planId} not found`);
   return Plan.toPrompt(plan);

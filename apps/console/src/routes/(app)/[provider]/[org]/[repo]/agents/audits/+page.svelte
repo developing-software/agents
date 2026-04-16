@@ -75,7 +75,11 @@
         timeCreated: now,
         timeUpdated: now,
       };
-      const prompt = await previewPrompt({ planId: result.id });
+      const prompt = await previewPrompt({
+        organization: data.organization,
+        repoName: data.repoName,
+        planId: result.id,
+      });
       drawer!.open({
         title: 'Dispatch Audit',
         prompt,

@@ -28,7 +28,11 @@
 
   async function openDispatch() {
     if (!data.plan) return;
-    const prompt = await previewPrompt({ planId: data.plan.id });
+    const prompt = await previewPrompt({
+      organization: data.organization,
+      repoName: data.repoName,
+      planId: data.plan.id,
+    });
     drawer!.open({
       title: 'Dispatch Plan',
       prompt,
