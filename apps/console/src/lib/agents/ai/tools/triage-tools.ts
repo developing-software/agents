@@ -1,8 +1,11 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { Event } from "@agents/core/events";
+import { Tags } from "@agents/core/events/tag";
+import type { ProviderType } from "@agents/core/git";
 
 export type TriageContext = {
+  provider: ProviderType;
   owner: string;
   repo: string;
   repoEntityId: string;
@@ -24,8 +27,9 @@ export function triageTools(ctx: TriageContext) {
         await Event.create({
           type: "github.issue.triaged",
           tags: [
-            `gh:repo:${ctx.owner}/${ctx.repo}`,
-            `gh:issue:${issueNumber}`,
+            Tags.Git.provider(ctx.provider),
+            Tags.Git.repo(ctx.provider, `${ctx.owner}/${ctx.repo}`),
+            Tags.Git.issue(issueNumber),
             `type:${type}`,
             `scope:${scope}`,
           ],

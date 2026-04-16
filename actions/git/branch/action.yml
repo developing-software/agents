@@ -63,8 +63,8 @@ runs:
 
         # Write tags
         if [ -n "${DEV_AGENTS_TAGS_DIR:-}" ]; then
-          printf 'gh:branch:%s\n' "$BRANCH" > "$DEV_AGENTS_TAGS_DIR/gh-branch"
+          printf 'git:branch:%s\n' "$BRANCH" > "$DEV_AGENTS_TAGS_DIR/git-branch"
           if [ -n "$ISSUE_NUMBER" ]; then
-            printf 'gh:issue:%s\n' "$ISSUE_NUMBER" > "$DEV_AGENTS_TAGS_DIR/gh-issue"
+            printf 'git:issue:%s\n' "$ISSUE_NUMBER" > "$DEV_AGENTS_TAGS_DIR/git-issue"
           fi
         fi

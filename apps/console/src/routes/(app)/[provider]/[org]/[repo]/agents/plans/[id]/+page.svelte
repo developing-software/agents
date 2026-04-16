@@ -9,6 +9,7 @@
   import { updatePlan } from '$lib/agents/plans/plans.remote';
   import { previewPrompt, previewFixPrompt } from '$lib/agents/dispatch/dispatch.remote';
   import type { Plan } from '@agents/core/events/plan';
+  import { Tags } from '@agents/core/events/tag';
   import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
@@ -64,7 +65,12 @@
     drawer!.open({
       title: `Fix PR #${prNumber}`,
       prompt: result.prompt,
-      tags: [`plan:${data.plan.id}`, ...data.plan.tags, `gh:pr:${prNumber}`, `parent:${reviewEventId}`],
+      tags: [
+        `plan:${data.plan.id}`,
+        ...data.plan.tags,
+        Tags.Git.pr(prNumber),
+        `parent:${reviewEventId}`,
+      ],
       multi: false,
       branch: result.branch,
       planId: data.plan.id,

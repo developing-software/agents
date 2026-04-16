@@ -31,7 +31,7 @@ export namespace Examples {
     sourceId: Id("repository"),
     origin: "webhook" as const,
     type: "github.issues.opened",
-    tags: ["gh:repo:octocat/hello-world", "gh:issue:42"],
+    tags: ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
     data: { action: "opened" },
     timeCreated: "2024-01-01T00:00:00.000Z",
   };
@@ -68,7 +68,7 @@ export namespace Examples {
     body: "## Scope\nRefactor the event API to support batch ingestion.\n\n## Acceptance Criteria\n- [ ] Batch endpoint accepts array of events",
     status: "draft" as const,
     authorType: "human" as const,
-    tags: ["gh:repo:octocat/hello-world", "gh:issue:42"],
+    tags: ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
     data: {},
     source: "repository",
     sourceId: Id("repository"),

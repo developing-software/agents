@@ -1,8 +1,11 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { Plan } from "@agents/core/events/plan";
+import { Tags } from "@agents/core/events/tag";
+import type { ProviderType } from "@agents/core/git";
 
 export type PlanToolsContext = {
+  provider: ProviderType;
   owner: string;
   repo: string;
   repoEntityId: string;
@@ -23,12 +26,17 @@ export function planTools(ctx: PlanToolsContext) {
       }),
       needsApproval: true,
       execute: async ({ title, body, issueNumbers, tags }) => {
-        const issueTags = issueNumbers.map((n) => `gh:issue:${n}`);
+        const issueTags = issueNumbers.map((n) => Tags.Git.issue(n));
         const id = await Plan.create({
           title,
           body,
           authorType: "llm",
-          tags: [`gh:repo:${ctx.owner}/${ctx.repo}`, ...issueTags, ...(tags ?? [])],
+          tags: [
+            Tags.Git.provider(ctx.provider),
+            Tags.Git.repo(ctx.provider, `${ctx.owner}/${ctx.repo}`),
+            ...issueTags,
+            ...(tags ?? []),
+          ],
           source: "repository",
           sourceId: ctx.repoEntityId,
         });

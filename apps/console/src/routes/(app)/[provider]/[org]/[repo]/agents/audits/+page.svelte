@@ -6,6 +6,7 @@
   import DispatchOptions from '$lib/agents/dispatch/DispatchOptions.svelte';
   import { previewPrompt } from '$lib/agents/dispatch/dispatch.remote';
   import type { Plan } from '@agents/core/events/plan';
+  import { Tags } from '@agents/core/events/tag';
   import { relativeTime, type PlanItem } from '$lib/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
@@ -70,7 +71,11 @@
         body: audit.body,
         status: 'approved',
         authorType: 'human',
-        tags: [`gh:repo:${data.organization}/${data.repoName}`, `type:audit-${audit.name}`],
+        tags: [
+          Tags.Git.provider(data.provider),
+          Tags.Git.repo(data.provider, `${data.organization}/${data.repoName}`),
+          `type:audit-${audit.name}`,
+        ],
         data: {},
         source: 'repository',
         sourceId: null,

@@ -79,8 +79,9 @@ describe("forjero push webhook handler", () => {
     });
 
     const events = await Event.list({ source: "repository", sourceId: repoId });
-    expect(events[0]!.tags).toContain(Tags.ghRepo("octocat/forjero-push-2"));
-    expect(events[0]!.tags).toContain(Tags.ghBranch("feature/my-feature"));
+    expect(events[0]!.tags).toContain(Tags.Git.provider("forjero"));
+    expect(events[0]!.tags).toContain(Tags.Git.repo("forjero", "octocat/forjero-push-2"));
+    expect(events[0]!.tags).toContain(Tags.Git.branch("feature/my-feature"));
   });
 
   it("skips event creation when repository is not registered", async () => {
@@ -93,7 +94,7 @@ describe("forjero push webhook handler", () => {
     });
 
     const events = await Event.list({
-      tags: [Tags.ghRepo("ghosts/no-such-forjero-repo")],
+      tags: [Tags.Git.repo("forjero", "ghosts/no-such-forjero-repo")],
     });
     expect(events.length).toBe(0);
   });
@@ -114,8 +115,9 @@ describe("forjero push webhook handler", () => {
     const events = await Event.list({ source: "repository", sourceId: repoId });
     expect(events.length).toBe(1);
     expect(events[0]!.type).toBe("forjero.issues.opened");
-    expect(events[0]!.tags).toContain(Tags.ghRepo("octocat/forjero-issues-1"));
-    expect(events[0]!.tags).toContain(Tags.ghIssue(7));
+    expect(events[0]!.tags).toContain(Tags.Git.provider("forjero"));
+    expect(events[0]!.tags).toContain(Tags.Git.repo("forjero", "octocat/forjero-issues-1"));
+    expect(events[0]!.tags).toContain(Tags.Git.issue(7));
     expect(events[0]!.data.title).toBe("first issue");
   });
 });

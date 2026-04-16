@@ -28,6 +28,7 @@
     "./git/provider/forjero/webhook": "./src/git/provider/forjero/webhook.ts",
     "./git/branch-artifact": "./src/git/branch-artifact/index.ts",
     "./events/agent-metrics": "./src/events/agent-metrics.ts",
+    "./events/tag": "./src/events/tag/index.ts",
     "./events/agent/*": "./src/events/agent/*.ts",
     "./events/plan/*": "./src/events/plan/*.ts"
   },

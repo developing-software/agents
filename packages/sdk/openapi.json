@@ -14,86 +14,37 @@
       }
     },
     "schemas": {
-      "User": {
+      "App": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
-            "example": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            "example": "app_XXXXXXXXXXXXXXXXXXXXXXXXX"
           },
           "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Name of the user.",
-            "example": "John Doe"
+            "type": "string",
+            "description": "Name of the app.",
+            "example": "Example App"
           },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Email address of the user.",
-            "example": "john@example.com"
+          "redirectURI": {
+            "type": "string",
+            "description": "Redirect URI of the app.",
+            "example": "https://example.com/callback"
           },
-          "username": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "GitHub username of the user.",
-            "example": "octocat"
-          },
-          "avatarUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Avatar URL of the user.",
-            "example": "https://avatars.githubusercontent.com/u/1"
+          "secret": {
+            "type": "string",
+            "description": "OAuth 2.0 client secret of the app (obfuscated).",
+            "example": "sec_******XXXX"
           }
         },
-        "required": ["id", "name", "email", "username", "avatarUrl"],
-        "description": "A user.",
+        "required": ["id", "name", "redirectURI", "secret"],
+        "description": "App.",
         "example": {
-          "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
-          "name": "John Doe",
-          "email": "john@example.com"
-        }
-      },
-      "Profile": {
-        "type": "object",
-        "properties": {
-          "user": {
-            "$ref": "#/components/schemas/User"
-          }
-        },
-        "required": ["user"],
-        "description": "Updated user profile information.",
-        "example": {
-          "user": {
-            "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
-            "name": "John Doe",
-            "email": "john@example.com"
-          }
+          "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "secret": "sec_******XXXX",
+          "name": "Example App",
+          "redirectURI": "https://example.com/callback"
         }
       },
       "ErrorResponse": {
@@ -134,39 +85,6 @@
         "required": ["type", "code", "message"],
         "description": "Permission error"
       },
-      "App": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
-            "example": "app_XXXXXXXXXXXXXXXXXXXXXXXXX"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the app.",
-            "example": "Example App"
-          },
-          "redirectURI": {
-            "type": "string",
-            "description": "Redirect URI of the app.",
-            "example": "https://example.com/callback"
-          },
-          "secret": {
-            "type": "string",
-            "description": "OAuth 2.0 client secret of the app (obfuscated).",
-            "example": "sec_******XXXX"
-          }
-        },
-        "required": ["id", "name", "redirectURI", "secret"],
-        "description": "App.",
-        "example": {
-          "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
-          "secret": "sec_******XXXX",
-          "name": "Example App",
-          "redirectURI": "https://example.com/callback"
-        }
-      },
       "Token": {
         "type": "object",
         "properties": {
@@ -174,6 +92,11 @@
             "type": "string",
             "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
             "example": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX"
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name for the token.",
+            "example": "CI token"
           },
           "created": {
             "type": "string",
@@ -185,15 +108,42 @@
           "token": {
             "type": "string",
             "description": "Personal access token (obfuscated).",
-            "example": "pat_test_******XXXX"
+            "example": "tok_test_******XXXX"
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
-        "required": ["id", "created", "token"],
+        "required": ["id", "name", "created", "token", "lastUsedAt", "expiresAt"],
         "description": "Personal access token.",
         "example": {
           "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
-          "token": "pat_test_******XXXX",
-          "created": "2024-06-29T00:00:00.000Z"
+          "name": "CI token",
+          "token": "tok_test_******XXXX",
+          "created": "2024-06-29T00:00:00.000Z",
+          "lastUsedAt": "2024-06-29T00:10:00.000Z",
+          "expiresAt": null
         }
       },
       "Event": {
@@ -256,8 +206,12 @@
             "items": {
               "type": "string"
             },
-            "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
-            "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+            "description": "Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.",
+            "example": [
+              "git:provider:github",
+              "git:repo:github:octocat/hello-world",
+              "git:issue:42"
+            ]
           },
           "data": {
             "type": "object",
@@ -295,7 +249,7 @@
           "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "origin": "webhook",
           "type": "github.issues.opened",
-          "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+          "tags": ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
           "data": {
             "action": "opened"
           },
@@ -367,8 +321,12 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
-                "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+                "description": "Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.",
+                "example": [
+                  "git:provider:github",
+                  "git:repo:github:octocat/hello-world",
+                  "git:issue:42"
+                ]
               },
               "data": {
                 "type": "object",
@@ -390,7 +348,7 @@
           "repoFullName": "octocat/hello-world",
           "origin": "webhook",
           "type": "github.issues.opened",
-          "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+          "tags": ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
           "data": {
             "action": "opened"
           }
@@ -449,190 +407,6 @@
     }
   ],
   "paths": {
-    "/profile": {
-      "get": {
-        "operationId": "getProfile",
-        "tags": ["Profile"],
-        "summary": "Get profile",
-        "description": "Get the current user's profile.",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Profile"
-                },
-                "example": {
-                  "user": {
-                    "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
-                    "name": "John Doe",
-                    "email": "john@example.com"
-                  }
-                }
-              }
-            },
-            "description": "User profile information."
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "authentication",
-                  "code": "unauthorized",
-                  "message": "Authentication required"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "rate_limit",
-                  "code": "too_many_requests",
-                  "message": "Rate limit exceeded"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "internal",
-                  "code": "internal_error",
-                  "message": "Internal server error"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "put": {
-        "operationId": "putProfile",
-        "tags": ["Profile"],
-        "summary": "Update profile",
-        "description": "Update the current user's profile.",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Profile"
-                },
-                "example": {
-                  "user": {
-                    "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
-                    "name": "John Doe",
-                    "email": "john@example.com"
-                  }
-                }
-              }
-            },
-            "description": "Updated user profile information."
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "validation",
-                  "code": "invalid_parameter",
-                  "message": "The request was invalid",
-                  "param": "email"
-                }
-              }
-            },
-            "description": "Bad Request"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "authentication",
-                  "code": "unauthorized",
-                  "message": "Authentication required"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "rate_limit",
-                  "code": "too_many_requests",
-                  "message": "Rate limit exceeded"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "type": "internal",
-                  "code": "internal_error",
-                  "message": "Internal server error"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
-                  }
-                },
-                "required": ["name", "email"],
-                "description": "The user's updated profile information.",
-                "example": {
-                  "name": "John Doe",
-                  "email": "john@example.com"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/app": {
       "get": {
         "operationId": "getApp",
@@ -1078,16 +852,22 @@
                   "example": [
                     {
                       "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
-                      "token": "pat_test_******XXXX",
-                      "created": "2024-06-29T00:00:00.000Z"
+                      "name": "CI token",
+                      "token": "tok_test_******XXXX",
+                      "created": "2024-06-29T00:00:00.000Z",
+                      "lastUsedAt": "2024-06-29T00:10:00.000Z",
+                      "expiresAt": null
                     }
                   ]
                 },
                 "example": [
                   {
                     "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
-                    "token": "pat_test_******XXXX",
-                    "created": "2024-06-29T00:00:00.000Z"
+                    "name": "CI token",
+                    "token": "tok_test_******XXXX",
+                    "created": "2024-06-29T00:00:00.000Z",
+                    "lastUsedAt": "2024-06-29T00:10:00.000Z",
+                    "expiresAt": null
                   }
                 ]
               }
@@ -1161,14 +941,14 @@
                     "token": {
                       "type": "string",
                       "description": "Personal access token. Include this in the Authorization header (`Bearer <token>`) when accessing the API.",
-                      "example": "pat_test_******XXXX"
+                      "example": "tok_test_******XXXX"
                     }
                   },
                   "required": ["id", "token"]
                 },
                 "example": {
                   "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
-                  "token": "pat_test_******XXXX"
+                  "token": "tok_test_******XXXX"
                 }
               }
             },
@@ -1237,8 +1017,11 @@
                 },
                 "example": {
                   "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
-                  "token": "pat_test_******XXXX",
-                  "created": "2024-06-29T00:00:00.000Z"
+                  "name": "CI token",
+                  "token": "tok_test_******XXXX",
+                  "created": "2024-06-29T00:00:00.000Z",
+                  "lastUsedAt": "2024-06-29T00:10:00.000Z",
+                  "expiresAt": null
                 }
               }
             },
@@ -1431,7 +1214,11 @@
                   "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "origin": "webhook",
                   "type": "github.issues.opened",
-                  "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+                  "tags": [
+                    "git:provider:github",
+                    "git:repo:github:octocat/hello-world",
+                    "git:issue:42"
+                  ],
                   "data": {
                     "action": "opened"
                   },
@@ -1550,7 +1337,11 @@
                   "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "origin": "webhook",
                   "type": "github.issues.opened",
-                  "tags": ["gh:repo:octocat/hello-world", "gh:issue:42"],
+                  "tags": [
+                    "git:provider:github",
+                    "git:repo:github:octocat/hello-world",
+                    "git:issue:42"
+                  ],
                   "data": {
                     "action": "opened"
                   },
@@ -1672,8 +1463,12 @@
                     "items": {
                       "type": "string"
                     },
-                    "description": "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
-                    "example": ["gh:repo:octocat/hello-world", "gh:issue:42"]
+                    "description": "Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.",
+                    "example": [
+                      "git:provider:github",
+                      "git:repo:github:octocat/hello-world",
+                      "git:issue:42"
+                    ]
                   }
                 }
               }
@@ -1908,13 +1703,13 @@
                     "type": "string"
                   },
                   "issue_number": {
-                    "description": "Issue number to implement. Auto-fetches title/body to build prompt and adds gh:issue tag.",
+                    "description": "Issue number to implement. Auto-fetches title/body to build prompt and adds git:issue tag.",
                     "type": "integer",
                     "exclusiveMinimum": 0,
                     "maximum": 9007199254740991
                   },
                   "tags": {
-                    "description": "Additional tags for event linking (e.g. gh:issue:42)",
+                    "description": "Additional tags for event linking (e.g. git:issue:42)",
                     "type": "array",
                     "items": {
                       "type": "string"

@@ -24,7 +24,8 @@ Reusable GitHub Actions for observable workflows. The core idea: `event/init` pr
   |   DEV_AGENTS_EVENT_ID                         |
   |                                               |
   | Writes initial tags:                          |
-  |   gh-repo, gh-workflow, gh-branch/gh-pr       |
+  |   git-provider, git-repo, git-workflow,       |
+  |   git-branch/git-pr                           |
   |   + user-provided tags                        |
   |                                               |
   | Emits:                                        |
@@ -49,14 +50,15 @@ Reusable GitHub Actions for observable workflows. The core idea: `event/init` pr
                     ================
 
   $DEV_AGENTS_TAGS_DIR/
-    gh-repo              "gh:repo:owner/repo"
-    gh-workflow           "gh:workflow:123456"
-    gh-branch            "gh:branch:claude/issue-42-123"
+    git-provider         "git:provider:github"
+    git-repo             "git:repo:github:owner/repo"
+    git-workflow         "git:workflow:123456"
+    git-branch           "git:branch:claude/issue-42-123"
     harness              "harness:claude-code"
     model                "model:claude-sonnet-4-6"
     check-tests-unit     "check:tests/unit:success"
     check-lint-oxlint    "check:lint/oxlint:success"
-    gh-pr                "gh:pr:99"
+    git-pr               "git:pr:99"
 ```
 
 ## Design Principles
@@ -151,7 +153,7 @@ Stages changes, detects if the agent already committed (via `DEV_AGENTS_INITIAL_
 
 ### `git/pr`
 
-Creates a PR (idempotent). Auto-generates title and body from prefix + issue number. Writes `gh-pr` tag and `pr/data.json`.
+Creates a PR (idempotent). Auto-generates title and body from prefix + issue number. Writes `git-pr` tag and `pr/data.json`.
 
 ### `comment/create`
 

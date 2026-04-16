@@ -1,4 +1,5 @@
 import { VisibleError } from "../error";
+import { Tags } from "../events/tag";
 import { getProvider } from "../git";
 import { Repository } from "../repository/index";
 
@@ -21,7 +22,7 @@ export namespace AgentWorkflow {
     agent: Agent;
     /** Task/instructions for the agent. Required if issue_number is not provided. */
     prompt?: string;
-    /** Issue number — auto-fetches title/body to build prompt and adds gh:issue tag. */
+    /** Issue number — auto-fetches title/body to build prompt and adds git:issue tag. */
     issueNumber?: number;
     /** Additional tags for event linking */
     tags?: string[];
@@ -77,7 +78,7 @@ export namespace AgentWorkflow {
     const tags = input.tags ? [...input.tags] : [];
 
     if (input.issueNumber) {
-      tags.push(`gh:issue:${input.issueNumber}`);
+      tags.push(Tags.Git.issue(input.issueNumber));
 
       if (!prompt) {
         const issue = await provider.issues.get(repository.fullName, input.issueNumber);

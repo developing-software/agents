@@ -24,6 +24,7 @@ export const POST: RequestHandler = async (event) => {
     };
 
     const entityCtx = {
+      provider: repoEntity.source,
       owner: org,
       repo: repoName,
       repoEntityId: repoEntity.id,

@@ -169,7 +169,11 @@ async function handlePush(payload: ForjeroPushPayload) {
     sourceId: repo.id,
     origin: "webhook",
     type: "forjero.push",
-    tags: [Tags.ghRepo(repo.fullName), Tags.ghBranch(branch)],
+    tags: [
+      Tags.Git.provider("forjero"),
+      Tags.Git.repo("forjero", repo.fullName),
+      Tags.Git.branch(branch),
+    ],
     data: {
       branch,
       commitCount,
@@ -191,7 +195,11 @@ async function handleIssues(payload: ForjeroIssuePayload) {
     number: issue.number,
   });
 
-  const issueTags = [Tags.ghRepo(repo.fullName), Tags.ghIssue(issue.number)];
+  const issueTags = [
+    Tags.Git.provider("forjero"),
+    Tags.Git.repo("forjero", repo.fullName),
+    Tags.Git.issue(issue.number),
+  ];
   const parentEventId =
     payload.action !== "opened"
       ? await Event.findParent({
@@ -232,9 +240,10 @@ async function handlePullRequest(payload: ForjeroPullRequestPayload) {
   });
 
   const prTags = [
-    Tags.ghRepo(repo.fullName),
-    Tags.ghPr(number),
-    Tags.ghBranch(pr?.head?.ref ?? ""),
+    Tags.Git.provider("forjero"),
+    Tags.Git.repo("forjero", repo.fullName),
+    Tags.Git.pr(number),
+    Tags.Git.branch(pr?.head?.ref ?? ""),
   ];
   const parentEventId =
     payload.action !== "opened"

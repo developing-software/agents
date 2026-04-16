@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { Tags } from '@agents/core/events/tag';
 	import { createPlan, updatePlan } from './plans.remote';
 	import { PLAN_STATUSES, type PlanStatus, type AuthorType } from './plan-helpers';
 	import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
@@ -25,21 +26,21 @@
 
 	const { provider, organization, repoName } = repoContext.get();
 
+	function isGitIssueTag(tag: string): boolean {
+		return Tags.Git.parse(tag)?.kind === 'issue';
+	}
+
 	let title = $state(untrack(() => plan?.title ?? ''));
 	let body = $state(untrack(() => plan?.body ?? ''));
 	let authorType = $state<AuthorType>(untrack(() => plan?.authorType ?? 'human'));
 	let status = $state<PlanStatus>(untrack(() => plan?.status ?? 'draft'));
-	let tagsInput = $state(untrack(() => plan?.tags.filter(t => !t.startsWith('gh:issue:')).join(', ') ?? ''));
+	let tagsInput = $state(untrack(() => plan?.tags.filter((tag) => !isGitIssueTag(tag)).join(', ') ?? ''));
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let showIssues = $state(false);
 	let linkedIssues = $state<Set<number>>(new Set(untrack(() => {
-		// Parse existing gh:issue:N tags from plan
 		if (!plan?.tags) return [];
-		return plan.tags
-			.filter(t => t.startsWith('gh:issue:'))
-			.map(t => parseInt(t.slice('gh:issue:'.length)))
-			.filter(n => !isNaN(n));
+		return Tags.Git.collect(plan.tags, 'issue').map((tag) => tag.number);
 	})));
 	let issuesRetry = $state(0);
 
@@ -55,7 +56,7 @@
 		saving = true;
 		error = null;
 		const manualTags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
-		const issueTags = [...linkedIssues].map(n => `gh:issue:${n}`);
+		const issueTags = [...linkedIssues].map((n) => Tags.Git.issue(n));
 		const tags = [...new Set([...manualTags, ...issueTags])];
 		try {
 			if (isEdit && plan) {
@@ -150,7 +151,7 @@
 	<div class="field">
 		<label class="label" for="plan-tags">Tags</label>
 		<input id="plan-tags" type="text" bind:value={tagsInput} placeholder="Comma-separated tags" />
-		<span class="hint">Comma-separated, e.g. gh:issue:42, scope:small</span>
+		<span class="hint">Comma-separated, e.g. git:issue:42, scope:small</span>
 	</div>
 
 	{#if error}

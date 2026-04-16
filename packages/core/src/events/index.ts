@@ -22,6 +22,7 @@ import { eventTable } from "./event.sql";
 import { OriginType } from "./types";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { Repository } from "../repository/index";
+import { Tags } from "./tag";
 
 const log = Log.create({ service: "event" });
 
@@ -53,7 +54,7 @@ export namespace Event {
         example: Examples.Event.origin,
       }),
       tags: z.array(z.string()).meta({
-        description: "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+        description: "Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.",
         example: Examples.Event.tags,
       }),
       data: z.record(z.string(), z.unknown()).meta({
@@ -252,6 +253,8 @@ export namespace Event {
 
   /** Find the most recent event matching a type prefix and tags (no root constraint). */
   export async function findByTypeAndTags(opts: {
+    source: string;
+    sourceId: string;
     typePrefix: string;
     tags: string[];
   }): Promise<string | undefined> {
@@ -261,6 +264,8 @@ export namespace Event {
         .from(eventTable)
         .where(
           and(
+            eq(eventTable.source, opts.source),
+            eq(eventTable.sourceId, opts.sourceId),
             like(eventTable.type, opts.typePrefix + "%"),
             arrayContains(eventTable.tags, opts.tags),
           ),
@@ -307,30 +312,28 @@ export namespace Event {
       if (planId) return planId;
     }
 
-    const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
+    if (!opts.source || !opts.sourceId) {
+      return opts.parentEventId;
+    }
+
+    const prTag = opts.tags ? Tags.Git.find(opts.tags, "pr") : null;
     if (prTag) {
       // For non-agent events (e.g. deploy), prefer parenting under the agent
       // that created/owns the PR, so deploys nest under the implementation.
       if (!opts.type?.startsWith("agent")) {
         const agentId = await findByTypeAndTags({
+          source: opts.source,
+          sourceId: opts.sourceId,
           typePrefix: "agent",
-          tags: [prTag],
+          tags: [prTag.tag],
         }).catch(() => undefined);
         if (agentId) return agentId;
       }
 
-      const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent" }).catch(
-        () => undefined,
-      );
-      if (parentEventId) {
-        return parentEventId;
-      }
-    }
-
-    const workflowTag = opts.tags?.find((tag) => tag.startsWith("gh:workflow:"));
-    if (workflowTag) {
       const parentEventId = await findParent({
-        tags: [workflowTag],
+        source: opts.source,
+        sourceId: opts.sourceId,
+        tags: [prTag.tag],
         excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {
@@ -338,10 +341,25 @@ export namespace Event {
       }
     }
 
-    const issueTag = opts.tags?.find((tag) => tag.startsWith("gh:issue:"));
+    const workflowTag = opts.tags ? Tags.Git.find(opts.tags, "workflow") : null;
+    if (workflowTag) {
+      const parentEventId = await findParent({
+        source: opts.source,
+        sourceId: opts.sourceId,
+        tags: [workflowTag.tag],
+        excludeTypePrefix: "agent",
+      }).catch(() => undefined);
+      if (parentEventId) {
+        return parentEventId;
+      }
+    }
+
+    const issueTag = opts.tags ? Tags.Git.find(opts.tags, "issue") : null;
     if (issueTag) {
       const parentEventId = await findParent({
-        tags: [issueTag],
+        source: opts.source,
+        sourceId: opts.sourceId,
+        tags: [issueTag.tag],
         excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {

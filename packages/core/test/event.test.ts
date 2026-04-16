@@ -1,10 +1,15 @@
 import { describe, it, expect } from "bun:test";
 import { Event } from "../src/events";
 import { Tags } from "../src/events/tag";
+import type { ProviderType } from "../src/git/provider/interface";
 import { Identifier } from "../src/identifier";
 
 function testSourceId() {
   return Identifier.create("repository");
+}
+
+function repoTags(provider: ProviderType, fullName: string): string[] {
+  return [Tags.Git.provider(provider), Tags.Git.repo(provider, fullName)];
 }
 
 describe("event", () => {
@@ -24,10 +29,10 @@ describe("event", () => {
   });
 
   it("list by tags", async () => {
-    await Event.create({ type: "test.tagged", origin: "cli", tags: [Tags.ghIssue(99)] });
-    const events = await Event.list({ tags: [Tags.ghIssue(99)] });
+    await Event.create({ type: "test.tagged", origin: "cli", tags: [Tags.Git.issue(99)] });
+    const events = await Event.list({ tags: [Tags.Git.issue(99)] });
     expect(events.length).toBeGreaterThanOrEqual(1);
-    expect(events[0]?.tags).toContain("gh:issue:99");
+    expect(events[0]?.tags).toContain("git:issue:99");
   });
 
   it("listTree", async () => {
@@ -63,7 +68,7 @@ describe("event", () => {
 
   it("infers parent from issue tags when parentEventId is null", async () => {
     const sourceId = testSourceId();
-    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(42)];
+    const tags = [...repoTags("github", "octocat/hello-world"), Tags.Git.issue(42)];
     const rootId = await Event.create({
       type: "github.issues.opened",
       origin: "webhook",
@@ -78,7 +83,7 @@ describe("event", () => {
       source: "repository",
       sourceId,
       parentEventId: undefined,
-      tags: [...tags, Tags.ghBranch("agents/issue-42")],
+      tags: [...tags, Tags.Git.branch("agents/issue-42")],
     });
 
     const child = await Event.fromID(childId);
@@ -87,7 +92,7 @@ describe("event", () => {
 
   it("does not infer agent as parent of another agent", async () => {
     const sourceId = testSourceId();
-    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(16)];
+    const tags = [...repoTags("github", "octocat/hello-world"), Tags.Git.issue(16)];
 
     const firstAgentId = await Event.create({
       type: "agent",
@@ -113,7 +118,7 @@ describe("event", () => {
 
   it("agent parents under github.issues.opened, not under another agent", async () => {
     const sourceId = testSourceId();
-    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(16)];
+    const tags = [...repoTags("github", "octocat/hello-world"), Tags.Git.issue(16)];
 
     const issueEventId = await Event.create({
       type: "github.issues.opened",
@@ -147,20 +152,20 @@ describe("event", () => {
 
   it("prefers PR parent inference over issue parent inference", async () => {
     const sourceId = testSourceId();
-    const repoTag = Tags.ghRepo("octocat/hello-world");
+    const repoTagsForEvent = repoTags("github", "octocat/hello-world");
     await Event.create({
       type: "github.issues.opened",
       origin: "webhook",
       source: "repository",
       sourceId,
-      tags: [repoTag, Tags.ghIssue(42)],
+      tags: [...repoTagsForEvent, Tags.Git.issue(42)],
     });
     const prRootId = await Event.create({
       type: "github.pull_request.opened",
       origin: "webhook",
       source: "repository",
       sourceId,
-      tags: [repoTag, Tags.ghPr(99), Tags.ghBranch("feature/pr-99")],
+      tags: [...repoTagsForEvent, Tags.Git.pr(99), Tags.Git.branch("feature/pr-99")],
     });
 
     const childId = await Event.create({
@@ -169,7 +174,12 @@ describe("event", () => {
       source: "repository",
       sourceId,
       parentEventId: undefined,
-      tags: [repoTag, Tags.ghIssue(42), Tags.ghPr(99), Tags.ghBranch("feature/pr-99")],
+      tags: [
+        ...repoTagsForEvent,
+        Tags.Git.issue(42),
+        Tags.Git.pr(99),
+        Tags.Git.branch("feature/pr-99"),
+      ],
     });
 
     const child = await Event.fromID(childId);
@@ -181,17 +191,17 @@ describe("event", () => {
       type: "agent",
       origin: "action",
       data: { runUrl: "https://example.com", trigger: "push" },
-      tags: [Tags.ghRepo("octocat/hello")],
+      tags: repoTags("github", "octocat/hello"),
     });
     await Event.update(id, {
       data: { workflow: { durationMs: 5000, conclusion: "success" } },
-      tags: [Tags.ghRepo("octocat/hello"), Tags.ghPr(42)],
+      tags: [...repoTags("github", "octocat/hello"), Tags.Git.pr(42)],
     });
     const event = await Event.fromID(id);
     expect(event!.data.runUrl).toBe("https://example.com");
     expect((event!.data.workflow as any).durationMs).toBe(5000);
-    expect(event!.tags).toContain(Tags.ghPr(42));
-    expect(event!.tags).toContain(Tags.ghRepo("octocat/hello"));
+    expect(event!.tags).toContain(Tags.Git.pr(42));
+    expect(event!.tags).toContain(Tags.Git.repo("github", "octocat/hello"));
   });
 
   it("infers parent from plan tag", async () => {
@@ -201,7 +211,7 @@ describe("event", () => {
       origin: "console",
       source: "repository",
       sourceId,
-      tags: [Tags.ghRepo("octocat/hello-world")],
+      tags: repoTags("github", "octocat/hello-world"),
       data: { title: "Test plan", body: "...", status: "implementing", authorType: "human" },
     });
 
@@ -210,7 +220,7 @@ describe("event", () => {
       origin: "action",
       source: "repository",
       sourceId,
-      tags: [`plan:${planId}`, Tags.ghRepo("octocat/hello-world")],
+      tags: [`plan:${planId}`, ...repoTags("github", "octocat/hello-world")],
     });
 
     const agent = await Event.fromID(agentId);
@@ -219,7 +229,7 @@ describe("event", () => {
 
   it("plan tag takes priority over issue tag inference", async () => {
     const sourceId = testSourceId();
-    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(42)];
+    const tags = [...repoTags("github", "octocat/hello-world"), Tags.Git.issue(42)];
 
     const issueEventId = await Event.create({
       type: "github.issues.opened",
@@ -234,7 +244,7 @@ describe("event", () => {
       origin: "console",
       source: "repository",
       sourceId,
-      tags: [Tags.ghRepo("octocat/hello-world")],
+      tags: repoTags("github", "octocat/hello-world"),
       data: { title: "Plan", body: "...", status: "implementing", authorType: "human" },
     });
 
@@ -254,7 +264,7 @@ describe("event", () => {
 
   it("keeps an explicit parentEventId instead of inferring one", async () => {
     const sourceId = testSourceId();
-    const tags = [Tags.ghRepo("octocat/hello-world"), Tags.ghIssue(42)];
+    const tags = [...repoTags("github", "octocat/hello-world"), Tags.Git.issue(42)];
     await Event.create({
       type: "github.issues.opened",
       origin: "webhook",
@@ -284,8 +294,8 @@ describe("event", () => {
 
   it("deploy event parents under agent with same PR tag", async () => {
     const sourceId = testSourceId();
-    const repoTag = Tags.ghRepo("octocat/hello-world");
-    const prTag = Tags.ghPr(200);
+    const tags = repoTags("github", "octocat/hello-world");
+    const prTag = Tags.Git.pr(200);
 
     // Webhook event (root)
     const webhookId = await Event.create({
@@ -293,7 +303,7 @@ describe("event", () => {
       origin: "webhook",
       source: "repository",
       sourceId,
-      tags: [repoTag, prTag],
+      tags: [...tags, prTag],
     });
 
     // Agent event (child of webhook, created the PR)
@@ -302,7 +312,7 @@ describe("event", () => {
       origin: "action",
       source: "repository",
       sourceId,
-      tags: [repoTag, prTag, Tags.ghBranch("claude/issue-200")],
+      tags: [...tags, prTag, Tags.Git.branch("claude/issue-200")],
     });
     const agent = await Event.fromID(agentId);
     expect(agent?.parentEventId).toBe(webhookId);
@@ -313,7 +323,7 @@ describe("event", () => {
       origin: "action",
       source: "repository",
       sourceId,
-      tags: [repoTag, prTag, "env:pr-200", "tool:sst"],
+      tags: [...tags, prTag, "env:pr-200", "tool:sst"],
     });
 
     const deploy = await Event.fromID(deployId);
@@ -322,8 +332,8 @@ describe("event", () => {
 
   it("deploy event falls back to webhook parent when no agent has PR tag", async () => {
     const sourceId = testSourceId();
-    const repoTag = Tags.ghRepo("octocat/hello-world");
-    const prTag = Tags.ghPr(201);
+    const tags = repoTags("github", "octocat/hello-world");
+    const prTag = Tags.Git.pr(201);
 
     // Webhook event (root, no agent with this PR)
     const webhookId = await Event.create({
@@ -331,7 +341,7 @@ describe("event", () => {
       origin: "webhook",
       source: "repository",
       sourceId,
-      tags: [repoTag, prTag],
+      tags: [...tags, prTag],
     });
 
     // Deploy event should fall back to the webhook parent
@@ -340,10 +350,32 @@ describe("event", () => {
       origin: "action",
       source: "repository",
       sourceId,
-      tags: [repoTag, prTag, "env:pr-201", "tool:sst"],
+      tags: [...tags, prTag, "env:pr-201", "tool:sst"],
     });
 
     const deploy = await Event.fromID(deployId);
     expect(deploy?.parentEventId).toBe(webhookId);
+  });
+
+  it("does not infer parents from matching tags in another sourceId", async () => {
+    const issueTags = [...repoTags("github", "octocat/hello-world"), Tags.Git.issue(77)];
+    await Event.create({
+      type: "github.issues.opened",
+      origin: "webhook",
+      source: "repository",
+      sourceId: testSourceId(),
+      tags: issueTags,
+    });
+
+    const childId = await Event.create({
+      type: "agent",
+      origin: "action",
+      source: "repository",
+      sourceId: testSourceId(),
+      tags: issueTags,
+    });
+
+    const child = await Event.fromID(childId);
+    expect(child?.parentEventId).toBeNull();
   });
 });

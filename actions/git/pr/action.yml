@@ -158,7 +158,7 @@ runs:
 
         # Write PR tag
         if [ -n "${DEV_AGENTS_TAGS_DIR:-}" ] && [ -n "$PR_NUMBER" ]; then
-          printf 'gh:pr:%s\n' "$PR_NUMBER" > "$DEV_AGENTS_TAGS_DIR/gh-pr"
+          printf 'git:pr:%s\n' "$PR_NUMBER" > "$DEV_AGENTS_TAGS_DIR/git-pr"
         fi
 
         # Write PR metadata

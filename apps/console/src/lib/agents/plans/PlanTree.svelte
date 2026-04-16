@@ -2,6 +2,7 @@
   import { listTree } from '$lib/events/repository/repository.remote';
   import { relativeTime } from '$lib/agents/plans/plan-helpers';
   import { repoContext } from '$lib/git/context.svelte';
+  import { Tags } from '@agents/core/events/tag';
 
   type TreeNode = {
     id: string;
@@ -19,11 +20,8 @@
   let retryCount = $state(0);
 
   function extractPrFromTags(tags: string[]): string | null {
-    for (const tag of tags) {
-      const match = tag.match(/^gh:pr:(\d+)$/);
-      if (match) return match[1];
-    }
-    return null;
+    const pr = Tags.Git.find(tags, 'pr');
+    return pr ? String(pr.number) : null;
   }
 
   function extractStatus(node: TreeNode): string | null {

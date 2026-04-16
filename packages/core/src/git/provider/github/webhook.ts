@@ -174,7 +174,11 @@ export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
     const repo = await ensureRepo(payload);
     if (!repo) return;
 
-    const issueTags = [Tags.ghRepo(repo.fullName), Tags.ghIssue(payload.issue.number)];
+    const issueTags = [
+      Tags.Git.provider("github"),
+      Tags.Git.repo("github", repo.fullName),
+      Tags.Git.issue(payload.issue.number),
+    ];
     const parentEventId =
       payload.action !== "opened"
         ? await Event.findParent({
@@ -214,9 +218,10 @@ export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
     if (!repo) return;
 
     const prTags = [
-      Tags.ghRepo(repo.fullName),
-      Tags.ghPr(payload.pull_request.number),
-      Tags.ghBranch(payload.pull_request.head.ref),
+      Tags.Git.provider("github"),
+      Tags.Git.repo("github", repo.fullName),
+      Tags.Git.pr(payload.pull_request.number),
+      Tags.Git.branch(payload.pull_request.head.ref),
     ];
     const parentEventId =
       payload.action !== "opened"
@@ -254,7 +259,11 @@ export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
 
     log.info("push event", { repo: payload.repository.full_name, branch, commitCount });
 
-    const pushTags = [Tags.ghRepo(repo.fullName), Tags.ghBranch(branch)];
+    const pushTags = [
+      Tags.Git.provider("github"),
+      Tags.Git.repo("github", repo.fullName),
+      Tags.Git.branch(branch),
+    ];
 
     await Event.create({
       source: "repository",

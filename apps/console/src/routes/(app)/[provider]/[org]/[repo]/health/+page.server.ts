@@ -1,6 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { Event } from "@agents/core/events";
 import { ChecksEvent } from "@agents/core/events/checks";
+import { Tags } from "@agents/core/events/tag";
 
 export const load: PageServerLoad = async ({ parent, url }) => {
   const { repo } = await parent();
@@ -16,7 +17,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       type: "checks",
       source: "repository",
       sourceId: repo.id,
-      tags: [`gh:branch:${branch}`],
+      tags: [Tags.Git.branch(branch)],
       limit: 1,
     });
 

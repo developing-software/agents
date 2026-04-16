@@ -5,6 +5,7 @@ import { Event } from "@agents/core/events";
 import { AgentEvent } from "@agents/core/events/agent";
 import { Plan } from "@agents/core/events/plan";
 import { PlanJudge } from "@agents/core/events/plan/judge";
+import { Tags } from "@agents/core/events/tag";
 import { getProvider } from "@agents/core/git";
 import { createModel } from "./model";
 import { flattenChecks } from "$lib/events/helpers";
@@ -17,11 +18,7 @@ function getApiKey(): string | undefined {
 }
 
 function extractPrNumber(tags: string[]): number | null {
-  for (const tag of tags) {
-    const match = tag.match(/^gh:pr:(\d+)$/);
-    if (match) return parseInt(match[1]!, 10);
-  }
-  return null;
+  return Tags.Git.find(tags, "pr")?.number ?? null;
 }
 
 interface PlanRun {
@@ -206,7 +203,7 @@ export const reviewPR = command(
         source: "repository",
         sourceId: repo.id,
         parentEventId: runId,
-        tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
+        tags: [`plan:${planId}`, Tags.Git.pr(prNumber)],
         data: review as Record<string, unknown>,
       });
 
@@ -276,7 +273,7 @@ export const humanReviewPR = command(
         source: "repository",
         sourceId: repo.id,
         parentEventId: runId,
-        tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
+        tags: [`plan:${planId}`, Tags.Git.pr(prNumber)],
         data: review as Record<string, unknown>,
       });
 
@@ -351,7 +348,7 @@ export const mergeWinner = command(
         origin: "console",
         source: "repository",
         sourceId: repo.id,
-        tags: [`plan:${planId}`, `gh:pr:${winnerPrNumber}`],
+        tags: [`plan:${planId}`, Tags.Git.pr(winnerPrNumber)],
         data: {
           winnerPr: winnerPrNumber,
           winnerAgent: null,

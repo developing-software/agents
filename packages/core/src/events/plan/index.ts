@@ -40,7 +40,7 @@ export namespace Plan {
         example: Examples.Plan.authorType,
       }),
       tags: z.array(z.string()).meta({
-        description: "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+        description: "Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.",
         example: Examples.Plan.tags,
       }),
       data: z.record(z.string(), z.unknown()).meta({

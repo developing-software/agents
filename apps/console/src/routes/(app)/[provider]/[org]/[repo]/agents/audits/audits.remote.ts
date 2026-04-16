@@ -4,6 +4,7 @@ import { AgentAudit } from "@agents/core/agent/audit";
 import { getProvider } from "@agents/core/git";
 import { Event } from "@agents/core/events";
 import { Plan } from "@agents/core/events/plan";
+import { Tags } from "@agents/core/events/tag";
 import { repoCommand, repoQuery } from "$lib/repo-remote";
 
 export const listAudits = repoQuery({}, async ({ repo }) => AgentAudit.list(repo));
@@ -50,7 +51,11 @@ export const createPlanFromAudit = repoCommand(
     auditBody: z.string(),
   },
   async ({ organization, repoName, repo, auditName, auditTitle, auditBody }) => {
-    const tags = [`gh:repo:${organization}/${repoName}`, `type:audit-${auditName}`];
+    const tags = [
+      Tags.Git.provider(repo.source),
+      Tags.Git.repo(repo.source, `${organization}/${repoName}`),
+      `type:audit-${auditName}`,
+    ];
 
     const body = [
       `## Audit: ${auditTitle}`,

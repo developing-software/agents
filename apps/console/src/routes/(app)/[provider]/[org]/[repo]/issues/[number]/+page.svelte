@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import { Tags } from '@agents/core/events/tag';
   import Events from '$lib/events/repository/Feed.svelte';
 
   let { data }: PageProps = $props();
@@ -13,7 +14,7 @@
 </div>
 
 <Events
-  filterTags={[`gh:issue:${data.number}`]}
+  filterTags={[Tags.Git.issue(data.number)]}
   emptyText="No events for this issue"
 />
 

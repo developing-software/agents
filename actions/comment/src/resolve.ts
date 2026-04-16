@@ -5,8 +5,8 @@ import { extractIssueFromTags, extractPrFromTags, readContextTags } from "@agent
  * Resolve all target issue/PR numbers to comment on.
  *
  * Collects unique targets from:
- * - gh:issue:N tag (the originating issue)
- * - gh:pr:N tag (created PR)
+ * - git:issue:N tag (the originating issue)
+ * - git:pr:N tag (created PR)
  * - issue_number input (explicit override)
  *
  * Returns empty array if no targets can be resolved.
@@ -17,13 +17,13 @@ export function resolveTargets(): number[] {
 
   const issueNumber = extractIssueFromTags(tags);
   if (issueNumber != null) {
-    core.info(`Resolved comment target from gh:issue tag: #${issueNumber}`);
+    core.info(`Resolved comment target from git:issue tag: #${issueNumber}`);
     targets.add(issueNumber);
   }
 
   const prNumber = extractPrFromTags(tags);
   if (prNumber != null) {
-    core.info(`Resolved comment target from gh:pr tag: #${prNumber}`);
+    core.info(`Resolved comment target from git:pr tag: #${prNumber}`);
     targets.add(prNumber);
   }
 

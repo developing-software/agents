@@ -4,6 +4,7 @@ import { getProvider } from "../../git";
 import type { NormalizedIssue } from "../../git/provider/interface";
 import { Repository } from "../../repository/index";
 import { lazy } from "../../util/lazy";
+import { Tags } from "../tag";
 import type { Plan } from "./index";
 
 export type SectionRenderer = () => Promise<string | null>;
@@ -69,13 +70,7 @@ async function renderBody(): Promise<string | null> {
 
 async function renderLinkedIssues(): Promise<string | null> {
   const plan = usePlan();
-  const issueNumbers = plan.tags
-    .filter((t) => t.startsWith("gh:issue:"))
-    .map((t) => {
-      const text = t.split(":")[2];
-      return text ? parseInt(text, 10) : NaN;
-    })
-    .filter((n) => !isNaN(n));
+  const issueNumbers = Tags.Git.collect(plan.tags, "issue").map((tag) => tag.number);
   if (issueNumbers.length === 0) return null;
 
   const issues = (await Promise.all(issueNumbers.map(useIssue))).filter(

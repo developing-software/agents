@@ -17,10 +17,10 @@ const DispatchInput = z
     }),
     issue_number: z.number().int().positive().optional().meta({
       description:
-        "Issue number to implement. Auto-fetches title/body to build prompt and adds gh:issue tag.",
+        "Issue number to implement. Auto-fetches title/body to build prompt and adds git:issue tag.",
     }),
     tags: z.array(z.string()).optional().meta({
-      description: "Additional tags for event linking (e.g. gh:issue:42)",
+      description: "Additional tags for event linking (e.g. git:issue:42)",
     }),
     model: z.string().optional().meta({
       description: "Model override",

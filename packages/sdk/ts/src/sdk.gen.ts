@@ -21,8 +21,6 @@ import type {
   GetModelsPricingByModelIdResponses,
   GetModelsPricingErrors,
   GetModelsPricingResponses,
-  GetProfileErrors,
-  GetProfileResponses,
   GetTokenByIdErrors,
   GetTokenByIdResponses,
   GetTokenErrors,
@@ -42,8 +40,6 @@ import type {
   PostModelsCostResponses,
   PostTokenErrors,
   PostTokenResponses,
-  PutProfileErrors,
-  PutProfileResponses,
 } from "./types.gen";
 
 export type Options<
@@ -97,63 +93,6 @@ export class DevAgentSdk extends HeyApiClient {
   constructor(args?: { client?: Client; key?: string }) {
     super(args);
     DevAgentSdk.__registry.set(this, args?.key);
-  }
-
-  /**
-   * Get profile
-   *
-   * Get the current user's profile.
-   */
-  public getProfile<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
-    return (options?.client ?? this.client).get<
-      GetProfileResponses,
-      GetProfileErrors,
-      ThrowOnError
-    >({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options,
-    });
-  }
-
-  /**
-   * Update profile
-   *
-   * Update the current user's profile.
-   */
-  public putProfile<ThrowOnError extends boolean = false>(
-    parameters: {
-      name: string;
-      email: string;
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "body", key: "name" },
-            { in: "body", key: "email" },
-          ],
-        },
-      ],
-    );
-    return (options?.client ?? this.client).put<
-      PutProfileResponses,
-      PutProfileErrors,
-      ThrowOnError
-    >({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    });
   }
 
   /**
