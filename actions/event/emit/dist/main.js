@@ -19729,34 +19729,6 @@ class DevAgentSdk extends HeyApiClient {
     super(args);
     DevAgentSdk.__registry.set(this, args?.key);
   }
-  getProfile(options) {
-    return (options?.client ?? this.client).get({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options
-    });
-  }
-  putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
-    return (options?.client ?? this.client).put({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers
-      }
-    });
-  }
   getApp(options) {
     return (options?.client ?? this.client).get({
       security: [{ scheme: "bearer", type: "http" }],
@@ -19997,6 +19969,15 @@ function createFetchWithRetry(timeoutMs = DEFAULT_TIMEOUT_MS) {
   };
 }
 // actions/core/src/index.ts
+var GitTags = {
+  provider: (provider) => `git:provider:${provider}`,
+  repo: (provider, fullName) => `git:repo:${provider}:${fullName}`,
+  issue: (n) => `git:issue:${n}`,
+  pr: (n) => `git:pr:${n}`,
+  workflow: (id) => `git:workflow:${id}`,
+  branch: (name) => `git:branch:${name}`,
+  trigger: (name) => `git:trigger:${name}`
+};
 function readContextTags() {
   const tagsDir = process.env.DEV_AGENTS_TAGS_DIR;
   if (tagsDir && existsSync(tagsDir)) {
@@ -33647,6 +33628,106 @@ function date4(params) {
 
 // node_modules/.bun/zod@4.3.6/node_modules/zod/v4/classic/external.js
 config(en_default());
+// packages/core/src/error.ts
+var ErrorResponse = exports_external.object({
+  type: exports_external.enum(["validation", "authentication", "forbidden", "not_found", "rate_limit", "internal"]).meta({
+    description: "The error type category",
+    examples: ["validation", "authentication"]
+  }),
+  code: exports_external.string().meta({
+    description: "Machine-readable error code identifier",
+    examples: ["invalid_parameter", "missing_required_field", "unauthorized"]
+  }),
+  message: exports_external.string().meta({
+    description: "Human-readable error message",
+    examples: ["The request was invalid", "Authentication required"]
+  }),
+  param: exports_external.string().optional().meta({
+    description: "The parameter that caused the error (if applicable)",
+    examples: ["email", "user_id"]
+  }),
+  details: exports_external.any().optional().meta({
+    description: "Additional error context information"
+  })
+}).meta({ ref: "ErrorResponse" });
+var ErrorCodes = {
+  Validation: {
+    INVALID_PARAMETER: "invalid_parameter",
+    MISSING_REQUIRED_FIELD: "missing_required_field",
+    INVALID_FORMAT: "invalid_format",
+    ALREADY_EXISTS: "already_exists",
+    IN_USE: "resource_in_use",
+    INVALID_STATE: "invalid_state"
+  },
+  Authentication: {
+    UNAUTHORIZED: "unauthorized",
+    INVALID_TOKEN: "invalid_token",
+    EXPIRED_TOKEN: "expired_token",
+    INVALID_CREDENTIALS: "invalid_credentials"
+  },
+  Permission: {
+    FORBIDDEN: "forbidden",
+    INSUFFICIENT_PERMISSIONS: "insufficient_permissions",
+    ACCOUNT_RESTRICTED: "account_restricted"
+  },
+  NotFound: {
+    RESOURCE_NOT_FOUND: "resource_not_found"
+  },
+  RateLimit: {
+    TOO_MANY_REQUESTS: "too_many_requests",
+    QUOTA_EXCEEDED: "quota_exceeded"
+  },
+  Server: {
+    INTERNAL_ERROR: "internal_error",
+    SERVICE_UNAVAILABLE: "service_unavailable",
+    DEPENDENCY_FAILURE: "dependency_failure"
+  }
+};
+
+class VisibleError extends Error {
+  type;
+  code;
+  message;
+  param;
+  details;
+  constructor(type, code, message, param, details) {
+    super(message);
+    this.type = type;
+    this.code = code;
+    this.message = message;
+    this.param = param;
+    this.details = details;
+  }
+  statusCode() {
+    switch (this.type) {
+      case "validation":
+        return 400;
+      case "authentication":
+        return 401;
+      case "forbidden":
+        return 403;
+      case "not_found":
+        return 404;
+      case "rate_limit":
+        return 429;
+      case "internal":
+        return 500;
+    }
+  }
+  toResponse() {
+    const response = {
+      type: this.type,
+      code: this.code,
+      message: this.message
+    };
+    if (this.param)
+      response.param = this.param;
+    if (this.details)
+      response.details = this.details;
+    return response;
+  }
+}
+
 // packages/core/src/identifier.ts
 var Identifier;
 ((Identifier) => {
@@ -33670,7 +33751,7 @@ var Identifier;
     if (given) {
       if (given.startsWith(Identifier.prefixes[prefix]))
         return given;
-      throw new Error(`ID ${given} does not start with ${Identifier.prefixes[prefix]}`);
+      throw new VisibleError("validation", ErrorCodes.Validation.INVALID_FORMAT, `ID ${given} does not start with ${Identifier.prefixes[prefix]}`);
     }
     return [Identifier.prefixes[prefix], ulid()].join("_");
   }
@@ -33687,21 +33768,22 @@ function readTags(raw) {
     ...new Set(raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean))
   ];
 }
-function githubTags() {
+function gitTags() {
   const tags = [];
   const repo = process.env.GITHUB_REPOSITORY;
   const runId = process.env.GITHUB_RUN_ID;
   const ref = process.env.GITHUB_REF;
   const refName = process.env.GITHUB_REF_NAME;
-  if (repo)
-    tags.push(`gh:repo:${repo}`);
+  if (repo) {
+    tags.push(GitTags.provider("github"), GitTags.repo("github", repo));
+  }
   if (runId)
-    tags.push(`gh:workflow:${runId}`);
+    tags.push(GitTags.workflow(runId));
   const prMatch = ref?.match(/^refs\/pull\/(\d+)\//);
   if (prMatch) {
-    tags.push(`gh:pr:${prMatch[1]}`);
+    tags.push(GitTags.pr(Number.parseInt(prMatch[1], 10)));
   } else if (refName && ref?.startsWith("refs/heads/")) {
-    tags.push(`gh:branch:${refName}`);
+    tags.push(GitTags.branch(refName));
   }
   return tags;
 }
@@ -33728,7 +33810,7 @@ async function run() {
   const type = core3.getInput("type", { required: true });
   const explicitTags = readTags(core3.getInput("tags"));
   const contextTags = inheritContext ? readContextTags() : [];
-  const tags = [...new Set([...githubTags(), ...contextTags, ...explicitTags])];
+  const tags = [...new Set([...gitTags(), ...contextTags, ...explicitTags])];
   const data = readData(core3.getInput("data"));
   const repoFullName = process.env.GITHUB_REPOSITORY;
   if (!repoFullName) {

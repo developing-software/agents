@@ -19716,34 +19716,6 @@ class DevAgentSdk extends HeyApiClient {
     super(args);
     DevAgentSdk.__registry.set(this, args?.key);
   }
-  getProfile(options) {
-    return (options?.client ?? this.client).get({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options
-    });
-  }
-  putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
-    return (options?.client ?? this.client).put({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers
-      }
-    });
-  }
   getApp(options) {
     return (options?.client ?? this.client).get({
       security: [{ scheme: "bearer", type: "http" }],

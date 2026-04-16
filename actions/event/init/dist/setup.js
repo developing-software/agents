@@ -19729,34 +19729,6 @@ class DevAgentSdk extends HeyApiClient {
     super(args);
     DevAgentSdk.__registry.set(this, args?.key);
   }
-  getProfile(options) {
-    return (options?.client ?? this.client).get({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options
-    });
-  }
-  putProfile(parameters, options) {
-    const params = buildClientParams([parameters], [
-      {
-        args: [
-          { in: "body", key: "name" },
-          { in: "body", key: "email" }
-        ]
-      }
-    ]);
-    return (options?.client ?? this.client).put({
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/profile",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers
-      }
-    });
-  }
   getApp(options) {
     return (options?.client ?? this.client).get({
       security: [{ scheme: "bearer", type: "http" }],
@@ -19997,6 +19969,15 @@ function createFetchWithRetry(timeoutMs = DEFAULT_TIMEOUT_MS) {
   };
 }
 // actions/core/src/index.ts
+var GitTags = {
+  provider: (provider) => `git:provider:${provider}`,
+  repo: (provider, fullName) => `git:repo:${provider}:${fullName}`,
+  issue: (n) => `git:issue:${n}`,
+  pr: (n) => `git:pr:${n}`,
+  workflow: (id) => `git:workflow:${id}`,
+  branch: (name) => `git:branch:${name}`,
+  trigger: (name) => `git:trigger:${name}`
+};
 function uniqueTags(tags) {
   return [...new Set(tags.filter(Boolean))];
 }
@@ -33638,6 +33619,106 @@ function date4(params) {
 
 // node_modules/.bun/zod@4.3.6/node_modules/zod/v4/classic/external.js
 config(en_default());
+// packages/core/src/error.ts
+var ErrorResponse = exports_external.object({
+  type: exports_external.enum(["validation", "authentication", "forbidden", "not_found", "rate_limit", "internal"]).meta({
+    description: "The error type category",
+    examples: ["validation", "authentication"]
+  }),
+  code: exports_external.string().meta({
+    description: "Machine-readable error code identifier",
+    examples: ["invalid_parameter", "missing_required_field", "unauthorized"]
+  }),
+  message: exports_external.string().meta({
+    description: "Human-readable error message",
+    examples: ["The request was invalid", "Authentication required"]
+  }),
+  param: exports_external.string().optional().meta({
+    description: "The parameter that caused the error (if applicable)",
+    examples: ["email", "user_id"]
+  }),
+  details: exports_external.any().optional().meta({
+    description: "Additional error context information"
+  })
+}).meta({ ref: "ErrorResponse" });
+var ErrorCodes = {
+  Validation: {
+    INVALID_PARAMETER: "invalid_parameter",
+    MISSING_REQUIRED_FIELD: "missing_required_field",
+    INVALID_FORMAT: "invalid_format",
+    ALREADY_EXISTS: "already_exists",
+    IN_USE: "resource_in_use",
+    INVALID_STATE: "invalid_state"
+  },
+  Authentication: {
+    UNAUTHORIZED: "unauthorized",
+    INVALID_TOKEN: "invalid_token",
+    EXPIRED_TOKEN: "expired_token",
+    INVALID_CREDENTIALS: "invalid_credentials"
+  },
+  Permission: {
+    FORBIDDEN: "forbidden",
+    INSUFFICIENT_PERMISSIONS: "insufficient_permissions",
+    ACCOUNT_RESTRICTED: "account_restricted"
+  },
+  NotFound: {
+    RESOURCE_NOT_FOUND: "resource_not_found"
+  },
+  RateLimit: {
+    TOO_MANY_REQUESTS: "too_many_requests",
+    QUOTA_EXCEEDED: "quota_exceeded"
+  },
+  Server: {
+    INTERNAL_ERROR: "internal_error",
+    SERVICE_UNAVAILABLE: "service_unavailable",
+    DEPENDENCY_FAILURE: "dependency_failure"
+  }
+};
+
+class VisibleError extends Error {
+  type;
+  code;
+  message;
+  param;
+  details;
+  constructor(type, code, message, param, details) {
+    super(message);
+    this.type = type;
+    this.code = code;
+    this.message = message;
+    this.param = param;
+    this.details = details;
+  }
+  statusCode() {
+    switch (this.type) {
+      case "validation":
+        return 400;
+      case "authentication":
+        return 401;
+      case "forbidden":
+        return 403;
+      case "not_found":
+        return 404;
+      case "rate_limit":
+        return 429;
+      case "internal":
+        return 500;
+    }
+  }
+  toResponse() {
+    const response = {
+      type: this.type,
+      code: this.code,
+      message: this.message
+    };
+    if (this.param)
+      response.param = this.param;
+    if (this.details)
+      response.details = this.details;
+    return response;
+  }
+}
+
 // packages/core/src/identifier.ts
 var Identifier;
 ((Identifier) => {
@@ -33661,7 +33742,7 @@ var Identifier;
     if (given) {
       if (given.startsWith(Identifier.prefixes[prefix]))
         return given;
-      throw new Error(`ID ${given} does not start with ${Identifier.prefixes[prefix]}`);
+      throw new VisibleError("validation", ErrorCodes.Validation.INVALID_FORMAT, `ID ${given} does not start with ${Identifier.prefixes[prefix]}`);
     }
     return [Identifier.prefixes[prefix], ulid()].join("_");
   }
@@ -33702,23 +33783,32 @@ async function run() {
   const runId = process.env.GITHUB_RUN_ID ?? "";
   const runUrl = `https://github.com/${repository}/actions/runs/${runId}`;
   core3.exportVariable("DEV_AGENTS_RUN_URL", runUrl);
-  if (repository) {
-    writeTag(tagsDir, "gh-repo", `gh:repo:${repository}`);
-  }
-  if (runId) {
-    writeTag(tagsDir, "gh-workflow", `gh:workflow:${runId}`);
-  }
   const trigger = process.env.GITHUB_EVENT_NAME ?? "";
-  if (trigger) {
-    writeTag(tagsDir, "gh-trigger", `gh:trigger:${trigger}`);
-  }
   const githubRef = process.env.GITHUB_REF ?? "";
   const prMatch = githubRef.match(/^refs\/pull\/(\d+)/);
+  const contextTags = uniqueTags([
+    repository ? GitTags.provider("github") : "",
+    repository ? GitTags.repo("github", repository) : "",
+    runId ? GitTags.workflow(runId) : "",
+    trigger ? GitTags.trigger(trigger) : "",
+    prMatch ? GitTags.pr(Number.parseInt(prMatch[1], 10)) : "",
+    githubRef.startsWith("refs/heads/") ? GitTags.branch(githubRef.replace("refs/heads/", "")) : ""
+  ].filter(Boolean));
+  if (repository) {
+    writeTag(tagsDir, "git-provider", GitTags.provider("github"));
+    writeTag(tagsDir, "git-repo", GitTags.repo("github", repository));
+  }
+  if (runId) {
+    writeTag(tagsDir, "git-workflow", GitTags.workflow(runId));
+  }
+  if (trigger) {
+    writeTag(tagsDir, "git-trigger", GitTags.trigger(trigger));
+  }
   if (prMatch) {
-    writeTag(tagsDir, "gh-pr", `gh:pr:${prMatch[1]}`);
+    writeTag(tagsDir, "git-pr", GitTags.pr(Number.parseInt(prMatch[1], 10)));
   } else if (githubRef.startsWith("refs/heads/")) {
     const branch = githubRef.replace("refs/heads/", "");
-    writeTag(tagsDir, "gh-branch", `gh:branch:${branch}`);
+    writeTag(tagsDir, "git-branch", GitTags.branch(branch));
   }
   const extraTagsRaw = core3.getInput("tags");
   const extraTags = parseTagLines(extraTagsRaw);
@@ -33739,7 +33829,7 @@ async function run() {
   core3.saveState("url", apiUrl);
   if (agentsToken) {
     try {
-      const allTags = uniqueTags(extraTags.concat(repository ? [`gh:repo:${repository}`] : [], runId ? [`gh:workflow:${runId}`] : [], trigger ? [`gh:trigger:${trigger}`] : [], prMatch ? [`gh:pr:${prMatch[1]}`] : [], githubRef.startsWith("refs/heads/") ? [`gh:branch:${githubRef.replace("refs/heads/", "")}`] : []));
+      const allTags = uniqueTags(extraTags.concat(contextTags));
       let extraData = {};
       const dataInput = core3.getInput("data");
       if (dataInput) {
