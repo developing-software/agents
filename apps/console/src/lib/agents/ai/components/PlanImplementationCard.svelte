@@ -3,13 +3,12 @@
   import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
   import ArtifactList from '$lib/events/repository/ArtifactList.svelte';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   let {
     run,
     review,
     judgment,
-    organization,
-    repoName,
     planId,
     completed,
     prStatesPromise,
@@ -21,8 +20,6 @@
     run: PlanRun;
     review: ReviewResult | undefined;
     judgment: CompareResult | null;
-    organization: string;
-    repoName: string;
     planId: string;
     completed: boolean;
     prStatesPromise: Promise<Record<number, string | null>>;
@@ -31,6 +28,8 @@
     onDispatchFix?: (prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) => void;
     agentColor: (agent: string) => string;
   } = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   const prStatePromise = $derived.by(() => {
     if (run.prNumber == null) return Promise.resolve(null);
@@ -212,12 +211,12 @@
       </div>
     {:else if activeTab === 'diff'}
       {#if run.prNumber != null}
-        <PRDiffLoader autoLoad {organization} {repoName} prNumber={run.prNumber} prUrl={run.prUrl} />
+        <PRDiffLoader autoLoad prNumber={run.prNumber} prUrl={run.prUrl} />
       {:else}
         <div class="dim-placeholder">No PR yet</div>
       {/if}
     {:else if activeTab === 'artifacts'}
-      <ArtifactList eventId={run.id} {organization} {repoName} />
+      <ArtifactList eventId={run.id} />
     {:else if activeTab === 'judge'}
       {#if editing && run.prNumber != null}
         <!-- Human review form -->

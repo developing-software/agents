@@ -3,20 +3,19 @@
   import type { ReviewResult, CompareResult } from './plan-types';
   import PlanImplementationCard from './PlanImplementationCard.svelte';
   import WorkflowStrip from './WorkflowStrip.svelte';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   let {
-    organization,
-    repoName,
     planId,
     planStatus,
     onDispatchFix,
   }: {
-    organization: string;
-    repoName: string;
     planId: string;
     planStatus: string;
     onDispatchFix?: (prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) => void;
   } = $props();
+
+  const { organization, repoName } = repoContext.get();
 
   // -- Data loading --
 
@@ -118,8 +117,6 @@
             {run}
             review={run.prNumber != null ? reviews[run.prNumber] : undefined}
             {judgment}
-            {organization}
-            {repoName}
             {planId}
             {completed}
             {prStatesPromise}
@@ -143,8 +140,6 @@
           {runs}
           {reviews}
           {judgment}
-          {organization}
-          {repoName}
           {planId}
           {completed}
           onReviewComplete={handleReviewComplete}

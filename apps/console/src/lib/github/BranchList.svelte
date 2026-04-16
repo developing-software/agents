@@ -6,7 +6,8 @@
   import {
     deleteBranch,
     deleteBranches,
-  } from '../../routes/gh/[organization]/[repo]/branches/branches.remote';
+  } from '../../routes/(app)/[provider]/[org]/[repo]/branches/branches.remote';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   interface PullRef {
     number: number;
@@ -14,7 +15,7 @@
     state: string;
     headBranch: string;
     baseBranch: string;
-    htmlUrl: string;
+    url: string;
   }
 
   interface Branch {
@@ -36,12 +37,12 @@
   }
 
   interface Props {
-    organization: string;
-    repoName: string;
     branches: Branch[];
   }
 
-  let { organization, repoName, branches }: Props = $props();
+  let { branches }: Props = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   type Filter = 'all' | 'active' | 'stale' | 'merged' | 'noPR' | 'agents' | 'protected';
   type Sort = 'recent' | 'oldest' | 'name';
@@ -341,7 +342,7 @@
           <span class="col-pr">
             {#if b.pullRequest}
               <a
-                href="/gh/{organization}/{repoName}/pulls/{b.pullRequest.number}"
+                href="/{provider}/{organization}/{repoName}/pulls/{b.pullRequest.number}"
                 class="pr-link"
                 style="color: {prStateColor(b.pullRequest.state)};"
               >

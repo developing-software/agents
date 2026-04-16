@@ -1,7 +1,7 @@
 import { AgentSkill } from "../../agent/skill";
 import { Context } from "../../context";
-import { GithubContent } from "../../github/repo/content";
-import { GithubIssue } from "../../github/repo/issue";
+import { getProvider } from "../../git";
+import type { NormalizedDirEntry, NormalizedIssue } from "../../git/provider/interface";
 import { Repository } from "../../repository/index";
 import { lazy } from "../../util/lazy";
 import type { Plan } from "./index";
@@ -11,8 +11,8 @@ export type SectionRenderer = () => Promise<string | null>;
 interface PlanContextState {
   plan: Plan.Info;
   repo: () => Promise<Repository.Info | null>;
-  rootListing: () => Promise<GithubContent.DirEntry[] | null>;
-  issue: (n: number) => Promise<GithubIssue.Info | null>;
+  rootListing: () => Promise<NormalizedDirEntry[] | null>;
+  issue: (n: number) => Promise<NormalizedIssue | null>;
 }
 
 const PlanContextStorage = Context.create<PlanContextState>();
@@ -23,15 +23,15 @@ function makeState(plan: Plan.Info): PlanContextState {
   );
   const rootListing = lazy(async () => {
     const r = await repo();
-    return r ? GithubContent.listDir(r, "") : null;
+    return r ? getProvider(r.source).content.listDir(r.fullName, "") : null;
   });
-  const issueCache = new Map<number, Promise<GithubIssue.Info | null>>();
+  const issueCache = new Map<number, Promise<NormalizedIssue | null>>();
   const issue = (n: number) => {
     let p = issueCache.get(n);
     if (!p) {
       p = (async () => {
         const r = await repo();
-        return r ? GithubIssue.get(r, n).catch(() => null) : null;
+        return r ? getProvider(r.source).issues.get(r.fullName, n).catch(() => null) : null;
       })();
       issueCache.set(n, p);
     }
@@ -52,11 +52,11 @@ export function useRepo(): Promise<Repository.Info | null> {
   return PlanContextStorage.use().repo();
 }
 
-export function useRepoRoot(): Promise<GithubContent.DirEntry[] | null> {
+export function useRepoRoot(): Promise<NormalizedDirEntry[] | null> {
   return PlanContextStorage.use().rootListing();
 }
 
-export function useIssue(n: number): Promise<GithubIssue.Info | null> {
+export function useIssue(n: number): Promise<NormalizedIssue | null> {
   return PlanContextStorage.use().issue(n);
 }
 
@@ -84,7 +84,7 @@ async function renderLinkedIssues(): Promise<string | null> {
   if (issueNumbers.length === 0) return null;
 
   const issues = (await Promise.all(issueNumbers.map(useIssue))).filter(
-    (i): i is GithubIssue.Info => i !== null,
+    (i): i is NormalizedIssue => i !== null,
   );
   if (issues.length === 0) return null;
 
@@ -100,10 +100,9 @@ async function renderSkills(): Promise<string | null> {
   const repo = await useRepo();
   if (!repo) return null;
 
-  const all = await AgentSkill.listAgentsSkills(repo);
+  const all = await AgentSkill.listAgentsSkills({ source: repo.source, fullName: repo.fullName });
   if (all.length === 0) return null;
 
-  // If the plan has any `skill:*` tags, filter to those; otherwise include all.
   const plan = usePlan();
   const wanted = new Set(
     plan.tags
@@ -119,10 +118,10 @@ async function renderSkills(): Promise<string | null> {
 
 // AGENTS.md and CLAUDE.md are almost always symlinks to one another. Reading
 // both would either duplicate the same content or — for the symlink side —
-// depend on the GitHub raw endpoint resolving the link. We use the parent
-// directory listing (cached via useRepoRoot) to detect the source file and
-// read only that one. If both are real files (intentional divergence), we
-// merge them in listing order.
+// depend on the raw endpoint resolving the link. We use the parent directory
+// listing (cached via useRepoRoot) to detect the source file and read only
+// that one. If both are real files (intentional divergence), we merge them
+// in listing order.
 async function renderInstructions(): Promise<string | null> {
   const repo = await useRepo();
   if (!repo) return null;
@@ -136,8 +135,11 @@ async function renderInstructions(): Promise<string | null> {
   const realFiles = candidates.filter((e) => e.type === "file");
   const toRead = realFiles.length > 0 ? realFiles : candidates.slice(0, 1);
 
+  const content = getProvider(repo.source).content;
   const contents = (
-    await Promise.all(toRead.map((e) => GithubContent.readFile(repo, e.path).catch(() => null)))
+    await Promise.all(
+      toRead.map((e) => content.readFile(repo.fullName, e.path).then((r) => r?.content ?? null).catch(() => null)),
+    )
   ).filter((c): c is string => Boolean(c));
 
   if (contents.length === 0) return null;

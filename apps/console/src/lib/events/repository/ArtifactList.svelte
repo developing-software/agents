@@ -1,5 +1,6 @@
 <script lang="ts">
   import ArtifactCard from './ArtifactCard.svelte';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   type ArtifactInfo = {
     key: string;
@@ -10,16 +11,15 @@
 
   let {
     eventId,
-    organization,
-    repoName,
   }: {
     eventId: string;
-    organization: string;
-    repoName: string;
   } = $props();
 
+  const { provider, organization, repoName } = repoContext.get();
+  const base = $derived(`/${provider}/${organization}/${repoName}/events/artifact`);
+
   const artifactsPromise = $derived(
-    fetch(`/gh/${organization}/${repoName}/events/artifact?eventId=${eventId}`)
+    fetch(`${base}?eventId=${eventId}`)
       .then(r => r.ok ? r.json() as Promise<ArtifactInfo[]> : [] as ArtifactInfo[])
       .catch(() => [] as ArtifactInfo[])
   );
@@ -35,7 +35,7 @@
             name={artifact.name}
             size={artifact.size}
             uploaded={artifact.uploaded}
-            contentUrl={`/gh/${organization}/${repoName}/events/artifact?key=${encodeURIComponent(artifact.key)}`}
+            contentUrl={`${base}?key=${encodeURIComponent(artifact.key)}`}
           />
         {/each}
       </div>

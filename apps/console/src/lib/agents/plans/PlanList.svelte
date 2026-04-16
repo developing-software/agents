@@ -8,22 +8,21 @@
   } from './plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   let {
-    organization,
-    repoName,
     plans,
     emptyText = 'No plans',
     ondispatch,
     dispatched = $bindable(new Set<string>()),
   }: {
-    organization: string;
-    repoName: string;
     plans: PlanItem[];
     emptyText?: string;
     ondispatch?: (plan: PlanItem) => void;
     dispatched?: Set<string>;
   } = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   let activeFilter = $state<'all' | string>('all');
 
@@ -56,7 +55,7 @@
     icon="plans"
     title={emptyText}
     description="Create a plan to coordinate agent work."
-    href="/gh/{organization}/{repoName}/agents/plans/create"
+    href="/{provider}/{organization}/{repoName}/agents/plans/create"
     hrefLabel="Create a plan"
   />
 {:else}
@@ -75,7 +74,7 @@
 
         <span class="time">{relativeTime(plan.timeCreated)}</span>
 
-        <a href="/gh/{organization}/{repoName}/agents/plans/{plan.id}" class="detail-link">&rarr;</a>
+        <a href="/{provider}/{organization}/{repoName}/agents/plans/{plan.id}" class="detail-link">&rarr;</a>
 
         {#if ondispatch}
           {#if dispatched.has(plan.id)}

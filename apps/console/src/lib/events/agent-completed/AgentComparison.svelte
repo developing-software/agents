@@ -3,14 +3,9 @@
   import Section from '../Section.svelte';
   import ComparisonView from './ComparisonView.svelte';
   import { getAgentComparison, getAgentStats, invalidateComparisonCache } from './agent-completed.remote';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
-  let {
-    organization,
-    repoName,
-  }: {
-    organization: string;
-    repoName: string;
-  } = $props();
+  const { organization, repoName } = repoContext.get();
 
   let isRefreshing = $state(false);
 

@@ -12,13 +12,16 @@ export namespace Examples {
     defaultBranch: "main",
     source: "github" as const,
     sourceId: "987654321",
-    installationId: 123456789,
+    installationRef: "123456789",
   };
 
-  export const GithubInstallation = {
-    id: Id("githubInstallation"),
-    installationId: 123456789,
-    owner: "octocat",
+  export const Installation = {
+    id: Id("installation"),
+    provider: "github" as const,
+    providerAccountId: "42",
+    providerAccountLogin: "octocat",
+    installationRef: "123456789",
+    accountType: "Organization" as const,
   };
 
   export const Event = {

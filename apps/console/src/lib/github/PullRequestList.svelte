@@ -2,22 +2,26 @@
   import GitHubLink from '$lib/ui/GitHubLink.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { prStateColor, prStateDotStyle } from './github-helpers';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   interface Props {
-    organization: string;
-    repoName: string;
     pulls: Array<{
       number: number;
       title: string;
       state: string;
       headBranch: string;
       baseBranch: string;
-      htmlUrl: string;
+      url: string;
     }>;
     emptyText?: string;
   }
 
-  let { organization, repoName, pulls, emptyText = 'No pull requests found.' }: Props = $props();
+  let {
+    pulls,
+    emptyText = 'No pull requests found.',
+  }: Props = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   let activeFilter = $state<'all' | 'open' | 'merged' | 'closed'>('open');
 
@@ -114,12 +118,12 @@
 
           <!-- GitHub link -->
           <div class="shrink-0">
-            <GitHubLink href={pr.htmlUrl} />
+            <GitHubLink href={pr.url} />
           </div>
 
           <!-- Activity link -->
           <a
-            href="/gh/{organization}/{repoName}/pulls/{pr.number}"
+            href="/{provider}/{organization}/{repoName}/pulls/{pr.number}"
             class="activity-link"
             title="View activity"
           >activity &rarr;</a>

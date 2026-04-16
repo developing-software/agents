@@ -14,7 +14,7 @@ export namespace Identifier {
     apiSecret: "sec",
     link: "lnk",
     repository: "rep",
-    githubInstallation: "gin",
+    installation: "ins",
     githubRepo: "grp",
     githubEvent: "gev",
   } as const;

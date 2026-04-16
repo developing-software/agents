@@ -3,16 +3,15 @@
   import GitHubLink from '$lib/ui/GitHubLink.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { issueStateColor, issueStateDotStyle } from './github-helpers';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   interface Props {
-    organization: string;
-    repoName: string;
     issues: Array<{
       number: number;
       title: string;
       state: string;
       labels: string[];
-      htmlUrl: string;
+      url: string;
     }>;
     selectable?: boolean;
     selected?: Set<number>;
@@ -20,13 +19,13 @@
   }
 
   let {
-    organization,
-    repoName,
     issues,
     selectable = false,
     selected = $bindable(new Set<number>()),
     emptyText = 'No issues found.',
   }: Props = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   let activeFilter = $state<'all' | 'open' | 'closed'>('open');
 
@@ -161,7 +160,7 @@
 
             <!-- GitHub link -->
             <div class="shrink-0">
-              <GitHubLink href={issue.htmlUrl} />
+              <GitHubLink href={issue.url} />
             </div>
           </div>
         {:else}
@@ -208,12 +207,12 @@
 
             <!-- GitHub link -->
             <div class="shrink-0">
-              <GitHubLink href={issue.htmlUrl} />
+              <GitHubLink href={issue.url} />
             </div>
 
             <!-- Activity link -->
             <a
-              href="/gh/{organization}/{repoName}/issues/{issue.number}"
+              href="/{provider}/{organization}/{repoName}/issues/{issue.number}"
               class="activity-link"
               title="View activity"
             >activity →</a>

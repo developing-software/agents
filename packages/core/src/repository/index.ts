@@ -4,7 +4,7 @@ import { Actor } from "../actor";
 import { Common } from "../common";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { Examples } from "../examples";
-import { githubInstallationTable } from "../github/installation/installation.sql";
+import { installationsTable } from "../git/installation.sql";
 import { Identifier } from "../identifier";
 import { Log } from "../util/log";
 import { repositoryTable } from "./repository.sql";
@@ -12,7 +12,7 @@ import { repositoryTable } from "./repository.sql";
 const log = Log.create({ namespace: "repository" });
 
 export namespace Repository {
-  export const Source = z.enum(["github"]).meta({
+  export const Source = z.enum(["github", "gitlab", "bitbucket", "gitea"]).meta({
     description: "Repository source provider.",
     example: "github",
   });
@@ -46,9 +46,10 @@ export namespace Repository {
         description: "Default branch of the repository.",
         example: Examples.Repository.defaultBranch,
       }),
-      installationId: z.number().int().meta({
-        description: "GitHub installation identifier used to access this repository.",
-        example: Examples.Repository.installationId,
+      installationRef: z.string().meta({
+        description:
+          "Provider-specific installation reference used to access this repository.",
+        example: Examples.Repository.installationRef,
       }),
     })
     .meta({
@@ -63,7 +64,7 @@ export namespace Repository {
     accountId?: string;
     source: Source;
     sourceId: string;
-    connectionId: string;
+    installationId: string;
     owner: string;
     repo: string;
     fullName: string;
@@ -78,7 +79,7 @@ export namespace Repository {
     repo: repositoryTable.repo,
     fullName: repositoryTable.fullName,
     defaultBranch: repositoryTable.defaultBranch,
-    installationId: githubInstallationTable.installationId,
+    installationRef: installationsTable.installationRef,
   };
 
   function serialize(row: {
@@ -89,7 +90,7 @@ export namespace Repository {
     repo: string;
     fullName: string;
     defaultBranch: string | null;
-    installationId: number;
+    installationRef: string | null;
   }): Info {
     return {
       id: row.id,
@@ -99,7 +100,7 @@ export namespace Repository {
       repo: row.repo,
       fullName: row.fullName,
       defaultBranch: row.defaultBranch ?? null,
-      installationId: row.installationId,
+      installationRef: row.installationRef ?? "",
     };
   }
 
@@ -123,7 +124,7 @@ export namespace Repository {
             accountId: input.accountId,
             source: input.source,
             sourceId: input.sourceId,
-            connectionId: input.connectionId,
+            installationId: input.installationId,
             owner: input.owner,
             repo: input.repo,
             fullName: input.fullName,
@@ -146,7 +147,7 @@ export namespace Repository {
         accountId: input.accountId,
         source: input.source,
         sourceId: input.sourceId,
-        connectionId: input.connectionId,
+        installationId: input.installationId,
         owner: input.owner,
         repo: input.repo,
         fullName: input.fullName,
@@ -156,12 +157,12 @@ export namespace Repository {
     });
   }
 
-  export async function removeByConnectionId(connectionId: string) {
+  export async function removeByInstallationId(installationId: string) {
     return useTransaction(async (tx) =>
       tx
         .update(repositoryTable)
         .set({ timeDeleted: new Date(), timeUpdated: new Date() })
-        .where(eq(repositoryTable.connectionId, connectionId)),
+        .where(eq(repositoryTable.installationId, installationId)),
     );
   }
 
@@ -188,10 +189,7 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(
-          githubInstallationTable,
-          eq(repositoryTable.connectionId, githubInstallationTable.id),
-        )
+        .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
         .where(
           and(
             eq(repositoryTable.source, source),
@@ -209,10 +207,7 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(
-          githubInstallationTable,
-          eq(repositoryTable.connectionId, githubInstallationTable.id),
-        )
+        .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
         .where(
           and(
             eq(repositoryTable.id, id),
@@ -230,10 +225,7 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(
-          githubInstallationTable,
-          eq(repositoryTable.connectionId, githubInstallationTable.id),
-        )
+        .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
         .where(
           and(
             eq(repositoryTable.fullName, fullName),
@@ -250,10 +242,7 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(
-          githubInstallationTable,
-          eq(repositoryTable.connectionId, githubInstallationTable.id),
-        )
+        .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
         .where(and(eq(repositoryTable.fullName, fullName), isNull(repositoryTable.timeDeleted)))
         .then((rows) => (rows[0] ? serialize(rows[0]) : null)),
     );
@@ -265,10 +254,7 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(
-          githubInstallationTable,
-          eq(repositoryTable.connectionId, githubInstallationTable.id),
-        )
+        .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
         .where(and(eq(repositoryTable.accountId, accountId), isNull(repositoryTable.timeDeleted)))
         .then((rows) => rows.map(serialize)),
     );
@@ -280,10 +266,7 @@ export namespace Repository {
       tx
         .select(infoSelection)
         .from(repositoryTable)
-        .innerJoin(
-          githubInstallationTable,
-          eq(repositoryTable.connectionId, githubInstallationTable.id),
-        )
+        .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
         .where(
           and(
             eq(repositoryTable.owner, owner),

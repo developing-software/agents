@@ -9,8 +9,8 @@
   let { data, children }: LayoutProps = $props();
 
   const currentRepoKey = $derived(
-    page.params.organization && page.params.repo
-      ? `${page.params.organization}/${page.params.repo}`
+    page.params.org && page.params.repo
+      ? `${page.params.org}/${page.params.repo}`
       : null
   );
 
@@ -88,7 +88,7 @@
         <div class="sidebar-content">
           {#each data.sidebarOrgs as { org, repos } (org)}
             <div class="org-group">
-              <a href="/gh/{org}" class="org-header" title={org}>
+              <a href="/{repos[0].source}/{org}" class="org-header" title={org}>
                 <span class="org-initial">{orgInitials(org)}</span>
                 <span class="org-header-text">/ {org}</span>
               </a>
@@ -98,7 +98,7 @@
                   {@const isActive = currentRepoKey === repoKey}
                   <li>
                     <a
-                      href="/gh/{repo.owner}/{repo.repo}"
+                      href="/{repo.source}/{repo.owner}/{repo.repo}"
                       class="repo-link"
                       class:repo-link-active={isActive}
                       aria-current={isActive ? 'page' : undefined}

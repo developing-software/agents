@@ -1,13 +1,11 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { GithubIssue } from "@agents/core/github/repo/issue";
-import { GithubContent } from "@agents/core/github/repo/content";
-import { GitHub } from "@agents/core/github/client";
+import { getProvider } from "@agents/core/git";
+import type { ProviderType } from "@agents/core/git";
 
 export type RepoContext = {
-  installationId: number;
-  owner: string;
-  repo: string;
+  source: ProviderType | string;
+  fullName: string;
 };
 
 const MAX_TOOL_OUTPUT_CHARS = 30_000;
@@ -18,14 +16,16 @@ function truncate(text: string, limit = MAX_TOOL_OUTPUT_CHARS): string {
 }
 
 export function githubTools(ctx: RepoContext) {
+  const provider = getProvider(ctx.source);
+
   return {
     listIssues: tool({
       description: "List issues for this repository. Returns number, title, state, and labels.",
       inputSchema: z.object({
         state: z.enum(["open", "closed", "all"]).default("open").describe("Filter by issue state"),
       }),
-      execute: async () => {
-        const issues = await GithubIssue.list(ctx);
+      execute: async ({ state }) => {
+        const issues = await provider.issues.list(ctx.fullName, { state });
         return truncate(JSON.stringify(issues));
       },
     }),
@@ -36,7 +36,7 @@ export function githubTools(ctx: RepoContext) {
         number: z.number().describe("Issue number"),
       }),
       execute: async ({ number }) => {
-        const issue = await GithubIssue.get(ctx, number);
+        const issue = await provider.issues.get(ctx.fullName, number);
         return truncate(JSON.stringify(issue));
       },
     }),
@@ -49,26 +49,9 @@ export function githubTools(ctx: RepoContext) {
         remove: z.array(z.string()).optional().describe("Labels to remove"),
       }),
       execute: async ({ number, add, remove }) => {
-        const octokit = await GitHub.appClient(ctx.installationId);
-        if (add?.length) {
-          await octokit.rest.issues.addLabels({
-            owner: ctx.owner,
-            repo: ctx.repo,
-            issue_number: number,
-            labels: add,
-          });
-        }
+        if (add?.length) await provider.issues.addLabels(ctx.fullName, number, add);
         if (remove?.length) {
-          for (const label of remove) {
-            await octokit.rest.issues
-              .removeLabel({
-                owner: ctx.owner,
-                repo: ctx.repo,
-                issue_number: number,
-                name: label,
-              })
-              .catch(() => {});
-          }
+          for (const label of remove) await provider.issues.removeLabel(ctx.fullName, number, label);
         }
         return { number, added: add ?? [], removed: remove ?? [] };
       },
@@ -81,10 +64,11 @@ export function githubTools(ctx: RepoContext) {
       }),
       execute: async ({ path }) => {
         if (path) {
-          const entries = await GithubContent.listDir(ctx, path);
+          const entries = await provider.content.listDir(ctx.fullName, path);
           return truncate(JSON.stringify(entries ?? []));
         }
-        const tree = await GithubContent.getTree(ctx);
+        const repoInfo = await provider.repos.get(ctx.fullName);
+        const tree = await provider.repos.getTree(ctx.fullName, repoInfo.defaultBranch);
         const paths = tree.filter((e) => e.type === "blob").map((e) => e.path);
         return truncate(paths.join("\n"));
       },
@@ -96,8 +80,8 @@ export function githubTools(ctx: RepoContext) {
         path: z.string().describe("File path relative to repo root"),
       }),
       execute: async ({ path }) => {
-        const content = await GithubContent.readFile(ctx, path);
-        return truncate(content ?? "File not found");
+        const file = await provider.content.readFile(ctx.fullName, path);
+        return truncate(file?.content ?? "File not found");
       },
     }),
   };

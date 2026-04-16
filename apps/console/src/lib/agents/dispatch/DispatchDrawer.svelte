@@ -8,6 +8,7 @@
   import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
   import ModelSelector from './ModelSelector.svelte';
   import { SvelteSet } from 'svelte/reactivity';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   export type OpenParams = {
     title?: string;
@@ -19,14 +20,12 @@
   };
 
   let {
-    organization,
-    repoName,
     ondispatched,
   }: {
-    organization: string;
-    repoName: string;
     ondispatched?: () => void;
   } = $props();
+
+  const { organization, repoName } = repoContext.get();
 
   let isOpen = $state(false);
   let drawerTitle = $state('Dispatch');
@@ -205,7 +204,7 @@
               <div class="section-label">Configuration</div>
               <div class="config-grid">
                 <label class="config-label" for="ref-input">Branch</label>
-                <BranchSelect {organization} {repoName} bind:value={ref} />
+                <BranchSelect bind:value={ref} />
               </div>
             </section>
           {/if}

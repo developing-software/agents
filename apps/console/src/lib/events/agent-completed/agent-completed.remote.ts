@@ -81,6 +81,7 @@ export const getDashboardSummary = query(z.object({}), async () => {
   const perRepo = new Map<
     string,
     {
+      source: string;
       owner: string;
       repo: string;
       total: number;
@@ -143,6 +144,7 @@ export const getDashboardSummary = query(z.object({}), async () => {
       let entry = perRepo.get(key);
       if (!entry) {
         entry = {
+          source: repo.source,
           owner: repo.owner,
           repo: repo.repo,
           total: 0,
@@ -181,6 +183,7 @@ export const getDashboardSummary = query(z.object({}), async () => {
       .map((r) => {
         const total = r.passed + r.failed;
         return {
+          source: r.source,
           owner: r.owner,
           repo: r.repo,
           total: r.total,

@@ -140,7 +140,7 @@
           <div class="repo-grid">
             {#each result.repos as repo (`${repo.owner}/${repo.repo}`)}
               {@const hasChecks = repo.passRate > 0 || repo.total > 0}
-              <a href="/gh/{repo.owner}/{repo.repo}" class="repo-card">
+              <a href="/{repo.source}/{repo.owner}/{repo.repo}" class="repo-card">
                 <div class="repo-card-header">
                   <span class="repo-card-name">{repo.owner}/{repo.repo}</span>
                   {#if repo.lastActivity}

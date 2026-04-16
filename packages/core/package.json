@@ -17,8 +17,11 @@
     "./api/*": "./src/api/*.ts",
     "./agent/*": "./src/agent/*.ts",
     "./email/*": "./src/email/*.ts",
-    "./github/client": "./src/github/client.ts",
-    "./github/repo/*": "./src/github/repo/*.ts",
+    "./git": "./src/git/index.ts",
+    "./git/*": "./src/git/*.ts",
+    "./git/provider/github": "./src/git/provider/github/index.ts",
+    "./git/provider/github/client": "./src/git/provider/github/client.ts",
+    "./git/provider/github/webhook": "./src/git/provider/github/webhook.ts",
     "./events/agent-metrics": "./src/events/agent-metrics.ts",
     "./events/plan/*": "./src/events/plan/*.ts"
   },

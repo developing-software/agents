@@ -6,12 +6,11 @@
 	import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
 	import { listIssues } from '$lib/github/github.remote';
 	import IssueList from '$lib/github/IssueList.svelte';
+	import { repoContext } from '$lib/git-repo/context.svelte';
 
 	let {
 		plan = null,
 		repoId,
-		organization,
-		repoName,
 	}: {
 		plan?: {
 			id: string;
@@ -22,9 +21,9 @@
 			tags: string[];
 		} | null | undefined;
 		repoId: string;
-		organization: string;
-		repoName: string;
 	} = $props();
+
+	const { provider, organization, repoName } = repoContext.get();
 
 	let title = $state(untrack(() => plan?.title ?? ''));
 	let body = $state(untrack(() => plan?.body ?? ''));
@@ -61,10 +60,10 @@
 		try {
 			if (isEdit && plan) {
 				await updatePlan({ id: plan.id, title, body, status, tags });
-				goto(`/gh/${organization}/${repoName}/agents/plans/${plan.id}`);
+				goto(`/${provider}/${organization}/${repoName}/agents/plans/${plan.id}`);
 			} else {
 				const result = await createPlan({ title, body, authorType, tags, repoId });
-				goto(`/gh/${organization}/${repoName}/agents/plans/${result.id}`);
+				goto(`/${provider}/${organization}/${repoName}/agents/plans/${result.id}`);
 			}
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to save plan';
@@ -111,8 +110,6 @@
 						<div class="issues-loading">Loading issues...</div>
 					{:then issues}
 						<IssueList
-							{organization}
-							{repoName}
 							issues={issues}
 							selectable={true}
 							bind:selected={linkedIssues}

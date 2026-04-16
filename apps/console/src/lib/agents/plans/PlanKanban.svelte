@@ -7,20 +7,19 @@
     type PlanItem,
   } from './plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   let {
-    organization,
-    repoName,
     plans,
     ondispatch,
     dispatched = $bindable(new Set<string>()),
   }: {
-    organization: string;
-    repoName: string;
     plans: PlanItem[];
     ondispatch?: (plan: PlanItem) => void;
     dispatched?: Set<string>;
   } = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   let grouped = $derived(
     PLAN_STATUSES.reduce(
@@ -45,7 +44,7 @@
       <div class="column-body">
         {#each items as plan (plan.id)}
           <a
-            href="/gh/{organization}/{repoName}/agents/plans/{plan.id}"
+            href="/{provider}/{organization}/{repoName}/agents/plans/{plan.id}"
             class="card"
           >
             <div class="card-title">{plan.title}</div>

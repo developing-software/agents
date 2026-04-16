@@ -1,8 +1,7 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
 import { AgentWorkflow, AgentCompat } from "@agents/core/agent";
-import { GithubBranch } from "@agents/core/github/repo/branch";
-import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
+import { getProvider } from "@agents/core/git";
 import { Plan } from "@agents/core/events/plan";
 import { Repository } from "@agents/core/repository";
 import { error } from "@sveltejs/kit";
@@ -45,7 +44,7 @@ export const listBranches = query(
   async ({ organization, repoName }) => {
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
-    return GithubBranch.list(repo);
+    return getProvider(repo.source).branches.list(repo.fullName);
   },
 );
 
@@ -71,8 +70,8 @@ export const previewFixPrompt = query(
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
-    const pr = await GithubPullRequest.get(repoRef, prNumber);
+    const pr = await getProvider(repo.source).pulls.get(repo.fullName, prNumber);
+    if (!pr) error(404, `Pull request #${prNumber} not found`);
 
     const planPrompt = await Plan.toPrompt(plan);
     return {

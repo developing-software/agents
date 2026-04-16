@@ -2,13 +2,12 @@
   import { reviewPR, judgePlan, mergeWinner, humanPickWinner } from '$lib/agents/ai/judge.remote';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
   import { capitalize } from '$lib/events/helpers';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   let {
     runs,
     reviews,
     judgment,
-    organization,
-    repoName,
     planId,
     completed,
     onReviewComplete,
@@ -19,8 +18,6 @@
     runs: PlanRun[];
     reviews: Record<number, ReviewResult>;
     judgment: CompareResult | null;
-    organization: string;
-    repoName: string;
     planId: string;
     completed: boolean;
     onReviewComplete: (prNumber: number, review: ReviewResult) => void;
@@ -28,6 +25,8 @@
     onError: (message: string) => void;
     agentColor: (agent: string) => string;
   } = $props();
+
+  const { organization, repoName } = repoContext.get();
 
   let reviewAllLoading = $state(false);
   let reviewAllProgress = $state<{ done: number; total: number } | null>(null);

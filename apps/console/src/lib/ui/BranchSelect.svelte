@@ -1,20 +1,18 @@
 <script lang="ts">
 	import { listBranches } from '$lib/agents/dispatch/dispatch.remote';
+	import { repoContext } from '$lib/git-repo/context.svelte';
 
 	interface Props {
-		organization: string;
-		repoName: string;
 		value: string;
 		onchange?: (branch: string) => void;
 	}
 
 	let {
-		organization,
-		repoName,
 		value = $bindable(''),
 		onchange,
 	}: Props = $props();
 
+	const { organization, repoName } = repoContext.get();
 	const branchesPromise = $derived(listBranches({ organization, repoName }));
 
 	function handleChange(e: Event) {

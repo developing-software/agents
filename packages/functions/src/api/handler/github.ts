@@ -1,11 +1,9 @@
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { z } from "zod";
-import { GitHubWebhook } from "@agents/core/github";
+import { verifyAndReceive } from "@agents/core/git/provider/github";
 import { AgentWorkflow } from "@agents/core/agent";
 import { authRequired, validator, Result, ErrorResponses } from "../common";
-
-GitHubWebhook.init(process.env.GITHUB_WEBHOOK_SECRET ?? "dev_webhook_secret");
 
 const DispatchInput = z
   .object({
@@ -47,7 +45,7 @@ export namespace GitHubApi {
       }
 
       const rawBody = await c.req.text();
-      await GitHubWebhook.verifyAndReceive({ id, name, rawBody, signature });
+      await verifyAndReceive({ id, name, rawBody, signature });
       return c.json({ ok: true }, 200);
     })
     .post(

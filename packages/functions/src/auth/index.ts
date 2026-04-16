@@ -9,7 +9,7 @@ import { Auth } from "@agents/core/auth";
 import { Workspace } from "@agents/core/workspace";
 import { User } from "@agents/core/user";
 import { Actor } from "@agents/core/actor";
-import { GitHub } from "@agents/core/github";
+import { tokenClient } from "@agents/core/git/provider/github/client";
 import { Api } from "@agents/core/api/api";
 import { logger } from "hono/logger";
 import type { StorageAdapter } from "@openauthjs/openauth/storage/storage";
@@ -63,7 +63,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       let email: string | undefined;
 
       if (response.provider === "github") {
-        const octokit = GitHub.fromToken(response.tokenset.access);
+        const octokit = tokenClient(response.tokenset.access);
         const [{ data: emails }, { data: profile }] = await Promise.all([
           octokit.rest.users.listEmailsForAuthenticatedUser(),
           octokit.rest.users.getAuthenticated(),

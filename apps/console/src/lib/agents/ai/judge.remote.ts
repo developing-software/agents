@@ -6,7 +6,7 @@ import { Event } from "@agents/core/events";
 import { AgentEvent } from "@agents/core/events/agent";
 import { Plan } from "@agents/core/events/plan";
 import { PlanJudge } from "@agents/core/events/plan/judge";
-import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
+import { getProvider } from "@agents/core/git";
 import { createModel } from "./model";
 import { flattenChecks } from "$lib/events/helpers";
 
@@ -147,13 +147,13 @@ export const listPrStates = query(
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) return {} as Record<number, string | null>;
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
+    const pulls = getProvider(repo.source).pulls;
 
     const results = await Promise.all(
       prNumbers.map(async (prNumber) => {
         try {
-          const pr = await GithubPullRequest.get(repoRef, prNumber);
-          return { prNumber, state: pr.state };
+          const pr = await pulls.get(repo.fullName, prNumber);
+          return { prNumber, state: pr?.state ?? null };
         } catch {
           return { prNumber, state: null };
         }
@@ -193,8 +193,7 @@ export const reviewPR = command(
     const plan = await Plan.fromID(planId);
     if (!plan) throw new Error("Plan not found");
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
-    const diff = await GithubPullRequest.getDiff(repoRef, prNumber);
+    const diff = await getProvider(repo.source).pulls.getDiff(repo.fullName, prNumber);
 
     const prompt = PlanJudge.composeReviewPrompt({ plan, agent, prNumber, diff, checks, metrics });
 
@@ -348,12 +347,11 @@ export const mergeWinner = command(
     const repo = await Repository.findByFullName(`${organization}/${repoName}`);
     if (!repo) throw new Error("Repository not found");
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
-
-    const mergeResult = await GithubPullRequest.merge(repoRef, winnerPrNumber);
+    const pulls = getProvider(repo.source).pulls;
+    const mergeResult = await pulls.merge(repo.fullName, winnerPrNumber);
 
     for (const prNumber of loserPrNumbers) {
-      await GithubPullRequest.close(repoRef, prNumber);
+      await pulls.close(repo.fullName, prNumber);
     }
 
     await Plan.update(planId, { status: "completed" });

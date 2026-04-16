@@ -20,6 +20,7 @@
   } from '../helpers';
   import { DeployEvent } from '@agents/core/events/deploy';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
+  import { repoContext } from '$lib/git-repo/context.svelte';
 
   type EventItem = {
     id: string;
@@ -32,18 +33,16 @@
   };
 
   let {
-    organization,
-    repoName,
     filterTags = [],
     compact = false,
     emptyText = 'No events',
   }: {
-    organization: string;
-    repoName: string;
     filterTags?: string[];
     compact?: boolean;
     emptyText?: string;
   } = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   let retryCount = $state(0);
 
@@ -128,9 +127,9 @@
               <span class="etype" class:etype-muted={child}>{e.type}</span>
               <span class="badge" style={originBadgeStyle(e.origin)}>{e.origin}</span>
               {#if issue}
-                <a href="/gh/{organization}/{repoName}/issues/{issue}" class="ref ref-issue" onclick={(ev) => ev.stopPropagation()}>#{issue}</a>
+                <a href="/{provider}/{organization}/{repoName}/issues/{issue}" class="ref ref-issue" onclick={(ev) => ev.stopPropagation()}>#{issue}</a>
               {:else if pr}
-                <a href="/gh/{organization}/{repoName}/pulls/{pr}" class="ref ref-pr" onclick={(ev) => ev.stopPropagation()}>#{pr}</a>
+                <a href="/{provider}/{organization}/{repoName}/pulls/{pr}" class="ref ref-pr" onclick={(ev) => ev.stopPropagation()}>#{pr}</a>
               {/if}
               <span class="time">{relativeTime(e.timeCreated)}</span>
             </button>
@@ -189,7 +188,7 @@
             {/if}
           </div>
           {#if selectedEventId === e.id}
-            <EventDetail event={e} {organization} {repoName} onclose={() => { selectedEventId = null; }} />
+            <EventDetail event={e} onclose={() => { selectedEventId = null; }} />
           {/if}
         {/snippet}
 

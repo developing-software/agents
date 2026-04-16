@@ -1,20 +1,19 @@
 <script lang="ts">
 	import { getPRDiff } from '$lib/github/github.remote';
 	import UnifiedDiff from '$lib/ui/UnifiedDiff.svelte';
+	import { repoContext } from '$lib/git-repo/context.svelte';
 
 	let {
-		organization,
-		repoName,
 		prNumber,
 		prUrl = null,
 		autoLoad = false
 	}: {
-		organization: string;
-		repoName: string;
 		prNumber: number;
 		prUrl?: string | null;
 		autoLoad?: boolean;
 	} = $props();
+
+	const { organization, repoName } = repoContext.get();
 
 	let loading = $state(false);
 	let diff = $state<string | null>(null);
