@@ -28,6 +28,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "GitHubAppSlug": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "GitHubClientId": {
       "type": "sst.sst.Secret"
       "value": string

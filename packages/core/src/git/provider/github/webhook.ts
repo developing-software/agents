@@ -119,6 +119,16 @@ export function registerGithubWebhookHandlers(webhook: WebhookEmitter): void {
     await Repository.removeByInstallationId(installation.id);
   });
 
+  webhook.on("installation.suspend", async ({ payload }) => {
+    log.info("installation suspended", { installationId: payload.installation.id });
+    await Installation.setSuspended("github", String(payload.installation.id), true);
+  });
+
+  webhook.on("installation.unsuspend", async ({ payload }) => {
+    log.info("installation unsuspended", { installationId: payload.installation.id });
+    await Installation.setSuspended("github", String(payload.installation.id), false);
+  });
+
   webhook.on("installation_repositories.added", async ({ payload }) => {
     const login = accountLogin(payload.installation.account);
     log.info("repositories added", {

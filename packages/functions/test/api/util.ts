@@ -3,6 +3,8 @@ import { app } from "../../src/api/routes";
 import { Account } from "@agents/core/account";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
+import { User } from "@agents/core/user";
+import { Workspace } from "@agents/core/workspace";
 import { z } from "zod";
 
 /**
@@ -10,10 +12,12 @@ import { z } from "zod";
  */
 export function setupApiTest() {
   let accountID: string;
+  let workspaceID: string;
+  let userID: string;
   let pat: string;
 
   const withContext = async <T>(fn: () => T | Promise<T>): Promise<T> => {
-    return Actor.provide("account", { accountID, email: "test@example.com" }, fn);
+    return Actor.provide("user", { accountID, workspaceID, userID, role: "admin" }, fn);
   };
 
   beforeAll(async () => {
@@ -23,8 +27,17 @@ export function setupApiTest() {
     console.error = mock();
 
     accountID = await Account.create({});
+    workspaceID = await Actor.provide(
+      "account",
+      { accountID, email: "test@example.com" },
+      () => Workspace.create({ name: "API Test Workspace" }),
+    );
+    const user = await User.fromAccount({ accountID, workspaceID });
+    if (!user) throw new Error("Failed to create test user");
+    userID = user.id;
+
     await withContext(async () => {
-      pat = await Api.Personal.create().then((r) => r.token);
+      pat = await Api.Personal.create({}).then((r) => r.token);
     });
   });
 

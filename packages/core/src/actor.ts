@@ -31,20 +31,12 @@ export namespace Actor {
     };
   }
 
-  export interface Token {
-    type: "token";
-    properties: {
-      accountID: string;
-      tokenID: string;
-    };
-  }
-
   export interface Public {
     type: "public";
     properties: Record<string, never>;
   }
 
-  export type Info = Account | User | Public | Token | System;
+  export type Info = Account | User | Public | System;
 
   export const ctx = Context.create<Info>();
 

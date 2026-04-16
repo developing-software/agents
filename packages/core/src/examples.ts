@@ -89,8 +89,11 @@ export namespace Examples {
 
   export const Token = {
     id: Id("apiPersonal"),
-    token: "pat_test_******XXXX",
+    name: "CI token",
+    token: "tok_test_******XXXX",
     created: "2024-06-29T00:00:00.000Z",
+    lastUsedAt: "2024-06-29T00:10:00.000Z",
+    expiresAt: null,
   };
 
   export const App = {

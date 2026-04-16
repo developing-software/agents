@@ -1,45 +1,31 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
-import { Repository } from "@agents/core/repository";
 import { AgentAudit } from "@agents/core/agent/audit";
 import { getProvider } from "@agents/core/git";
 import { Event } from "@agents/core/events";
 import { Plan } from "@agents/core/events/plan";
-import { error } from "@sveltejs/kit";
+import { repoCommand, repoQuery } from "$lib/repo-remote";
 
-const repoInput = z.object({ organization: z.string(), repoName: z.string() });
+export const listAudits = repoQuery({}, async ({ repo }) => AgentAudit.list(repo));
 
-export const listAudits = query(repoInput, async ({ organization, repoName }) => {
-  const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-  if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
-  return AgentAudit.list(repo);
-});
-
-export const listAuditRuns = query(repoInput, async ({ organization, repoName }) => {
-  const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-  if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
-  return Event.list({
+export const listAuditRuns = repoQuery({}, async ({ repo }) =>
+  Event.list({
     source: "repository",
     sourceId: repo.id,
     type: "audit",
     limit: 30,
-  });
-});
+  }),
+);
 
-export const updateAudit = command(
-  z.object({
-    organization: z.string(),
-    repoName: z.string(),
+export const updateAudit = repoCommand(
+  {
     name: z.string(),
     title: z.string(),
     description: z.string().optional(),
     body: z.string(),
     mode: z.enum(["direct", "pr"]),
-  }),
-  async ({ organization, repoName, name, title, description, body, mode }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
-
+  },
+  async ({ repo, name, title, description, body, mode }) => {
     const frontmatter = [
       "---",
       `title: ${title}`,
@@ -57,18 +43,13 @@ export const updateAudit = command(
   },
 );
 
-export const createPlanFromAudit = command(
-  z.object({
-    organization: z.string(),
-    repoName: z.string(),
+export const createPlanFromAudit = repoCommand(
+  {
     auditName: z.string(),
     auditTitle: z.string(),
     auditBody: z.string(),
-  }),
-  async ({ organization, repoName, auditName, auditTitle, auditBody }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
-
+  },
+  async ({ organization, repoName, repo, auditName, auditTitle, auditBody }) => {
     const tags = [`gh:repo:${organization}/${repoName}`, `type:audit-${auditName}`];
 
     const body = [

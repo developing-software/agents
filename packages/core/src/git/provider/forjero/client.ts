@@ -68,7 +68,7 @@ export async function resolveInstallation(fullName: string): Promise<ResolvedIns
 export async function resolveInstallationByInstallationId(
   installationId: string,
 ): Promise<ResolvedInstallation> {
-  const row = await Installation.findByID(installationId);
+  const row = await Installation.findByIDForWebhook(installationId);
   if (!row?.installationRef) {
     throw new VisibleError(
       "not_found",

@@ -86,9 +86,9 @@
         aria-label="Repository navigation"
       >
         <div class="sidebar-content">
-          {#each data.sidebarOrgs as { org, repos } (org)}
+          {#each data.sidebarOrgs as { workspaceID, source, org, repos } (`${workspaceID}:${source}:${org}`)}
             <div class="org-group">
-              <a href="/{repos[0].source}/{org}" class="org-header" title={org}>
+              <a href="/w/{workspaceID}/{source}/{org}" class="org-header" title={org}>
                 <span class="org-initial">{orgInitials(org)}</span>
                 <span class="org-header-text">/ {org}</span>
               </a>

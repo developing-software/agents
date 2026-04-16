@@ -3,8 +3,8 @@ import { z } from "zod";
 import { AgentWorkflow, AgentCompat } from "@agents/core/agent";
 import { getProvider } from "@agents/core/git";
 import { Plan } from "@agents/core/events/plan";
-import { Repository } from "@agents/core/repository";
 import { error } from "@sveltejs/kit";
+import { withRequestRepoActor } from "$lib/repository.server";
 
 export const listAgentConfigs = query(z.object({}), async () => {
   return AgentWorkflow.Agents.map((id) => {
@@ -41,11 +41,10 @@ export const searchAgentModels = query(
 
 export const listBranches = query(
   z.object({ organization: z.string(), repoName: z.string() }),
-  async ({ organization, repoName }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
-    return getProvider(repo.source).branches.list(repo.fullName);
-  },
+  async ({ organization, repoName }) =>
+    withRequestRepoActor({ organization, repoName }, async (repo) =>
+      getProvider(repo.source).branches.list(repo.fullName),
+    ),
 );
 
 export const previewPrompt = query(z.object({ planId: z.string() }), async ({ planId }) => {
@@ -67,17 +66,16 @@ export const previewFixPrompt = query(
     const plan = await Plan.fromID(planId);
     if (!plan) error(404, `Plan ${planId} not found`);
 
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) error(404, `Repository ${organization}/${repoName} not found`);
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const pr = await getProvider(repo.source).pulls.get(repo.fullName, prNumber);
+      if (!pr) error(404, `Pull request #${prNumber} not found`);
 
-    const pr = await getProvider(repo.source).pulls.get(repo.fullName, prNumber);
-    if (!pr) error(404, `Pull request #${prNumber} not found`);
-
-    const planPrompt = await Plan.toPrompt(plan);
-    return {
-      prompt: buildFixPrompt(planPrompt, prNumber, reviewVerdict, reviewSuggestions),
-      branch: pr.headBranch,
-    };
+      const planPrompt = await Plan.toPrompt(plan);
+      return {
+        prompt: buildFixPrompt(planPrompt, prNumber, reviewVerdict, reviewSuggestions),
+        branch: pr.headBranch,
+      };
+    });
   },
 );
 
@@ -115,22 +113,24 @@ export const dispatch = command(
     branch: z.string().optional(),
   }),
   async ({ organization, repoName, prompt, agents, ref, tags, branch }) => {
-    const results: { harness: string; status: string }[] = [];
+    return withRequestRepoActor({ organization, repoName }, async () => {
+      const results: { harness: string; status: string }[] = [];
 
-    for (const agent of agents) {
-      await AgentWorkflow.dispatch({
-        owner: organization,
-        repo: repoName,
-        agent: agent.harness,
-        prompt,
-        tags,
-        model: agent.model,
-        ref,
-        branch,
-      });
-      results.push({ harness: agent.harness, status: "dispatched" });
-    }
+      for (const agent of agents) {
+        await AgentWorkflow.dispatch({
+          owner: organization,
+          repo: repoName,
+          agent: agent.harness,
+          prompt,
+          tags,
+          model: agent.model,
+          ref,
+          branch,
+        });
+        results.push({ harness: agent.harness, status: "dispatched" });
+      }
 
-    return results;
+      return results;
+    });
   },
 );

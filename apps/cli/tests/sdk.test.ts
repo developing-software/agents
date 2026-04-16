@@ -3,10 +3,14 @@ import { app } from "@agents/functions/src/api/routes";
 import { Account } from "@agents/core/account";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
+import { User } from "@agents/core/user";
+import { Workspace } from "@agents/core/workspace";
 import { DevAgentSdk } from "@agents/sdk";
 import { createClient } from "@agents/sdk/client";
 
 let accountID: string;
+let workspaceID: string;
+let userID: string;
 let token: string;
 let appID: string;
 let tokenID: string;
@@ -14,11 +18,19 @@ let sdk: DevAgentSdk;
 
 beforeAll(async () => {
   accountID = await Account.create({});
-
-  const pat = await Actor.provide(
+  workspaceID = await Actor.provide(
     "account",
     { accountID, email: `test+${Date.now()}@example.com` },
-    () => Api.Personal.create(),
+    () => Workspace.create({ name: "SDK Test Workspace" }),
+  );
+  const user = await User.fromAccount({ accountID, workspaceID });
+  if (!user) throw new Error("Failed to create SDK test user");
+  userID = user.id;
+
+  const pat = await Actor.provide(
+    "user",
+    { accountID, workspaceID, userID, role: "admin" },
+    () => Api.Personal.create({}),
   );
   token = pat.token;
 

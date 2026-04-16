@@ -10,7 +10,7 @@ declare global {
     }
 
     interface Locals {
-      actor: Actor.Account | Actor.Public;
+      actor: Actor.Account | Actor.User | Actor.Public;
       workspaceActors: Map<string, Actor.User>;
     }
   }

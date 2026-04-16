@@ -124,7 +124,7 @@ export namespace TokenApi {
       }),
       authRequired,
       async (c) => {
-        const token = await Api.Personal.create();
+        const token = await Api.Personal.create({});
         return c.json(token, 200);
       },
     )

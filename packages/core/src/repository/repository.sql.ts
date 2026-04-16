@@ -1,14 +1,14 @@
-import { pgTable as table, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { accountTable } from "../account/account.sql";
+import { index, pgTable as table, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { id, timestamps, ulid } from "../drizzle/types";
 import { installationsTable } from "../git/installation.sql";
+import { workspaceTable } from "../workspace/workspace.sql";
 
 export const repositoryTable = table(
   "repository",
   {
     ...id,
     ...timestamps,
-    accountId: ulid("account_id").references(() => accountTable.id),
+    workspaceId: ulid("workspace_id").references(() => workspaceTable.id),
     source: varchar("source", { length: 32 }).notNull(),
     sourceId: varchar("source_id", { length: 255 }).notNull(),
     installationId: ulid("installation_id")
@@ -19,5 +19,8 @@ export const repositoryTable = table(
     fullName: varchar("full_name", { length: 512 }).notNull(),
     defaultBranch: varchar("default_branch", { length: 255 }),
   },
-  (t) => [uniqueIndex("repository_source_source_id_key").on(t.source, t.sourceId)],
+  (t) => [
+    uniqueIndex("repository_source_source_id_key").on(t.source, t.sourceId),
+    index("repository_workspace_idx").on(t.workspaceId),
+  ],
 );

@@ -3,14 +3,14 @@ import { redirect, fail } from "@sveltejs/kit";
 import { Auth } from "@agents/core/auth";
 
 export const load: PageServerLoad = async ({ locals }) => {
-  if (locals.actor.type !== "account") redirect(302, "/login");
+  if (locals.actor.type === "public") redirect(302, "/login");
   const providers = await Auth.listByAccount(locals.actor.properties.accountID);
   return { providers };
 };
 
 export const actions: Actions = {
   unlink: async ({ request, locals }) => {
-    if (locals.actor.type !== "account") redirect(302, "/login");
+    if (locals.actor.type === "public") redirect(302, "/login");
     const form = await request.formData();
     const id = form.get("id");
     if (typeof id !== "string" || !id) return fail(400, { message: "missing id" });

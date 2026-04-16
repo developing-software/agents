@@ -2,6 +2,8 @@ import { type MiddlewareHandler } from "hono";
 import { VisibleError, ErrorCodes } from "@agents/core/error";
 import { Actor } from "@agents/core/actor";
 import { Api } from "@agents/core/api/api";
+import { User } from "@agents/core/user";
+import { sha256 } from "@agents/core/util/crypto";
 import { subjects } from "../auth/subject";
 import { authClient } from "./auth";
 
@@ -21,16 +23,37 @@ export const auth: MiddlewareHandler = async (c, next) => {
     const bearerToken = match[1];
 
     if (bearerToken.startsWith("tok_")) {
-      const token = await Api.Personal.fromToken(bearerToken);
+      const token = await Api.Personal.fromTokenHash(await sha256(bearerToken));
       if (!token)
         throw new VisibleError(
           "authentication",
           ErrorCodes.Authentication.INVALID_TOKEN,
           "Invalid personal access token",
         );
+      if (token.expiresAt && token.expiresAt < new Date())
+        throw new VisibleError(
+          "authentication",
+          ErrorCodes.Authentication.INVALID_TOKEN,
+          "Personal access token expired",
+        );
+
+      const user = await User.fromID(token.userID);
+      if (!user?.accountID)
+        throw new VisibleError(
+          "authentication",
+          ErrorCodes.Authentication.INVALID_TOKEN,
+          "Token user no longer exists",
+        );
+
+      void Api.Personal.touchLastUsed(token.id);
       return Actor.provide(
-        "token",
-        { accountID: token.accountID, tokenID: token.id },
+        "user",
+        {
+          accountID: user.accountID,
+          workspaceID: user.workspaceID,
+          userID: user.id,
+          role: user.role,
+        },
         next,
       );
     }

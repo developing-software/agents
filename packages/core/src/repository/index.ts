@@ -1,11 +1,14 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { Actor } from "../actor";
 import { Common } from "../common";
 import { createTransaction, useTransaction } from "../drizzle/transaction";
+import { ErrorCodes, VisibleError } from "../error";
 import { Examples } from "../examples";
 import { installationsTable } from "../git/installation.sql";
 import { Identifier } from "../identifier";
+import { userTable } from "../user/user.sql";
+import { fn } from "../util/fn";
 import { Log } from "../util/log";
 import { repositoryTable } from "./repository.sql";
 
@@ -62,8 +65,12 @@ export namespace Repository {
 
   export type Info = z.infer<typeof Info>;
 
+  export const Accessible = Info.extend({
+    workspaceID: z.string(),
+  });
+  export type Accessible = z.infer<typeof Accessible>;
+
   export interface UpsertInput {
-    accountId?: string;
     source: Source;
     sourceId: string;
     installationId: string;
@@ -106,8 +113,39 @@ export namespace Repository {
     };
   }
 
+  function serializeAccessible(row: {
+    id: string;
+    source: string;
+    sourceId: string;
+    owner: string;
+    repo: string;
+    fullName: string;
+    defaultBranch: string | null;
+    installationRef: string | null;
+    workspaceID: string;
+  }): Accessible {
+    return {
+      ...serialize(row),
+      workspaceID: row.workspaceID,
+    };
+  }
+
   export async function upsert(input: UpsertInput) {
     return createTransaction(async (tx) => {
+      const installation = await tx
+        .select({ workspaceId: installationsTable.workspaceId })
+        .from(installationsTable)
+        .where(eq(installationsTable.id, input.installationId))
+        .then((rows) => rows[0] ?? null);
+
+      if (!installation) {
+        throw new VisibleError(
+          "not_found",
+          ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+          "Installation not found",
+        );
+      }
+
       const existing = await tx
         .select({ id: repositoryTable.id })
         .from(repositoryTable)
@@ -123,7 +161,7 @@ export namespace Repository {
         await tx
           .update(repositoryTable)
           .set({
-            accountId: input.accountId,
+            workspaceId: installation.workspaceId ?? null,
             source: input.source,
             sourceId: input.sourceId,
             installationId: input.installationId,
@@ -146,7 +184,7 @@ export namespace Repository {
       });
       await tx.insert(repositoryTable).values({
         id,
-        accountId: input.accountId,
+        workspaceId: installation.workspaceId ?? null,
         source: input.source,
         sourceId: input.sourceId,
         installationId: input.installationId,
@@ -204,7 +242,7 @@ export namespace Repository {
   }
 
   export async function findByID(id: string): Promise<Info | null> {
-    const accountId = Actor.accountID();
+    const workspaceId = Actor.workspaceID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
@@ -213,7 +251,7 @@ export namespace Repository {
         .where(
           and(
             eq(repositoryTable.id, id),
-            eq(repositoryTable.accountId, accountId),
+            eq(repositoryTable.workspaceId, workspaceId),
             isNull(repositoryTable.timeDeleted),
           ),
         )
@@ -222,7 +260,7 @@ export namespace Repository {
   }
 
   export async function findByFullName(fullName: string): Promise<Info | null> {
-    const accountId = Actor.accountID();
+    const workspaceId = Actor.workspaceID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
@@ -231,7 +269,7 @@ export namespace Repository {
         .where(
           and(
             eq(repositoryTable.fullName, fullName),
-            eq(repositoryTable.accountId, accountId),
+            eq(repositoryTable.workspaceId, workspaceId),
             isNull(repositoryTable.timeDeleted),
           ),
         )
@@ -251,19 +289,24 @@ export namespace Repository {
   }
 
   export async function list(): Promise<Info[]> {
-    const accountId = Actor.accountID();
+    const workspaceId = Actor.workspaceID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
         .from(repositoryTable)
         .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
-        .where(and(eq(repositoryTable.accountId, accountId), isNull(repositoryTable.timeDeleted)))
+        .where(
+          and(
+            eq(repositoryTable.workspaceId, workspaceId),
+            isNull(repositoryTable.timeDeleted),
+          ),
+        )
         .then((rows) => rows.map(serialize)),
     );
   }
 
   export async function listByOwner(owner: string): Promise<Info[]> {
-    const accountId = Actor.accountID();
+    const workspaceId = Actor.workspaceID();
     return useTransaction(async (tx) =>
       tx
         .select(infoSelection)
@@ -272,11 +315,100 @@ export namespace Repository {
         .where(
           and(
             eq(repositoryTable.owner, owner),
-            eq(repositoryTable.accountId, accountId),
+            eq(repositoryTable.workspaceId, workspaceId),
             isNull(repositoryTable.timeDeleted),
           ),
         )
         .then((rows) => rows.map(serialize)),
     );
+  }
+
+  export const findAccessibleByFullName = fn(
+    z.object({
+      accountIDs: z.array(z.string()).min(1),
+      source: Source,
+      fullName: z.string(),
+    }),
+    async ({ accountIDs, source, fullName }): Promise<Accessible | null> => {
+      const rows = await useTransaction(async (tx) =>
+        tx
+          .select({
+            ...infoSelection,
+            workspaceID: repositoryTable.workspaceId,
+          })
+          .from(repositoryTable)
+          .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
+          .innerJoin(userTable, eq(userTable.workspaceID, repositoryTable.workspaceId))
+          .where(
+            and(
+              eq(repositoryTable.source, source),
+              eq(repositoryTable.fullName, fullName),
+              isNotNull(repositoryTable.workspaceId),
+              inArray(userTable.accountID, accountIDs),
+              isNull(userTable.timeDeleted),
+              isNull(repositoryTable.timeDeleted),
+            ),
+          ),
+      );
+
+      const unique = dedupeAccessible(rows);
+      if (unique.length === 0) return null;
+      if (unique.length > 1) {
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Repository is linked to multiple accessible workspaces",
+        );
+      }
+      return serializeAccessible(unique[0]!);
+    },
+  );
+
+  export const listAccessible = fn(
+    z.object({
+      accountIDs: z.array(z.string()).min(1),
+    }),
+    async ({ accountIDs }): Promise<Accessible[]> => {
+      const rows = await useTransaction(async (tx) =>
+        tx
+          .select({
+            ...infoSelection,
+            workspaceID: repositoryTable.workspaceId,
+          })
+          .from(repositoryTable)
+          .innerJoin(installationsTable, eq(repositoryTable.installationId, installationsTable.id))
+          .innerJoin(userTable, eq(userTable.workspaceID, repositoryTable.workspaceId))
+          .where(
+            and(
+              isNotNull(repositoryTable.workspaceId),
+              inArray(userTable.accountID, accountIDs),
+              isNull(userTable.timeDeleted),
+              isNull(repositoryTable.timeDeleted),
+            ),
+          ),
+      );
+      return dedupeAccessible(rows).map(serializeAccessible);
+    },
+  );
+
+  function dedupeAccessible(
+    rows: Array<{
+      id: string;
+      source: string;
+      sourceId: string;
+      owner: string;
+      repo: string;
+      fullName: string;
+      defaultBranch: string | null;
+      installationRef: string | null;
+      workspaceID: string | null;
+    }>,
+  ) {
+    const unique = new Map<string, (typeof rows)[number]>();
+    for (const row of rows) {
+      if (!row.workspaceID) continue;
+      unique.set(`${row.id}:${row.workspaceID}`, row);
+    }
+    return [...unique.values()] as Array<(typeof rows)[number] & { workspaceID: string }>;
   }
 }

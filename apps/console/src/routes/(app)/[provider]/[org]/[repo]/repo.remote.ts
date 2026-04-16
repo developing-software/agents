@@ -1,18 +1,18 @@
-import { command, query } from "$app/server";
+import { command, query, getRequestEvent } from "$app/server";
 import { z } from "zod";
 import { AgentWorkflow } from "@agents/core/agent";
 import { Api } from "@agents/core/api/api";
-import { Repository } from "@agents/core/repository";
 import { getProvider } from "@agents/core/git";
 import { error } from "@sveltejs/kit";
+import { withRequestRepoActor } from "$lib/repository.server";
 
 async function resolveRepo(provider: string, organization: string, repo: string) {
-  const found = await Repository.findByFullName(`${organization}/${repo}`);
-  if (!found) error(404, `Repository ${organization}/${repo} not found`);
-  if (found.source !== provider) {
-    error(404, `Repository ${organization}/${repo} does not belong to ${provider}`);
-  }
-  return found;
+  return withRequestRepoActor({ provider, organization, repoName: repo }, async (found) => {
+    if (found.source !== provider) {
+      error(404, `Repository ${organization}/${repo} does not belong to ${provider}`);
+    }
+    return found;
+  });
 }
 
 export const dispatchAgent = command(
@@ -28,16 +28,17 @@ export const dispatchAgent = command(
     ref: z.string().default("dev"),
   }),
   async ({ provider, organization, repo, agent, prompt, issueNumber, tags, model, ref }) => {
-    await resolveRepo(provider, organization, repo);
-    await AgentWorkflow.dispatch({
-      owner: organization,
-      repo,
-      agent,
-      prompt,
-      issueNumber,
-      tags,
-      model,
-      ref,
+    return resolveRepo(provider, organization, repo).then(async () => {
+      await AgentWorkflow.dispatch({
+        owner: organization,
+        repo,
+        agent,
+        prompt,
+        issueNumber,
+        tags,
+        model,
+        ref,
+      });
     });
   },
 );
@@ -62,7 +63,15 @@ export const dispatchAction = command(
 );
 
 export const generateToken = command(z.object({}), async () => {
-  return Api.Personal.create();
+  const event = getRequestEvent();
+  return withRequestRepoActor(
+    {
+      provider: event.params.provider,
+      organization: event.params.org ?? error(500, "Missing org parameter"),
+      repoName: event.params.repo ?? error(500, "Missing repo parameter"),
+    },
+    async () => Api.Personal.create({}),
+  );
 });
 
 export const listWorkflowRuns = query(
