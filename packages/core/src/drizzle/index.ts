@@ -111,6 +111,10 @@ export namespace Database {
     await Promise.all(effects.map((effect) => effect()));
     return result as T;
   }
+
+  export async function fn<Input, T>(callback: (input: Input, trx: TxOrDb) => Promise<T>) {
+    return (input: Input) => use(async (tx) => callback(input, tx))
+  }
 }
 
 /** Wrap a request handler — worker calls this once per request */
