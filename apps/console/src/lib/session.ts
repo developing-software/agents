@@ -23,10 +23,10 @@ function b64urlEncode(bytes: Uint8Array): string {
   return btoa(str).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
-function b64urlDecode(s: string): Uint8Array {
+function b64urlDecode(s: string): Uint8Array<ArrayBuffer> {
   const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
   const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/") + pad);
-  const out = new Uint8Array(bin.length);
+  const out = new Uint8Array(new ArrayBuffer(bin.length));
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
@@ -51,13 +51,7 @@ async function sign(data: string): Promise<string> {
 
 async function verify(data: string, sig: string): Promise<boolean> {
   const key = await hmacKey();
-  const sigBytes = b64urlDecode(sig);
-  return crypto.subtle.verify(
-    "HMAC",
-    key,
-    sigBytes.buffer.slice(sigBytes.byteOffset, sigBytes.byteOffset + sigBytes.byteLength),
-    encoder.encode(data),
-  );
+  return crypto.subtle.verify("HMAC", key, b64urlDecode(sig), encoder.encode(data));
 }
 
 const EMPTY: AuthSession = { accounts: {} };
