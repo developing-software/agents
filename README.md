@@ -333,3 +333,11 @@ bun run lint         # lint (oxlint)
 bun run typecheck    # type check
 bun test             # run tests
 ```
+
+## Agent Information
+
+| Field | Value |
+|-------|-------|
+| Agent | Claude (claude-sonnet-4-6) |
+| Modified | 2026-04-16T00:00:00Z |
+| Plan | Agent Self-Identification in README |
