@@ -1,4 +1,4 @@
-import { AgentEvent } from "@agents/core/events/agent";
+import { resolveAgent } from "@agents/core/events/agent/resolve";
 import type { ExtractorInputs, ExtractorResult } from "../types";
 import { extractClaude } from "./claude";
 import { extractCodex } from "./codex";
@@ -11,7 +11,7 @@ const extractors: Record<string, (inputs: ExtractorInputs) => Promise<ExtractorR
 };
 
 export function getExtractor(agent: string): (inputs: ExtractorInputs) => Promise<ExtractorResult> {
-  const canonical = AgentEvent.resolveAgent(agent);
+  const canonical = resolveAgent(agent);
   const extractor = extractors[canonical];
   if (!extractor) {
     throw new Error(`Unknown agent: "${agent}". Supported: ${Object.keys(extractors).join(", ")}`);

@@ -33643,6 +33643,9 @@ var Identifier;
 ((Identifier) => {
   Identifier.prefixes = {
     user: "usr",
+    account: "acc",
+    workspace: "wsp",
+    auth: "aut",
     event: "evt",
     plan: "pln",
     apiPersonal: "pat",
@@ -33650,7 +33653,7 @@ var Identifier;
     apiSecret: "sec",
     link: "lnk",
     repository: "rep",
-    githubInstallation: "gin",
+    installation: "ins",
     githubRepo: "grp",
     githubEvent: "gev"
   };

@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import { createApiClient } from "@agents/actions-core";
-import { AgentEvent } from "@agents/core/events/agent";
+import { resolveModel } from "@agents/core/events/agent/resolve";
 import type { AgentMetrics, AgentPricing } from "./types";
 
 export async function enrichWithPricing(
@@ -15,7 +15,7 @@ export async function enrichWithPricing(
   const apiUrl = process.env.DEV_AGENTS_API_URL || "https://api.agents.developing.company/api";
 
   // Extract provider from model string (e.g. "anthropic/claude-sonnet-4-20250514")
-  const resolved = AgentEvent.resolveModel(metrics.model);
+  const resolved = resolveModel(metrics.model);
 
   try {
     const sdk = createApiClient(token, apiUrl);
