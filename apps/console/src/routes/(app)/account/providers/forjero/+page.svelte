@@ -5,7 +5,7 @@
   let token = $state("");
   let webhookSecret = $state("");
   let submitting = $state(false);
-  let result = $state<{ ok: true; login: string; synced: number } | null>(null);
+  let result = $state<{ ok: boolean; login: string; synced: number } | null>(null);
   let errorMessage = $state<string | null>(null);
 
   async function handleSubmit(event: SubmitEvent) {
