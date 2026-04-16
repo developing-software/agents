@@ -35,7 +35,7 @@ Use **Bun** everywhere.
 
 ```ts
 import { Actor } from "@agents/core/actor";
-const userId= Actor.userID();
+const userId = Actor.userID();
 ```
 
 **Errors** — use `VisibleError` for client-safe errors:

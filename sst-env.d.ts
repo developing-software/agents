@@ -28,6 +28,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "GitHubAppSlug": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "GitHubClientId": {
       "type": "sst.sst.Secret"
       "value": string
@@ -45,6 +49,10 @@ declare module "sst" {
       "value": string
     }
     "SenderEmailDomain": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "SessionSecret": {
       "type": "sst.sst.Secret"
       "value": string
     }

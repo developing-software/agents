@@ -1,5 +1,6 @@
 import { ulid } from "ulid";
 import { z } from "zod";
+import { ErrorCodes, VisibleError } from "./error";
 
 export namespace Identifier {
   export const prefixes = {
@@ -24,7 +25,11 @@ export namespace Identifier {
   export function create(prefix: Prefix, given?: string): string {
     if (given) {
       if (given.startsWith(prefixes[prefix])) return given;
-      throw new Error(`ID ${given} does not start with ${prefixes[prefix]}`);
+      throw new VisibleError(
+        "validation",
+        ErrorCodes.Validation.INVALID_FORMAT,
+        `ID ${given} does not start with ${prefixes[prefix]}`,
+      );
     }
     return [prefixes[prefix], ulid()].join("_");
   }

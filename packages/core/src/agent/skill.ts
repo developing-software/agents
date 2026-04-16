@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ErrorCodes, VisibleError } from "../error";
 import { getProvider } from "../git";
 import type { ProviderType } from "../git/provider/interface";
 import { parseFrontmatter } from "../util/yaml";
@@ -105,7 +106,11 @@ export namespace AgentSkill {
           source.ref,
         );
         if (!sourceFile)
-          throw new Error(`Skill not found at ${source.owner}/${source.repo}/${source.path}`);
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            `Skill not found at ${source.owner}/${source.repo}/${source.path}`,
+          );
         content = sourceFile.content;
         name = source.path.split("/").slice(-2, -1)[0] ?? "skill";
         break;
@@ -136,7 +141,12 @@ export namespace AgentSkill {
       repo.fullName,
       `.agents/skills/${skillId}/SKILL.md`,
     );
-    if (!file) throw new Error(`Skill '${skillId}' not found in .agents/skills/`);
+    if (!file)
+      throw new VisibleError(
+        "not_found",
+        ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+        `Skill '${skillId}' not found in .agents/skills/`,
+      );
 
     await provider.content.writeFile(repo.fullName, {
       path: `.claude/skills/${skillId}/SKILL.md`,
