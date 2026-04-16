@@ -3,11 +3,12 @@
   import Drawer from '$lib/ui/Drawer.svelte';
   import { dispatch as dispatchAgents, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
   import { updatePlan } from '$lib/agents/plans/plans.remote';
-  import BranchSelect from '$lib/ui/BranchSelect.svelte';
+  import BranchSelect from '$lib/git/components/BranchSelect.svelte';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
   import ModelSelector from './ModelSelector.svelte';
   import { SvelteSet } from 'svelte/reactivity';
+  import { repoContext } from '$lib/git/context.svelte';
 
   export type OpenParams = {
     title?: string;
@@ -19,14 +20,12 @@
   };
 
   let {
-    organization,
-    repoName,
     ondispatched,
   }: {
-    organization: string;
-    repoName: string;
     ondispatched?: () => void;
   } = $props();
+
+  const { organization, repoName } = repoContext.get();
 
   let isOpen = $state(false);
   let drawerTitle = $state('Dispatch');
@@ -205,7 +204,7 @@
               <div class="section-label">Configuration</div>
               <div class="config-grid">
                 <label class="config-label" for="ref-input">Branch</label>
-                <BranchSelect {organization} {repoName} bind:value={ref} />
+                <BranchSelect bind:value={ref} />
               </div>
             </section>
           {/if}

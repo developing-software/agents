@@ -1,7 +1,6 @@
-import { GithubIssue } from "../github/repo/issue";
-import { GithubWorkflow } from "../github/repo/workflow";
-import { Repository } from "../repository/index";
 import { VisibleError } from "../error";
+import { getProvider } from "../git";
+import { Repository } from "../repository/index";
 
 export namespace AgentWorkflow {
   export const Agents = ["claude", "opencode", "codex"] as const;
@@ -72,6 +71,8 @@ export namespace AgentWorkflow {
       throw new VisibleError("not_found", "resource_not_found", `Repository ${fullName} not found`);
     }
 
+    const provider = getProvider(repository.source);
+
     let prompt = input.prompt;
     const tags = input.tags ? [...input.tags] : [];
 
@@ -79,8 +80,15 @@ export namespace AgentWorkflow {
       tags.push(`gh:issue:${input.issueNumber}`);
 
       if (!prompt) {
-        const issue = await GithubIssue.get(repository, input.issueNumber);
-        prompt = buildIssuePrompt(issue.title, issue.body ?? null);
+        const issue = await provider.issues.get(repository.fullName, input.issueNumber);
+        if (!issue) {
+          throw new VisibleError(
+            "not_found",
+            "resource_not_found",
+            `Issue #${input.issueNumber} not found on ${repository.fullName}`,
+          );
+        }
+        prompt = buildIssuePrompt(issue.title, issue.body);
       }
     }
 
@@ -93,6 +101,10 @@ export namespace AgentWorkflow {
     if (input.branch) workflowInputs.branch = input.branch;
 
     const ref = input.ref ?? "dev";
-    await GithubWorkflow.dispatch(repository, workflowFile, ref, workflowInputs);
+    await provider.actions.dispatch(repository.fullName, {
+      action: workflowFile,
+      ref,
+      inputs: workflowInputs,
+    });
   }
 }

@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { AgentEvent } from "@agents/core/events/agent";
+import { resolveModel } from "@agents/core/events/agent/resolve";
 import type { ExtractorInputs } from "./types";
 import { getExtractor } from "./extractors/index";
 import { enrichWithPricing } from "./pricing";
@@ -45,7 +45,7 @@ async function run() {
 
     // Normalize provider/model format (e.g. "anthropic/claude-sonnet-4-20250514" → "claude-sonnet-4-20250514")
     if (result.metrics?.model) {
-      result.metrics.model = AgentEvent.resolveModel(result.metrics.model).model;
+      result.metrics.model = resolveModel(result.metrics.model).model;
     }
 
     const pricing = await enrichWithPricing(result.metrics, inputs.provider);

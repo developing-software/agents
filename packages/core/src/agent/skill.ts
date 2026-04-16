@@ -1,12 +1,12 @@
-import { GithubContent } from "../github/repo/content";
-import { parseFrontmatter } from "../util/yaml";
 import { z } from "zod";
+import { getProvider } from "../git";
+import type { ProviderType } from "../git/provider/interface";
+import { parseFrontmatter } from "../util/yaml";
 
 export namespace AgentSkill {
   export interface RepoRef {
-    installationId: number;
-    owner: string;
-    repo: string;
+    source: ProviderType | string;
+    fullName: string;
   }
 
   export const SkillInfo = z.object({
@@ -32,9 +32,6 @@ export namespace AgentSkill {
   ]);
   export type SkillSource = z.infer<typeof SkillSource>;
 
-  /**
-   * Parse a SKILL.md file (YAML frontmatter + markdown body).
-   */
   export function parseSkillFile(
     content: string,
     id: string,
@@ -51,50 +48,43 @@ export namespace AgentSkill {
     };
   }
 
-  /**
-   * List skills in .agents/skills/ for a repo.
-   */
   export async function listAgentsSkills(repo: RepoRef, ref?: string): Promise<SkillInfo[]> {
-    const entries = await GithubContent.listDir(repo, ".agents/skills", ref);
+    const content = getProvider(repo.source).content;
+    const entries = await content.listDir(repo.fullName, ".agents/skills", ref);
     if (!entries) return [];
 
     const skills: SkillInfo[] = [];
     for (const entry of entries) {
       if (entry.type !== "dir") continue;
-      const content = await GithubContent.readFile(repo, `${entry.path}/SKILL.md`, ref);
-      if (!content) continue;
-      skills.push(parseSkillFile(content, entry.name, ".agents"));
+      const file = await content.readFile(repo.fullName, `${entry.path}/SKILL.md`, ref);
+      if (!file) continue;
+      skills.push(parseSkillFile(file.content, entry.name, ".agents"));
     }
     return skills;
   }
 
-  /**
-   * List skills in .claude/skills/ for a repo.
-   */
   export async function listClaudeSkills(repo: RepoRef, ref?: string): Promise<SkillInfo[]> {
-    const entries = await GithubContent.listDir(repo, ".claude/skills", ref);
+    const content = getProvider(repo.source).content;
+    const entries = await content.listDir(repo.fullName, ".claude/skills", ref);
     if (!entries) return [];
 
     const skills: SkillInfo[] = [];
     for (const entry of entries) {
       if (entry.type !== "dir") continue;
-      const content = await GithubContent.readFile(repo, `${entry.path}/SKILL.md`, ref);
-      if (!content) continue;
-      skills.push(parseSkillFile(content, entry.name, ".claude"));
+      const file = await content.readFile(repo.fullName, `${entry.path}/SKILL.md`, ref);
+      if (!file) continue;
+      skills.push(parseSkillFile(file.content, entry.name, ".claude"));
     }
     return skills;
   }
 
-  /**
-   * Install a skill from a source into the target folder.
-   * Creates the skill directory and SKILL.md via GitHub API commit.
-   */
   export async function install(
     repo: RepoRef,
     source: SkillSource,
     target: ".agents" | ".claude",
     branch?: string,
   ): Promise<void> {
+    const provider = getProvider(repo.source);
     let name: string;
     let content: string;
 
@@ -104,20 +94,19 @@ export namespace AgentSkill {
         if (!response.ok)
           throw new Error(`Failed to fetch skill from ${source.url}: ${response.status}`);
         content = await response.text();
-        // derive name from URL path
         const urlParts = source.url.split("/");
         name = urlParts[urlParts.length - 2] ?? "skill";
         break;
       }
       case "repo": {
-        const sourceContent = await GithubContent.readFile(
-          { installationId: repo.installationId, owner: source.owner, repo: source.repo },
+        const sourceFile = await provider.content.readFile(
+          `${source.owner}/${source.repo}`,
           source.path,
           source.ref,
         );
-        if (!sourceContent)
+        if (!sourceFile)
           throw new Error(`Skill not found at ${source.owner}/${source.repo}/${source.path}`);
-        content = sourceContent;
+        content = sourceFile.content;
         name = source.path.split("/").slice(-2, -1)[0] ?? "skill";
         break;
       }
@@ -129,51 +118,52 @@ export namespace AgentSkill {
     }
 
     const targetPath = `${target}/skills/${name}/SKILL.md`;
-    await GithubContent.writeFile(repo, targetPath, content, `Add skill: ${name}`, branch);
+    await provider.content.writeFile(repo.fullName, {
+      path: targetPath,
+      content,
+      message: `Add skill: ${name}`,
+      branch,
+    });
   }
 
-  /**
-   * Link a skill from .agents/skills/ to .claude/skills/ by copying the SKILL.md.
-   */
   export async function linkToClaude(
     repo: RepoRef,
     skillId: string,
     branch?: string,
   ): Promise<void> {
-    const content = await GithubContent.readFile(repo, `.agents/skills/${skillId}/SKILL.md`);
-    if (!content) throw new Error(`Skill '${skillId}' not found in .agents/skills/`);
-
-    await GithubContent.writeFile(
-      repo,
-      `.claude/skills/${skillId}/SKILL.md`,
-      content,
-      `Link skill to .claude: ${skillId}`,
-      branch,
+    const provider = getProvider(repo.source);
+    const file = await provider.content.readFile(
+      repo.fullName,
+      `.agents/skills/${skillId}/SKILL.md`,
     );
+    if (!file) throw new Error(`Skill '${skillId}' not found in .agents/skills/`);
+
+    await provider.content.writeFile(repo.fullName, {
+      path: `.claude/skills/${skillId}/SKILL.md`,
+      content: file.content,
+      message: `Link skill to .claude: ${skillId}`,
+      branch,
+    });
   }
 
-  /**
-   * Remove a skill from the target folder.
-   */
   export async function remove(
     repo: RepoRef,
     skillId: string,
     target: ".agents" | ".claude",
     branch?: string,
   ): Promise<void> {
-    const dir = await GithubContent.listDir(repo, `${target}/skills/${skillId}`);
+    const provider = getProvider(repo.source);
+    const dir = await provider.content.listDir(repo.fullName, `${target}/skills/${skillId}`);
     if (!dir) return;
 
-    // delete all files in the skill directory
     for (const entry of dir) {
       if (entry.type === "file") {
-        await GithubContent.deleteFile(
-          repo,
-          entry.path,
-          `Remove skill: ${skillId}`,
-          entry.sha,
+        await provider.content.deleteFile(repo.fullName, {
+          path: entry.path,
+          message: `Remove skill: ${skillId}`,
+          sha: entry.sha,
           branch,
-        );
+        });
       }
     }
   }

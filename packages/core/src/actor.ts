@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Context } from "./context";
 import { useTransaction } from "./drizzle/transaction";
 import { UserFlags, userTable } from "./user/user.sql";
@@ -6,46 +6,67 @@ import { ErrorCodes, VisibleError } from "./error";
 import { Log } from "./util/log";
 
 export namespace Actor {
+  export interface Account {
+    type: "account";
+    properties: {
+      accountID: string;
+      email: string;
+    };
+  }
+
   export interface User {
     type: "user";
     properties: {
+      accountID: string;
+      workspaceID: string;
       userID: string;
-      clientID: string;
+      role: "admin" | "member";
     };
   }
 
   export interface System {
     type: "system";
     properties: {
-      userID: string;
-    };
-  }
-
-  export interface Token {
-    type: "token";
-    properties: {
-      userID: string;
-      tokenID: string;
+      workspaceID: string;
     };
   }
 
   export interface Public {
     type: "public";
-    properties: {};
+    properties: Record<string, never>;
   }
 
-  export type Info = User | Public | Token | System;
+  export type Info = Account | User | Public | System;
 
   export const ctx = Context.create<Info>();
-  // const log = Log.create().tag("namespace", "actor");
 
-  export function userID() {
+  export function accountID() {
     const actor = ctx.use();
-    if ("userID" in actor.properties) return actor.properties.userID;
+    if ("accountID" in actor.properties) return actor.properties.accountID;
     throw new VisibleError(
       "authentication",
       ErrorCodes.Authentication.UNAUTHORIZED,
       `You don't have permission to access this resource.`,
+    );
+  }
+
+  export function userID() {
+    const actor = ctx.use();
+    if (actor.type === "user") return actor.properties.userID;
+    throw new VisibleError(
+      "authentication",
+      ErrorCodes.Authentication.UNAUTHORIZED,
+      `You don't have permission to access this resource.`,
+    );
+  }
+
+  export function workspaceID() {
+    const actor = ctx.use();
+    if ("workspaceID" in actor.properties) return actor.properties.workspaceID;
+    throw new VisibleError(
+      "authentication",
+      ErrorCodes.Authentication.UNAUTHORIZED,
+      `No workspace in actor.`,
     );
   }
 
@@ -54,7 +75,7 @@ export namespace Actor {
       tx
         .select({ flags: userTable.flags })
         .from(userTable)
-        .where(eq(userTable.id, userID()))
+        .where(and(eq(userTable.id, userID()), eq(userTable.workspaceID, workspaceID())))
         .then((rows) => {
           const flags = rows[0]?.flags;
           if (!flags || !flags[flag])
@@ -72,7 +93,7 @@ export namespace Actor {
       const flags = await tx
         .select({ flags: userTable.flags })
         .from(userTable)
-        .where(eq(userTable.id, userID()))
+        .where(and(eq(userTable.id, userID()), eq(userTable.workspaceID, workspaceID())))
         .then((rows) => rows[0]?.flags);
 
       if (!flags) {
@@ -110,14 +131,10 @@ export namespace Actor {
     properties: Extract<Info, { type: T }>["properties"],
     fn: Next,
   ): ReturnType<Next> {
-    return ctx.provide({ type, properties } as any, () =>
-      Log.provide(
-        {
-          actor: type,
-          ...properties,
-        },
-        fn,
-      ),
-    );
+    return ctx.provide({ type, properties } as any, () => {
+      const logProps = { ...properties } as Record<string, unknown>;
+      delete logProps.email;
+      return Log.provide({ actor: type, ...logProps }, fn);
+    });
   }
 }

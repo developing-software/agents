@@ -3,14 +3,9 @@
   import Section from '../Section.svelte';
   import SummaryView from './SummaryView.svelte';
   import { getEventSummary, invalidateSummaryCache } from './agent-completed.remote';
+  import { repoContext } from '$lib/git/context.svelte';
 
-  let {
-    organization,
-    repoName,
-  }: {
-    organization: string;
-    repoName: string;
-  } = $props();
+  const { organization, repoName } = repoContext.get();
 
   let isRefreshing = $state(false);
 

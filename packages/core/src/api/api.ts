@@ -4,12 +4,11 @@ import { and, eq, isNull } from "../drizzle";
 import { apiClientTable, apiPersonalTokenTable } from "./api.sql";
 import { Identifier } from "../identifier";
 import { Actor } from "../actor";
-import { randomBytes } from "crypto";
-// import { Resource } from "sst";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { useTransaction } from "../drizzle/transaction";
 import { ErrorCodes, VisibleError } from "../error";
+import { randomHex, sha256 } from "../util/crypto";
 
 export namespace Api {
   export namespace Client {
@@ -54,7 +53,7 @@ export namespace Api {
             secret,
             name: input.name,
             redirectURI: input.redirectURI,
-            userID: Actor.userID(),
+            accountID: Actor.accountID(),
           }),
         );
         return {
@@ -90,7 +89,12 @@ export namespace Api {
         tx
           .select()
           .from(apiClientTable)
-          .where(and(eq(apiClientTable.userID, Actor.userID()), isNull(apiClientTable.timeDeleted)))
+          .where(
+            and(
+              eq(apiClientTable.accountID, Actor.accountID()),
+              isNull(apiClientTable.timeDeleted),
+            ),
+          )
           .then((rows) => rows.map(serialize)),
       );
     }
@@ -99,7 +103,7 @@ export namespace Api {
       useTransaction(async (tx) => {
         const response = await tx
           .delete(apiClientTable)
-          .where(and(eq(apiClientTable.id, input), eq(apiClientTable.userID, Actor.userID())))
+          .where(and(eq(apiClientTable.id, input), eq(apiClientTable.accountID, Actor.accountID())))
           .returning({ id: apiClientTable.id });
         if (response.length === 0) {
           throw new VisibleError(
@@ -131,7 +135,7 @@ export namespace Api {
         const rows = await tx
           .select()
           .from(apiClientTable)
-          .where(and(eq(apiClientTable.id, id), eq(apiClientTable.userID, Actor.userID())))
+          .where(and(eq(apiClientTable.id, id), eq(apiClientTable.accountID, Actor.accountID())))
           .limit(1);
         return rows.map(serialize).at(0);
       }),
@@ -139,11 +143,22 @@ export namespace Api {
   }
 
   export namespace Personal {
+    const CreateInput = z
+      .object({
+        name: z.string().min(1).default("Personal access token"),
+        expiresAt: z.string().datetime().optional(),
+      })
+      .default({ name: "Personal access token" });
+
     export const Info = z
       .object({
         id: z.string().meta({
           description: Common.IdDescription,
           example: Examples.Token.id,
+        }),
+        name: z.string().meta({
+          description: "The display name for the token.",
+          example: "CI token",
         }),
         created: z.string().datetime().meta({
           description: "The created time for the token.",
@@ -153,6 +168,8 @@ export namespace Api {
           description: "Personal access token (obfuscated).",
           example: Examples.Token.token,
         }),
+        lastUsedAt: z.string().datetime().nullable(),
+        expiresAt: z.string().datetime().nullable(),
       })
       .meta({
         ref: "Token",
@@ -162,16 +179,22 @@ export namespace Api {
 
     export type Info = z.infer<typeof Info>;
 
-    export async function create() {
+    export const create = fn(CreateInput, async (input) => {
       const id = Identifier.create("apiPersonal");
-      // const prefix = Resource.App.stage === "production" ? "live" : "test";
-      const prefix = process.env.NODE_ENV === "production" ? "live" : "test";
-      const token = `tok_${prefix}_` + randomBytes(10).toString("hex");
+      const env = process.env.NODE_ENV === "production" ? "live" : "test";
+      const body = randomHex(20);
+      const token = `tok_${env}_${body}`;
+      const prefix = `tok_${env}_${body.slice(0, 4)}_${body.slice(-4)}`;
+      const tokenHash = await sha256(token);
+
       await useTransaction((tx) =>
         tx.insert(apiPersonalTokenTable).values({
           id,
-          token,
           userID: Actor.userID(),
+          name: input.name,
+          token: tokenHash,
+          prefix,
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
         }),
       );
 
@@ -179,7 +202,7 @@ export namespace Api {
         id,
         token,
       };
-    }
+    });
 
     export const remove = fn(Info.shape.id, (input) =>
       useTransaction(async (tx) => {
@@ -217,17 +240,21 @@ export namespace Api {
       );
     }
 
-    function obfuscate(token: string) {
-      const [prefix, stage, id] = token.split("_");
-      const last4 = id?.slice(-4);
-      return `${prefix}_${stage}_******${last4}`;
+    function obfuscate(prefix: string) {
+      const parts = prefix.split("_");
+      if (parts.length < 4) return `${prefix}_******`;
+      const [tokenPrefix, stage, first4, last4] = parts;
+      return `${tokenPrefix}_${stage}_${first4}_******${last4}`;
     }
 
     function serialize(input: typeof apiPersonalTokenTable.$inferSelect): z.infer<typeof Info> {
       return {
         id: input.id,
+        name: input.name,
         created: input.timeCreated.toISOString(),
-        token: obfuscate(input.token),
+        token: obfuscate(input.prefix),
+        lastUsedAt: input.lastUsedAt?.toISOString() ?? null,
+        expiresAt: input.expiresAt?.toISOString() ?? null,
       };
     }
 
@@ -244,16 +271,28 @@ export namespace Api {
       }),
     );
 
-    export async function fromToken(token: string) {
+    export async function fromTokenHash(token: string) {
       return useTransaction((tx) =>
         tx
           .select({
             id: apiPersonalTokenTable.id,
             userID: apiPersonalTokenTable.userID,
+            expiresAt: apiPersonalTokenTable.expiresAt,
           })
           .from(apiPersonalTokenTable)
-          .where(eq(apiPersonalTokenTable.token, token))
+          .where(
+            and(eq(apiPersonalTokenTable.token, token), isNull(apiPersonalTokenTable.timeDeleted)),
+          )
           .then((rows) => rows.at(0)),
+      );
+    }
+
+    export async function touchLastUsed(id: string) {
+      return useTransaction((tx) =>
+        tx
+          .update(apiPersonalTokenTable)
+          .set({ lastUsedAt: new Date(), timeUpdated: new Date() })
+          .where(eq(apiPersonalTokenTable.id, id)),
       );
     }
   }

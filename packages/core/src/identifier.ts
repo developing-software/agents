@@ -4,6 +4,9 @@ import { z } from "zod";
 export namespace Identifier {
   export const prefixes = {
     user: "usr",
+    account: "acc",
+    workspace: "wsp",
+    auth: "aut",
     event: "evt",
     plan: "pln",
     apiPersonal: "pat",
@@ -11,7 +14,7 @@ export namespace Identifier {
     apiSecret: "sec",
     link: "lnk",
     repository: "rep",
-    githubInstallation: "gin",
+    installation: "ins",
     githubRepo: "grp",
     githubEvent: "gev",
   } as const;

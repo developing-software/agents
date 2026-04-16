@@ -1,7 +1,9 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
 import { Plan } from "@agents/core/events/plan";
-import { Repository } from "@agents/core/repository";
+import { error } from "@sveltejs/kit";
+import { getRequestEvent } from "$app/server";
+import { withRequestRepoActor } from "$lib/repository.server";
 import type { PlanStatus } from "./plan-helpers";
 
 export const listPlans = query(
@@ -9,11 +11,10 @@ export const listPlans = query(
     organization: z.string(),
     repoName: z.string(),
   }),
-  async ({ organization, repoName }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) return [];
-    return Plan.list({ source: "repository", sourceId: repo.id });
-  },
+  async ({ organization, repoName }) =>
+    withRequestRepoActor({ organization, repoName }, async (repo) =>
+      Plan.list({ source: "repository", sourceId: repo.id }),
+    ),
 );
 
 export const createPlan = command(
@@ -25,15 +26,26 @@ export const createPlan = command(
     repoId: z.string(),
   }),
   async ({ title, body, authorType, tags, repoId }) => {
-    const id = await Plan.create({
-      title,
-      body,
-      authorType,
-      tags,
-      source: "repository",
-      sourceId: repoId,
-    });
-    return { id };
+    const event = getRequestEvent();
+    return withRequestRepoActor(
+      {
+        organization: event.params.org ?? error(500, "Missing org parameter"),
+        repoName: event.params.repo ?? error(500, "Missing repo parameter"),
+        provider: event.params.provider,
+      },
+      async (repo) => {
+        if (repo.id !== repoId) error(404, "Repository not found");
+        const id = await Plan.create({
+          title,
+          body,
+          authorType,
+          tags,
+          source: "repository",
+          sourceId: repo.id,
+        });
+        return { id };
+      },
+    );
   },
 );
 

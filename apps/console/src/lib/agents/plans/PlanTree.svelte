@@ -1,6 +1,7 @@
 <script lang="ts">
   import { listTree } from '$lib/events/repository/repository.remote';
   import { relativeTime } from '$lib/agents/plans/plan-helpers';
+  import { repoContext } from '$lib/git/context.svelte';
 
   type TreeNode = {
     id: string;
@@ -13,13 +14,7 @@
     children: TreeNode[];
   };
 
-  let {
-    organization,
-    repoName,
-  }: {
-    organization: string;
-    repoName: string;
-  } = $props();
+  const { provider, organization, repoName } = repoContext.get();
 
   let retryCount = $state(0);
 
@@ -122,7 +117,7 @@
           {/if}
           <span class="dot" style="background:{dotColor(node.type)};"></span>
           {#if isPlan && title}
-            <a href="/gh/{organization}/{repoName}/agents/plans/{node.id}" class="etype etype-accent plan-link">{title}</a>
+            <a href="/{provider}/{organization}/{repoName}/agents/plans/{node.id}" class="etype etype-accent plan-link">{title}</a>
           {:else}
             <span class="etype" class:etype-accent={isPlan} class:etype-muted={!isPlan && depth > 0}>{node.type}</span>
           {/if}

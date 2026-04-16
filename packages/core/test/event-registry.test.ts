@@ -5,10 +5,7 @@ import { EventRegistry } from "../src/events/registry";
 
 describe("event-registry", () => {
   it("define then create + fromID returns typed data", async () => {
-    const Def = EventRegistry.define(
-      "test.registry.created",
-      z.object({ value: z.number() }),
-    );
+    const Def = EventRegistry.define("test.registry.created", z.object({ value: z.number() }));
     const id = await EventRegistry.create(Def, {
       origin: "cli",
       data: { value: 42 },
@@ -20,16 +17,13 @@ describe("event-registry", () => {
 
   it("define rejects duplicate type", () => {
     EventRegistry.define("test.registry.dup", z.object({}));
-    expect(() =>
-      EventRegistry.define("test.registry.dup", z.object({})),
-    ).toThrow(/already registered/);
+    expect(() => EventRegistry.define("test.registry.dup", z.object({}))).toThrow(
+      /already registered/,
+    );
   });
 
   it("create throws when data shape does not match schema", async () => {
-    const Def = EventRegistry.define(
-      "test.registry.strict",
-      z.object({ n: z.number() }),
-    );
+    const Def = EventRegistry.define("test.registry.strict", z.object({ n: z.number() }));
     await expect(
       EventRegistry.create(Def, {
         origin: "cli",
@@ -40,10 +34,7 @@ describe("event-registry", () => {
   });
 
   it("list returns only events of the registered type with parsed data", async () => {
-    const Def = EventRegistry.define(
-      "test.registry.listed",
-      z.object({ label: z.string() }),
-    );
+    const Def = EventRegistry.define("test.registry.listed", z.object({ label: z.string() }));
     await EventRegistry.create(Def, { origin: "cli", data: { label: "a" } });
     await EventRegistry.create(Def, { origin: "cli", data: { label: "b" } });
 
@@ -55,10 +46,7 @@ describe("event-registry", () => {
   });
 
   it("fromID returns undefined when the row's type does not match the definition", async () => {
-    const Def = EventRegistry.define(
-      "test.registry.mismatch",
-      z.object({ x: z.number() }),
-    );
+    const Def = EventRegistry.define("test.registry.mismatch", z.object({ x: z.number() }));
     const otherId = await Event.create({
       type: "test.registry.other",
       origin: "cli",
@@ -80,10 +68,7 @@ describe("event-registry", () => {
   });
 
   it("schemaFor / all expose the registry", () => {
-    const Def = EventRegistry.define(
-      "test.registry.exposed",
-      z.object({ ok: z.boolean() }),
-    );
+    const Def = EventRegistry.define("test.registry.exposed", z.object({ ok: z.boolean() }));
     expect(EventRegistry.schemaFor("test.registry.exposed")).toBe(Def.schema);
     expect(EventRegistry.all().has("test.registry.exposed")).toBe(true);
   });

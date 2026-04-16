@@ -1,11 +1,15 @@
 import { describe, test, expect, beforeAll } from "bun:test";
 import { app } from "@agents/functions/src/api/routes";
-import { User } from "@agents/core/user";
+import { Account } from "@agents/core/account";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";
+import { User } from "@agents/core/user";
+import { Workspace } from "@agents/core/workspace";
 import { DevAgentSdk } from "@agents/sdk";
 import { createClient } from "@agents/sdk/client";
 
+let accountID: string;
+let workspaceID: string;
 let userID: string;
 let token: string;
 let appID: string;
@@ -13,13 +17,18 @@ let tokenID: string;
 let sdk: DevAgentSdk;
 
 beforeAll(async () => {
-  userID = await User.create({
-    email: `test+${Date.now()}@example.com`,
-    username: "sdktestuser",
-  });
+  accountID = await Account.create({});
+  workspaceID = await Actor.provide(
+    "account",
+    { accountID, email: `test+${Date.now()}@example.com` },
+    () => Workspace.create({ name: "SDK Test Workspace" }),
+  );
+  const user = await User.fromAccount({ accountID, workspaceID });
+  if (!user) throw new Error("Failed to create SDK test user");
+  userID = user.id;
 
-  const pat = await Actor.provide("user", { userID, clientID: "test" }, () =>
-    Api.Personal.create(),
+  const pat = await Actor.provide("user", { accountID, workspaceID, userID, role: "admin" }, () =>
+    Api.Personal.create({}),
   );
   token = pat.token;
 
@@ -44,23 +53,6 @@ beforeAll(async () => {
 //     await Actor.provide("user", { userID, clientID: "test" }, () => Api.Personal.remove(t.id));
 //   }
 // });
-
-describe("profile", () => {
-  test("getProfile returns the current user", async () => {
-    const { data, error } = await sdk.getProfile();
-    expect(error).toBeUndefined();
-    expect(data?.user.id).toBe(userID);
-  });
-
-  test("putProfile updates name and email", async () => {
-    const { data, error } = await sdk.putProfile({
-      name: "SDK Test",
-      email: `updated+${Date.now()}@example.com`,
-    });
-    expect(error).toBeUndefined();
-    expect(data?.user.name).toBe("SDK Test");
-  });
-});
 
 describe("apps", () => {
   test("getApp returns empty list initially", async () => {
@@ -135,7 +127,7 @@ describe("auth errors", () => {
         fetch: (input, init) => app.fetch(new Request(input as string, init as RequestInit)),
       }),
     });
-    const { error } = await badSdk.getProfile();
+    const { error } = await badSdk.getToken();
     expect(error).toBeDefined();
   });
 });

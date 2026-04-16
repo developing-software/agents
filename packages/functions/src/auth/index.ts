@@ -4,8 +4,12 @@ import { CodeProvider } from "@openauthjs/openauth/provider/code";
 import { CodeUI } from "@openauthjs/openauth/ui/code";
 import { subjects } from "./subject";
 import { THEME_OPENAUTH } from "@openauthjs/openauth/ui/theme";
+import { Account } from "@agents/core/account";
+import { Auth } from "@agents/core/auth";
+import { Workspace } from "@agents/core/workspace";
 import { User } from "@agents/core/user";
-import { GitHub } from "@agents/core/github";
+import { Actor } from "@agents/core/actor";
+import { tokenClient } from "@agents/core/git/provider/github/client";
 import { Api } from "@agents/core/api/api";
 import { logger } from "hono/logger";
 import type { StorageAdapter } from "@openauthjs/openauth/storage/storage";
@@ -16,9 +20,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
   return issuer({
     subjects,
     storage,
-    ttl: {
-      access: 60 * 30,
-    },
+    ttl: { access: 60 * 30 },
     theme: THEME_OPENAUTH,
     providers: {
       github: GithubProvider({
@@ -30,7 +32,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
         CodeUI({
           sendCode: async (claims, code) => {
             if (!claims.email) return;
-            await Template.sendLoginCode(claims.email!, code);
+            await Template.sendLoginCode(claims.email, code);
           },
         }),
       ),
@@ -56,61 +58,44 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       }
       return false;
     },
-    success: async (ctx, value, _req) => {
-      if (value.provider === "code") throw new Error("code provider is not supported yet");
-      try {
-        const octokit = GitHub.fromToken(value.tokenset.access);
+    success: async (ctx, response, _req) => {
+      let subject: string | undefined;
+      let email: string | undefined;
+
+      if (response.provider === "github") {
+        const octokit = tokenClient(response.tokenset.access);
         const [{ data: emails }, { data: profile }] = await Promise.all([
           octokit.rest.users.listEmailsForAuthenticatedUser(),
           octokit.rest.users.getAuthenticated(),
         ]);
-
         const primary = emails.find((e) => e.primary);
-        if (!primary?.verified) throw new Error("Email not verified");
+        if (!primary) throw new Error("No primary email found for GitHub user");
+        if (!primary.verified) throw new Error("Primary email for GitHub user not verified");
+        subject = String(profile.id);
+        email = primary.email;
+      } else if (response.provider === "code") {
+        email = response.claims.email;
+        subject = email;
+      } else throw new Error("Unsupported provider");
 
-        const { email } = primary;
-        const username = profile.login;
-        const avatarUrl = profile.avatar_url;
-        const whitelisted = ["andre-brandao"];
-        if (!whitelisted.includes(username)) throw new Error("The username is not whitelisted");
+      if (!email) throw new Error("No email found");
+      if (!subject) throw new Error("No subject found");
 
-        const matching = await User.fromEmail(email);
+      const existing = await Auth.findByProviderOrEmail({
+        provider: response.provider,
+        subject,
+        email,
+      });
+      const accountID = existing ?? (await Account.create({}));
+      await Auth.upsertPair({ accountID, provider: response.provider, subject, email });
 
-        if (matching?.length === 0) {
-          const matchingByUsername = await User.fromUsername(username);
-          if (matchingByUsername?.length === 1) {
-            const user = matchingByUsername[0]!;
-            if (user.email !== email || user.avatarUrl !== avatarUrl)
-              await User.update({ id: user.id, email, avatarUrl });
-            return ctx.subject("user", { userID: user.id });
-          }
+      await Actor.provide("account", { accountID, email }, async () => {
+        await User.joinInvitedWorkspaces();
+        const workspaces = await Workspace.forAccount(accountID);
+        if (workspaces.length === 0) await Workspace.create({ name: "Default" });
+      });
 
-          // await Template.sendWelcome
-
-          const id = await User.create({ email, username, avatarUrl });
-          return ctx.subject("user", { userID: id });
-        }
-
-        if (matching.length === 1) {
-          const user = matching[0]!;
-          if (user.username !== username || user.avatarUrl !== avatarUrl)
-            await User.update({ id: user.id, username, avatarUrl });
-          return ctx.subject("user", { userID: user.id });
-        }
-
-        const id = await User.merge(matching.map((x) => x.id));
-        if (id) await User.update({ id, username, avatarUrl });
-        return ctx.subject("user", { userID: id! });
-      } catch (err: any) {
-        console.error("auth success error", {
-          message: err?.message,
-          code: err?.code,
-          detail: err?.detail,
-          hint: err?.hint,
-          stack: err?.stack,
-        });
-        throw err;
-      }
+      return ctx.subject("account", { accountID, email });
     },
   }).use(logger());
 }

@@ -1,22 +1,11 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { redirect } from "@sveltejs/kit";
-import { authClient, getTokens, setTokens } from "$lib/auth";
-import { subjects } from "@agents/functions/src/auth/subject";
+import { authClient } from "$lib/auth";
 
 export const GET: RequestHandler = async (event) => {
-  const { access, refresh } = getTokens(event);
+  if (event.locals.actor.type === "account") redirect(302, "/auth");
 
-  if (access) {
-    const verified = await authClient.verify(subjects, access, {
-      refresh: refresh ?? undefined,
-    });
-    if (!verified.err) {
-      if (verified.tokens) setTokens(event, verified.tokens.access, verified.tokens.refresh);
-      redirect(302, "/");
-    }
-  }
-
-  const redirectUri = `${event.url.origin}/callback`;
-  const { url: authUrl } = await authClient.authorize(redirectUri, "code");
+  const callback = new URL("/callback", event.url.origin);
+  const { url: authUrl } = await authClient.authorize(callback.toString(), "code");
   redirect(302, authUrl);
 };

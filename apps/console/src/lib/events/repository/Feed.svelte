@@ -3,15 +3,11 @@
   import EventTree from './FeedTree.svelte';
 
   let {
-    organization,
-    repoName,
     filterTags = [],
     compact = false,
     emptyText = 'No events',
     rootEventId,
   }: {
-    organization: string;
-    repoName: string;
     filterTags?: string[];
     compact?: boolean;
     emptyText?: string;
@@ -37,9 +33,9 @@
 </div>
 
 {#if view === 'list'}
-  <EventList {organization} {repoName} {filterTags} {compact} {emptyText} />
+  <EventList {filterTags} {compact} {emptyText} />
 {:else}
-  <EventTree {organization} {repoName} {filterTags} {emptyText} {rootEventId} />
+  <EventTree {filterTags} {emptyText} {rootEventId} />
 {/if}
 
 <style>

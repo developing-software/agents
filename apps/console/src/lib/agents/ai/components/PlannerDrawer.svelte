@@ -28,23 +28,22 @@
 		status: string;
 	};
 
+	import { repoContext } from '$lib/git/context.svelte';
+
 	let {
 		open = $bindable(false),
-		organization,
-		repoName,
 		mode = 'draft',
 		plan,
 		onplancreated,
 	}: {
 		open?: boolean;
-		organization: string;
-		repoName: string;
 		mode?: 'draft' | 'edit';
 		plan?: PlanSummary;
 		onplancreated?: (plan: PlanSummary) => void;
 	} = $props();
 
-	const basePath = $derived(`/gh/${organization}/${repoName}/agents/plans`);
+	const { provider, organization, repoName } = repoContext.get();
+	const basePath = $derived(`/${provider}/${organization}/${repoName}/agents/plans`);
 // TODO: remove derived by and have a pure chat insteace, (add a reactive transport? & have the plan as a separate variable || have a separate state class with inner chat state)
 	const chat = $derived.by(() => {
 		const body = mode === 'edit' && plan ? { planId: plan.id } : undefined;

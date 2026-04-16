@@ -1,14 +1,14 @@
 import { command, query, getRequestEvent } from "$app/server";
 import { z } from "zod";
 import { generateText, Output } from "ai";
-import { Repository } from "@agents/core/repository";
 import { Event } from "@agents/core/events";
 import { AgentEvent } from "@agents/core/events/agent";
 import { Plan } from "@agents/core/events/plan";
 import { PlanJudge } from "@agents/core/events/plan/judge";
-import { GithubPullRequest } from "@agents/core/github/repo/pull_request";
+import { getProvider } from "@agents/core/git";
 import { createModel } from "./model";
 import { flattenChecks } from "$lib/events/helpers";
+import { withRequestRepoActor } from "$lib/repository.server";
 
 // -- Helpers --
 
@@ -53,87 +53,79 @@ export const listPlanRuns = query(
     planId: z.string(),
   }),
   async ({ organization, repoName, planId }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo)
-      return {
-        runs: [],
-        reviews: {} as Record<number, PlanJudge.ReviewResult>,
-        judgment: null as PlanJudge.CompareResult | null,
-      };
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const tags = [`plan:${planId}`];
 
-    const tags = [`plan:${planId}`];
+      const [events, reviewEvents, judgmentEvents] = await Promise.all([
+        Event.list({
+          type: "agent",
+          source: "repository",
+          sourceId: repo.id,
+          tags,
+          limit: 20,
+        }),
+        Event.list({
+          type: "github.pull_request.reviewed",
+          source: "repository",
+          sourceId: repo.id,
+          tags,
+          limit: 20,
+        }),
+        Event.list({
+          type: "plan.evaluated",
+          source: "repository",
+          sourceId: repo.id,
+          tags,
+          limit: 1,
+        }),
+      ]);
 
-    // Fetch events and reviews/judgment in parallel (all DB queries)
-    const [events, reviewEvents, judgmentEvents] = await Promise.all([
-      Event.list({
-        type: "agent",
-        source: "repository",
-        sourceId: repo.id,
-        tags,
-        limit: 20,
-      }),
-      Event.list({
-        type: "github.pull_request.reviewed",
-        source: "repository",
-        sourceId: repo.id,
-        tags,
-        limit: 20,
-      }),
-      Event.list({
-        type: "plan.evaluated",
-        source: "repository",
-        sourceId: repo.id,
-        tags,
-        limit: 1,
-      }),
-    ]);
+      const runs: PlanRun[] = events.map((e) => {
+        const parsed = AgentEvent.Completed.parse(e.data);
+        const metrics = parsed.agent.metrics;
+        const tokens = metrics?.tokens;
+        const checks = flattenChecks(parsed.checks);
+        const prNumber = extractPrNumber(e.tags);
 
-    // Build runs from agent events (no I/O, just parsing)
-    const runs: PlanRun[] = events.map((e) => {
-      const parsed = AgentEvent.Completed.parse(e.data);
-      const metrics = parsed.agent.metrics;
-      const tokens = metrics?.tokens;
-      const checks = flattenChecks(parsed.checks);
-      const prNumber = extractPrNumber(e.tags);
+        return {
+          id: e.id,
+          agent: parsed.agent.name,
+          model: metrics?.model ?? null,
+          prNumber,
+          prState: null,
+          prUrl: parsed.pr?.url || null,
+          runUrl: parsed.workflow.runUrl || null,
+          cost_usd: metrics?.cost_usd ?? null,
+          input_tokens: tokens?.input ?? null,
+          output_tokens: tokens?.output ?? null,
+          turns: metrics?.turns ?? null,
+          durationMs: parsed.workflow.durationMs || null,
+          linesAdded: parsed.diff?.linesAdded ?? null,
+          linesRemoved: parsed.diff?.linesRemoved ?? null,
+          checks,
+          tags: e.tags,
+          timeCreated: e.timeCreated,
+        };
+      });
 
-      return {
-        id: e.id,
-        agent: parsed.agent.name,
-        model: metrics?.model ?? null,
-        prNumber,
-        prState: null,
-        prUrl: parsed.pr?.url || null,
-        runUrl: parsed.workflow.runUrl || null,
-        cost_usd: metrics?.cost_usd ?? null,
-        input_tokens: tokens?.input ?? null,
-        output_tokens: tokens?.output ?? null,
-        turns: metrics?.turns ?? null,
-        durationMs: parsed.workflow.durationMs || null,
-        linesAdded: parsed.diff?.linesAdded ?? null,
-        linesRemoved: parsed.diff?.linesRemoved ?? null,
-        checks,
-        tags: e.tags,
-        timeCreated: e.timeCreated,
-      };
-    });
-
-    const reviews: Record<number, PlanJudge.ReviewResult> = {};
-    for (const re of reviewEvents) {
-      const rd = re.data as Record<string, unknown>;
-      const prNum = typeof rd.prNumber === "number" ? rd.prNumber : null;
-      if (prNum != null) {
-        const parsed = PlanJudge.ReviewResult.safeParse(rd);
-        if (parsed.success) reviews[prNum] = parsed.data;
+      const reviews: Record<number, PlanJudge.ReviewResult> = {};
+      for (const re of reviewEvents) {
+        const rd = re.data as Record<string, unknown>;
+        const prNum = typeof rd.prNumber === "number" ? rd.prNumber : null;
+        if (prNum != null) {
+          const parsed = PlanJudge.ReviewResult.safeParse(rd);
+          if (parsed.success) reviews[prNum] = parsed.data;
+        }
       }
-    }
 
-    let judgment: PlanJudge.CompareResult | null = null;
-    if (judgmentEvents.length > 0) {
-      const parsed = PlanJudge.CompareResult.safeParse(judgmentEvents[0]!.data);
-      if (parsed.success) judgment = parsed.data;
-    }
+      let judgment: PlanJudge.CompareResult | null = null;
+      if (judgmentEvents.length > 0) {
+        const parsed = PlanJudge.CompareResult.safeParse(judgmentEvents[0]!.data);
+        if (parsed.success) judgment = parsed.data;
+      }
 
-    return { runs, reviews, judgment };
+      return { runs, reviews, judgment };
+    });
   },
 );
 
@@ -144,27 +136,26 @@ export const listPrStates = query(
     prNumbers: z.array(z.number()),
   }),
   async ({ organization, repoName, prNumbers }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) return {} as Record<number, string | null>;
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const pulls = getProvider(repo.source).pulls;
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
+      const results = await Promise.all(
+        prNumbers.map(async (prNumber) => {
+          try {
+            const pr = await pulls.get(repo.fullName, prNumber);
+            return { prNumber, state: pr?.state ?? null };
+          } catch {
+            return { prNumber, state: null };
+          }
+        }),
+      );
 
-    const results = await Promise.all(
-      prNumbers.map(async (prNumber) => {
-        try {
-          const pr = await GithubPullRequest.get(repoRef, prNumber);
-          return { prNumber, state: pr.state };
-        } catch {
-          return { prNumber, state: null };
-        }
-      }),
-    );
-
-    const states: Record<number, string | null> = {};
-    for (const { prNumber, state } of results) {
-      states[prNumber] = state;
-    }
-    return states;
+      const states: Record<number, string | null> = {};
+      for (const { prNumber, state } of results) {
+        states[prNumber] = state;
+      }
+      return states;
+    });
   },
 );
 
@@ -187,36 +178,40 @@ export const reviewPR = command(
     }),
   }),
   async ({ organization, repoName, planId, runId, agent, prNumber, checks, metrics }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) throw new Error("Repository not found");
-
     const plan = await Plan.fromID(planId);
     if (!plan) throw new Error("Plan not found");
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
-    const diff = await GithubPullRequest.getDiff(repoRef, prNumber);
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const diff = await getProvider(repo.source).pulls.getDiff(repo.fullName, prNumber);
+      const prompt = PlanJudge.composeReviewPrompt({
+        plan,
+        agent,
+        prNumber,
+        diff,
+        checks,
+        metrics,
+      });
 
-    const prompt = PlanJudge.composeReviewPrompt({ plan, agent, prNumber, diff, checks, metrics });
+      const result = await generateText({
+        model: createModel(getApiKey()),
+        output: Output.object({ schema: PlanJudge.ReviewResult }),
+        prompt,
+      });
 
-    const result = await generateText({
-      model: createModel(getApiKey()),
-      output: Output.object({ schema: PlanJudge.ReviewResult }),
-      prompt,
+      const review = result.output;
+
+      const eventId = await Event.create({
+        type: "github.pull_request.reviewed",
+        origin: "console",
+        source: "repository",
+        sourceId: repo.id,
+        parentEventId: runId,
+        tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
+        data: review as Record<string, unknown>,
+      });
+
+      return { ...review, eventId };
     });
-
-    const review = result.output;
-
-    const eventId = await Event.create({
-      type: "github.pull_request.reviewed",
-      origin: "console",
-      source: "repository",
-      sourceId: repo.id,
-      parentEventId: runId,
-      tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
-      data: review as Record<string, unknown>,
-    });
-
-    return { ...review, eventId };
   },
 );
 
@@ -228,33 +223,31 @@ export const judgePlan = command(
     reviews: z.array(PlanJudge.ReviewResult),
   }),
   async ({ organization, repoName, planId, reviews }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) throw new Error("Repository not found");
-
     const plan = await Plan.fromID(planId);
     if (!plan) throw new Error("Plan not found");
 
-    const prompt = PlanJudge.composeComparePrompt({ plan, reviews });
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const prompt = PlanJudge.composeComparePrompt({ plan, reviews });
+      const result = await generateText({
+        model: createModel(getApiKey()),
+        output: Output.object({ schema: PlanJudge.CompareResult }),
+        prompt,
+      });
 
-    const result = await generateText({
-      model: createModel(getApiKey()),
-      output: Output.object({ schema: PlanJudge.CompareResult }),
-      prompt,
+      const judgment = result.output;
+
+      await Event.create({
+        type: "plan.evaluated",
+        origin: "console",
+        source: "repository",
+        sourceId: repo.id,
+        parentEventId: planId,
+        tags: [`plan:${planId}`],
+        data: judgment as Record<string, unknown>,
+      });
+
+      return judgment;
     });
-
-    const judgment = result.output;
-
-    await Event.create({
-      type: "plan.evaluated",
-      origin: "console",
-      source: "repository",
-      sourceId: repo.id,
-      parentEventId: planId,
-      tags: [`plan:${planId}`],
-      data: judgment as Record<string, unknown>,
-    });
-
-    return judgment;
   },
 );
 
@@ -274,22 +267,21 @@ export const humanReviewPR = command(
     verdict: z.string(),
   }),
   async ({ organization, repoName, planId, runId, agent, prNumber, scores, verdict }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) throw new Error("Repository not found");
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const review = { agent, prNumber, scores, verdict, suggestions: [] };
 
-    const review = { agent, prNumber, scores, verdict, suggestions: [] };
+      const eventId = await Event.create({
+        type: "github.pull_request.reviewed",
+        origin: "console",
+        source: "repository",
+        sourceId: repo.id,
+        parentEventId: runId,
+        tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
+        data: review as Record<string, unknown>,
+      });
 
-    const eventId = await Event.create({
-      type: "github.pull_request.reviewed",
-      origin: "console",
-      source: "repository",
-      sourceId: repo.id,
-      parentEventId: runId,
-      tags: [`plan:${planId}`, `gh:pr:${prNumber}`],
-      data: review as Record<string, unknown>,
+      return { ...review, eventId };
     });
-
-    return { ...review, eventId };
   },
 );
 
@@ -304,35 +296,34 @@ export const humanPickWinner = command(
     reviews: z.array(PlanJudge.ReviewResult),
   }),
   async ({ organization, repoName, planId, winnerPrNumber, winnerAgent, reasoning, reviews }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) throw new Error("Repository not found");
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const rankings = reviews.map((r, i) => ({
+        rank: r.prNumber === winnerPrNumber ? 1 : i + 2,
+        agent: r.agent,
+        prNumber: r.prNumber,
+        scores: r.scores,
+        note: r.prNumber === winnerPrNumber ? "Human-selected winner" : undefined,
+      }));
+      rankings.sort((a, b) => a.rank - b.rank);
 
-    const rankings = reviews.map((r, i) => ({
-      rank: r.prNumber === winnerPrNumber ? 1 : i + 2,
-      agent: r.agent,
-      prNumber: r.prNumber,
-      scores: r.scores,
-      note: r.prNumber === winnerPrNumber ? "Human-selected winner" : undefined,
-    }));
-    rankings.sort((a, b) => a.rank - b.rank);
+      const judgment = {
+        rankings,
+        winner: { agent: winnerAgent, prNumber: winnerPrNumber },
+        reasoning,
+      };
 
-    const judgment = {
-      rankings,
-      winner: { agent: winnerAgent, prNumber: winnerPrNumber },
-      reasoning,
-    };
+      await Event.create({
+        type: "plan.evaluated",
+        origin: "console",
+        source: "repository",
+        sourceId: repo.id,
+        parentEventId: planId,
+        tags: [`plan:${planId}`],
+        data: judgment as Record<string, unknown>,
+      });
 
-    await Event.create({
-      type: "plan.evaluated",
-      origin: "console",
-      source: "repository",
-      sourceId: repo.id,
-      parentEventId: planId,
-      tags: [`plan:${planId}`],
-      data: judgment as Record<string, unknown>,
+      return judgment as PlanJudge.CompareResult;
     });
-
-    return judgment as PlanJudge.CompareResult;
   },
 );
 
@@ -345,32 +336,30 @@ export const mergeWinner = command(
     loserPrNumbers: z.array(z.number()),
   }),
   async ({ organization, repoName, planId, winnerPrNumber, loserPrNumbers }) => {
-    const repo = await Repository.findByFullName(`${organization}/${repoName}`);
-    if (!repo) throw new Error("Repository not found");
+    return withRequestRepoActor({ organization, repoName }, async (repo) => {
+      const pulls = getProvider(repo.source).pulls;
+      const mergeResult = await pulls.merge(repo.fullName, winnerPrNumber);
 
-    const repoRef = { installationId: repo.installationId, owner: organization, repo: repoName };
+      for (const prNumber of loserPrNumbers) {
+        await pulls.close(repo.fullName, prNumber);
+      }
 
-    const mergeResult = await GithubPullRequest.merge(repoRef, winnerPrNumber);
+      await Plan.update(planId, { status: "completed" });
 
-    for (const prNumber of loserPrNumbers) {
-      await GithubPullRequest.close(repoRef, prNumber);
-    }
+      await Event.create({
+        type: "plan.completed",
+        origin: "console",
+        source: "repository",
+        sourceId: repo.id,
+        tags: [`plan:${planId}`, `gh:pr:${winnerPrNumber}`],
+        data: {
+          winnerPr: winnerPrNumber,
+          winnerAgent: null,
+          closedPrs: loserPrNumbers,
+        },
+      });
 
-    await Plan.update(planId, { status: "completed" });
-
-    await Event.create({
-      type: "plan.completed",
-      origin: "console",
-      source: "repository",
-      sourceId: repo.id,
-      tags: [`plan:${planId}`, `gh:pr:${winnerPrNumber}`],
-      data: {
-        winnerPr: winnerPrNumber,
-        winnerAgent: null,
-        closedPrs: loserPrNumbers,
-      },
+      return { merged: winnerPrNumber, closed: loserPrNumbers, message: mergeResult.message };
     });
-
-    return { merged: winnerPrNumber, closed: loserPrNumbers, message: mergeResult.message };
   },
 );

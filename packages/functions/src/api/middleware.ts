@@ -2,8 +2,10 @@ import { type MiddlewareHandler } from "hono";
 import { VisibleError, ErrorCodes } from "@agents/core/error";
 import { Actor } from "@agents/core/actor";
 import { Api } from "@agents/core/api/api";
+import { User } from "@agents/core/user";
+import { sha256 } from "@agents/core/util/crypto";
 import { subjects } from "../auth/subject";
-import { authClient, getTokens, setTokens } from "./auth";
+import { authClient } from "./auth";
 
 export const auth: MiddlewareHandler = async (c, next) => {
   const authHeader = c.req.header("authorization");
@@ -20,19 +22,37 @@ export const auth: MiddlewareHandler = async (c, next) => {
     }
     const bearerToken = match[1];
 
-    if (bearerToken?.startsWith("tok_")) {
-      const token = await Api.Personal.fromToken(bearerToken);
+    if (bearerToken.startsWith("tok_")) {
+      const token = await Api.Personal.fromTokenHash(await sha256(bearerToken));
       if (!token)
         throw new VisibleError(
           "authentication",
           ErrorCodes.Authentication.INVALID_TOKEN,
           "Invalid personal access token",
         );
+      if (token.expiresAt && token.expiresAt < new Date())
+        throw new VisibleError(
+          "authentication",
+          ErrorCodes.Authentication.INVALID_TOKEN,
+          "Personal access token expired",
+        );
+
+      const user = await User.fromID(token.userID);
+      if (!user?.accountID)
+        throw new VisibleError(
+          "authentication",
+          ErrorCodes.Authentication.INVALID_TOKEN,
+          "Token user no longer exists",
+        );
+
+      void Api.Personal.touchLastUsed(token.id);
       return Actor.provide(
-        "token",
+        "user",
         {
-          userID: token.userID,
-          tokenID: token.id,
+          accountID: user.accountID,
+          workspaceID: user.workspaceID,
+          userID: user.id,
+          role: user.role,
         },
         next,
       );
@@ -47,44 +67,18 @@ export const auth: MiddlewareHandler = async (c, next) => {
         "Invalid bearer token",
       );
     }
-    if (result.subject.type === "user") {
+    if (result.subject.type === "account") {
       return Actor.provide(
-        "user",
+        "account",
         {
-          userID: result.subject.properties.userID,
-          clientID: result.aud,
+          accountID: result.subject.properties.accountID,
+          email: result.subject.properties.email,
         },
         next,
       );
     }
   }
 
-  const { access: cookieAccessToken, refresh: cookieRefreshToken } = await getTokens(c);
-
-  if (cookieAccessToken) {
-    const verified = await authClient.verify(subjects, cookieAccessToken, {
-      refresh: cookieRefreshToken ?? undefined,
-    });
-
-    if (!verified.err) {
-      // Persist refreshed tokens back to cookies so subsequent requests
-      // don't need to refresh again
-      if (verified.tokens) {
-        await setTokens(c, verified.tokens.access, verified.tokens.refresh);
-      }
-
-      if (verified.subject.type === "user") {
-        return Actor.provide(
-          "user",
-          {
-            userID: verified.subject.properties.userID,
-            clientID: verified.aud,
-          },
-          next,
-        );
-      }
-    }
-  }
-
-  return Actor.provide("public", { lang }, next);
+  void lang;
+  return Actor.provide("public", {}, next);
 };

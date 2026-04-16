@@ -1,8 +1,8 @@
-import { describe, it, expect } from "bun:test";
-import { registerHandlers } from "../src/github/webhook/handlers";
+import { describe, expect, it } from "bun:test";
 import { Event } from "../src/events";
 import { Tags } from "../src/events/tag";
-import { GithubInstallation } from "../src/github/installation";
+import { Installation } from "../src/git/installation";
+import { registerGithubWebhookHandlers } from "../src/git/provider/github/webhook";
 import { Repository } from "../src/repository";
 
 type AnyHandler = (event: { payload: any }) => Promise<void>;
@@ -22,7 +22,7 @@ function createTestWebhook() {
     },
   };
 
-  registerHandlers(webhook as any);
+  registerGithubWebhookHandlers(webhook as any);
   return webhook;
 }
 
@@ -30,14 +30,18 @@ let _installationSeq = 900000;
 
 async function createTestRepo(sourceId: string, fullName: string) {
   const [owner, repo] = fullName.split("/") as [string, string];
-  const connectionId = await GithubInstallation.upsert({
-    installationId: _installationSeq++,
-    owner,
+  const installationRef = String(_installationSeq++);
+  const installationId = await Installation.upsert({
+    provider: "github",
+    providerAccountId: installationRef,
+    providerAccountLogin: owner,
+    installationRef,
+    accountType: "Organization",
   });
   return Repository.upsert({
     source: "github",
     sourceId,
-    connectionId,
+    installationId,
     owner,
     repo,
     fullName,

@@ -5,7 +5,7 @@
   let { data }: PageProps = $props();
 
   const dashboardPromise = $derived.by(() => {
-    if (!data.userID) return null;
+    if (!data.accountID) return null;
     return getDashboardSummary({});
   });
 
@@ -68,7 +68,7 @@
       </a>
     </div>
   </div>
-{:else if !data.userID}
+{:else if !data.accountID}
   <div class="login">
     <h1 class="login-title">agents</h1>
     <a href="/login" class="login-btn">
@@ -140,7 +140,7 @@
           <div class="repo-grid">
             {#each result.repos as repo (`${repo.owner}/${repo.repo}`)}
               {@const hasChecks = repo.passRate > 0 || repo.total > 0}
-              <a href="/gh/{repo.owner}/{repo.repo}" class="repo-card">
+              <a href="/{repo.source}/{repo.owner}/{repo.repo}" class="repo-card">
                 <div class="repo-card-header">
                   <span class="repo-card-name">{repo.owner}/{repo.repo}</span>
                   {#if repo.lastActivity}

@@ -3,11 +3,10 @@
   import { DeployEvent } from '@agents/core/events/deploy';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import ArtifactList from './ArtifactList.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   let {
     event,
-    organization,
-    repoName,
     onclose,
   }: {
     event: {
@@ -19,10 +18,10 @@
       data: Record<string, unknown>;
       timeCreated: string;
     };
-    organization: string;
-    repoName: string;
     onclose: () => void;
   } = $props();
+
+  const { provider, organization, repoName } = repoContext.get();
 
   // ── Derived ──────────────────────────────────────────────────────────
 
@@ -71,7 +70,7 @@
   {/if}
 
   <!-- Artifacts -->
-  <ArtifactList eventId={event.id} {organization} {repoName} />
+  <ArtifactList eventId={event.id} />
 
   <!-- Deploy details -->
   {#if event.type === 'deploy' || event.type.startsWith('deploy.')}
@@ -135,7 +134,7 @@
           {/if}
           <span class="info-label">Console</span>
           <span class="info-value">
-            <a class="deploy-pr-link" href="/gh/{organization}/{repoName}/pulls/{dep.pr.number}">View in console</a>
+            <a class="deploy-pr-link" href="/{provider}/{organization}/{repoName}/pulls/{dep.pr.number}">View in console</a>
           </span>
         </div>
       </div>

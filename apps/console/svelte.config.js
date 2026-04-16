@@ -1,5 +1,13 @@
 import adapter from "@sveltejs/adapter-cloudflare";
-import * as child_process from 'node:child_process';
+import * as child_process from "node:child_process";
+
+const gitRevision = (() => {
+  try {
+    return child_process.execFileSync("git", ["rev-parse", "HEAD"]).toString().trim();
+  } catch {
+    return process.env.GIT_COMMIT ?? "dev";
+  }
+})();
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -9,8 +17,8 @@ const config = {
       remoteFunctions: true,
     },
     version: {
-      name: child_process.execSync('git rev-parse HEAD').toString().trim()
-    }
+      name: gitRevision,
+    },
   },
   compilerOptions: {
     experimental: {

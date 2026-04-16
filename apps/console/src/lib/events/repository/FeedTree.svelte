@@ -14,6 +14,7 @@
     otherTags,
   } from '../helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   type TreeNode = {
     id: string;
@@ -26,18 +27,16 @@
   };
 
   let {
-    organization,
-    repoName,
     filterTags = [],
     emptyText = 'No events',
     rootEventId,
   }: {
-    organization: string;
-    repoName: string;
     filterTags?: string[];
     emptyText?: string;
     rootEventId?: string;
   } = $props();
+
+  const { organization, repoName } = repoContext.get();
 
   let retryCount = $state(0);
 
@@ -173,8 +172,6 @@
                 data: selectedEventData ?? {},
                 timeCreated: node.timeCreated,
               }}
-              {organization}
-              {repoName}
               onclose={() => { selectedEventId = null; selectedEventData = null; }}
             />
           {/if}

@@ -1,2 +1,0 @@
-ALTER TABLE "github_repo" ADD COLUMN "user_id" char(30);--> statement-breakpoint
-ALTER TABLE "github_repo" ADD CONSTRAINT "github_repo_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id");

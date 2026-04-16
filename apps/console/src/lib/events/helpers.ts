@@ -1,6 +1,6 @@
 // Shared utility functions for event rendering
 
-import { AgentEvent } from "@agents/core/events/agent";
+import type { AgentEvent } from "@agents/core/events/agent";
 
 export type EventMetrics = AgentEvent.Completed.Metrics;
 
@@ -108,7 +108,8 @@ export function formatBytes(bytes: number): string {
 }
 
 export function extractMetrics(data: Record<string, unknown>): EventMetrics | null {
-  return AgentEvent.Completed.parse(data).agent.metrics;
+  const agent = (data as { agent?: { metrics?: EventMetrics | null } })?.agent;
+  return agent?.metrics ?? null;
 }
 
 export function formatMetricValue(name: string, value: number): string {

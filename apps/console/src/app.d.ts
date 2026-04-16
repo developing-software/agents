@@ -1,5 +1,5 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
-// for information about these interfaces
+import type { Actor } from "@agents/core/actor";
+
 declare global {
   namespace App {
     interface Platform {
@@ -9,12 +9,10 @@ declare global {
       cf?: IncomingRequestCfProperties;
     }
 
-    // interface Error {}
     interface Locals {
-      userID: string | null;
+      actor: Actor.Account | Actor.User | Actor.Public;
+      workspaceActors: Map<string, Actor.User>;
     }
-    // interface PageData {}
-    // interface PageState {}
   }
 }
 
