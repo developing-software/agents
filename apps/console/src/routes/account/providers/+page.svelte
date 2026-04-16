@@ -34,9 +34,7 @@
     {/each}
   </ul>
 
-  <div class="actions">
-    <a class="btn" href="/login?link=1">Add provider</a>
-  </div>
+  <p class="muted">Sign in with another provider using the same email to link it automatically.</p>
 </section>
 
 <style>
@@ -84,13 +82,5 @@
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
     cursor: pointer;
-  }
-  .btn {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background: var(--color-accent, #333);
-    color: #fff;
-    border-radius: 4px;
-    text-decoration: none;
   }
 </style>
