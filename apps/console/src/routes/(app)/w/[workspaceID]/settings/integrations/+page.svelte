@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
+  import WorkspaceSettingsNav from '$lib/workspace/WorkspaceSettingsNav.svelte';
 
   let { data }: PageProps = $props();
 
@@ -21,6 +22,11 @@
       <a class="install-link" href={installUrl}>Install GitHub App</a>
     {/if}
   </header>
+
+  <WorkspaceSettingsNav
+    workspaceID={data.workspaceID}
+    workspaceName={data.workspace?.name ?? null}
+  />
 
   {#if data.linked}
     <p class="notice success">Linked {data.linked} to this workspace.</p>

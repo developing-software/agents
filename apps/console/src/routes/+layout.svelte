@@ -53,6 +53,9 @@
     </a>
 
     <div class="topbar-actions">
+      {#if data.accountID}
+        <a href="/w" class="topbar-link">Workspaces</a>
+      {/if}
       <a href="/models" class="topbar-link">Models</a>
       {#if data.accountID}
         <a href="/logout" class="signout-link">Sign out</a>

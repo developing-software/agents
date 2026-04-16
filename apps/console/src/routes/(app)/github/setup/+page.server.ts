@@ -4,27 +4,7 @@ import { Actor } from "@agents/core/actor";
 import { Installation } from "@agents/core/git/installation";
 import { Workspace } from "@agents/core/workspace";
 import { withActor } from "$lib/auth";
-import { readSession } from "$lib/session";
-
-async function requireSession(event: RequestEvent) {
-  const session = await readSession(event);
-  const accountIDs = Object.keys(session.accounts);
-  const accountID = session.current ?? accountIDs[0];
-  const email = accountID ? session.accounts[accountID]?.email : undefined;
-  if (!accountID || !email || accountIDs.length === 0) {
-    throw redirect(302, "/login");
-  }
-  return { session, accountIDs, accountID, email };
-}
-
-async function listWorkspaces(accountIDs: string[]) {
-  const groups = await Promise.all(accountIDs.map((accountID) => Workspace.forAccount(accountID)));
-  const unique = new Map<string, Awaited<ReturnType<typeof Workspace.forAccount>>[number]>();
-  for (const group of groups) {
-    for (const workspace of group) unique.set(workspace.id, workspace);
-  }
-  return [...unique.values()];
-}
+import { listSessionWorkspaces, requireSessionAccount } from "$lib/workspace.server";
 
 function integrationsRedirect(workspaceID: string, params: Record<string, string>) {
   const target = new URL(`https://console.local/w/${workspaceID}/settings/integrations`);
@@ -76,13 +56,13 @@ export const load: PageServerLoad = async (event) => {
     throw error(400, "Missing installation_id query parameter.");
   }
 
-  const { accountIDs } = await requireSession(event);
+  const { accountID } = await requireSessionAccount(event);
   const stateWorkspaceID = event.url.searchParams.get("state");
   const installation = await findInstallation(installationRef);
-  const workspaces = await listWorkspaces(accountIDs);
+  const workspaces = await listSessionWorkspaces(accountID);
 
   if (stateWorkspaceID) {
-    const member = await canAccessWorkspace(accountIDs, stateWorkspaceID);
+    const member = await canAccessWorkspace([accountID], stateWorkspaceID);
     if (member) {
       const result = await claimInstallation(event, stateWorkspaceID, installationRef);
       if (result.type === "linked") {
@@ -156,7 +136,7 @@ export const actions: Actions = {
       return fail(409, { message: "Installation not ready yet. Refresh and try again." });
     }
 
-    const { accountID, email } = await requireSession(event);
+    const { accountID, email } = await requireSessionAccount(event);
     const workspaceID = await Actor.provide("account", { accountID, email }, () =>
       Workspace.create({ name: name.trim() }),
     );
