@@ -3,7 +3,7 @@ import type { RequestHandler } from "./$types";
 import { Repository } from "@agents/core/repository";
 import { Plan } from "@agents/core/events/plan";
 import { createModel } from "$lib/agents/ai/model";
-import { githubTools } from "$lib/agents/ai/tools/github-tools";
+import { gitTools } from "$lib/agents/ai/tools/git-tools";
 import { planTools } from "$lib/agents/ai/tools/plan-tools";
 import { triageTools } from "$lib/agents/ai/tools/triage-tools";
 import { askUserTool } from "$lib/agents/ai/tools/ask-user-tool";
@@ -69,7 +69,7 @@ Be concise and actionable. When you need clarification, use the askUser tool —
     system: existingPlan ? editPrompt : draftPrompt,
     messages: await convertToModelMessages(messages),
     tools: {
-      ...githubTools(repoCtx),
+      ...gitTools(repoCtx),
       ...planTools(entityCtx),
       ...triageTools(entityCtx),
       askUser: askUserTool,

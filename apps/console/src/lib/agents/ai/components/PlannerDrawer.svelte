@@ -28,7 +28,7 @@
 		status: string;
 	};
 
-	import { repoContext } from '$lib/git-repo/context.svelte';
+	import { repoContext } from '$lib/git/context.svelte';
 
 	let {
 		open = $bindable(false),

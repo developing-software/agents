@@ -1,6 +1,6 @@
 <script lang="ts">
   import ArtifactCard from './ArtifactCard.svelte';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   type ArtifactInfo = {
     key: string;

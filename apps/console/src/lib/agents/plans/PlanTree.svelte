@@ -1,7 +1,7 @@
 <script lang="ts">
   import { listTree } from '$lib/events/repository/repository.remote';
   import { relativeTime } from '$lib/agents/plans/plan-helpers';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   type TreeNode = {
     id: string;

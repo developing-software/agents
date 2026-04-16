@@ -1,8 +1,8 @@
 <script lang="ts">
-  import GitHubLink from '$lib/ui/GitHubLink.svelte';
+  import ProviderLink from './ProviderLink.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
-  import { prStateColor, prStateDotStyle } from './github-helpers';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { prStateColor, prStateDotStyle } from '../helpers';
+  import { repoContext } from '../context.svelte';
 
   interface Props {
     pulls: Array<{
@@ -116,9 +116,9 @@
             style="font-size: 10px; width: 48px; text-align: right; color: {prStateColor(pr.state)};"
           >{pr.state}</span>
 
-          <!-- GitHub link -->
+          <!-- Provider link -->
           <div class="shrink-0">
-            <GitHubLink href={pr.url} />
+            <ProviderLink href={pr.url} {provider} />
           </div>
 
           <!-- Activity link -->

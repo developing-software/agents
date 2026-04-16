@@ -3,7 +3,7 @@
   import { DeployEvent } from '@agents/core/events/deploy';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import ArtifactList from './ArtifactList.svelte';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   let {
     event,

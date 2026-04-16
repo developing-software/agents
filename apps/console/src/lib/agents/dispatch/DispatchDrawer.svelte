@@ -3,12 +3,12 @@
   import Drawer from '$lib/ui/Drawer.svelte';
   import { dispatch as dispatchAgents, listFeaturedModels, listAgentConfigs } from './dispatch.remote';
   import { updatePlan } from '$lib/agents/plans/plans.remote';
-  import BranchSelect from '$lib/ui/BranchSelect.svelte';
+  import BranchSelect from '$lib/git/components/BranchSelect.svelte';
   import TagList from '$lib/ui/tag/TagList.svelte';
   import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
   import ModelSelector from './ModelSelector.svelte';
   import { SvelteSet } from 'svelte/reactivity';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   export type OpenParams = {
     title?: string;

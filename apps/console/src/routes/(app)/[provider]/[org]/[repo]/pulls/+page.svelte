@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import PullRequestList from '$lib/github/PullRequestList.svelte';
+  import PullRequestList from '$lib/git/components/PullRequestList.svelte';
 
   let { data }: PageProps = $props();
 </script>

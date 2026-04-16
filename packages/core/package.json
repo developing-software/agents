@@ -21,6 +21,7 @@
     "./git/*": "./src/git/*.ts",
     "./git/provider/github": "./src/git/provider/github/index.ts",
     "./git/provider/github/client": "./src/git/provider/github/client.ts",
+    "./git/branch-artifact": "./src/git/branch-artifact/index.ts",
     "./git/provider/github/webhook": "./src/git/provider/github/webhook.ts",
     "./events/agent-metrics": "./src/events/agent-metrics.ts",
     "./events/plan/*": "./src/events/plan/*.ts"

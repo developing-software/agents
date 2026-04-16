@@ -1,9 +1,9 @@
 <script lang="ts">
   import { SvelteSet } from 'svelte/reactivity';
-  import GitHubLink from '$lib/ui/GitHubLink.svelte';
+  import ProviderLink from './ProviderLink.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
-  import { issueStateColor, issueStateDotStyle } from './github-helpers';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { issueStateColor, issueStateDotStyle } from '../helpers';
+  import { repoContext } from '../context.svelte';
 
   interface Props {
     issues: Array<{
@@ -158,9 +158,9 @@
               style="font-size: 10px; width: 40px; text-align: right; color: {issueStateColor(issue.state)};"
             >{issue.state}</span>
 
-            <!-- GitHub link -->
+            <!-- Provider link -->
             <div class="shrink-0">
-              <GitHubLink href={issue.url} />
+              <ProviderLink href={issue.url} {provider} />
             </div>
           </div>
         {:else}
@@ -205,9 +205,9 @@
               style="font-size: 10px; width: 40px; text-align: right; color: {issueStateColor(issue.state)};"
             >{issue.state}</span>
 
-            <!-- GitHub link -->
+            <!-- Provider link -->
             <div class="shrink-0">
-              <GitHubLink href={issue.url} />
+              <ProviderLink href={issue.url} {provider} />
             </div>
 
             <!-- Activity link -->

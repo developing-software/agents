@@ -4,7 +4,7 @@
   import CheckCard from '$lib/events/health/CheckCard.svelte';
   import ToolTile from '$lib/events/health/ToolTile.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
-  import BranchSelect from '$lib/ui/BranchSelect.svelte';
+  import BranchSelect from '$lib/git/components/BranchSelect.svelte';
   import { relativeTime } from '$lib/events/helpers';
 
   let { data }: PageProps = $props();

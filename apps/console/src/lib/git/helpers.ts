@@ -1,5 +1,3 @@
-// Shared utility functions for GitHub issue/PR rendering
-
 export function issueStateColor(state: string): string {
   return state === "open" ? "var(--color-success)" : "var(--color-dim)";
 }

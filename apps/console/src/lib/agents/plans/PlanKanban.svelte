@@ -7,7 +7,7 @@
     type PlanItem,
   } from './plan-helpers';
   import TagList from '$lib/ui/tag/TagList.svelte';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   let {
     plans,

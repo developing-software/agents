@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import BranchList from '$lib/github/BranchList.svelte';
+  import BranchList from '$lib/git/components/BranchList.svelte';
 
   let { data }: PageProps = $props();
 </script>

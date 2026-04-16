@@ -1,13 +1,14 @@
 <script lang="ts">
-  import GitHubLink from '$lib/ui/GitHubLink.svelte';
+  import ProviderLink from './ProviderLink.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { invalidateAll } from '$app/navigation';
-  import { prStateColor, prStateDotStyle } from './github-helpers';
+  import { prStateColor, prStateDotStyle } from '../helpers';
+  import { branchUrl } from '../url';
   import {
     deleteBranch,
     deleteBranches,
-  } from '../../routes/(app)/[provider]/[org]/[repo]/branches/branches.remote';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  } from '../../../routes/(app)/[provider]/[org]/[repo]/branches/branches.remote';
+  import { repoContext } from '../context.svelte';
 
   interface PullRef {
     number: number;
@@ -68,14 +69,14 @@
 
   function protectedReason(b: Branch): string {
     if (b.isDefault) return 'default branch';
-    if (b.protected) return 'GitHub protected';
+    if (b.protected) return 'provider protected';
     if (b.reserved) return 'reserved name';
     return '';
   }
 
   const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
   function relTime(iso: string | null): string {
-    if (!iso) return '—';
+    if (!iso) return '\u2014';
     const diff = new Date(iso).getTime() - Date.now();
     const abs = Math.abs(diff);
     const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
@@ -192,10 +193,6 @@
       isDeleting = false;
     }
   }
-
-  function ghUrl(name: string): string {
-    return `https://github.com/${organization}/${repoName}/tree/${encodeURIComponent(name)}`;
-  }
 </script>
 
 <div>
@@ -209,7 +206,7 @@
     >
       <option value="recent">Recently updated</option>
       <option value="oldest">Oldest first</option>
-      <option value="name">Name A–Z</option>
+      <option value="name">Name A-Z</option>
     </select>
 
     <!-- Filter pills -->
@@ -325,9 +322,9 @@
             title={b.compareBase ? `vs ${b.compareBase}` : ''}
           >
             {#if b.isDefault || b.name === b.compareBase}
-              <span class="compare-empty">—</span>
+              <span class="compare-empty">&mdash;</span>
             {:else if b.aheadBy === null && b.behindBy === null}
-              <span class="compare-empty">·</span>
+              <span class="compare-empty">&middot;</span>
             {:else}
               <span class="compare-ahead" class:dim={b.aheadBy === 0}
                 >+{b.aheadBy ?? 0}</span
@@ -362,12 +359,12 @@
 
           <!-- Author -->
           <span class="col-author" title={b.lastCommitAuthor ?? ''}
-            >{b.lastCommitAuthor ?? '—'}</span
+            >{b.lastCommitAuthor ?? '\u2014'}</span
           >
 
-          <!-- GitHub link -->
+          <!-- Provider link -->
           <span class="col-gh">
-            <GitHubLink href={ghUrl(b.name)} />
+            <ProviderLink href={branchUrl(provider, organization, repoName, b.name)} {provider} />
           </span>
 
           <!-- Delete button -->
@@ -430,7 +427,7 @@
         type="button"
         class="bulk-btn bulk-btn-danger"
         onclick={runSingleDelete}
-        disabled={isDeleting}>{isDeleting ? 'Deleting…' : 'Delete'}</button
+        disabled={isDeleting}>{isDeleting ? 'Deleting\u2026' : 'Delete'}</button
       >
     </div>
   </div>
@@ -468,7 +465,7 @@
         class="bulk-btn bulk-btn-danger"
         onclick={runBulkDelete}
         disabled={isDeleting}
-        >{isDeleting ? 'Deleting…' : `Delete ${selected.size}`}</button
+        >{isDeleting ? 'Deleting\u2026' : `Delete ${selected.size}`}</button
       >
     </div>
   </div>

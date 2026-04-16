@@ -15,7 +15,7 @@ function truncate(text: string, limit = MAX_TOOL_OUTPUT_CHARS): string {
   return text.slice(0, limit) + "\n\n... [truncated — output too long]";
 }
 
-export function githubTools(ctx: RepoContext) {
+export function gitTools(ctx: RepoContext) {
   const provider = getProvider(ctx.source);
 
   return {

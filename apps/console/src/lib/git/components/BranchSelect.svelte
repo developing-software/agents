@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { listBranches } from '$lib/agents/dispatch/dispatch.remote';
-	import { repoContext } from '$lib/git-repo/context.svelte';
+	import { repoContext } from '../context.svelte';
 
 	interface Props {
 		value: string;

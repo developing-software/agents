@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getPRDiff } from '$lib/github/github.remote';
+	import { getPRDiff } from '../remote';
 	import UnifiedDiff from '$lib/ui/UnifiedDiff.svelte';
-	import { repoContext } from '$lib/git-repo/context.svelte';
+	import { repoContext } from '../context.svelte';
 
 	let {
 		prNumber,
@@ -68,7 +68,7 @@
 	{/if}
 
 	{#if loading && autoLoad}
-		<div class="diff-loading">loading diff…</div>
+		<div class="diff-loading">loading diff...</div>
 	{/if}
 
 	{#if error}

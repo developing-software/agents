@@ -4,9 +4,9 @@
 	import { createPlan, updatePlan } from './plans.remote';
 	import { PLAN_STATUSES, type PlanStatus, type AuthorType } from './plan-helpers';
 	import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
-	import { listIssues } from '$lib/github/github.remote';
-	import IssueList from '$lib/github/IssueList.svelte';
-	import { repoContext } from '$lib/git-repo/context.svelte';
+	import { listIssues } from '$lib/git/remote';
+	import IssueList from '$lib/git/components/IssueList.svelte';
+	import { repoContext } from '$lib/git/context.svelte';
 
 	let {
 		plan = null,

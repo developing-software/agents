@@ -2,7 +2,7 @@
   import { reviewPR, judgePlan, mergeWinner, humanPickWinner } from '$lib/agents/ai/judge.remote';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
   import { capitalize } from '$lib/events/helpers';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   let {
     runs,

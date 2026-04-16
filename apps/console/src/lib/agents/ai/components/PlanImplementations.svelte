@@ -3,7 +3,7 @@
   import type { ReviewResult, CompareResult } from './plan-types';
   import PlanImplementationCard from './PlanImplementationCard.svelte';
   import WorkflowStrip from './WorkflowStrip.svelte';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   let {
     planId,

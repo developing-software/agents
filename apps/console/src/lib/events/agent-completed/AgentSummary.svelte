@@ -3,7 +3,7 @@
   import Section from '../Section.svelte';
   import SummaryView from './SummaryView.svelte';
   import { getEventSummary, invalidateSummaryCache } from './agent-completed.remote';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   const { organization, repoName } = repoContext.get();
 

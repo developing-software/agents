@@ -1,9 +1,9 @@
 <script lang="ts">
   import { reviewPR, humanReviewPR } from '$lib/agents/ai/judge.remote';
-  import PRDiffLoader from '$lib/github/PRDiffLoader.svelte';
+  import PRDiffLoader from '$lib/git/components/PRDiffLoader.svelte';
   import ArtifactList from '$lib/events/repository/ArtifactList.svelte';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   let {
     run,

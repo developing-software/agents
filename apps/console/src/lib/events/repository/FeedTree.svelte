@@ -14,7 +14,7 @@
     otherTags,
   } from '../helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   type TreeNode = {
     id: string;

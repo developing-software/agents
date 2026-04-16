@@ -20,7 +20,7 @@
   } from '../helpers';
   import { DeployEvent } from '@agents/core/events/deploy';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
-  import { repoContext } from '$lib/git-repo/context.svelte';
+  import { repoContext } from '$lib/git/context.svelte';
 
   type EventItem = {
     id: string;

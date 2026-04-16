@@ -1,12 +1,14 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { generateToken } from './repo.remote';
-  import GitHubLink from '$lib/ui/GitHubLink.svelte';
+  import ProviderLink from '$lib/git/components/ProviderLink.svelte';
+  import { providerLabel } from '$lib/git/url';
   import Events from '$lib/events/repository/Feed.svelte';
 
   let { data }: PageProps = $props();
 
   const base = $derived(`/${data.provider}/${data.organization}/${data.repoName}`);
+  const providerName = $derived(providerLabel(data.provider));
 
   let token = $state<string | null>(null);
   let tokenError = $state<string | null>(null);
@@ -36,7 +38,7 @@
       </div>
 
       {#if data.issues.length === 0}
-        <p class="empty-text">No issues synced yet. They will appear after syncing from GitHub.</p>
+        <p class="empty-text">No issues synced yet. They will appear after syncing from {providerName}.</p>
       {:else}
         <ul class="item-list">
           {#each data.issues.slice(0, 5) as issue (issue.number)}
@@ -56,7 +58,7 @@
                   </div>
                 {/if}
               </div>
-              <GitHubLink href={issue.url} />
+              <ProviderLink href={issue.url} provider={data.provider} />
             </li>
           {/each}
         </ul>
@@ -70,7 +72,7 @@
       </div>
 
       {#if data.pulls.length === 0}
-        <p class="empty-text">No pull requests synced yet. They will appear after syncing from GitHub.</p>
+        <p class="empty-text">No pull requests synced yet. They will appear after syncing from {providerName}.</p>
       {:else}
         <ul class="item-list">
           {#each data.pulls.slice(0, 5) as pr (pr.number)}
@@ -92,7 +94,7 @@
                   <span>{pr.baseBranch}</span>
                 </p>
               </div>
-              <GitHubLink href={pr.url} />
+              <ProviderLink href={pr.url} provider={data.provider} />
             </li>
           {/each}
         </ul>
