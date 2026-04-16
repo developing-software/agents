@@ -5,6 +5,7 @@ import { Common } from "../../common";
 import { Examples } from "../../examples";
 import { Event } from "../index";
 import { render as renderContext } from "./context";
+import { CAVEMAN_LEVELS } from "./extensions/caveman";
 import { PlanStatus, AuthorType } from "./plan.sql";
 import type { PlanEventData } from "./plan.sql";
 
@@ -15,7 +16,7 @@ export namespace Plan {
     includeIssueDetails: z.boolean().optional(),
     includeSkillSummary: z.boolean().optional(),
     includeFileScope: z.boolean().optional(),
-    caveman: z.boolean().optional(),
+    caveman: z.enum(CAVEMAN_LEVELS).optional(),
   });
 
   export type ToPromptOptions = z.input<typeof ToPromptOptions>;

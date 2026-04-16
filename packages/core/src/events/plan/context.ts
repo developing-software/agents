@@ -101,7 +101,7 @@ async function renderFileScope(ctx: PlanCtx): Promise<string | null> {
 
 function renderers(opts: Plan.ToPromptOptions): SectionRenderer[] {
   return [
-    ...(opts.caveman ? [renderCaveman] : []),
+    ...(opts.caveman ? [renderCaveman(opts.caveman)] : []),
     renderTitle,
     renderBody,
     ...(opts.includeIssueDetails ? [renderLinkedIssues] : []),

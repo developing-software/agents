@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onClickOutside } from 'runed';
   import type { Plan } from '@agents/core/events/plan';
+  import { isNonLatinLevel } from '@agents/core/events/plan/extensions/caveman';
 
   let {
     title = 'Prepare Dispatch',
@@ -10,20 +11,32 @@
     onconfirm: (opts: Plan.ToPromptOptions) => Promise<void> | void;
   } = $props();
 
+  type CavemanLevel = NonNullable<Plan.ToPromptOptions['caveman']>;
+  const CAVEMAN_OPTIONS: { value: CavemanLevel; label: string }[] = [
+    { value: 'lite', label: 'lite — no filler, full sentences' },
+    { value: 'full', label: 'full — drop articles, fragments OK' },
+    { value: 'ultra', label: 'ultra — abbreviate, arrows, one word' },
+    { value: 'wenyan-lite', label: 'wenyan-lite — semi-classical Chinese' },
+    { value: 'wenyan-full', label: 'wenyan-full — 文言文, 80–90% reduction' },
+    { value: 'wenyan-ultra', label: 'wenyan-ultra — extreme classical' },
+  ];
+
   let isOpen = $state(false);
   let includeIssueDetails = $state(false);
   let includeSkillSummary = $state(false);
   let includeFileScope = $state(false);
-  let caveman = $state(false);
+  let caveman = $state<CavemanLevel | ''>('');
   let working = $state(false);
   let errorMsg = $state<string | null>(null);
   let dialog = $state<HTMLElement>();
+
+  const cavemanWarning = $derived(caveman && isNonLatinLevel(caveman) ? caveman : null);
 
   export function open() {
     includeIssueDetails = false;
     includeSkillSummary = false;
     includeFileScope = false;
-    caveman = false;
+    caveman = '';
     working = false;
     errorMsg = null;
     isOpen = true;
@@ -39,7 +52,12 @@
     working = true;
     errorMsg = null;
     try {
-      await onconfirm({ includeIssueDetails, includeSkillSummary, includeFileScope, caveman });
+      await onconfirm({
+        includeIssueDetails,
+        includeSkillSummary,
+        includeFileScope,
+        caveman: caveman || undefined,
+      });
       isOpen = false;
     } catch (err: unknown) {
       errorMsg = err instanceof Error ? err.message : 'Failed to prepare dispatch';
@@ -84,13 +102,27 @@
         </div>
       </label>
 
-      <label class="opt-row">
-        <input type="checkbox" bind:checked={caveman} disabled={working} />
+      <div class="opt-row opt-select">
         <div class="opt-text">
           <span class="opt-label">Caveman mode</span>
-          <span class="opt-hint">Prepend terse-response directive to cut output tokens.</span>
+          <span class="opt-hint">
+            Prepend terse-response directive to cut output tokens. Adapted from
+            <a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener noreferrer">JuliusBrussee/caveman</a>.
+          </span>
         </div>
-      </label>
+        <select bind:value={caveman} disabled={working} class="level-select">
+          <option value="">Off</option>
+          {#each CAVEMAN_OPTIONS as opt (opt.value)}
+            <option value={opt.value}>{opt.label}</option>
+          {/each}
+        </select>
+      </div>
+
+      {#if cavemanWarning}
+        <div class="lang-warning" role="alert">
+          <strong>{cavemanWarning}</strong> responds in classical Chinese (文言文). Output will be non-Latin.
+        </div>
+      {/if}
 
       {#if errorMsg}
         <div class="error-msg">{errorMsg}</div>
@@ -183,6 +215,27 @@
     cursor: pointer;
   }
 
+  .opt-select {
+    cursor: default;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .level-select {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 4px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    background: var(--color-elevated);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  .level-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .opt-text {
     display: flex;
     flex-direction: column;
@@ -199,6 +252,11 @@
     color: var(--color-dim);
   }
 
+  .opt-hint a {
+    color: var(--color-accent);
+    text-decoration: underline;
+  }
+
   .error-msg {
     font-size: 11px;
     color: var(--color-danger);
@@ -206,6 +264,15 @@
     border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
     border-radius: 3px;
     background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  }
+
+  .lang-warning {
+    font-size: 11px;
+    color: var(--color-warning, #c78200);
+    padding: 6px 8px;
+    border: 1px solid color-mix(in srgb, var(--color-warning, #c78200) 35%, transparent);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-warning, #c78200) 10%, transparent);
   }
 
   .dialog-footer {
