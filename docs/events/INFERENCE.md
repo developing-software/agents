@@ -41,12 +41,12 @@ These require aggregation over time windows using `Event.list()` with `from`/`to
 
 Group by tags to compare:
 
-| Comparison         | Group By          | Metrics                           | Use                               |
-| ------------------ | ----------------- | --------------------------------- | --------------------------------- |
-| Model vs model     | `model:*` tag     | cost, tokens, duration, pass rate | Choose best model for workload    |
-| Harness vs harness | `harness:*` tag   | cost, tokens, duration, pass rate | Compare agent implementations     |
-| Branch activity    | `gh:branch:*` tag | event count, lines changed        | Identify active development areas |
-| Issue complexity   | `scope:*` tag     | duration, cost, lines changed     | Validate scope estimates          |
+| Comparison         | Group By           | Metrics                           | Use                               |
+| ------------------ | ------------------ | --------------------------------- | --------------------------------- |
+| Model vs model     | `model:*` tag      | cost, tokens, duration, pass rate | Choose best model for workload    |
+| Harness vs harness | `harness:*` tag    | cost, tokens, duration, pass rate | Compare agent implementations     |
+| Branch activity    | `git:branch:*` tag | event count, lines changed        | Identify active development areas |
+| Issue complexity   | `scope:*` tag      | duration, cost, lines changed     | Validate scope estimates          |
 
 ## Event Chain Inference
 
@@ -54,11 +54,11 @@ Group by tags to compare:
 
 Events can be chained without explicit `parentEventId` using tag-based inference:
 
-1. **By PR:** Match `gh:pr:` tag to find all events related to a PR
-2. **By workflow:** Match `gh:workflow:` tag to find all events in a single workflow run
-3. **By issue:** Match `gh:issue:` tag to find the root event for an issue
+1. **By PR:** Match `git:pr:` tag to find all events related to a PR
+2. **By workflow:** Match `git:workflow:` tag to find all events in a single workflow run
+3. **By issue:** Match `git:issue:` tag to find the root event for an issue
 
-`Event.inferParentEventId()` implements this: it searches for existing events with the same tag combination and returns the most recent match as the parent.
+`Event.inferParentEventId()` implements this: it searches for existing events with the same tag combination and returns the most recent match as the parent. Inference is constrained to the same `source` and `sourceId`, so matching tags in a different repository cannot create parent links.
 
 ### Tree Queries
 
@@ -71,7 +71,7 @@ Some metrics require joining data from multiple events in a chain:
 | Want             | Need                                                      | How                                               |
 | ---------------- | --------------------------------------------------------- | ------------------------------------------------- |
 | Full run summary | agent                                                     | All data (metrics, diff, pr, checks) in one event |
-| Issue lifecycle  | github.issues.opened → agent → github.pull_request.closed | Tag chain via `gh:issue:N`                        |
+| Issue lifecycle  | github.issues.opened → agent → github.pull_request.closed | Tag chain via `git:issue:N`                       |
 | Plan execution   | plan → agent → github.pull_request.reviewed               | Tag chain via `plan:ID`                           |
 
 ## Currently Computed (in Console)

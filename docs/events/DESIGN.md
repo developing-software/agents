@@ -1,6 +1,6 @@
 # Event System Design
 
-Events are the backbone of observability in this system. Every meaningful action — agent runs, GitHub webhooks, console operations — emits an event that flows through a single schema into Postgres.
+Events are the backbone of observability in this system. Every meaningful action — agent runs, git-provider webhooks, console operations — emits an event that flows through a single schema into Postgres.
 
 ## Event Shape
 
@@ -23,7 +23,7 @@ Events are the backbone of observability in this system. Every meaningful action
 | Origin    | Description                                              |
 | --------- | -------------------------------------------------------- |
 | `action`  | GitHub Actions workflows (agent runs, event/emit action) |
-| `webhook` | GitHub webhook handlers (issues, PRs, pushes)            |
+| `webhook` | Git-provider webhook handlers (issues, PRs, pushes)      |
 | `console` | Console server-side commands (triage, review, judge)     |
 | `cli`     | CLI tools (reserved, not actively used)                  |
 | `api`     | Direct API posts (reserved)                              |
@@ -37,13 +37,16 @@ Events are the backbone of observability in this system. Every meaningful action
 | ------- | ------ | --------------------------------------------------------------------------- |
 | `agent` | action | Agent workflow event — created on setup, updated on teardown with full data |
 
-### GitHub Webhooks
+### Provider Webhooks
 
 | Type                           | Origin  | Description                                   |
 | ------------------------------ | ------- | --------------------------------------------- |
-| `github.issues.{action}`       | webhook | Issue opened, closed, reopened, labeled, etc. |
-| `github.pull_request.{action}` | webhook | PR opened, closed, synchronize, etc.          |
-| `github.push`                  | webhook | Push to a branch                              |
+| `github.issues.{action}`        | webhook | GitHub issue opened, closed, reopened, labeled, etc.  |
+| `github.pull_request.{action}`  | webhook | GitHub PR opened, closed, synchronize, etc.           |
+| `github.push`                   | webhook | GitHub push to a branch                               |
+| `forjero.issues.{action}`       | webhook | Forgejo issue opened, closed, reopened, labeled, etc. |
+| `forjero.pull_request.{action}` | webhook | Forgejo PR opened, closed, synchronize, etc.          |
+| `forjero.push`                  | webhook | Forgejo push to a branch                              |
 
 ### Console Operations
 
@@ -74,7 +77,7 @@ Typed schema: `ChecksEvent.Completed.Data` in `packages/core/src/events/checks/i
 | `deploy`        | action | Deploy event — created on setup, updated on teardown with outputs/PR |
 | `deploy.remove` | action | Teardown event — created on setup, updated on teardown               |
 
-Standard tags: `env:<stage>`, `tool:<name>` (e.g. `sst`), `gh:branch:<head>` and `gh:base:<base>` on PR runs, plus all auto-injected `gh:*` tags from `event/init`.
+Standard tags: `env:<stage>`, `tool:<name>` (e.g. `sst`), `git:branch:<head>` on PR runs, plus all auto-injected `git:*` tags from `event/init`.
 
 Typed schema: `DeployEvent.Completed.Data` in `packages/core/src/events/deploy/index.ts`.
 
@@ -82,7 +85,14 @@ Typed schema: `DeployEvent.Completed.Data` in `packages/core/src/events/deploy/i
 
 Events form trees via `parentEventId`. Agent events are single nodes — created at workflow start and updated at teardown with full data.
 
-Parent inference works via tag matching — when `parentEventId` isn't explicit, `Event.inferParentEventId()` finds existing events with matching `gh:pr:`, `gh:issue:`, or `gh:workflow:` tags.
+Parent inference works via tag matching — when `parentEventId` isn't explicit, `Event.inferParentEventId()` finds existing events with matching `git:pr:`, `git:issue:`, or `git:workflow:` tags within the same `source` and `sourceId`.
+
+Git tags are produced and consumed through `Tags.Git.*` in `packages/core/src/events/tag/index.ts`. Use:
+
+- `Tags.Git.parse(tag)` to parse a single tag
+- `Tags.Git.list(tags)` to parse all git tags from a tag list
+- `Tags.Git.find(tags, kind)` to get the first matching git tag
+- `Tags.Git.collect(tags, kind)` to get all matches, such as multiple `git:issue:*` tags on a plan
 
 ## Tags vs Data
 
@@ -93,11 +103,12 @@ Tags and data serve different purposes. Getting this wrong makes events hard to 
 Tags are **small, categorical, deterministic values** used for search and aggregation:
 
 ```
-gh:repo:owner/name     # repository reference
-gh:issue:42            # issue number
-gh:pr:15               # pull request number
-gh:branch:main         # branch name
-gh:workflow:12345           # GitHub Actions run ID
+git:provider:github         # git provider
+git:repo:github:owner/name  # repository reference
+git:issue:42                # issue number
+git:pr:15                   # pull request number
+git:branch:main             # branch name
+git:workflow:12345          # GitHub Actions run ID
 env:production         # environment / base branch
 harness:claude         # agent harness name
 model:claude-sonnet-4-20250514  # LLM model identifier
@@ -132,7 +143,7 @@ Data holds **everything that is NOT small and simple:**
 
 ```
 Is it a short identifier, enum, or number you'd filter/group by?
-  → Tag (e.g., harness:claude, model:gpt-4o, gh:issue:42)
+  → Tag (e.g., harness:claude, model:gpt-4o, git:issue:42)
 
 Is it a measurement, long string, object, or array?
   → Data (e.g., cost_usd, finalMessage, checks)

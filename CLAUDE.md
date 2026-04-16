@@ -1,12 +1,12 @@
 # Dev Agents
 
-Monorepo for reusable GitHub/agent actions and a console to track GitHub and agent activity — collecting metrics and traces for analysis.
+Monorepo for reusable git/agent actions and a console to track git-provider and agent activity — collecting metrics and traces for analysis.
 
 When proposing solutions, prefer the simplest approach that matches existing codebase patterns. Check for existing patterns (e.g., Project.get style) before suggesting new abstractions. Do NOT propose complex architectures (sidecars, supervisors, executors) unless explicitly asked.
 
 ## Packages
 
-- `packages/core` — shared business logic, DB schema, GitHub integration, actor/context system
+- `packages/core` — shared business logic, DB schema, git-provider integration, actor/context system
 - `packages/functions` — Hono API server (port 3000), OpenAPI-documented endpoints
 - `packages/sdk/ts` — TypeScript SDK auto-generated from OpenAPI spec
 - `apps/console` — SvelteKit dashboard (Cloudflare Workers)

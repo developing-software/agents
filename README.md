@@ -61,7 +61,7 @@ Issues are triaged, validated, and grouped into plans. Plans can be authored by 
 |                  INCEPTION PHASE (Platform-Orchestrated)              |
 +----------------------------------------------------------------------+
 
-  GitHub Issues
+  Git Provider Issues
   (bug, feature, task)
         |
         v
@@ -244,7 +244,7 @@ Each PR is reviewed individually (by an LLM judge, a human, or both), then all r
   |  - Repo browser             |    |  - POST /events            |
   |  - Issue / PR views         |    |  - POST /events/:id/       |
   |  - Agent config + skills    |    |       artifacts             |
-  |  - Plan management          |    |  - GitHub webhooks          |
+  |  - Plan management          |    |  - Provider webhooks        |
   |  - Dispatch drawer          |    |  - Auth (OAuth + tokens)   |
   |  - AI Planner chat          |    |                             |
   |  - Event viewer             |    |                             |
@@ -260,7 +260,7 @@ Each PR is reviewed individually (by an LLM judge, a human, or both), then all r
                    |  - Event store (Postgres)   |
                    |  - Plan system (CRUD,       |
                    |       prompt, lifecycle)    |
-                   |  - GitHub API client        |
+                   |  - Git provider clients     |
                    |  - Agent discovery          |
                    |  - Workflow dispatch         |
                    +-----------------------------+
@@ -289,7 +289,7 @@ agents/
     console/        SvelteKit dashboard (Cloudflare Workers)
     cli/            CLI tool
   packages/
-    core/           Shared business logic, DB schema, GitHub integration
+    core/           Shared business logic, DB schema, git-provider integration
     functions/      Hono API server (OpenAPI-documented endpoints)
     workers/        Cloudflare Workers build/deployment
     sdk/ts/         TypeScript SDK (auto-generated from OpenAPI spec)

@@ -104,7 +104,7 @@ The core lifecycle harness. Node.js action with `main` (setup) and `post` (teard
 
 - Creates `DEV_AGENTS_RESULTS_DIR` and `DEV_AGENTS_TAGS_DIR`
 - Exports `DEV_AGENTS_TOKEN` and `DEV_AGENTS_API_URL` to env for all downstream steps
-- Writes GitHub context tags (repo, run, branch/PR)
+- Writes workflow context tags (provider, repo, run, branch/PR)
 - Writes user-provided tags
 - Emits `{type}.started` event
 
