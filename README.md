@@ -8,14 +8,14 @@ Inspired by the [AIDLC](https://github.com/awslabs/aidlc-workflows) framework, a
 
 Every phase transition requires a human decision. Agents never act autonomously — the platform orchestrates, but humans approve.
 
-| Gate | Who decides | What happens |
-|------|------------|--------------|
-| Plan approval | Human | `draft → review → approved` — no agent runs without this |
-| Dispatch | Human | Selects agents, models, and triggers execution from the console |
-| Review | Human and/or LLM | Scores each PR on adherence, quality, completeness |
-| Fix dispatch | Human | Sends agent back to fix issues on the same PR branch with feedback |
-| Winner selection | Human and/or LLM judge | Picks which competing PR to merge |
-| Merge | Human | Merges winner, closes losers, completes the plan |
+| Gate             | Who decides            | What happens                                                       |
+| ---------------- | ---------------------- | ------------------------------------------------------------------ |
+| Plan approval    | Human                  | `draft → review → approved` — no agent runs without this           |
+| Dispatch         | Human                  | Selects agents, models, and triggers execution from the console    |
+| Review           | Human and/or LLM       | Scores each PR on adherence, quality, completeness                 |
+| Fix dispatch     | Human                  | Sends agent back to fix issues on the same PR branch with feedback |
+| Winner selection | Human and/or LLM judge | Picks which competing PR to merge                                  |
+| Merge            | Human                  | Merges winner, closes losers, completes the plan                   |
 
 The **review/fix loop** is the core iteration cycle: after an agent submits a PR, the reviewer (human or LLM) evaluates it. If issues are found, the human dispatches a fix — the same agent receives the original plan prompt plus review feedback and works on the same branch. This repeats until the PR passes review. Only then does it enter winner comparison.
 

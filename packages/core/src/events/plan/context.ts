@@ -18,7 +18,7 @@ const PlanContextStorage = Context.create<PlanContextState>();
 
 function makeState(plan: Plan.Info): PlanContextState {
   const repo = lazy(() =>
-    plan.sourceId ? Repository.findByID(plan.sourceId) : Promise.resolve(null),
+    plan.sourceId ? Repository.fromID(plan.sourceId) : Promise.resolve(null),
   );
   const issueCache = new Map<number, Promise<NormalizedIssue | null>>();
   const issue = (n: number) => {

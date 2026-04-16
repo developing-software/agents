@@ -214,6 +214,7 @@ export const listAgentRuns = query(
           id: e.id,
           parentEventId: e.parentEventId,
           agent: parsed.agent.name,
+          finalMessage: parsed.agent.finalMessage ?? null,
           model: metrics?.model ?? null,
           cost_usd: metrics?.cost_usd ?? null,
           input_tokens: tokens?.input ?? null,

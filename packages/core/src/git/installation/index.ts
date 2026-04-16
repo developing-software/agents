@@ -114,7 +114,7 @@ export namespace Installation {
     });
   }
 
-  export async function findByID(id: string): Promise<Info | null> {
+  export async function fromID(id: string): Promise<Info | null> {
     const workspaceId = Actor.workspaceID();
     return useTransaction(async (tx) =>
       tx
@@ -131,7 +131,7 @@ export namespace Installation {
     );
   }
 
-  export async function findByIDForWebhook(id: string): Promise<Info | null> {
+  export async function fromIDForWebhook(id: string): Promise<Info | null> {
     return useTransaction(async (tx) =>
       tx
         .select()

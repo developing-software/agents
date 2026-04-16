@@ -16,6 +16,19 @@
 - **Error Handling**: Use explicit error throwing, wrap DB operations in transactions
 - **Module Pattern**: Export functions through namespaces (e.g., `export namespace User`)
 - **Testing**: Use `bun:test` with `describe`/`it` pattern and `withTestUser` helper
+
+## Module Layout
+
+- Default: one module = one `index.ts` exporting a `namespace Foo { ... }`
+  (see `user/`, `auth/`, `workspace/`, `account/`).
+- Split into multiple files inside the module directory when `index.ts`
+  grows hard to navigate or mixes unrelated concerns (see `agent/`,
+  `cache/`, `events/`). The module's `index.ts` then becomes a thin
+  re-export aggregator.
+- No top-level shim files at `src/<module>.ts` alongside `src/<module>/`.
+  Consumers import through the directory via `@agents/core/<module>`.
+- SQL schemas live next to the module they belong to (`user/user.sql.ts`,
+  `git/installation/installation.sql.ts`).
 - **Documentation**: Use OpenAPI annotations with Zod schemas
 - **Database**: Use Drizzle ORM with explicit transactions via `useTransaction` and `createTransaction`
 - **Validation**: Use `fn()` utility for input validation and schema definition

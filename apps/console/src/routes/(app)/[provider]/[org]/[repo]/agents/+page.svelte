@@ -16,6 +16,7 @@
   } from '$lib/events/helpers';
   import AgentSummary from '$lib/events/agent-completed/AgentSummary.svelte';
   import AgentComparison from '$lib/events/agent-completed/AgentComparison.svelte';
+  import ArtifactList from '$lib/events/repository/ArtifactList.svelte';
 
   let { data }: PageProps = $props();
 
@@ -153,6 +154,13 @@
 
           {#if isExpanded}
             <div class="detail-panel">
+              {#if run.finalMessage}
+                <div class="detail-section">
+                  <span class="detail-label">Final message</span>
+                  <pre class="final-message">{run.finalMessage}</pre>
+                </div>
+              {/if}
+
               {#if run.checks.length > 0}
                 <div class="detail-section">
                   <span class="detail-label">Checks</span>
@@ -289,6 +297,7 @@
                 </div>
               {/if}
 
+              <ArtifactList eventId={run.id} />
             </div>
           {/if}
         </div>
@@ -527,6 +536,25 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--color-dim);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Final message                                                       */
+  /* ------------------------------------------------------------------ */
+  .final-message {
+    margin: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--color-text);
   }
 
   /* ------------------------------------------------------------------ */

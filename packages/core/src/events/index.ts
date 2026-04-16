@@ -106,7 +106,7 @@ export namespace Event {
     /** Resolve a SourceRef to a concrete source type and ID. */
     export async function resolve(input: Ref): Promise<Resolved | null> {
       if ("repositoryId" in input) {
-        const repo = await Repository.findByID(input.repositoryId);
+        const repo = await Repository.fromID(input.repositoryId);
         if (repo) return { source: "repository", sourceId: repo.id, label: input.repositoryId };
       }
 

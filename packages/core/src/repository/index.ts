@@ -238,7 +238,7 @@ export namespace Repository {
     );
   }
 
-  export async function findByID(id: string): Promise<Info | null> {
+  export async function fromID(id: string): Promise<Info | null> {
     const workspaceId = Actor.workspaceID();
     return useTransaction(async (tx) =>
       tx
