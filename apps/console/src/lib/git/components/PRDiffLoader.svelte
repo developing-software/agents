@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getPRDiff } from '../remote';
+	import { getPRDiff } from '../git.remote';
 	import UnifiedDiff from '$lib/ui/UnifiedDiff.svelte';
 	import { repoContext } from '../context.svelte';
 

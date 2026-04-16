@@ -7,38 +7,12 @@
   import {
     deleteBranch,
     deleteBranches,
-  } from '../../../routes/(app)/[provider]/[org]/[repo]/branches/branches.remote';
+    type BranchDetails,
+  } from '../branches.remote';
   import { repoContext } from '../context.svelte';
 
-  interface PullRef {
-    number: number;
-    title: string;
-    state: string;
-    headBranch: string;
-    baseBranch: string;
-    url: string;
-  }
-
-  interface Branch {
-    name: string;
-    protected: boolean;
-    reserved: boolean;
-    isDefault: boolean;
-    agent: string | null;
-    sha: string;
-    lastCommitDate: string | null;
-    lastCommitAuthor: string | null;
-    lastCommitMessage: string | null;
-    aheadBy: number | null;
-    behindBy: number | null;
-    compareBase: string | null;
-    pullRequest: PullRef | null;
-    pullRequestCount: number;
-    hasMergedPR: boolean;
-  }
-
   interface Props {
-    branches: Branch[];
+    branches: BranchDetails[];
   }
 
   let { branches }: Props = $props();
@@ -58,16 +32,16 @@
 
   const STALE_MS = 30 * 86_400_000;
 
-  function isStale(b: Branch): boolean {
+  function isStale(b: BranchDetails): boolean {
     if (!b.lastCommitDate) return false;
     return Date.now() - new Date(b.lastCommitDate).getTime() > STALE_MS;
   }
 
-  function isDeletable(b: Branch): boolean {
+  function isDeletable(b: BranchDetails): boolean {
     return !b.protected && !b.reserved && !b.isDefault;
   }
 
-  function protectedReason(b: Branch): string {
+  function protectedReason(b: BranchDetails): string {
     if (b.isDefault) return 'default branch';
     if (b.protected) return 'provider protected';
     if (b.reserved) return 'reserved name';
@@ -113,7 +87,7 @@
     { value: 'protected', label: 'Protected' },
   ];
 
-  function matchesFilter(b: Branch, f: Filter): boolean {
+  function matchesFilter(b: BranchDetails, f: Filter): boolean {
     switch (f) {
       case 'all':
         return true;

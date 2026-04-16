@@ -1,18 +1,13 @@
 <script lang="ts">
   import { SvelteSet } from 'svelte/reactivity';
+  import type { NormalizedIssue } from '@agents/core/git';
   import ProviderLink from './ProviderLink.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { issueStateColor, issueStateDotStyle } from '../helpers';
   import { repoContext } from '../context.svelte';
 
   interface Props {
-    issues: Array<{
-      number: number;
-      title: string;
-      state: string;
-      labels: string[];
-      url: string;
-    }>;
+    issues: NormalizedIssue[];
     selectable?: boolean;
     selected?: Set<number>;
     emptyText?: string;

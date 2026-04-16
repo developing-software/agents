@@ -1,18 +1,12 @@
 <script lang="ts">
+  import type { NormalizedPullRequest } from '@agents/core/git';
   import ProviderLink from './ProviderLink.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { prStateColor, prStateDotStyle } from '../helpers';
   import { repoContext } from '../context.svelte';
 
   interface Props {
-    pulls: Array<{
-      number: number;
-      title: string;
-      state: string;
-      headBranch: string;
-      baseBranch: string;
-      url: string;
-    }>;
+    pulls: NormalizedPullRequest[];
     emptyText?: string;
   }
 
