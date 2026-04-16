@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
-  import { enhance } from "$app/forms";
+  import { unlinkProvider } from "./providers.remote";
 
-  let { data, form }: PageProps = $props();
+  let { data }: PageProps = $props();
 
   const providers = $derived(data.providers.filter((p) => p.provider !== "email"));
 </script>
@@ -18,10 +18,6 @@
     <p class="muted">Sign-in methods connected to your account.</p>
   </header>
 
-  {#if form?.message}
-    <p class="notice notice-error">{form.message}</p>
-  {/if}
-
   <section class="panel">
     <h2 class="section-heading">Providers</h2>
 
@@ -30,14 +26,20 @@
     {:else}
       <ul class="provider-list">
         {#each providers as p (p.id)}
+          {@const unlink = unlinkProvider.for(p.id)}
           <li class="provider-row">
             <div class="provider-main">
               <p class="provider-name">{p.provider}</p>
               <p class="provider-subject">{p.subject}</p>
+              {#each unlink.fields.allIssues() as issue (issue.message)}
+                <p class="issue">{issue.message}</p>
+              {/each}
             </div>
-            <form method="POST" action="?/unlink" use:enhance>
-              <input type="hidden" name="id" value={p.id} />
-              <button type="submit" class="btn-danger">Unlink</button>
+            <form {...unlink}>
+              <input {...unlink.fields.id.as("hidden", p.id)} />
+              <button type="submit" class="btn-danger" disabled={!!unlink.pending}>
+                {unlink.pending ? "Unlinking…" : "Unlink"}
+              </button>
             </form>
           </li>
         {/each}
@@ -123,20 +125,6 @@
     border-top: 1px solid var(--color-border);
   }
 
-  .notice {
-    margin: 0;
-    padding: 8px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 5px;
-    font-size: 12px;
-    background: var(--color-surface);
-  }
-
-  .notice-error {
-    border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
-    background: var(--color-danger-dim);
-  }
-
   .panel {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -199,6 +187,12 @@
     white-space: nowrap;
   }
 
+  .issue {
+    margin: 4px 0 0;
+    color: var(--color-danger);
+    font-size: 11px;
+  }
+
   .btn-danger {
     min-height: 26px;
     padding: 0 10px;
@@ -211,9 +205,14 @@
     transition: background 0.1s, border-color 0.1s;
   }
 
-  .btn-danger:hover {
+  .btn-danger:hover:not(:disabled) {
     background: var(--color-danger-dim);
     border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
+  }
+
+  .btn-danger:disabled {
+    opacity: 0.5;
+    cursor: progress;
   }
 
   .connect-row {

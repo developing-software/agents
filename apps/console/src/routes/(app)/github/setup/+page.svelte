@@ -1,22 +1,35 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
   import { untrack } from "svelte";
+  import { goto } from "$app/navigation";
   import { claimInstallation, createWorkspaceAndClaim } from "./setup.remote";
 
   let { data }: PageProps = $props();
 
+  const REDIRECT_DELAY_MS = 1500;
+
   let workspaceName = $state(untrack(() => data.suggestedWorkspaceName));
   let submitting = $state<string | null>(null);
   let message = $state<string | null>(null);
+  let success = $state<string | null>(null);
+
+  function scheduleRedirect(redirectTo: string) {
+    setTimeout(() => {
+      goto(redirectTo);
+    }, REDIRECT_DELAY_MS);
+  }
 
   async function linkExisting(workspaceID: string) {
     submitting = workspaceID;
     message = null;
+    success = null;
     try {
-      await claimInstallation({
+      const { redirectTo } = await claimInstallation({
         workspaceID,
         installationRef: data.installationRef,
       });
+      success = "Linked. Redirecting to workspace settings…";
+      scheduleRedirect(redirectTo);
     } catch (err) {
       message = err instanceof Error ? err.message : "Failed to link installation.";
       submitting = null;
@@ -27,11 +40,14 @@
     event.preventDefault();
     submitting = "__create__";
     message = null;
+    success = null;
     try {
-      await createWorkspaceAndClaim({
+      const { redirectTo } = await createWorkspaceAndClaim({
         name: workspaceName,
         installationRef: data.installationRef,
       });
+      success = `Workspace "${workspaceName}" created. Redirecting…`;
+      scheduleRedirect(redirectTo);
     } catch (err) {
       message = err instanceof Error ? err.message : "Failed to create workspace.";
       submitting = null;
@@ -51,6 +67,10 @@
       GitHub sent this installation without a usable workspace destination. Pick where it should live, or create a new workspace and claim it immediately.
     </p>
   </section>
+
+  {#if success}
+    <p class="notice success">{success}</p>
+  {/if}
 
   {#if message}
     <p class="notice error">{message}</p>
@@ -187,6 +207,11 @@
   .notice.error {
     border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
     background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  }
+
+  .notice.success {
+    border-color: color-mix(in srgb, var(--color-success) 45%, var(--color-border));
+    background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
   }
 
   .panel {

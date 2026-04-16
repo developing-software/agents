@@ -1,8 +1,9 @@
 <script lang="ts">
-  import type { ActionData, PageProps } from "./$types";
+  import type { PageProps } from "./$types";
   import WorkspaceSettingsNav from "$lib/workspace/WorkspaceSettingsNav.svelte";
+  import { inviteMember } from "./members.remote";
 
-  let { data, form }: PageProps & { form: ActionData } = $props();
+  let { data }: PageProps = $props();
 </script>
 
 <div class="page">
@@ -19,30 +20,37 @@
     workspaceName={data.workspace?.name ?? null}
   />
 
-  {#if form?.success}
-    <p class="notice notice-success">Invitation recorded for {form.invitedEmail}.</p>
-  {:else if form?.message}
-    <p class="notice notice-error">{form.message}</p>
+  {#if inviteMember.result?.invitedEmail}
+    <p class="notice notice-success">Invitation recorded for {inviteMember.result.invitedEmail}.</p>
   {/if}
+
+  {#each inviteMember.fields.allIssues() as issue (issue.message)}
+    <p class="notice notice-error">{issue.message}</p>
+  {/each}
 
   {#if data.role === "admin"}
     <section class="panel">
       <h2 class="section-heading">Invite someone</h2>
       <p class="muted small">Invited emails appear immediately and are claimed when that account signs in.</p>
 
-      <form method="POST" action="?/invite" class="invite-form">
+      <form {...inviteMember} class="invite-form">
         <label class="field field-email">
           <span>Email</span>
-          <input name="email" type="email" placeholder="teammate@example.com" required />
+          <input
+            {...inviteMember.fields.email.as("email")}
+            placeholder="teammate@example.com"
+          />
         </label>
         <label class="field field-role">
           <span>Role</span>
-          <select name="role">
+          <select {...inviteMember.fields.role.as("select")}>
             <option value="member">Member</option>
             <option value="admin">Admin</option>
           </select>
         </label>
-        <button type="submit" class="btn-primary">Send invite</button>
+        <button type="submit" class="btn-primary" disabled={!!inviteMember.pending}>
+          {inviteMember.pending ? "Sending…" : "Send invite"}
+        </button>
       </form>
     </section>
   {/if}
@@ -205,8 +213,13 @@
     transition: opacity 0.1s;
   }
 
-  .btn-primary:hover {
+  .btn-primary:hover:not(:disabled) {
     opacity: 0.9;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: progress;
   }
 
   .empty-text {

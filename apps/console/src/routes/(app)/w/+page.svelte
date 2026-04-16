@@ -1,7 +1,8 @@
 <script lang="ts">
-  import type { ActionData, PageProps } from "./$types";
+  import type { PageProps } from "./$types";
+  import { createWorkspace } from "./workspaces.remote";
 
-  let { data, form }: PageProps & { form: ActionData } = $props();
+  let { data }: PageProps = $props();
 </script>
 
 <svelte:head>
@@ -14,10 +15,6 @@
     <h1>Choose a workspace</h1>
     <p class="muted">Pick where you want to work, or create a new workspace for a new team.</p>
   </header>
-
-  {#if form?.message}
-    <p class="notice notice-error">{form.message}</p>
-  {/if}
 
   <section class="panel">
     <h2 class="section-heading">Your memberships</h2>
@@ -44,12 +41,17 @@
   <section class="panel">
     <h2 class="section-heading">Create a workspace</h2>
 
-    <form method="POST" action="?/create" class="create-form">
+    <form {...createWorkspace} class="create-form">
       <label class="field">
         <span>Workspace name</span>
-        <input name="name" type="text" placeholder="Acme Engineering" required />
+        <input {...createWorkspace.fields.name.as("text")} placeholder="Acme Engineering" />
+        {#each createWorkspace.fields.name.issues() as issue (issue.message)}
+          <small class="issue">{issue.message}</small>
+        {/each}
       </label>
-      <button type="submit" class="btn-primary">Create workspace</button>
+      <button type="submit" class="btn-primary" disabled={!!createWorkspace.pending}>
+        {createWorkspace.pending ? "Creating…" : "Create workspace"}
+      </button>
     </form>
   </section>
 </div>
@@ -110,21 +112,6 @@
     content: "";
     flex: 1;
     border-top: 1px solid var(--color-border);
-  }
-
-  .notice {
-    margin: 0;
-    padding: 8px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 5px;
-    background: var(--color-surface);
-    font-size: 12px;
-  }
-
-  .notice-error {
-    border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
-    background: var(--color-danger-dim);
-    color: var(--color-text);
   }
 
   .panel {
@@ -227,6 +214,11 @@
     width: 100%;
   }
 
+  .issue {
+    color: var(--color-danger);
+    font-size: 11px;
+  }
+
   .btn-primary {
     min-height: 28px;
     padding: 0 14px;
@@ -240,8 +232,13 @@
     transition: opacity 0.1s;
   }
 
-  .btn-primary:hover {
+  .btn-primary:hover:not(:disabled) {
     opacity: 0.9;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: progress;
   }
 
   @media (max-width: 640px) {

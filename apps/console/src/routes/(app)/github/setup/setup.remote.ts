@@ -1,6 +1,6 @@
 import { command, getRequestEvent } from "$app/server";
 import { z } from "zod";
-import { error, redirect } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { Actor } from "@agents/core/actor";
 import { Installation } from "@agents/core/git/installation";
 import { Workspace } from "@agents/core/workspace";
@@ -55,7 +55,7 @@ export const claimInstallation = command(
     if (result.type === "already_linked") {
       error(409, `${result.org} is already linked to another workspace.`);
     }
-    redirect(303, integrationsPath(workspaceID, { linked: result.org }));
+    return { redirectTo: integrationsPath(workspaceID, { linked: result.org }) };
   },
 );
 
@@ -76,11 +76,18 @@ export const createWorkspaceAndClaim = command(
 
     const result = await claim(event, workspaceID, installationRef);
     if (result.type === "already_linked") {
-      redirect(303, integrationsPath(workspaceID, { error: "already_linked", org: result.org }));
+      return {
+        redirectTo: integrationsPath(workspaceID, {
+          error: "already_linked",
+          org: result.org,
+        }),
+      };
     }
     if (result.type === "not_ready") {
-      redirect(303, integrationsPath(workspaceID, { error: "installation_not_ready" }));
+      return {
+        redirectTo: integrationsPath(workspaceID, { error: "installation_not_ready" }),
+      };
     }
-    redirect(303, integrationsPath(workspaceID, { linked: result.org }));
+    return { redirectTo: integrationsPath(workspaceID, { linked: result.org }) };
   },
 );
