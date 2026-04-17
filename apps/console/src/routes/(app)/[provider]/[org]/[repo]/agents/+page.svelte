@@ -14,8 +14,8 @@
     formatDuration,
     formatTokensCompact,
   } from '$lib/features/events/helpers';
-  import AgentSummary from '$lib/features/events/components/metrics/AgentSummary.svelte';
-  import AgentComparison from '$lib/features/events/components/metrics/AgentComparison.svelte';
+  import AgentSummary from '$lib/features/events/views/AgentSummary.svelte';
+  import AgentComparison from '$lib/features/events/views/AgentComparison.svelte';
   import ArtifactList from '$lib/features/events/components/feed/ArtifactList.svelte';
 
   let { data }: PageProps = $props();

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import QueryLoader from '$lib/ui/QueryLoader.svelte';
   import { listTree } from '$lib/features/events/api/activity.remote';
   import { relativeTime } from '$lib/features/agents/plans/plan-helpers';
   import { repoContext } from '$lib/features/git/context.svelte';
@@ -18,7 +19,6 @@
   const { provider, organization, repoName } = repoContext.get();
 
   const treeQuery = listTree({ organization, repoName, tags: [] });
-  const roots = $derived(treeQuery.current?.filter(hasTypePlan) ?? []);
 
   function extractPrFromTags(tags: string[]): string | null {
     const pr = Tags.Git.find(tags, 'pr');
@@ -79,25 +79,15 @@
 
 </script>
 
-{#if treeQuery.loading && !treeQuery.current}
-  <div class="tree">
-    {#each [1, 2, 3] as i (i)}
-      <div class="skeleton-row">
-        <div class="skeleton-block" style="width:5px;height:5px;border-radius:50%;"></div>
-        <div class="skeleton-block" style="width:140px;height:12px;"></div>
-        <div class="skeleton-block" style="width:52px;height:16px;"></div>
-        <div class="skeleton-block" style="width:40px;height:11px;margin-left:auto;"></div>
-      </div>
-    {/each}
-  </div>
-{:else if treeQuery.error}
-  <div class="error">
-    <span class="error-text">Failed to load plan tree</span>
-    <button type="button" class="retry" onclick={() => treeQuery.refresh()}>Retry</button>
-  </div>
-{:else if roots.length === 0}
-  <p class="empty">No plan trees</p>
-{:else}
+<QueryLoader query={treeQuery}>
+  {#snippet empty()}
+    <p class="empty">No plan trees</p>
+  {/snippet}
+  {#snippet children(allNodes)}
+    {@const roots = allNodes.filter(hasTypePlan)}
+    {#if roots.length === 0}
+      <p class="empty">No plan trees</p>
+    {:else}
     {#snippet renderNode(node: TreeNode, depth: number)}
       {@const isPlan = node.type === 'plan'}
       {@const isAgentCompleted = node.type === 'agent'}
@@ -138,7 +128,9 @@
         {@render renderNode(root, 0)}
       {/each}
     </div>
-{/if}
+    {/if}
+  {/snippet}
+</QueryLoader>
 
 <style>
   .empty { font-size: 12px; color: var(--color-dim); margin: 8px 0 0; }
@@ -178,11 +170,4 @@
 
   .branch { border-left: 1px solid var(--color-border); margin-left: 6px; }
 
-  .skeleton-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-  .skeleton-block { background: var(--color-elevated); border-radius: 3px; animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-  .error { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--color-danger) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent); border-radius: 3px; margin-top: 4px; }
-  .error-text { font-size: 12px; color: var(--color-danger); flex: 1; }
-  .retry { font-family: "JetBrains Mono", monospace; font-size: 11px; padding: 2px 8px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent); background: none; color: var(--color-danger); cursor: pointer; }
 </style>

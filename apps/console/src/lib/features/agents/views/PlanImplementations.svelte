@@ -1,8 +1,9 @@
 <script lang="ts">
+  import QueryLoader from '$lib/ui/QueryLoader.svelte';
   import { listPlanRuns } from '$lib/features/agents/api/judge.remote';
-  import type { ReviewResult, CompareResult } from './plan-types';
-  import PlanImplementationCard from './PlanImplementationCard.svelte';
-  import WorkflowStrip from './WorkflowStrip.svelte';
+  import type { ReviewResult, CompareResult } from '../ai/components/plan-types';
+  import PlanImplementationCard from '../ai/components/PlanImplementationCard.svelte';
+  import WorkflowStrip from '../ai/components/WorkflowStrip.svelte';
   import { repoContext } from '$lib/features/git/context.svelte';
 
   let {
@@ -65,42 +66,40 @@
   }
 </script>
 
-{#if dataQuery.loading && !dataQuery.current}
-  <div class="impl-container">
-    <div class="impl-header">
-      <span class="section-label">implementations</span>
-    </div>
-    <div class="cards-row">
-      {#each [1, 2] as i (i)}
-        <div class="skel-card">
-          <div class="skel-header">
-            <div class="skel-dot"></div>
-            <div class="skel-name"></div>
-          </div>
-          <div class="skel-rows">
-            {#each [1, 2, 3, 4, 5] as j (j)}
-              <div class="skel-row">
-                <div class="skel-label"></div>
-                <div class="skel-value"></div>
-              </div>
-            {/each}
-          </div>
-          <div class="skel-btn"></div>
-        </div>
-      {/each}
-    </div>
+<div class="impl-container">
+  <div class="impl-header">
+    <span class="section-label">implementations</span>
   </div>
-{:else if dataQuery.error}
-  <div class="impl-container">
-    <div class="impl-header">
-      <span class="section-label">implementations</span>
-    </div>
-    <div class="error-text">Failed to load implementations</div>
-  </div>
-{:else if dataQuery.current}
-  {@const reviews = mergedReviews(dataQuery.current.reviews)}
-  {@const judgment = mergedJudgment(dataQuery.current.judgment)}
-  {@const runs = dataQuery.current.runs}
+
+  <QueryLoader query={dataQuery}>
+    {#snippet loading()}
+      <div class="cards-row">
+        {#each [1, 2] as i (i)}
+          <div class="skel-card">
+            <div class="skel-header">
+              <div class="skel-dot"></div>
+              <div class="skel-name"></div>
+            </div>
+            <div class="skel-rows">
+              {#each [1, 2, 3, 4, 5] as j (j)}
+                <div class="skel-row">
+                  <div class="skel-label"></div>
+                  <div class="skel-value"></div>
+                </div>
+              {/each}
+            </div>
+            <div class="skel-btn"></div>
+          </div>
+        {/each}
+      </div>
+    {/snippet}
+    {#snippet error(_)}
+      <div class="error-text">Failed to load implementations</div>
+    {/snippet}
+    {#snippet children(data)}
+  {@const reviews = mergedReviews(data.reviews)}
+  {@const judgment = mergedJudgment(data.judgment)}
+  {@const runs = data.runs}
   {@const completed = planStatus === 'completed'}
   {@const activeRuns = runs.filter(r => {
     const s = r.status ?? r.workflowConclusion;
@@ -110,11 +109,6 @@
     const s = r.status ?? r.workflowConclusion;
     return s === 'failure' || s === 'cancelled';
   })}
-
-  <div class="impl-container">
-    <div class="impl-header">
-      <span class="section-label">implementations</span>
-    </div>
 
     {#if runs.length === 0}
       <div class="empty-text">No implementations yet. Dispatch agents to start.</div>
@@ -185,8 +179,9 @@
         />
       {/if}
     {/if}
-  </div>
-{/if}
+    {/snippet}
+  </QueryLoader>
+</div>
 
 <style>
   .impl-container {

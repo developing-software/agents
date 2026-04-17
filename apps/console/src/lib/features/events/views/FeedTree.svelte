@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { listTree, getEventDetail } from '../../api/activity.remote';
-  import EventDetail from './FeedDetail.svelte';
+  import QueryLoader from '$lib/ui/QueryLoader.svelte';
+  import { listTree, getEventDetail } from '../api/activity.remote';
+  import EventDetail from '../components/feed/FeedDetail.svelte';
   import {
     eventDotColor,
     originBadgeStyle,
@@ -12,7 +13,7 @@
     triggerTag,
     toolTag,
     otherTags,
-  } from '../../helpers';
+  } from '../helpers';
   import TagPill from '$lib/ui/tag/TagPill.svelte';
   import { repoContext } from '$lib/features/git/context.svelte';
 
@@ -73,26 +74,11 @@
   }
 </script>
 
-{#if query.loading && !query.current}
-  <div class="tree">
-    {#each [1, 2, 3] as i (i)}
-      <div class="skeleton-row">
-        <div class="skeleton-block" style="width:5px;height:5px;border-radius:50%;"></div>
-        <div class="skeleton-block" style="width:160px;height:12px;"></div>
-        <div class="skeleton-block" style="width:48px;height:16px;"></div>
-        <div class="skeleton-block" style="width:40px;height:11px;margin-left:auto;"></div>
-      </div>
-    {/each}
-  </div>
-{:else if query.error}
-  <div class="error">
-    <span class="error-text">Failed to load events</span>
-    <button type="button" class="retry" onclick={() => query.refresh()}>Retry</button>
-  </div>
-{:else if !query.current || query.current.length === 0}
-  <p class="empty">{emptyText}</p>
-{:else}
-  {@const roots = query.current}
+<QueryLoader {query}>
+  {#snippet empty()}
+    <p class="empty">{emptyText}</p>
+  {/snippet}
+  {#snippet children(roots)}
     {#snippet renderNode(node: TreeNode, depth: number)}
       {@const env = envTag(node.tags)}
       {@const svc = serviceTag(node.tags)}
@@ -189,7 +175,8 @@
         {@render renderNode(root, 0)}
       {/each}
     </div>
-{/if}
+  {/snippet}
+</QueryLoader>
 
 <style>
   .empty { font-size: 12px; color: var(--color-dim); margin: 8px 0 0; }
@@ -265,11 +252,4 @@
 
   .branch { border-left: 1px solid var(--color-border); margin-left: 6px; }
 
-  .skeleton-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-  .skeleton-block { background: var(--color-elevated); border-radius: 3px; animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-  .error { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--color-danger) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent); border-radius: 3px; margin-top: 4px; }
-  .error-text { font-size: 12px; color: var(--color-danger); flex: 1; }
-  .retry { font-family: "JetBrains Mono", monospace; font-size: 11px; padding: 2px 8px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent); background: none; color: var(--color-danger); cursor: pointer; }
 </style>

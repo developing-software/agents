@@ -2,7 +2,7 @@
   import type { PageProps } from './$types';
   import PlanList from '$lib/features/agents/plans/PlanList.svelte';
   import PlanKanban from '$lib/features/agents/plans/PlanKanban.svelte';
-  import PlanTree from '$lib/features/agents/plans/PlanTree.svelte';
+  import PlanTree from '$lib/features/agents/views/PlanTree.svelte';
   import DispatchDrawer from '$lib/features/agents/dispatch/DispatchDrawer.svelte';
   import DispatchOptions from '$lib/features/agents/dispatch/DispatchOptions.svelte';
   import PlannerDrawer from '$lib/features/agents/ai/components/PlannerDrawer.svelte';

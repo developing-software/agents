@@ -1,7 +1,8 @@
 <script lang="ts">
-  import Section from '../Section.svelte';
-  import SummaryView from './SummaryView.svelte';
-  import { getEventSummary, invalidateSummaryCache } from '../../api/metrics.remote';
+  import QueryLoader from '$lib/ui/QueryLoader.svelte';
+  import Section from '../components/Section.svelte';
+  import SummaryView from '../components/metrics/SummaryView.svelte';
+  import { getEventSummary, invalidateSummaryCache } from '../api/metrics.remote';
   import { repoContext } from '$lib/features/git/context.svelte';
 
   const { organization, repoName } = repoContext.get();
@@ -14,40 +15,30 @@
   }
 </script>
 
-{#if summary.loading && !summary.current}
-  <Section title="Summary" cachedAt={null} loading={true} onrefresh={refresh}>
-    <div class="stat-row">
-      {#each [1, 2, 3, 4, 5, 6] as i (i)}
-        <div class="stat-card">
-          <div class="skeleton-label"></div>
-          <div class="skeleton-value"></div>
-        </div>
-      {/each}
-    </div>
-  </Section>
-{:else if summary.error}
-  <Section
-    title="Summary"
-    cachedAt={summary.current?.cachedAt ?? null}
-    loading={summary.loading}
-    onrefresh={refresh}
-  >
-    <p class="empty">Failed to load summary</p>
-  </Section>
-{:else}
-  <Section
-    title="Summary"
-    cachedAt={summary.current?.cachedAt ?? null}
-    loading={summary.loading}
-    onrefresh={refresh}
-  >
-    {#if summary.current?.data}
-      <SummaryView summary={summary.current.data} />
-    {:else}
-      <p class="empty">No data available</p>
-    {/if}
-  </Section>
-{/if}
+<Section title="Summary" cachedAt={summary.current?.cachedAt ?? null} loading={summary.loading} onrefresh={refresh}>
+  <QueryLoader query={summary}>
+    {#snippet loading()}
+      <div class="stat-row">
+        {#each [1, 2, 3, 4, 5, 6] as i (i)}
+          <div class="stat-card">
+            <div class="skeleton-label"></div>
+            <div class="skeleton-value"></div>
+          </div>
+        {/each}
+      </div>
+    {/snippet}
+    {#snippet error(_)}
+      <p class="empty">Failed to load summary</p>
+    {/snippet}
+    {#snippet children(data)}
+      {#if data.data}
+        <SummaryView summary={data.data} />
+      {:else}
+        <p class="empty">No data available</p>
+      {/if}
+    {/snippet}
+  </QueryLoader>
+</Section>
 
 <style>
   .stat-row { display: flex; flex-wrap: wrap; gap: 6px; }

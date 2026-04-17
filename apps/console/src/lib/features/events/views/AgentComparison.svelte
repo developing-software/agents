@@ -1,7 +1,8 @@
 <script lang="ts">
-  import Section from '../Section.svelte';
-  import ComparisonView from './ComparisonView.svelte';
-  import { getAgentComparison, getAgentStats, invalidateComparisonCache } from '../../api/metrics.remote';
+  import QueryLoader from '$lib/ui/QueryLoader.svelte';
+  import Section from '../components/Section.svelte';
+  import ComparisonView from '../components/metrics/ComparisonView.svelte';
+  import { getAgentComparison, getAgentStats, invalidateComparisonCache } from '../api/metrics.remote';
   import { repoContext } from '$lib/features/git/context.svelte';
 
   const { organization, repoName } = repoContext.get();
@@ -10,7 +11,6 @@
   const stats = getAgentStats({ organization, repoName });
 
   const loading = $derived(comparison.loading || stats.loading);
-  const error = $derived(comparison.error || stats.error);
 
   async function refresh() {
     await invalidateComparisonCache({ organization, repoName });
@@ -19,57 +19,47 @@
   }
 </script>
 
-{#if loading && !comparison.current}
-  <Section title="Agents" cachedAt={null} loading={true} onrefresh={refresh}>
-    <div class="cards">
-      {#each [1, 2] as i (i)}
-        <div class="agent-card">
-          <div class="skel-header">
-            <div class="skel-dot"></div>
-            <div class="skel-name"></div>
-            <div class="skel-badge"></div>
+<Section title="Agents" cachedAt={comparison.current?.cachedAt ?? null} loading={loading} onrefresh={refresh}>
+  <QueryLoader query={comparison}>
+    {#snippet loading()}
+      <div class="cards">
+        {#each [1, 2] as i (i)}
+          <div class="agent-card">
+            <div class="skel-header">
+              <div class="skel-dot"></div>
+              <div class="skel-name"></div>
+              <div class="skel-badge"></div>
+            </div>
+            <div class="skel-pills">
+              <div class="skel-pill"></div>
+              <div class="skel-pill short"></div>
+            </div>
+            <div class="skel-grid">
+              {#each [1, 2, 3, 4] as j (j)}
+                <div class="skel-metric">
+                  <div class="skel-label"></div>
+                  <div class="skel-value"></div>
+                  <div class="skel-avg"></div>
+                </div>
+              {/each}
+            </div>
           </div>
-          <div class="skel-pills">
-            <div class="skel-pill"></div>
-            <div class="skel-pill short"></div>
-          </div>
-          <div class="skel-grid">
-            {#each [1, 2, 3, 4] as j (j)}
-              <div class="skel-metric">
-                <div class="skel-label"></div>
-                <div class="skel-value"></div>
-                <div class="skel-avg"></div>
-              </div>
-            {/each}
-          </div>
-        </div>
-      {/each}
-    </div>
-  </Section>
-{:else if error}
-  <Section
-    title="Agents"
-    cachedAt={comparison.current?.cachedAt ?? null}
-    loading={loading}
-    onrefresh={refresh}
-  >
-    <p class="empty">Failed to load agent data</p>
-  </Section>
-{:else}
-  <Section
-    title="Agents"
-    cachedAt={comparison.current?.cachedAt ?? null}
-    loading={loading}
-    onrefresh={refresh}
-  >
-    <div class="scroll-container">
-      <ComparisonView
-        agents={comparison.current?.data ?? []}
-        stats={stats.current?.data ?? []}
-      />
-    </div>
-  </Section>
-{/if}
+        {/each}
+      </div>
+    {/snippet}
+    {#snippet error(_)}
+      <p class="empty">Failed to load agent data</p>
+    {/snippet}
+    {#snippet children(data)}
+      <div class="scroll-container">
+        <ComparisonView
+          agents={data.data ?? []}
+          stats={stats.current?.data ?? []}
+        />
+      </div>
+    {/snippet}
+  </QueryLoader>
+</Section>
 
 <style>
   .scroll-container {

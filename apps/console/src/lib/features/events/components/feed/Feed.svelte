@@ -1,6 +1,6 @@
 <script lang="ts">
-  import EventList from './FeedList.svelte';
-  import EventTree from './FeedTree.svelte';
+  import EventList from '../../views/FeedList.svelte';
+  import EventTree from '../../views/FeedTree.svelte';
 
   let {
     filterTags = [],

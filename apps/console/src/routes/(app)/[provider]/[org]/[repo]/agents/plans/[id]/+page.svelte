@@ -5,7 +5,7 @@
   import DispatchDrawer from '$lib/features/agents/dispatch/DispatchDrawer.svelte';
   import DispatchOptions from '$lib/features/agents/dispatch/DispatchOptions.svelte';
   import PlannerDrawer from '$lib/features/agents/ai/components/PlannerDrawer.svelte';
-  import PlanImplementations from '$lib/features/agents/ai/components/PlanImplementations.svelte';
+  import PlanImplementations from '$lib/features/agents/views/PlanImplementations.svelte';
   import { updatePlan } from '$lib/features/agents/api/plans.remote';
   import { previewPrompt, previewFixPrompt } from '$lib/features/agents/api/dispatch.remote';
   import type { Plan } from '@agents/core/events/plan';

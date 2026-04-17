@@ -4,6 +4,7 @@
 	import { Tags } from '@agents/core/events/tag';
 	import { createPlan, updatePlan } from '../api/plans.remote';
 	import { PLAN_STATUSES, type PlanStatus, type AuthorType } from './plan-helpers';
+	import QueryLoader from '$lib/ui/QueryLoader.svelte';
 	import MarkdownEditor from '$lib/ui/MarkdownEditor.svelte';
 	import { listIssues } from '$lib/features/git/api/git.remote';
 	import IssueList from '$lib/features/git/components/IssueList.svelte';
@@ -100,23 +101,16 @@
 
 		{#if showIssues}
 			<div class="issues-panel">
-				{#if issuesQuery}
-					{#if issuesQuery.loading && !issuesQuery.current}
-						<div class="issues-loading">Loading issues...</div>
-					{:else if issuesQuery.error}
-						<div class="issues-error">
-							<span>Failed to load issues</span>
-							<button type="button" class="retry-btn" onclick={() => issuesQuery.refresh()}>Retry</button>
-						</div>
-					{:else if issuesQuery.current}
+				<QueryLoader query={issuesQuery}>
+					{#snippet children(issues)}
 						<IssueList
-							issues={issuesQuery.current}
+							{issues}
 							selectable={true}
 							bind:selected={linkedIssues}
 							emptyText="No issues found"
 						/>
-					{/if}
-				{/if}
+					{/snippet}
+				</QueryLoader>
 			</div>
 		{/if}
 	</div>
@@ -278,29 +272,4 @@
 		overflow-y: auto;
 	}
 
-	.issues-loading {
-		font-size: 11px;
-		color: var(--color-dim);
-		font-style: italic;
-		padding: 8px 0;
-	}
-
-	.issues-error {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		font-size: 12px;
-		color: var(--color-danger);
-	}
-
-	.retry-btn {
-		font-family: "JetBrains Mono", monospace;
-		font-size: 11px;
-		padding: 2px 8px;
-		border-radius: 3px;
-		border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
-		background: none;
-		color: var(--color-danger);
-		cursor: pointer;
-	}
 </style>
