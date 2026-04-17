@@ -5,6 +5,8 @@
   import ProviderLink from '$lib/features/git/components/ProviderLink.svelte';
   import { providerLabel } from '$lib/features/git/url';
   import Events from '$lib/features/events/components/feed/Feed.svelte';
+  import OverviewLinks from '$lib/features/agents/components/OverviewLinks.svelte';
+  import OverviewMetrics from '$lib/features/agents/components/OverviewMetrics.svelte';
   import { repoContext } from '$lib/features/git/context.svelte';
 
   let { data }: PageProps = $props();
@@ -38,10 +40,20 @@
 </svelte:head>
 
 <div class="page-grid">
-  <section class="activity-section">
-    <h2 class="section-heading">Activity</h2>
-    <Events />
-  </section>
+  <div class="main-column">
+    <section class="overview-section">
+      <h2 class="section-heading">Overview</h2>
+      <div class="overview-grid">
+        <OverviewLinks {base} />
+        <OverviewMetrics organization={data.organization} repoName={data.repoName} />
+      </div>
+    </section>
+
+    <section class="activity-section">
+      <h2 class="section-heading">Activity</h2>
+      <Events />
+    </section>
+  </div>
 
   <aside class="right-column">
     <section class="panel">
@@ -181,6 +193,30 @@
 
   .activity-section {
     min-width: 0;
+  }
+
+  .main-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .overview-section {
+    min-width: 0;
+  }
+
+  .overview-grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 1200px) {
+    .overview-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .right-column {

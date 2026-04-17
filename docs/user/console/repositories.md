@@ -2,6 +2,16 @@
 
 Repository pages are the main operating surface for day-to-day work.
 
+## Repository Overview Card
+
+Repository home page includes overview card with quick links and lightweight metrics:
+
+- quick links: plans, agents, skills, health, issues, pull requests
+- plan counts by status: draft, review, approved, implementing, completed, rejected
+- agent run summary: recent run count, success rate, total cost, last activity
+
+Links render immediately. Metrics load after page becomes interactive.
+
 ## What You Can View
 
 - issues
