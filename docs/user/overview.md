@@ -2,6 +2,18 @@
 
 Dev Agents is an AI development platform for brownfield repositories. Humans approve plans, dispatch agent runs, review results, and decide what gets merged.
 
+## Lifecycle
+
+```text
+Issues
+  |
+  v
+Plans -> Human approval -> Agent dispatch -> PRs -> Review / Fix loop -> Merge
+                                      |
+                                      v
+                            Events, health, and metrics
+```
+
 ## Core Flow
 
 1. Issues are triaged and grouped into a plan.

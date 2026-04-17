@@ -2,6 +2,23 @@
 
 Reusable actions provide the workflow-side data collection and event emission model.
 
+## Lifecycle Diagram
+
+```text
+event/init (setup)
+      |
+      v
+workflow steps write:
+  - results/data.json
+  - tags/*.txt
+      |
+      v
+event/init (teardown)
+      |
+      v
+emit {type}.completed with merged data + tags
+```
+
 ## Core Pattern
 
 `actions/event/init` creates a lifecycle context:

@@ -7,6 +7,24 @@ The platform is built from four main layers:
 - `packages/core` for business logic and shared models
 - `actions/*` for workflow-side collection and emission
 
+## High-Level Diagram
+
+```text
+Issues / Plans
+      |
+      v
++-------------+      +--------------------+      +------------------+
+| apps/console| ---> | packages/functions | ---> |  packages/core   |
+| user flows  |      | API + webhooks     |      | domain logic     |
++-------------+      +--------------------+      +------------------+
+       ^                         |                          |
+       |                         v                          v
+       |                +--------------------+      +------------------+
+       +----------------|      actions/*     |----->| Postgres / R2    |
+                        | emit events/data   |      | persisted state  |
+                        +--------------------+      +------------------+
+```
+
 ## Flow
 
 1. A repository is connected through a git provider.

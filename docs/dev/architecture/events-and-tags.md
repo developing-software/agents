@@ -2,6 +2,21 @@
 
 Events are the backbone of observability in this system. Every meaningful action — agent runs, git-provider webhooks, console operations, and CI workflows — emits an event into the same schema.
 
+## Event Flow
+
+```text
+git provider event / console action / workflow step
+                    |
+                    v
+              Event.create(...)
+                    |
+                    v
+      tags: git:* + plan:* + type:* + scope:* ...
+                    |
+                    v
+   parent inference only within same source + sourceId
+```
+
 ## Event Shape
 
 ```ts
