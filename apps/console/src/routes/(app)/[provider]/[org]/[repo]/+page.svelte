@@ -6,6 +6,8 @@
   import { providerLabel } from '$lib/features/git/url';
   import Events from '$lib/features/events/components/feed/Feed.svelte';
   import { repoContext } from '$lib/features/git/context.svelte';
+  import OverviewLinks from '$lib/features/agents/components/OverviewLinks.svelte';
+  import OverviewMetrics from '$lib/features/agents/components/OverviewMetrics.svelte';
 
   let { data }: PageProps = $props();
 
@@ -36,6 +38,20 @@
 <svelte:head>
   <title>{data.organization}/{data.repoName}</title>
 </svelte:head>
+
+<div class="page-layout">
+  <section class="panel overview-panel">
+    <div class="overview-inner">
+      <div class="overview-links-col">
+        <h2 class="section-heading" style="margin-bottom: 10px;">Quick Links</h2>
+        <OverviewLinks {base} />
+      </div>
+      <div class="overview-metrics-col">
+        <h2 class="section-heading" style="margin-bottom: 10px;">Overview</h2>
+        <OverviewMetrics {organization} {repoName} />
+      </div>
+    </div>
+  </section>
 
 <div class="page-grid">
   <section class="activity-section">
@@ -138,8 +154,38 @@
     </section>
   </aside>
 </div>
+</div>
 
 <style>
+  .page-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .overview-panel {
+    padding: 14px 16px;
+  }
+
+  .overview-inner {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .overview-inner {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+
+  .overview-links-col,
+  .overview-metrics-col {
+    min-width: 0;
+  }
+
   .page-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 340px;
