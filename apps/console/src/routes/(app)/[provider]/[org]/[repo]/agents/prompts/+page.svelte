@@ -11,6 +11,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Prompts — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <h2 class="page-heading">Prompts</h2>
 
 {#if data.prompts.length === 0}

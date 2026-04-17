@@ -33,6 +33,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <div class="page-grid">
   <section class="activity-section">
     <h2 class="section-heading">Activity</h2>

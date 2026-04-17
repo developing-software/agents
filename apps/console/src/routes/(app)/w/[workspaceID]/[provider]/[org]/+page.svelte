@@ -5,6 +5,10 @@
   let { data }: PageProps = $props();
 </script>
 
+<svelte:head>
+  <title>{data.organization} — Repositories</title>
+</svelte:head>
+
 <div class="page">
   <p class="breadcrumb">
     <a href="/w/{data.workspaceID}/{data.provider}" class="breadcrumb-link">repositories</a>

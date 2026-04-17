@@ -1,6 +1,11 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import Branches from '$lib/features/git/views/Branches.svelte';
 </script>
+
+<svelte:head>
+  <title>Branches — {page.params.org}/{page.params.repo}</title>
+</svelte:head>
 
 <div class="page-header">
   <span class="page-title">Branches</span>

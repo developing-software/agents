@@ -52,6 +52,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{data.path} — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <nav class="breadcrumb" aria-label="File path">
   <a href={baseTree} class="crumb">root</a>
   {#each data.breadcrumbs as crumb (crumb.href)}

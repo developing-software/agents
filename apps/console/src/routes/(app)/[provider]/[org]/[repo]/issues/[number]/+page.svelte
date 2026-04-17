@@ -8,6 +8,10 @@
   const base = $derived(`/${data.provider}/${data.organization}/${data.repoName}`);
 </script>
 
+<svelte:head>
+  <title>Issue #{data.number} — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <div class="header">
   <a href="{base}/issues" class="back">← Issues</a>
   <span class="title">Issue #{data.number} — Activity</span>

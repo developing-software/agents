@@ -8,6 +8,10 @@
   const agentFiles = $derived(data.agentFiles);
 </script>
 
+<svelte:head>
+  <title>Config — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <h2 class="section-heading">Agent Configuration</h2>
 
 <div class="cards-row">

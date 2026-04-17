@@ -1,8 +1,13 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import AgentSummary from '$lib/features/events/views/AgentSummary.svelte';
   import AgentComparison from '$lib/features/events/views/AgentComparison.svelte';
   import AgentRuns from '$lib/features/events/views/AgentRuns.svelte';
 </script>
+
+<svelte:head>
+  <title>Agents — {page.params.org}/{page.params.repo}</title>
+</svelte:head>
 
 <AgentSummary />
 <AgentComparison />

@@ -5,6 +5,10 @@
   let { data }: PageProps = $props();
 </script>
 
+<svelte:head>
+  <title>Repositories</title>
+</svelte:head>
+
 <div class="page">
   <h1 class="heading">Repositories</h1>
 

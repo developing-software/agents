@@ -5,6 +5,10 @@
 	let { data }: PageProps = $props();
 </script>
 
+<svelte:head>
+  <title>Edit Plan — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 {#if data.plan && data.repo}
 	<div class="header">
 		<a href="/{data.provider}/{data.organization}/{data.repoName}/agents/plans/{data.plan.id}" class="back">&larr; Plan</a>

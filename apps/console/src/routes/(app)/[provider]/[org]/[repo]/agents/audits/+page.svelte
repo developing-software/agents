@@ -184,6 +184,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Audits — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <h2 class="page-heading">Audits</h2>
 
 {#if data.audits.length === 0}

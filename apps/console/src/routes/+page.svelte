@@ -36,6 +36,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Dev Agents</title>
+</svelte:head>
+
 {#if data.installation}
   <div class="flex flex-1 items-center justify-center px-6 py-16">
     <div

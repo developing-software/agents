@@ -46,6 +46,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Health — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <div class="health-page">
   <div class="header-row">
     <div class="header-left">

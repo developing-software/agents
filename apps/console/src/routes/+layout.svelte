@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { LayoutProps } from './$types';
   import './layout.css';
-  import favicon from '$lib/assets/favicon.svg';
+  import favicon from '$lib/assets/favicon.ico';
   import { navigating, page } from '$app/state';
   import { PersistedState } from 'runed';
     import PreLoadingIndicator from './PreLoadingIndicator.svelte';

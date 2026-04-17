@@ -62,6 +62,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Plans — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <div>
   <div class="header">
     <span class="title">Plans</span>

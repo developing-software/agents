@@ -116,6 +116,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Actions — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <div class="layout">
   <aside class="sidebar">
     <p class="sidebar-label">Workflows</p>

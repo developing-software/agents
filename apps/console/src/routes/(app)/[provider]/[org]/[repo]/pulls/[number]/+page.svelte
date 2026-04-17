@@ -8,6 +8,10 @@
   const base = $derived(`/${data.provider}/${data.organization}/${data.repoName}`);
 </script>
 
+<svelte:head>
+  <title>PR #{data.number} — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <div class="header">
   <a href="{base}/pulls" class="back">← Pull Requests</a>
   <span class="title">PR #{data.number} — Activity</span>

@@ -6,6 +6,10 @@
   let { data }: PageProps = $props();
 </script>
 
+<svelte:head>
+  <title>Members — {data.workspace?.name ?? 'Workspace'}</title>
+</svelte:head>
+
 <div class="page">
   <header class="page-header">
     <div class="header-text">

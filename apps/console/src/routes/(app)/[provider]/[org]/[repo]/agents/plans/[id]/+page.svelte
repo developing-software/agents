@@ -82,6 +82,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{data.plan?.title ?? 'Plan'} — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 {#if data.plan}
   {#if data.parentEvent}
     <div class="breadcrumb">

@@ -1,3 +1,7 @@
+<svelte:head>
+  <title>Redirecting…</title>
+</svelte:head>
+
 <div class="page">
   <p class="message">Redirecting to your workspace…</p>
 </div>

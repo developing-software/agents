@@ -9,6 +9,10 @@
   );
 </script>
 
+<svelte:head>
+  <title>Skills — {data.organization}/{data.repoName}</title>
+</svelte:head>
+
 <h2 class="section-heading">Skills</h2>
 
 {#if allEmpty}

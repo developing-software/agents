@@ -11,6 +11,10 @@
   );
 </script>
 
+<svelte:head>
+  <title>Integrations — {data.workspace?.name ?? 'Workspace'}</title>
+</svelte:head>
+
 <div class="page">
   <header class="page-header">
     <div class="header-text">
