@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { reviewPR, humanReviewPR } from '$lib/agents/ai/judge.remote';
+  import { reviewPR, humanReviewPR, listPrStates } from '$lib/agents/ai/judge.remote';
   import PRDiffLoader from '$lib/git/components/PRDiffLoader.svelte';
   import ArtifactList from '$lib/events/repository/ArtifactList.svelte';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
@@ -11,7 +11,6 @@
     judgment,
     planId,
     completed,
-    prStatesPromise,
     onReviewComplete,
     onError,
     onDispatchFix,
@@ -22,7 +21,6 @@
     judgment: CompareResult | null;
     planId: string;
     completed: boolean;
-    prStatesPromise: Promise<Record<number, string | null>>;
     onReviewComplete: (prNumber: number, review: ReviewResult) => void;
     onError: (message: string) => void;
     onDispatchFix?: (prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) => void;
@@ -33,7 +31,8 @@
 
   const prStatePromise = $derived.by(() => {
     if (run.prNumber == null) return Promise.resolve(null);
-    return prStatesPromise.then((states) => states[run.prNumber!] ?? null);
+    return listPrStates({ organization, repoName, prNumbers: [run.prNumber] })
+      .then((states) => states[run.prNumber!] ?? null);
   });
 
   let activeTab = $state<'overview' | 'diff' | 'judge' | 'artifacts'>('overview');
@@ -47,6 +46,8 @@
 
   const rankEntry = $derived(judgment?.rankings.find(r => r.prNumber === run.prNumber));
   const isWinner = $derived(judgment != null && run.prNumber != null && judgment.winner.prNumber === run.prNumber);
+  const effectiveStatus = $derived(run.status ?? run.workflowConclusion);
+  const isFailed = $derived(effectiveStatus === 'failure' || effectiveStatus === 'cancelled');
   const cc = $derived.by(() => {
     let passed = 0;
     let failed = 0;
@@ -133,11 +134,14 @@
   }
 </script>
 
-<div class="agent-card" class:winner-card={isWinner}>
-  <!-- Header: agent name + model + score + rank -->
+<div class="agent-card" class:winner-card={isWinner} class:failed-card={isFailed}>
+  <!-- Header: agent name + model + status + score + rank -->
   <div class="card-header">
     <span class="agent-dot" style="background:{agentColor(run.agent)};"></span>
     <span class="agent-name">{capitalize(run.agent)}</span>
+    {#if effectiveStatus}
+      <span class="status-badge status-{effectiveStatus}">{effectiveStatus}</span>
+    {/if}
     {#if run.model}
       <span class="model-tag">{run.model}</span>
     {/if}
@@ -184,6 +188,10 @@
   <!-- Scrollable body -->
   <div class="card-body">
     {#if activeTab === 'overview'}
+      {#if isFailed && run.finalMessage}
+        <div class="failure-message">{run.finalMessage}</div>
+      {/if}
+
       <div class="metrics">
         <span class="metric-label">lines</span>
         <span class="metric-value">
@@ -208,6 +216,13 @@
             <span class="check-fail">{cc.failed} fail</span>
           {/if}
         </span>
+
+        {#if run.runUrl}
+          <span class="metric-label">workflow</span>
+          <span class="metric-value">
+            <a href={run.runUrl} target="_blank" rel="noopener noreferrer" class="run-link">view run</a>
+          </span>
+        {/if}
       </div>
     {:else if activeTab === 'diff'}
       {#if run.prNumber != null}
@@ -328,6 +343,11 @@
     background: color-mix(in srgb, var(--color-accent) 3%, var(--color-surface));
   }
 
+  .agent-card.failed-card {
+    border-left: 3px solid var(--color-danger, var(--color-warning));
+    background: color-mix(in srgb, var(--color-danger, var(--color-warning)) 3%, var(--color-surface));
+  }
+
   /* ── Header ──────────────────────────────────────────────────────────── */
 
   .card-header {
@@ -432,6 +452,62 @@
     color: var(--color-dim);
     background: color-mix(in srgb, var(--color-dim) 12%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-dim) 25%, transparent);
+  }
+
+  /* ── Status badge ────────────────────────────────────────────────────── */
+
+  .status-badge {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+
+  .status-success {
+    color: var(--color-success);
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+  }
+
+  .status-failure {
+    color: var(--color-danger, var(--color-warning));
+    background: color-mix(in srgb, var(--color-danger, var(--color-warning)) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-danger, var(--color-warning)) 25%, transparent);
+  }
+
+  .status-cancelled {
+    color: var(--color-dim);
+    background: color-mix(in srgb, var(--color-dim) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-dim) 25%, transparent);
+  }
+
+  /* ── Failure message ────────────────────────────────────────────────── */
+
+  .failure-message {
+    font-size: 11px;
+    color: var(--color-danger, var(--color-warning));
+    line-height: 1.5;
+    padding: 6px 8px;
+    background: color-mix(in srgb, var(--color-danger, var(--color-warning)) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-danger, var(--color-warning)) 15%, transparent);
+    border-radius: 4px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  /* ── Run link ───────────────────────────────────────────────────────── */
+
+  .run-link {
+    font-size: 11px;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .run-link:hover {
+    text-decoration: underline;
   }
 
   /* ── Score & rank badges ─────────────────────────────────────────────── */

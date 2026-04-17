@@ -1,7 +1,15 @@
+import type { z } from 'zod';
+import type { AgentEvent } from '@agents/core/events/agent';
+
+type AgentStatus = z.infer<typeof AgentEvent.Completed.Status>;
+
 export type PlanRun = {
   id: string;
   agent: string;
   model: string | null;
+  status: AgentStatus;
+  workflowConclusion: AgentStatus;
+  finalMessage: string | null;
   prNumber: number | null;
   prState: string | null;
   prUrl: string | null;

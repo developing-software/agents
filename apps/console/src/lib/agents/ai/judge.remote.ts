@@ -10,6 +10,7 @@ import { getProvider } from "@agents/core/git";
 import { createModel } from "./model";
 import { flattenChecks } from "$lib/events/helpers";
 import { withRequestRepoActor } from "$lib/repository.server";
+import type { PlanRun } from "./components/plan-types";
 
 // -- Helpers --
 
@@ -19,26 +20,6 @@ function getApiKey(): string | undefined {
 
 function extractPrNumber(tags: string[]): number | null {
   return Tags.Git.find(tags, "pr")?.number ?? null;
-}
-
-interface PlanRun {
-  id: string;
-  agent: string;
-  model: string | null;
-  prNumber: number | null;
-  prState: string | null;
-  prUrl: string | null;
-  runUrl: string | null;
-  cost_usd: number | null;
-  input_tokens: number | null;
-  output_tokens: number | null;
-  turns: number | null;
-  durationMs: number | null;
-  linesAdded: number | null;
-  linesRemoved: number | null;
-  checks: Array<{ category: string; name: string; outcome: string }>;
-  tags: string[];
-  timeCreated: string;
 }
 
 // -- Queries --
@@ -88,6 +69,9 @@ export const listPlanRuns = query(
           id: e.id,
           agent: parsed.agent.name,
           model: metrics?.model ?? null,
+          status: parsed.agent.status,
+          workflowConclusion: parsed.workflow.conclusion,
+          finalMessage: parsed.agent.finalMessage,
           prNumber,
           prState: null,
           prUrl: parsed.pr?.url || null,

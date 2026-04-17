@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { listPlanRuns, listPrStates } from '$lib/agents/ai/judge.remote';
+  import { listPlanRuns } from '$lib/agents/ai/judge.remote';
   import type { ReviewResult, CompareResult } from './plan-types';
   import PlanImplementationCard from './PlanImplementationCard.svelte';
   import WorkflowStrip from './WorkflowStrip.svelte';
@@ -20,13 +20,6 @@
   // -- Data loading --
 
   const dataPromise = $derived.by(() => listPlanRuns({ organization, repoName, planId }));
-  const prStatesPromise = $derived.by(() =>
-    dataPromise.then((data) => {
-      const prNumbers = data.runs.map((r) => r.prNumber).filter((n): n is number => n != null);
-      if (prNumbers.length === 0) return {} as Record<number, string | null>;
-      return listPrStates({ organization, repoName, prNumbers });
-    }),
-  );
 
   // -- Agent colors --
 
@@ -102,6 +95,14 @@
   {@const judgment = mergedJudgment(data.judgment)}
   {@const runs = data.runs}
   {@const completed = planStatus === 'completed'}
+  {@const activeRuns = runs.filter(r => {
+    const s = r.status ?? r.workflowConclusion;
+    return s !== 'failure' && s !== 'cancelled';
+  })}
+  {@const failedRuns = runs.filter(r => {
+    const s = r.status ?? r.workflowConclusion;
+    return s === 'failure' || s === 'cancelled';
+  })}
 
   <div class="impl-container">
     <div class="impl-header">
@@ -111,22 +112,50 @@
     {#if runs.length === 0}
       <div class="empty-text">No implementations yet. Dispatch agents to start.</div>
     {:else}
-      <div class="cards-row">
-        {#each runs as run (run.id)}
-          <PlanImplementationCard
-            {run}
-            review={run.prNumber != null ? reviews[run.prNumber] : undefined}
-            {judgment}
-            {planId}
-            {completed}
-            {prStatesPromise}
-            onReviewComplete={handleReviewComplete}
-            onError={handleError}
-            {onDispatchFix}
-            {agentColor}
-          />
-        {/each}
-      </div>
+      {#if activeRuns.length > 0}
+        <div class="cards-row">
+          {#each activeRuns as run (run.id)}
+            <PlanImplementationCard
+              {run}
+              review={run.prNumber != null ? reviews[run.prNumber] : undefined}
+              {judgment}
+              {planId}
+              {completed}
+  
+              onReviewComplete={handleReviewComplete}
+              onError={handleError}
+              {onDispatchFix}
+              {agentColor}
+            />
+          {/each}
+        </div>
+      {/if}
+
+      {#if failedRuns.length > 0}
+        <div class="failed-section">
+          <span class="failed-label">failed ({failedRuns.length})</span>
+          <div class="cards-row">
+            {#each failedRuns as run (run.id)}
+              <PlanImplementationCard
+                {run}
+                review={undefined}
+                judgment={null}
+                {planId}
+                {completed}
+    
+                onReviewComplete={handleReviewComplete}
+                onError={handleError}
+                {onDispatchFix}
+                {agentColor}
+              />
+            {/each}
+          </div>
+        </div>
+      {/if}
+
+      {#if activeRuns.length === 0 && failedRuns.length > 0}
+        <div class="empty-text">All agent runs failed. Dispatch again to retry.</div>
+      {/if}
 
       {#if errorMessage}
         <div class="error-banner">
@@ -135,9 +164,9 @@
         </div>
       {/if}
 
-      {#if runs.length >= 2}
+      {#if activeRuns.length >= 2}
         <WorkflowStrip
-          {runs}
+          runs={activeRuns}
           {reviews}
           {judgment}
           {planId}
@@ -191,6 +220,21 @@
   .error-text {
     font-size: 12px;
     color: var(--color-danger);
+  }
+
+  .failed-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--color-danger, var(--color-warning)) 15%, transparent);
+  }
+
+  .failed-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--color-danger, var(--color-warning));
+    letter-spacing: 0.03em;
   }
 
   .cards-row {
