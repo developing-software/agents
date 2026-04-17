@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
-  import { createWorkspace } from "./workspaces.remote";
+  import { createWorkspace } from "$lib/features/workspace/api/workspaces.remote";
 
   let { data }: PageProps = $props();
 </script>

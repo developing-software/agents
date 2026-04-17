@@ -113,7 +113,7 @@ export namespace Database {
   }
 
   export async function fn<Input, T>(callback: (input: Input, trx: TxOrDb) => Promise<T>) {
-    return (input: Input) => use(async (tx) => callback(input, tx))
+    return (input: Input) => use(async (tx) => callback(input, tx));
   }
 }
 

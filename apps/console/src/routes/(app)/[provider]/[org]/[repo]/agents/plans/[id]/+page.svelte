@@ -1,16 +1,16 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import PlanDetail from '$lib/agents/plans/PlanDetail.svelte';
-  import Events from '$lib/events/repository/Feed.svelte';
-  import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
-  import DispatchOptions from '$lib/agents/dispatch/DispatchOptions.svelte';
-  import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
-  import PlanImplementations from '$lib/agents/ai/components/PlanImplementations.svelte';
-  import { updatePlan } from '$lib/agents/plans/plans.remote';
-  import { previewPrompt, previewFixPrompt } from '$lib/agents/dispatch/dispatch.remote';
+  import PlanDetail from '$lib/features/agents/plans/PlanDetail.svelte';
+  import Events from '$lib/features/events/components/feed/Feed.svelte';
+  import DispatchDrawer from '$lib/features/agents/dispatch/DispatchDrawer.svelte';
+  import DispatchOptions from '$lib/features/agents/dispatch/DispatchOptions.svelte';
+  import PlannerDrawer from '$lib/features/agents/ai/components/PlannerDrawer.svelte';
+  import PlanImplementations from '$lib/features/agents/ai/components/PlanImplementations.svelte';
+  import { updatePlan } from '$lib/features/agents/api/plans.remote';
+  import { previewPrompt, previewFixPrompt } from '$lib/features/agents/api/dispatch.remote';
   import type { Plan } from '@agents/core/events/plan';
   import { Tags } from '@agents/core/events/tag';
-  import { PLAN_STATUSES, statusDotColor } from '$lib/agents/plans/plan-helpers';
+  import { PLAN_STATUSES, statusDotColor } from '$lib/features/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
   let { data }: PageProps = $props();

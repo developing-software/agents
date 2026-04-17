@@ -1,7 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { Installation } from "@agents/core/git/installation";
 import { Workspace } from "@agents/core/workspace";
-import { withActor } from "$lib/auth";
+import { withActor } from "$lib/server/auth";
 
 export const load: PageServerLoad = async (event) => {
   const { workspaceID } = event.params;

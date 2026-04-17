@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
-  import WorkspaceSettingsNav from "$lib/workspace/WorkspaceSettingsNav.svelte";
+  import WorkspaceSettingsNav from "$lib/features/workspace/WorkspaceSettingsNav.svelte";
 
   let { data }: PageProps = $props();
 

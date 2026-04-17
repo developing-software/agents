@@ -3,8 +3,8 @@ import { error, redirect } from "@sveltejs/kit";
 import { Actor } from "@agents/core/actor";
 import { Installation } from "@agents/core/git/installation";
 import { Workspace } from "@agents/core/workspace";
-import { withActor } from "$lib/auth";
-import { listSessionWorkspaces, requireSessionAccount } from "$lib/workspace.server";
+import { withActor } from "$lib/server/auth";
+import { listSessionWorkspaces, requireSessionAccount } from "$lib/server/workspace.server";
 
 function integrationsPath(workspaceID: string, params: Record<string, string>) {
   const search = new URLSearchParams(params).toString();

@@ -2,7 +2,7 @@ import type { LayoutServerLoad } from "./$types";
 import { redirect, error } from "@sveltejs/kit";
 import { hasProvider } from "@agents/core/git";
 import type { ProviderType } from "@agents/core/git";
-import { withRepoActor } from "$lib/repository.server";
+import { withRepoActor } from "$lib/server/repository.server";
 
 export const load: LayoutServerLoad = async (event) => {
   const { params, locals } = event;

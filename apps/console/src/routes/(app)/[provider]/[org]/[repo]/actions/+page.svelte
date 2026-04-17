@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import { untrack } from 'svelte';
   import { useDebounce } from 'runed';
-  import { dispatchAction, listWorkflowRuns } from '../repo.remote';
+  import { dispatchAction, listWorkflowRuns } from '$lib/features/git/api/repo.remote';
   import EmptyState from '$lib/ui/EmptyState.svelte';
 
   let { data }: PageProps = $props();

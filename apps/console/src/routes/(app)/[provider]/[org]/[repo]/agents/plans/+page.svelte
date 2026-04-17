@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import PlanList from '$lib/agents/plans/PlanList.svelte';
-  import PlanKanban from '$lib/agents/plans/PlanKanban.svelte';
-  import PlanTree from '$lib/agents/plans/PlanTree.svelte';
-  import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
-  import DispatchOptions from '$lib/agents/dispatch/DispatchOptions.svelte';
-  import PlannerDrawer from '$lib/agents/ai/components/PlannerDrawer.svelte';
-  import { previewPrompt } from '$lib/agents/dispatch/dispatch.remote';
+  import PlanList from '$lib/features/agents/plans/PlanList.svelte';
+  import PlanKanban from '$lib/features/agents/plans/PlanKanban.svelte';
+  import PlanTree from '$lib/features/agents/plans/PlanTree.svelte';
+  import DispatchDrawer from '$lib/features/agents/dispatch/DispatchDrawer.svelte';
+  import DispatchOptions from '$lib/features/agents/dispatch/DispatchOptions.svelte';
+  import PlannerDrawer from '$lib/features/agents/ai/components/PlannerDrawer.svelte';
+  import { previewPrompt } from '$lib/features/agents/api/dispatch.remote';
   import type { Plan } from '@agents/core/events/plan';
 
   let { data }: PageProps = $props();

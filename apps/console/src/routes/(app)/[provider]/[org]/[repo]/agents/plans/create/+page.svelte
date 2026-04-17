@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import PlanForm from '$lib/agents/plans/PlanForm.svelte';
+  import PlanForm from '$lib/features/agents/plans/PlanForm.svelte';
 
   let { data }: PageProps = $props();
 </script>

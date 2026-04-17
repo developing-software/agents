@@ -1,13 +1,13 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import EmptyState from '$lib/ui/EmptyState.svelte';
-  import { updateAudit, createPlanFromAudit } from './audits.remote';
-  import DispatchDrawer from '$lib/agents/dispatch/DispatchDrawer.svelte';
-  import DispatchOptions from '$lib/agents/dispatch/DispatchOptions.svelte';
-  import { previewPrompt } from '$lib/agents/dispatch/dispatch.remote';
+  import { updateAudit, createPlanFromAudit } from '$lib/features/agents/api/audits.remote';
+  import DispatchDrawer from '$lib/features/agents/dispatch/DispatchDrawer.svelte';
+  import DispatchOptions from '$lib/features/agents/dispatch/DispatchOptions.svelte';
+  import { previewPrompt } from '$lib/features/agents/api/dispatch.remote';
   import type { Plan } from '@agents/core/events/plan';
   import { Tags } from '@agents/core/events/tag';
-  import { relativeTime, type PlanItem } from '$lib/agents/plans/plan-helpers';
+  import { relativeTime, type PlanItem } from '$lib/features/agents/plans/plan-helpers';
   import { invalidateAll } from '$app/navigation';
 
   let { data }: PageProps = $props();

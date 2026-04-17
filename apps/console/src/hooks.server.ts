@@ -6,7 +6,7 @@ import { Actor } from "@agents/core/actor";
 import { sequence } from "@sveltejs/kit/hooks";
 import { withDatabase } from "@agents/core/drizzle";
 import { withCacheContext, CacheApiAdapter } from "@agents/core/cache";
-import { readSession } from "$lib/session";
+import { readSession } from "$lib/server/session";
 
 const log = Log.create({ namespace: "console.hooks.server" });
 

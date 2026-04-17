@@ -106,7 +106,7 @@ export function cavemanPrompt(level: CavemanLevel): string {
     HEADER,
     LEVEL_BODY[level],
     // FOOTER
-    ].join("\n\n");
+  ].join("\n\n");
 }
 
 export function renderCaveman(level: CavemanLevel): () => Promise<string | null> {

@@ -1,11 +1,20 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import { generateToken } from './repo.remote';
-  import ProviderLink from '$lib/git/components/ProviderLink.svelte';
-  import { providerLabel } from '$lib/git/url';
-  import Events from '$lib/events/repository/Feed.svelte';
+  import { generateToken } from '$lib/features/git/api/repo.remote';
+  import { listIssues, listPullRequests } from '$lib/features/git/api/git.remote';
+  import ProviderLink from '$lib/features/git/components/ProviderLink.svelte';
+  import { providerLabel } from '$lib/features/git/url';
+  import Events from '$lib/features/events/components/feed/Feed.svelte';
+  import { repoContext } from '$lib/features/git/context.svelte';
 
   let { data }: PageProps = $props();
+
+  const { organization, repoName } = repoContext.get();
+  const issuesQuery = listIssues({ organization, repoName });
+  const pullsQuery = listPullRequests({ organization, repoName });
+
+  const issues = $derived(issuesQuery.current?.slice(0, 5) ?? []);
+  const pulls = $derived(pullsQuery.current?.slice(0, 5) ?? []);
 
   const base = $derived(`/${data.provider}/${data.organization}/${data.repoName}`);
   const providerName = $derived(providerLabel(data.provider));
@@ -37,11 +46,11 @@
         <a href="{base}/issues" class="view-all-link">View all →</a>
       </div>
 
-      {#if data.issues.length === 0}
+      {#if issues.length === 0}
         <p class="empty-text">No issues synced yet. They will appear after syncing from {providerName}.</p>
       {:else}
         <ul class="item-list">
-          {#each data.issues.slice(0, 5) as issue (issue.number)}
+          {#each issues as issue (issue.number)}
             <li class="item-row">
               <span
                 class="item-dot"
@@ -71,11 +80,11 @@
         <a href="{base}/pulls" class="view-all-link">View all →</a>
       </div>
 
-      {#if data.pulls.length === 0}
+      {#if pulls.length === 0}
         <p class="empty-text">No pull requests synced yet. They will appear after syncing from {providerName}.</p>
       {:else}
         <ul class="item-list">
-          {#each data.pulls.slice(0, 5) as pr (pr.number)}
+          {#each pulls as pr (pr.number)}
             <li class="item-row">
               <span
                 class="item-dot"

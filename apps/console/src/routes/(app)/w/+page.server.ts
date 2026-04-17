@@ -1,6 +1,6 @@
 import type { PageServerLoad } from "./$types";
 import { Workspace } from "@agents/core/workspace";
-import { listSessionWorkspaces, requireSessionAccount } from "$lib/workspace.server";
+import { listSessionWorkspaces, requireSessionAccount } from "$lib/server/workspace.server";
 
 export const load: PageServerLoad = async (event) => {
   const { accountID } = await requireSessionAccount(event);

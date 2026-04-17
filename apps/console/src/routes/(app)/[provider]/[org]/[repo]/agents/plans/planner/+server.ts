@@ -1,12 +1,12 @@
 import { streamText, stepCountIs, convertToModelMessages, type UIMessage } from "ai";
 import type { RequestHandler } from "./$types";
 import { Plan } from "@agents/core/events/plan";
-import { createModel } from "$lib/agents/ai/model";
-import { gitTools } from "$lib/agents/ai/tools/git-tools";
-import { planTools } from "$lib/agents/ai/tools/plan-tools";
-import { triageTools } from "$lib/agents/ai/tools/triage-tools";
-import { askUserTool } from "$lib/agents/ai/tools/ask-user-tool";
-import { withRepoActor } from "$lib/repository.server";
+import { createModel } from "$lib/features/agents/ai/model";
+import { gitTools } from "$lib/features/agents/ai/tools/git-tools";
+import { planTools } from "$lib/features/agents/ai/tools/plan-tools";
+import { triageTools } from "$lib/features/agents/ai/tools/triage-tools";
+import { askUserTool } from "$lib/features/agents/ai/tools/ask-user-tool";
+import { withRepoActor } from "$lib/server/repository.server";
 
 export const POST: RequestHandler = async (event) => {
   const { request, params, locals, platform } = event;

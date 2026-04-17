@@ -1,10 +1,16 @@
 <script lang="ts">
-  import type { PageProps } from './$types';
-  import IssueList from '$lib/git/components/IssueList.svelte';
+  import IssueList from '$lib/features/git/components/IssueList.svelte';
+  import { listIssues } from '$lib/features/git/api/git.remote';
+  import { repoContext } from '$lib/features/git/context.svelte';
 
-  let { data }: PageProps = $props();
+  const { organization, repoName } = repoContext.get();
+  const issuesQuery = listIssues({ organization, repoName });
 </script>
 
-<IssueList
-  issues={data.issues}
-/>
+{#if issuesQuery.loading && !issuesQuery.current}
+  <p class="loading-text">Loading issues...</p>
+{:else if issuesQuery.error}
+  <p class="error-text">Failed to load issues</p>
+{:else if issuesQuery.current}
+  <IssueList issues={issuesQuery.current} />
+{/if}

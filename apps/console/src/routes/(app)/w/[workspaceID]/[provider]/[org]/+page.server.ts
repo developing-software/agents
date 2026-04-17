@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import { withActor } from "$lib/auth";
+import { withActor } from "$lib/server/auth";
 import { Repository } from "@agents/core/repository";
 
 export const load: PageServerLoad = async (event) => {

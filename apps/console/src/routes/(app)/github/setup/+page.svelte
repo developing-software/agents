@@ -2,7 +2,7 @@
   import type { PageProps } from "./$types";
   import { untrack } from "svelte";
   import { goto } from "$app/navigation";
-  import { claimInstallation, createWorkspaceAndClaim } from "./setup.remote";
+  import { claimInstallation, createWorkspaceAndClaim } from "$lib/features/account/api/setup.remote";
 
   let { data }: PageProps = $props();
 

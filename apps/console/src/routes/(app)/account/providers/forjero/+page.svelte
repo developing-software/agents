@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { connectForjero } from "./forjero.remote";
+  import { connectForjero } from "$lib/features/account/api/forjero.remote";
 
   let baseUrl = $state("");
   let token = $state("");

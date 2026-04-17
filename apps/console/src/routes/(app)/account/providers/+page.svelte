@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
-  import { unlinkProvider } from "./providers.remote";
+  import { unlinkProvider } from "$lib/features/account/api/providers.remote";
 
   let { data }: PageProps = $props();
 

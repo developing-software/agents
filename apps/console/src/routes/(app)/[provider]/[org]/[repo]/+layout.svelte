@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { LayoutProps } from './$types';
   import { page } from '$app/state';
-  import { repoContext } from '$lib/git/context.svelte';
+  import { repoContext } from '$lib/features/git/context.svelte';
 
   let { data, children }: LayoutProps = $props();
 

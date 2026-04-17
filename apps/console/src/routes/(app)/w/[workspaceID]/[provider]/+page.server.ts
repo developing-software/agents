@@ -3,7 +3,7 @@ import { error } from "@sveltejs/kit";
 import { Repository } from "@agents/core/repository";
 import { hasProvider } from "@agents/core/git";
 import type { ProviderType } from "@agents/core/git";
-import { withActor } from "$lib/auth";
+import { withActor } from "$lib/server/auth";
 
 export const load: PageServerLoad = async (event) => {
   const { provider, workspaceID } = event.params;

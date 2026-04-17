@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import { listAgentRuns } from '$lib/events/agent-completed/agent-completed.remote';
+  import { listAgentRuns } from '$lib/features/events/api/metrics.remote';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import {
     relativeTime,
@@ -13,24 +13,16 @@
     formatCost,
     formatDuration,
     formatTokensCompact,
-  } from '$lib/events/helpers';
-  import AgentSummary from '$lib/events/agent-completed/AgentSummary.svelte';
-  import AgentComparison from '$lib/events/agent-completed/AgentComparison.svelte';
-  import ArtifactList from '$lib/events/repository/ArtifactList.svelte';
+  } from '$lib/features/events/helpers';
+  import AgentSummary from '$lib/features/events/components/metrics/AgentSummary.svelte';
+  import AgentComparison from '$lib/features/events/components/metrics/AgentComparison.svelte';
+  import ArtifactList from '$lib/features/events/components/feed/ArtifactList.svelte';
 
   let { data }: PageProps = $props();
 
-  let retryCount = $state(0);
   let expandedId = $state<string | null>(null);
 
-  const runsPromise = $derived.by(() => {
-    void retryCount;
-    return listAgentRuns({ organization: data.organization, repoName: data.repoName });
-  });
-
-  function retry() {
-    retryCount += 1;
-  }
+  const runsQuery = listAgentRuns({ organization: data.organization, repoName: data.repoName });
 
   function toggleRow(id: string) {
     expandedId = expandedId === id ? null : id;
@@ -60,7 +52,7 @@
 
 <h2 class="section-heading">Agent Runs</h2>
 
-{#await runsPromise}
+{#if runsQuery.loading && !runsQuery.current}
   <div class="runs-table">
     {#each [1, 2, 3] as i (i)}
       <div class="skeleton-row">
@@ -75,10 +67,15 @@
       </div>
     {/each}
   </div>
-{:then runs}
-  {#if runs.length === 0}
-    <EmptyState icon="agents" title="No agent runs recorded" description="Runs will appear here when agents are triggered via GitHub Actions or CLI." />
-  {:else}
+{:else if runsQuery.error}
+  <div class="error">
+    <span class="error-text">Failed to load agent runs</span>
+    <button type="button" class="retry" onclick={() => runsQuery.refresh()}>Retry</button>
+  </div>
+{:else if !runsQuery.current || runsQuery.current.length === 0}
+  <EmptyState icon="agents" title="No agent runs recorded" description="Runs will appear here when agents are triggered via GitHub Actions or CLI." />
+{:else}
+  {@const runs = runsQuery.current}
     <div class="runs-table">
       {#each runs as run (run.id)}
         {@const status = runStatus(run.checks, run.conclusion)}
@@ -303,13 +300,7 @@
         </div>
       {/each}
     </div>
-  {/if}
-{:catch}
-  <div class="error">
-    <span class="error-text">Failed to load agent runs</span>
-    <button type="button" class="retry" onclick={retry}>Retry</button>
-  </div>
-{/await}
+{/if}
 
 <style>
   /* ------------------------------------------------------------------ */

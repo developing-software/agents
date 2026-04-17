@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from "./$types";
-import { listAccessibleRepos } from "$lib/repository.server";
+import { listAccessibleRepos } from "$lib/server/repository.server";
 
 export const load: LayoutServerLoad = async (event) => {
   const { locals } = event;

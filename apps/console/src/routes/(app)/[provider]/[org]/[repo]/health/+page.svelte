@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { goto } from '$app/navigation';
-  import CheckCard from '$lib/events/health/CheckCard.svelte';
-  import ToolTile from '$lib/events/health/ToolTile.svelte';
+  import CheckCard from '$lib/features/events/components/health/CheckCard.svelte';
+  import ToolTile from '$lib/features/events/components/health/ToolTile.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
-  import BranchSelect from '$lib/git/components/BranchSelect.svelte';
-  import { relativeTime } from '$lib/events/helpers';
+  import BranchSelect from '$lib/features/git/components/BranchSelect.svelte';
+  import { relativeTime } from '$lib/features/events/helpers';
 
   let { data }: PageProps = $props();
 

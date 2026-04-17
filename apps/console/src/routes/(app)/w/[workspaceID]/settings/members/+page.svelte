@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
-  import WorkspaceSettingsNav from "$lib/workspace/WorkspaceSettingsNav.svelte";
-  import { inviteMember } from "./members.remote";
+  import WorkspaceSettingsNav from "$lib/features/workspace/WorkspaceSettingsNav.svelte";
+  import { inviteMember } from "$lib/features/workspace/api/members.remote";
 
   let { data }: PageProps = $props();
 </script>

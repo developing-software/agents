@@ -1,6 +1,6 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { redirect } from "@sveltejs/kit";
-import { authClient } from "$lib/auth";
+import { authClient } from "$lib/server/auth";
 
 export const GET: RequestHandler = async (event) => {
   if (event.locals.actor.type === "account") redirect(302, "/auth");

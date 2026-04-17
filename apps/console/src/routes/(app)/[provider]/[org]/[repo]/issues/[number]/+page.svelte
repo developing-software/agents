@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import { Tags } from '@agents/core/events/tag';
-  import Events from '$lib/events/repository/Feed.svelte';
+  import Events from '$lib/features/events/components/feed/Feed.svelte';
 
   let { data }: PageProps = $props();
 
