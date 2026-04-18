@@ -37,9 +37,9 @@
     rootEventId?: string;
   } = $props();
 
-  const { organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
-  const query = $derived(listTree({ organization, repoName, tags: filterTags, rootEventId }));
+  const query = $derived(listTree({ organization: repo.organization, repoName: repo.repoName, tags: filterTags, rootEventId }));
 
   let selectedEventId = $state<string | null>(null);
   let selectedEventData = $state<Record<string, unknown> | null>(null);

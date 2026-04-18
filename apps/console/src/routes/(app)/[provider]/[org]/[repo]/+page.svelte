@@ -9,9 +9,9 @@
 
   let { data }: PageProps = $props();
 
-  const { organization, repoName } = repoContext.get();
-  const issuesQuery = listIssues({ organization, repoName });
-  const pullsQuery = listPullRequests({ organization, repoName });
+  const repo = repoContext.get();
+  const issuesQuery = $derived(listIssues({ organization: repo.organization, repoName: repo.repoName }));
+  const pullsQuery = $derived(listPullRequests({ organization: repo.organization, repoName: repo.repoName }));
 
   const issues = $derived(issuesQuery.current?.slice(0, 5) ?? []);
   const pulls = $derived(pullsQuery.current?.slice(0, 5) ?? []);

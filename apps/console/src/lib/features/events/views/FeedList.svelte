@@ -43,9 +43,9 @@
     emptyText?: string;
   } = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
-  const query = $derived(listEvents({ organization, repoName, tags: filterTags }));
+  const query = $derived(listEvents({ organization: repo.organization, repoName: repo.repoName, tags: filterTags }));
 
   let activeFilter = $state('all');
   let selectedEventId = $state<string | null>(null);
@@ -111,9 +111,9 @@
               <span class="etype" class:etype-muted={child}>{e.type}</span>
               <span class="badge" style={originBadgeStyle(e.origin)}>{e.origin}</span>
               {#if issue}
-                <a href="/{provider}/{organization}/{repoName}/issues/{issue}" class="ref ref-issue" onclick={(ev) => ev.stopPropagation()}>#{issue}</a>
+                <a href="/{repo.provider}/{repo.organization}/{repo.repoName}/issues/{issue}" class="ref ref-issue" onclick={(ev) => ev.stopPropagation()}>#{issue}</a>
               {:else if pr}
-                <a href="/{provider}/{organization}/{repoName}/pulls/{pr}" class="ref ref-pr" onclick={(ev) => ev.stopPropagation()}>#{pr}</a>
+                <a href="/{repo.provider}/{repo.organization}/{repo.repoName}/pulls/{pr}" class="ref ref-pr" onclick={(ev) => ev.stopPropagation()}>#{pr}</a>
               {/if}
               <span class="time">{relativeTime(e.timeCreated)}</span>
             </button>
