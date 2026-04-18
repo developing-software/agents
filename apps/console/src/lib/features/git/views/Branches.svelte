@@ -4,8 +4,8 @@
   import { listBranchDetails } from '../api/branches.remote';
   import { repoContext } from '../context.svelte';
 
-  const { organization, repoName } = repoContext.get();
-  const query = listBranchDetails({ organization, repoName });
+  const repo = repoContext.get();
+  const query = $derived(listBranchDetails({ organization: repo.organization, repoName: repo.repoName }));
 </script>
 
 <QueryLoader {query}>

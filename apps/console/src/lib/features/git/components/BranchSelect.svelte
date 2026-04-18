@@ -12,8 +12,8 @@
 		onchange,
 	}: Props = $props();
 
-	const { organization, repoName } = repoContext.get();
-	const branchesQuery = listBranches({ organization, repoName });
+	const repo = repoContext.get();
+	const branchesQuery = $derived(listBranches({ organization: repo.organization, repoName: repo.repoName }));
 
 	function handleChange(e: Event) {
 		const selected = (e.target as HTMLSelectElement).value;

@@ -16,9 +16,9 @@
     children: TreeNode[];
   };
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
-  const treeQuery = listTree({ organization, repoName, tags: [] });
+  const treeQuery = $derived(listTree({ organization: repo.organization, repoName: repo.repoName, tags: [] }));
 
   function extractPrFromTags(tags: string[]): string | null {
     const pr = Tags.Git.find(tags, 'pr');
@@ -101,7 +101,7 @@
           {/if}
           <span class="dot" style="background:{dotColor(node.type)};"></span>
           {#if isPlan && title}
-            <a href="/{provider}/{organization}/{repoName}/agents/plans/{node.id}" class="etype etype-accent plan-link">{title}</a>
+            <a href="/{repo.provider}/{repo.organization}/{repo.repoName}/agents/plans/{node.id}" class="etype etype-accent plan-link">{title}</a>
           {:else}
             <span class="etype" class:etype-accent={isPlan} class:etype-muted={!isPlan && depth > 0}>{node.type}</span>
           {/if}

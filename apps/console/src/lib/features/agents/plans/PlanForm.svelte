@@ -25,7 +25,7 @@
 		repoId: string;
 	} = $props();
 
-	const { provider, organization, repoName } = repoContext.get();
+	const repo = repoContext.get();
 
 	function isGitIssueTag(tag: string): boolean {
 		return Tags.Git.parse(tag)?.kind === 'issue';
@@ -45,7 +45,7 @@
 	})));
 	const isEdit = $derived(!!plan);
 
-	const issuesQuery = $derived(showIssues ? listIssues({ organization, repoName }) : null);
+	const issuesQuery = $derived(showIssues ? listIssues({ organization: repo.organization, repoName: repo.repoName }) : null);
 
 	async function handleSubmit() {
 		saving = true;
@@ -56,10 +56,10 @@
 		try {
 			if (isEdit && plan) {
 				await updatePlan({ id: plan.id, title, body, status, tags });
-				goto(`/${provider}/${organization}/${repoName}/agents/plans/${plan.id}`);
+				goto(`/${repo.provider}/${repo.organization}/${repo.repoName}/agents/plans/${plan.id}`);
 			} else {
 				const result = await createPlan({ title, body, authorType, tags, repoId });
-				goto(`/${provider}/${organization}/${repoName}/agents/plans/${result.id}`);
+				goto(`/${repo.provider}/${repo.organization}/${repo.repoName}/agents/plans/${result.id}`);
 			}
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to save plan';

@@ -27,10 +27,10 @@
     agentColor: (agent: string) => string;
   } = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   const prStatesQuery = $derived(
-    run.prNumber != null ? listPrStates({ organization, repoName, prNumbers: [run.prNumber] }) : null,
+    run.prNumber != null ? listPrStates({ organization: repo.organization, repoName: repo.repoName, prNumbers: [run.prNumber] }) : null,
   );
   const prState = $derived(
     prStatesQuery?.current && run.prNumber != null ? prStatesQuery.current[run.prNumber] ?? null : null,
@@ -89,7 +89,7 @@
     reviewLoading = true;
     try {
       const result = await reviewPR({
-        organization, repoName, planId,
+        organization: repo.organization, repoName: repo.repoName, planId,
         runId: run.id,
         agent: run.agent, prNumber: run.prNumber,
         checks: run.checks,
@@ -119,7 +119,7 @@
     editSaving = true;
     try {
       const result = await humanReviewPR({
-        organization, repoName, planId,
+        organization: repo.organization, repoName: repo.repoName, planId,
         runId: run.id,
         agent: run.agent, prNumber: run.prNumber,
         scores: editScores,

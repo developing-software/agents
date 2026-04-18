@@ -21,7 +21,7 @@
     onclose: () => void;
   } = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   // ── Derived ──────────────────────────────────────────────────────────
 
@@ -134,7 +134,7 @@
           {/if}
           <span class="info-label">Console</span>
           <span class="info-value">
-            <a class="deploy-pr-link" href="/{provider}/{organization}/{repoName}/pulls/{dep.pr.number}">View in console</a>
+            <a class="deploy-pr-link" href="/{repo.provider}/{repo.organization}/{repo.repoName}/pulls/{dep.pr.number}">View in console</a>
           </span>
         </div>
       </div>

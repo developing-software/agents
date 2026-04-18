@@ -16,11 +16,11 @@
     onDispatchFix?: (prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) => void;
   } = $props();
 
-  const { organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   // -- Data loading --
 
-  const dataQuery = $derived(listPlanRuns({ organization, repoName, planId }));
+  const dataQuery = $derived(listPlanRuns({ organization: repo.organization, repoName: repo.repoName, planId }));
 
   // -- Agent colors --
 

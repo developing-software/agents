@@ -25,7 +25,7 @@
     ondispatched?: () => void;
   } = $props();
 
-  const { organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   let isOpen = $state(false);
   let drawerTitle = $state('Dispatch');
@@ -102,8 +102,8 @@
       });
 
       const results = await dispatchAgents({
-        organization,
-        repoName,
+        organization: repo.organization,
+        repoName: repo.repoName,
         prompt: promptValue,
         agents: agentList,
         ref: branch ?? ref,

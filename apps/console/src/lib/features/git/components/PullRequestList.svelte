@@ -15,7 +15,7 @@
     emptyText = 'No pull requests found.',
   }: Props = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   let activeFilter = $state<'all' | 'open' | 'merged' | 'closed'>('open');
 
@@ -112,12 +112,12 @@
 
           <!-- Provider link -->
           <div class="shrink-0">
-            <ProviderLink href={pr.url} {provider} />
+            <ProviderLink href={pr.url} provider={repo.provider} />
           </div>
 
           <!-- Activity link -->
           <a
-            href="/{provider}/{organization}/{repoName}/pulls/{pr.number}"
+            href="/{repo.provider}/{repo.organization}/{repo.repoName}/pulls/{pr.number}"
             class="activity-link"
             title="View activity"
           >activity &rarr;</a>

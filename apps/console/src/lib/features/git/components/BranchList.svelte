@@ -17,7 +17,7 @@
 
   let { branches }: Props = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   type Filter = 'all' | 'active' | 'stale' | 'merged' | 'noPR' | 'agents' | 'protected';
   type Sort = 'recent' | 'oldest' | 'name';
@@ -134,7 +134,7 @@
     isDeleting = true;
     deleteError = null;
     try {
-      await deleteBranch({ organization, repoName, branch: confirmBranch });
+      await deleteBranch({ organization: repo.organization, repoName: repo.repoName, branch: confirmBranch });
       const next = new Set(selected);
       next.delete(confirmBranch);
       selected = next;
@@ -153,7 +153,7 @@
     isDeleting = true;
     deleteError = null;
     try {
-      const { results } = await deleteBranches({ organization, repoName, branches: names });
+      const { results } = await deleteBranches({ organization: repo.organization, repoName: repo.repoName, branches: names });
       const failed = results.filter((r) => !r.ok);
       if (failed.length) {
         deleteError = `Failed: ${failed.map((f) => `${f.name} (${f.error})`).join(', ')}`;
@@ -313,7 +313,7 @@
           <span class="col-pr">
             {#if b.pullRequest}
               <a
-                href="/{provider}/{organization}/{repoName}/pulls/{b.pullRequest.number}"
+                href="/{repo.provider}/{repo.organization}/{repo.repoName}/pulls/{b.pullRequest.number}"
                 class="pr-link"
                 style="color: {prStateColor(b.pullRequest.state)};"
               >
@@ -338,7 +338,7 @@
 
           <!-- Provider link -->
           <span class="col-gh">
-            <ProviderLink href={branchUrl(provider, organization, repoName, b.name)} {provider} />
+            <ProviderLink href={branchUrl(repo.provider, repo.organization, repo.repoName, b.name)} provider={repo.provider} />
           </span>
 
           <!-- Delete button -->

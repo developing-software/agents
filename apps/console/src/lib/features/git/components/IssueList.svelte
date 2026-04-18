@@ -20,7 +20,7 @@
     emptyText = 'No issues found.',
   }: Props = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   let activeFilter = $state<'all' | 'open' | 'closed'>('open');
 
@@ -155,7 +155,7 @@
 
             <!-- Provider link -->
             <div class="shrink-0">
-              <ProviderLink href={issue.url} {provider} />
+              <ProviderLink href={issue.url} provider={repo.provider} />
             </div>
           </div>
         {:else}
@@ -202,12 +202,12 @@
 
             <!-- Provider link -->
             <div class="shrink-0">
-              <ProviderLink href={issue.url} {provider} />
+              <ProviderLink href={issue.url} provider={repo.provider} />
             </div>
 
             <!-- Activity link -->
             <a
-              href="/{provider}/{organization}/{repoName}/issues/{issue.number}"
+              href="/{repo.provider}/{repo.organization}/{repo.repoName}/issues/{issue.number}"
               class="activity-link"
               title="View activity"
             >activity →</a>

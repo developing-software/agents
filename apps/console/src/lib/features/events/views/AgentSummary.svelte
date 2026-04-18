@@ -5,12 +5,12 @@
   import { getEventSummary, invalidateSummaryCache } from '../api/metrics.remote';
   import { repoContext } from '$lib/features/git/context.svelte';
 
-  const { organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
-  const summary = getEventSummary({ organization, repoName });
+  const summary = $derived(getEventSummary({ organization: repo.organization, repoName: repo.repoName }));
 
   async function refresh() {
-    await invalidateSummaryCache({ organization, repoName });
+    await invalidateSummaryCache({ organization: repo.organization, repoName: repo.repoName });
     summary.refresh();
   }
 </script>

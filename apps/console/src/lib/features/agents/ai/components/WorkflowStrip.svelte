@@ -26,7 +26,7 @@
     agentColor: (agent: string) => string;
   } = $props();
 
-  const { organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   let reviewAllLoading = $state(false);
   let reviewAllProgress = $state<{ done: number; total: number } | null>(null);
@@ -57,7 +57,7 @@
         if (!run.prNumber) continue;
         try {
           const result = await reviewPR({
-            organization, repoName, planId,
+            organization: repo.organization, repoName: repo.repoName, planId,
             runId: run.id,
             agent: run.agent, prNumber: run.prNumber,
             checks: run.checks,
@@ -82,7 +82,7 @@
         .filter((r): r is PlanRun & { prNumber: number } => r.prNumber != null)
         .map((r) => reviews[r.prNumber])
         .filter((r): r is ReviewResult => r != null);
-      const result = await judgePlan({ organization, repoName, planId, reviews: reviewList });
+      const result = await judgePlan({ organization: repo.organization, repoName: repo.repoName, planId, reviews: reviewList });
       onJudgmentComplete(result);
     } catch (e) {
       onError(e instanceof Error ? e.message : 'Judgment failed');
@@ -102,7 +102,7 @@
         .map((r) => reviews[r.prNumber])
         .filter((r): r is ReviewResult => r != null);
       const result = await humanPickWinner({
-        organization, repoName, planId,
+        organization: repo.organization, repoName: repo.repoName, planId,
         winnerPrNumber: humanPickedPr,
         winnerAgent: winnerRun.agent,
         reviews: reviewList,
@@ -123,7 +123,7 @@
       const loserPrNumbers = runs
         .filter(r => r.prNumber != null && r.prNumber !== judgment!.winner.prNumber)
         .map(r => r.prNumber!);
-      await mergeWinner({ organization, repoName, planId, winnerPrNumber: judgment.winner.prNumber, loserPrNumbers });
+      await mergeWinner({ organization: repo.organization, repoName: repo.repoName, planId, winnerPrNumber: judgment.winner.prNumber, loserPrNumbers });
     } catch (e) {
       onError(e instanceof Error ? e.message : 'Merge failed');
     } finally {

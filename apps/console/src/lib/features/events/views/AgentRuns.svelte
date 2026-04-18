@@ -5,9 +5,9 @@
   import AgentRunsTable from '../components/AgentRunsTable.svelte';
   import { repoContext } from '$lib/features/git/context.svelte';
 
-  const { organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
-  const runsQuery = listAgentRuns({ organization, repoName });
+  const runsQuery = $derived(listAgentRuns({ organization: repo.organization, repoName: repo.repoName }));
 </script>
 
 <h2 class="section-heading">Agent Runs</h2>

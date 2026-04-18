@@ -13,7 +13,7 @@
 		autoLoad?: boolean;
 	} = $props();
 
-	const { organization, repoName } = repoContext.get();
+	const repo = repoContext.get();
 
 	let loading = $state(false);
 	let diff = $state<string | null>(null);
@@ -26,7 +26,7 @@
 		error = null;
 		loading = true;
 		try {
-			const result = await getPRDiff({ organization, repoName, prNumber });
+			const result = await getPRDiff({ organization: repo.organization, repoName: repo.repoName, prNumber });
 			diff = result.diff;
 			truncated = result.truncated;
 			visible = true;

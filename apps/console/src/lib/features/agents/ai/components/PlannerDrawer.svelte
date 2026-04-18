@@ -42,8 +42,8 @@
 		onplancreated?: (plan: PlanSummary) => void;
 	} = $props();
 
-	const { provider, organization, repoName } = repoContext.get();
-	const basePath = $derived(`/${provider}/${organization}/${repoName}/agents/plans`);
+	const repo = repoContext.get();
+	const basePath = $derived(`/${repo.provider}/${repo.organization}/${repo.repoName}/agents/plans`);
 // TODO: remove derived by and have a pure chat insteace, (add a reactive transport? & have the plan as a separate variable || have a separate state class with inner chat state)
 	const chat = $derived.by(() => {
 		const body = mode === 'edit' && plan ? { planId: plan.id } : undefined;

@@ -44,7 +44,7 @@
 
   let { runs }: { runs: AgentRun[] } = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   let expandedId = $state<string | null>(null);
 
@@ -129,13 +129,13 @@
 
         {#if issue !== null}
           <a
-            href="/{provider}/{organization}/{repoName}/issues/{issue}"
+            href="/{repo.provider}/{repo.organization}/{repo.repoName}/issues/{issue}"
             class="ref ref-issue"
             onclick={(ev) => ev.stopPropagation()}
           >#{issue}</a>
         {:else if pr !== null}
           <a
-            href="/{provider}/{organization}/{repoName}/pulls/{pr}"
+            href="/{repo.provider}/{repo.organization}/{repo.repoName}/pulls/{pr}"
             class="ref ref-pr"
             onclick={(ev) => ev.stopPropagation()}
           >#{pr}</a>

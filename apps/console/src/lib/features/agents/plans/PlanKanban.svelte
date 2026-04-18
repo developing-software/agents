@@ -19,7 +19,7 @@
     dispatched?: Set<string>;
   } = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
   let grouped = $derived(
     PLAN_STATUSES.reduce(
@@ -44,7 +44,7 @@
       <div class="column-body">
         {#each items as plan (plan.id)}
           <a
-            href="/{provider}/{organization}/{repoName}/agents/plans/{plan.id}"
+            href="/{repo.provider}/{repo.organization}/{repo.repoName}/agents/plans/{plan.id}"
             class="card"
           >
             <div class="card-title">{plan.title}</div>

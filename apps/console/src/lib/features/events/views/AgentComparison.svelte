@@ -5,15 +5,15 @@
   import { getAgentComparison, getAgentStats, invalidateComparisonCache } from '../api/metrics.remote';
   import { repoContext } from '$lib/features/git/context.svelte';
 
-  const { organization, repoName } = repoContext.get();
+  const repo = repoContext.get();
 
-  const comparison = getAgentComparison({ organization, repoName });
-  const stats = getAgentStats({ organization, repoName });
+  const comparison = $derived(getAgentComparison({ organization: repo.organization, repoName: repo.repoName }));
+  const stats = $derived(getAgentStats({ organization: repo.organization, repoName: repo.repoName }));
 
   const loading = $derived(comparison.loading || stats.loading);
 
   async function refresh() {
-    await invalidateComparisonCache({ organization, repoName });
+    await invalidateComparisonCache({ organization: repo.organization, repoName: repo.repoName });
     comparison.refresh();
     stats.refresh();
   }

@@ -15,8 +15,8 @@
     eventId: string;
   } = $props();
 
-  const { provider, organization, repoName } = repoContext.get();
-  const base = $derived(`/${provider}/${organization}/${repoName}/events/artifact`);
+  const repo = repoContext.get();
+  const base = $derived(`/${repo.provider}/${repo.organization}/${repo.repoName}/events/artifact`);
 
   const artifactsPromise = $derived(
     fetch(`${base}?eventId=${eventId}`)
