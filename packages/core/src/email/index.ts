@@ -18,6 +18,7 @@ export namespace Email {
       to: string | string[];
       subject: string;
       body: string;
+      html?: string;
       attachments?: Attachment[];
     }): Promise<void>;
   }
@@ -43,12 +44,13 @@ export namespace Email {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
     return {
-      async send({ from, to, subject, body, attachments }) {
+      async send({ from, to, subject, body, html, attachments }) {
         await resend.emails.send({
           from,
           to,
           subject,
           text: body,
+          html,
           attachments: attachments?.map((a) => ({
             filename: a.filename,
             content: a.content,
@@ -70,18 +72,19 @@ export namespace Email {
     }
   }
 
-  export async function send(
-    from: string,
-    to: string | string[],
-    subject: string,
-    body: string,
-    attachments?: Attachment[],
-  ) {
-    from = `Developing Agents <no.reply@agents.developing.company>`;
-    log.info("sending email", { subject, from, to });
+  export async function send(input: {
+    from: string;
+    to: string | string[];
+    subject: string;
+    body: string;
+    html?: string;
+    attachments?: Attachment[];
+  }) {
+    input.from = `Developing Agents <no.reply@agents.developing.company>`;
+    log.info("sending email", { subject: input.subject, from: input.from, to: input.to });
     try {
       const sender = await getSender();
-      await sender.send({ from, to, subject, body, attachments });
+      await sender.send(input);
     } catch (err) {
       log.warn("failed to send email", { err: err instanceof Error ? err.message : String(err) });
       throw err;

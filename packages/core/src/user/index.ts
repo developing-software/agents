@@ -9,8 +9,13 @@ import { Account } from "../account";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { ErrorCodes, VisibleError } from "../error";
+import { Workspace } from "../workspace";
+import { Template } from "../email/template";
+import { Log } from "../util/log";
 
 export namespace User {
+  const log = Log.create({ namespace: "user" });
+
   export const Role = z.enum(["admin", "member"]);
   export type Role = z.infer<typeof Role>;
 
@@ -110,6 +115,7 @@ export namespace User {
       ),
   );
 
+
   export const invite = fn(
     z.object({ email: z.email(), role: Role.default("member") }),
     async (input) => {
@@ -140,6 +146,22 @@ export namespace User {
           role: input.role,
         }),
       );
+
+      // Send invite email (fire-and-forget — don't block on email delivery)
+      const inviter = await fromID(actor.properties.userID);
+      const workspace = await Workspace.fromID(workspaceID);
+      if (workspace) {
+        Template.sendInvite({
+          email: input.email,
+          workspaceName: workspace.name,
+          inviterEmail: inviter?.email ?? "A team member",
+        }).catch((err) =>
+          log.warn("failed to send invite email", {
+            err: err instanceof Error ? err.message : String(err),
+          }),
+        );
+      }
+
       return id;
     },
   );

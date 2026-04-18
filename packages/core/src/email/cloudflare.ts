@@ -7,6 +7,7 @@ interface SendEmailBinding {
     to: string | string[];
     subject: string;
     text?: string;
+    html?: string;
     attachments?: {
       content: string;
       filename: string;
@@ -18,12 +19,13 @@ interface SendEmailBinding {
 
 export function createCloudflareSender(binding: SendEmailBinding): Email.Sender {
   return {
-    async send({ from, to, subject, body, attachments }) {
+    async send({ from, to, subject, body, html, attachments }) {
       await binding.send({
         from,
         to,
         subject,
         text: body,
+        html,
         attachments: attachments?.map((a) => ({
           content: a.content,
           filename: a.filename,
