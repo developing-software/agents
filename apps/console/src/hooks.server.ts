@@ -6,6 +6,8 @@ import { Actor } from "@agents/core/actor";
 import { sequence } from "@sveltejs/kit/hooks";
 import { withDatabase } from "@agents/core/drizzle";
 import { withCacheContext, CacheApiAdapter } from "@agents/core/cache";
+import { Email } from "@agents/core/email";
+import { createCloudflareSender } from "@agents/core/email/cloudflare";
 import { readSession } from "$lib/server/session";
 
 const log = Log.create({ namespace: "console.hooks.server" });
@@ -43,8 +45,13 @@ const handleCache: Handle = async ({ event, resolve }) => {
   const adapter = new CacheApiAdapter(cache);
   return withCacheContext(adapter, { prefix: "console" }, () => resolve(event));
 };
+const handleEmail: Handle = async ({ event, resolve }) => {
+  const binding = event.platform?.env?.SEND_EMAIL;
+  if (!binding) return resolve(event);
+  return Email.provide(createCloudflareSender(binding), () => resolve(event));
+};
 
-export const handle = sequence(handleDb, handleCache, handleAuth);
+export const handle = sequence(handleDb, handleCache, handleEmail, handleAuth);
 
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
   if (status === 404) {

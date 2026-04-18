@@ -1,5 +1,5 @@
 {
-  description = "Template";
+  description = "DEV AGENTS";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";

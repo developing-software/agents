@@ -9,6 +9,7 @@
       "./src/*/index.ts",
       "./src/*.ts"
     ],
+    "./context": "./src/context.ts",
     "./identifier": "./src/identifier.ts",
     "./actor": "./src/actor.ts",
     "./error": "./src/error.ts",

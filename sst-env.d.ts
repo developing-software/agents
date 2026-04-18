@@ -44,14 +44,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "ResendApiKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "SenderEmailDomain": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "SessionSecret": {
       "type": "sst.sst.Secret"
       "value": string

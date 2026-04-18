@@ -31,6 +31,10 @@ const api = new sst.cloudflare.Worker("Api", {
           name: "HYPERDRIVE",
           id: "ebb41070546a4f5baf5bf1a37877f13c",
         },
+        {
+          type: "send_email",
+          name: "SEND_EMAIL",
+        }
       ]);
       args.observability = {
         enabled: true,

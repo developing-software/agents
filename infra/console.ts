@@ -33,6 +33,11 @@ const console = new sst.cloudflare.Worker("Console", {
           name: "HYPERDRIVE",
           id: "ebb41070546a4f5baf5bf1a37877f13c",
         },
+        // ["ai" "analytics_engine" "assets" "browser" "d1" "data_blob" "dispatch_namespace" "durable_object_namespace" "hyperdrive" "inherit" "images" "json" "kv_namespace" "mtls_certificate" "plain_text" "pipelines" "queue" "r2_bucket" "secret_text" "send_email" "service" "tail_consumer" "text_blob" "vectorize" "version_metadata" "secrets_store_secret" "secret_key" "workflow" "wasm_module"]
+        {
+          type: "send_email",
+          name: "SEND_EMAIL",
+        }
       ]);
       args.observability = {
         enabled: true,

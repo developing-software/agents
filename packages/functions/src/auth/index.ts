@@ -42,7 +42,7 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       const url = new URL(input.redirectURI);
       const hostname = url.hostname;
       if (hostname.endsWith("developing.company")) return true;
-      if (hostname.endsWith(".workers.dev")) return true;
+      // if (hostname.endsWith(".workers.dev")) return true;
       if (hostname === "localhost") return true;
       if (hostname.endsWith(".localhost")) return true;
       try {
