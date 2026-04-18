@@ -151,7 +151,7 @@ export namespace User {
       const inviter = await fromID(actor.properties.userID);
       const workspace = await Workspace.fromID(workspaceID);
       if (workspace) {
-        Template.sendInvite({
+        await Template.sendInvite({
           email: input.email,
           workspaceName: workspace.name,
           inviterEmail: inviter?.email ?? "A team member",
@@ -187,6 +187,42 @@ export namespace User {
       });
     },
   );
+
+  export const remove = fn(z.string(), async (targetUserID) => {
+    const actor = Actor.assert("user");
+    if (actor.properties.role !== "admin")
+      throw new VisibleError(
+        "forbidden",
+        ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
+        "Only admins can remove members",
+      );
+    if (actor.properties.userID === targetUserID)
+      throw new VisibleError(
+        "validation",
+        ErrorCodes.Validation.INVALID_PARAMETER,
+        "You cannot remove yourself",
+      );
+
+    const result = await Database.use((tx) =>
+      tx
+        .update(userTable)
+        .set({ timeDeleted: new Date(), timeUpdated: new Date() })
+        .where(
+          and(
+            eq(userTable.id, targetUserID),
+            eq(userTable.workspaceID, actor.properties.workspaceID),
+            isNull(userTable.timeDeleted),
+          ),
+        )
+        .returning({ id: userTable.id }),
+    );
+    if (result.length === 0)
+      throw new VisibleError(
+        "not_found",
+        ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+        "Member not found",
+      );
+  });
 
   export const listForWorkspace = fn(z.string(), (workspaceID) =>
     Database.use((tx) =>

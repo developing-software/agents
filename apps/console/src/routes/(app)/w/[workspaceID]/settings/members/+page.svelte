@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
   import WorkspaceSettingsNav from "$lib/features/workspace/WorkspaceSettingsNav.svelte";
-  import { inviteMember } from "$lib/features/workspace/api/members.remote";
+  import { inviteMember, removeMember } from "$lib/features/workspace/api/members.remote";
 
   let { data }: PageProps = $props();
 </script>
@@ -29,6 +29,10 @@
   {/if}
 
   {#each inviteMember.fields.allIssues() as issue (issue.message)}
+    <p class="notice notice-error">{issue.message}</p>
+  {/each}
+
+  {#each removeMember.fields.allIssues() as issue (issue.message)}
     <p class="notice notice-error">{issue.message}</p>
   {/each}
 
@@ -80,6 +84,18 @@
               <span class="role-chip">{member.role}</span>
               {#if !member.accountID}
                 <span class="chip chip-warning">pending</span>
+              {/if}
+              {#if data.role === "admin" && member.id !== data.userID}
+                <form {...removeMember} class="remove-form">
+                  <input type="hidden" name="userID" value={member.id} />
+                  <button
+                    type="submit"
+                    class="btn-danger-ghost"
+                    disabled={!!removeMember.pending}
+                  >
+                    Remove
+                  </button>
+                </form>
               {/if}
             </div>
           </li>
@@ -316,6 +332,32 @@
   .chip-warning {
     background: var(--color-warning-dim);
     color: var(--color-warning);
+  }
+
+  .remove-form {
+    display: contents;
+  }
+
+  .btn-danger-ghost {
+    padding: 3px 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: none;
+    color: var(--color-muted);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.1s, border-color 0.1s;
+  }
+
+  .btn-danger-ghost:hover:not(:disabled) {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+
+  .btn-danger-ghost:disabled {
+    opacity: 0.5;
+    cursor: progress;
   }
 
   @media (max-width: 720px) {

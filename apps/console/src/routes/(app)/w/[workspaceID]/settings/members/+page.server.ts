@@ -18,6 +18,7 @@ export const load: PageServerLoad = async (event) => {
       workspace,
       members,
       role: actor.properties.role,
+      userID: actor.properties.userID,
     };
   });
 };

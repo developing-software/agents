@@ -81,7 +81,7 @@ export namespace Email {
     attachments?: Attachment[];
   }) {
     input.from = `Developing Agents <no.reply@agents.developing.company>`;
-    log.info("sending email", { subject: input.subject, from: input.from, to: input.to });
+    log.info("sending email", { subject: `{{${input.subject}}}`, from: input.from, to: input.to });
     try {
       const sender = await getSender();
       await sender.send(input);

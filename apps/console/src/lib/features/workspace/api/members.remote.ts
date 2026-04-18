@@ -23,3 +23,20 @@ export const inviteMember = form(
     return { invitedEmail: email };
   },
 );
+
+export const removeMember = form(
+  z.object({
+    userID: z.string().min(1, "Missing member ID."),
+  }),
+  async ({ userID }, issue) => {
+    const event = getRequestEvent();
+    const workspaceID = event.params.workspaceID;
+    if (!workspaceID) error(400, "Missing workspace");
+
+    try {
+      await withActor(event, workspaceID, () => User.remove(userID));
+    } catch (err) {
+      invalid(issue.userID(err instanceof Error ? err.message : "Unable to remove member."));
+    }
+  },
+);
