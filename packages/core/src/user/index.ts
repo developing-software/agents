@@ -137,17 +137,28 @@ export namespace User {
       const pending = await pendingByEmail({ workspaceID, email: input.email });
       if (pending) return pending.id;
 
-      const id = Identifier.create("user");
-      await Database.use((tx) =>
-        tx.insert(userTable).values({
-          id,
-          workspaceID,
-          email: input.email,
-          role: input.role,
-        }),
+      const [row] = await Database.use((tx) =>
+        tx
+          .insert(userTable)
+          .values({
+            id: Identifier.create("user"),
+            workspaceID,
+            email: input.email,
+            role: input.role,
+          })
+          .onConflictDoUpdate({
+            target: [userTable.workspaceID, userTable.email],
+            set: {
+              timeDeleted: null,
+              timeUpdated: new Date(),
+              role: input.role,
+            },
+          })
+          .returning({ id: userTable.id }),
       );
+      const id = row!.id;
 
-      // Send invite email (fire-and-forget — don't block on email delivery)
+      // Send invite email — must be awaited on CF Workers (no background work after response)
       const inviter = await fromID(actor.properties.userID);
       const workspace = await Workspace.fromID(workspaceID);
       if (workspace) {
