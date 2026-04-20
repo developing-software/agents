@@ -33,6 +33,7 @@
       tokenError = err instanceof Error ? err.message : 'Failed to generate token.';
     }
   }
+
 </script>
 
 <svelte:head>
