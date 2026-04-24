@@ -47,9 +47,31 @@ Repo-specific instructions for AI coding agents working in this monorepo.
 ```sh
 bun run fmt
 bun run lint
-bun run typecheck
-bun test
+bun run typecheck              # all packages — avoid in agents
+bun test                       # all packages — avoid in agents
 bun run db:gen
 bun run db:push
 bun run gen:spec
+```
+
+### Scoped typecheck / test
+
+Run typecheck and tests only on the packages you changed, not the whole monorepo.
+Use `bun --filter` with the package name from its `package.json`:
+
+```sh
+bun --filter '@agents/core' typecheck
+bun --filter 'console' typecheck
+bun --filter '@agents/functions' typecheck
+bun --filter 'workers' typecheck
+bun --filter 'cli' typecheck
+
+bun --filter '@agents/core' test
+bun --filter 'console' test
+```
+
+If your changes span multiple packages, chain the relevant filters:
+
+```sh
+bun --filter '@agents/core' typecheck && bun --filter 'console' typecheck
 ```
