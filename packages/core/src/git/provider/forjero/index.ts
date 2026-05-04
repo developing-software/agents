@@ -58,7 +58,7 @@ export const forjeroProvider: GitProvider = {
       const { owner, repo } = splitFullName(fullName);
       const sdk = await sdkFor(fullName);
       const meta = unwrap(await sdk.repoGetContents({ owner, repo, filepath: path, ref }));
-      if (!meta || meta.type !== "file") {
+      if (!meta || (meta.type !== "file" && meta.type !== "symlink")) {
         throw new VisibleError("validation", "not_a_file", `${path} is not a file`);
       }
       return {

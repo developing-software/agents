@@ -74,8 +74,15 @@ export function mapCommit(data: Commit): NormalizedCommit {
 }
 
 export function mapTreeEntry(entry: GitEntry): NormalizedTreeEntry {
+  const mode = (entry as { mode?: string }).mode;
+  const type: NormalizedTreeEntry["type"] =
+    mode === "120000" || entry.type === "symlink"
+      ? "symlink"
+      : entry.type === "tree"
+        ? "tree"
+        : "blob";
   return {
-    type: entry.type === "tree" ? "tree" : "blob",
+    type,
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,

@@ -5,22 +5,14 @@ export const load: PageServerLoad = async ({ parent }) => {
   const { repo } = await parent();
   if (!repo)
     return {
-      agentFiles: [],
-      agentsFolder: null,
-      claudeFolder: [],
+      configPairs: [],
       defaultBranch: "main",
     };
 
-  const [agentFiles, agentsFolder, claudeFolder] = await Promise.all([
-    AgentDiscovery.findAgentFiles(repo),
-    AgentDiscovery.detectAgentsFolder(repo),
-    AgentDiscovery.detectClaudeFolder(repo),
-  ]);
+  const configPairs = await AgentDiscovery.findConfigPairs(repo);
 
   return {
-    agentFiles,
-    agentsFolder,
-    claudeFolder,
+    configPairs,
     defaultBranch: repo.defaultBranch,
   };
 };
