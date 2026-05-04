@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getProvider } from "../git";
-import type { ProviderType } from "../git/provider/interface";
+import type { NormalizedTreeEntry, ProviderType } from "../git/provider/interface";
 
 export namespace AgentDiscovery {
   export interface RepoRef {
@@ -21,8 +21,68 @@ export namespace AgentDiscovery {
   });
   export type AgentsFolderInfo = z.infer<typeof AgentsFolderInfo>;
 
+  export interface AgentPair {
+    directory: string;
+    agentsPath: string | null;
+    claudePath: string | null;
+    agentsSha: string | null;
+    claudeSha: string | null;
+    agentsIsSymlink: boolean;
+    claudeIsSymlink: boolean;
+    symlinkTarget: string | null;
+  }
+
   function resolveRef(repo: RepoRef, ref?: string): string {
     return ref ?? repo.defaultBranch ?? "HEAD";
+  }
+
+  function dirOf(path: string): string {
+    const idx = path.lastIndexOf("/");
+    return idx === -1 ? "" : path.substring(0, idx);
+  }
+
+  export function matchPairsFromTree(
+    tree: NormalizedTreeEntry[],
+  ): Omit<AgentPair, "symlinkTarget">[] {
+    const agentsFiles = new Map<string, { path: string; sha: string; isSymlink: boolean }>();
+    const claudeFiles = new Map<string, { path: string; sha: string; isSymlink: boolean }>();
+
+    for (const entry of tree) {
+      if (entry.type !== "blob") continue;
+
+      const name = entry.path.split("/").pop();
+      if (name !== "AGENTS.md" && name !== "CLAUDE.md") continue;
+
+      const dir = dirOf(entry.path);
+      const info = { path: entry.path, sha: entry.sha, isSymlink: entry.isSymlink ?? false };
+
+      if (name === "AGENTS.md") {
+        agentsFiles.set(dir, info);
+      } else {
+        claudeFiles.set(dir, info);
+      }
+    }
+
+    const allDirs = new Set([...agentsFiles.keys(), ...claudeFiles.keys()]);
+    const pairs: Omit<AgentPair, "symlinkTarget">[] = [];
+
+    for (const dir of allDirs) {
+      const agent = agentsFiles.get(dir);
+      const claude = claudeFiles.get(dir);
+
+      pairs.push({
+        directory: dir || ".",
+        agentsPath: agent?.path ?? null,
+        claudePath: claude?.path ?? null,
+        agentsSha: agent?.sha ?? null,
+        claudeSha: claude?.sha ?? null,
+        agentsIsSymlink: agent?.isSymlink ?? false,
+        claudeIsSymlink: claude?.isSymlink ?? false,
+      });
+    }
+
+    pairs.sort((a, b) => a.directory.localeCompare(b.directory));
+    return pairs;
   }
 
   /**
@@ -37,6 +97,29 @@ export namespace AgentDiscovery {
           (entry.path.endsWith("/AGENTS.md") || entry.path === "AGENTS.md"),
       )
       .map((entry) => ({ path: entry.path, sha: entry.sha }));
+  }
+
+  /**
+   * Find all AGENTS.md ↔ CLAUDE.md pairs in a repo with symlink detection.
+   */
+  export async function findAgentPairs(repo: RepoRef, ref?: string): Promise<AgentPair[]> {
+    const tree = await getProvider(repo.source).repos.getTree(repo.fullName, resolveRef(repo, ref));
+    const matched = matchPairsFromTree(tree);
+
+    const pairs: AgentPair[] = [];
+    for (const m of matched) {
+      let symlinkTarget: string | null = null;
+      if (m.agentsIsSymlink || m.claudeIsSymlink) {
+        const symlinkPath = m.agentsIsSymlink ? m.agentsPath : m.claudeIsSymlink ? m.claudePath : null;
+        if (symlinkPath) {
+          const content = await readFile(repo, symlinkPath, ref);
+          if (content) symlinkTarget = content.trim();
+        }
+      }
+      pairs.push({ ...m, symlinkTarget });
+    }
+
+    return pairs;
   }
 
   /**
