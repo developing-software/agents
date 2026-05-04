@@ -21,6 +21,12 @@ export namespace AgentDiscovery {
   });
   export type AgentsFolderInfo = z.infer<typeof AgentsFolderInfo>;
 
+  export interface AgentPair {
+    directory: string;
+    agents: { path: string; sha: string; isSymlink: boolean } | null;
+    claude: { path: string; sha: string; isSymlink: boolean } | null;
+  }
+
   function resolveRef(repo: RepoRef, ref?: string): string {
     return ref ?? repo.defaultBranch ?? "HEAD";
   }
@@ -37,6 +43,69 @@ export namespace AgentDiscovery {
           (entry.path.endsWith("/AGENTS.md") || entry.path === "AGENTS.md"),
       )
       .map((entry) => ({ path: entry.path, sha: entry.sha }));
+  }
+
+  /**
+   * Find all AGENTS.md ↔ CLAUDE.md pairs across a repo.
+   * For each directory containing either file, returns both entries with symlink status.
+   */
+  export async function findAgentPairs(repo: RepoRef, ref?: string): Promise<AgentPair[]> {
+    const resolvedRef = resolveRef(repo, ref);
+    const tree = await getProvider(repo.source).repos.getTree(repo.fullName, resolvedRef);
+
+    const agentsMap = new Map<string, { path: string; sha: string }>();
+    const claudeMap = new Map<string, { path: string; sha: string }>();
+
+    for (const entry of tree) {
+      if (entry.type !== "blob") continue;
+      const name = entry.path.split("/").pop();
+      if (name !== "AGENTS.md" && name !== "CLAUDE.md") continue;
+      const dir = entry.path === name ? "." : entry.path.slice(0, -(name.length + 1));
+      if (name === "AGENTS.md") agentsMap.set(dir, { path: entry.path, sha: entry.sha });
+      else claudeMap.set(dir, { path: entry.path, sha: entry.sha });
+    }
+
+    const allDirs = new Set([...agentsMap.keys(), ...claudeMap.keys()]);
+    const dirsToCheck = [...allDirs];
+
+    const provider = getProvider(repo.source);
+    const symlinkResults = await Promise.all(
+      dirsToCheck.map(async (dir) => {
+        const listPath = dir === "." ? "" : dir;
+        const entries = await provider.content.listDir(repo.fullName, listPath, resolvedRef);
+        const symlinkSet = new Set<string>();
+        if (entries) {
+          for (const e of entries) {
+            if (e.type === "symlink") symlinkSet.add(e.name);
+          }
+        }
+        return { dir, symlinkSet };
+      }),
+    );
+
+    const symlinkByDir = new Map<string, Set<string>>();
+    for (const { dir, symlinkSet } of symlinkResults) {
+      symlinkByDir.set(dir, symlinkSet);
+    }
+
+    const pairs: AgentPair[] = [];
+    for (const dir of [...allDirs].sort()) {
+      const symlinks = symlinkByDir.get(dir) ?? new Set();
+      const agentsEntry = agentsMap.get(dir);
+      const claudeEntry = claudeMap.get(dir);
+
+      pairs.push({
+        directory: dir,
+        agents: agentsEntry
+          ? { ...agentsEntry, isSymlink: symlinks.has("AGENTS.md") }
+          : null,
+        claude: claudeEntry
+          ? { ...claudeEntry, isSymlink: symlinks.has("CLAUDE.md") }
+          : null,
+      });
+    }
+
+    return pairs;
   }
 
   /**
