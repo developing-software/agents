@@ -21,8 +21,24 @@ export namespace AgentDiscovery {
   });
   export type AgentsFolderInfo = z.infer<typeof AgentsFolderInfo>;
 
+  export interface AgentPair {
+    dir: string;
+    agentsPath: string;
+    claudePath: string;
+    agentsSha: string;
+    claudeSha: string | null;
+    isAgentsSymlink: boolean;
+    isClaudeSymlink: boolean;
+    existsClaude: boolean;
+  }
+
   function resolveRef(repo: RepoRef, ref?: string): string {
     return ref ?? repo.defaultBranch ?? "HEAD";
+  }
+
+  function dirOf(path: string): string {
+    const idx = path.lastIndexOf("/");
+    return idx === -1 ? "" : path.slice(0, idx);
   }
 
   /**
@@ -37,6 +53,43 @@ export namespace AgentDiscovery {
           (entry.path.endsWith("/AGENTS.md") || entry.path === "AGENTS.md"),
       )
       .map((entry) => ({ path: entry.path, sha: entry.sha }));
+  }
+
+  /**
+   * Find AGENTS.md files and pair each with the CLAUDE.md in the same directory.
+   * Symlinks are detected from the git tree mode field (mode 120000).
+   */
+  export async function findAgentPairs(repo: RepoRef, ref?: string): Promise<AgentPair[]> {
+    const tree = await getProvider(repo.source).repos.getTree(repo.fullName, resolveRef(repo, ref));
+
+    const agentsEntries = tree.filter(
+      (e) => e.type === "blob" && (e.path === "AGENTS.md" || e.path.endsWith("/AGENTS.md")),
+    );
+    const claudeEntries = tree.filter(
+      (e) => e.type === "blob" && (e.path === "CLAUDE.md" || e.path.endsWith("/CLAUDE.md")),
+    );
+
+    const claudeByDir = new Map<string, (typeof claudeEntries)[0]>();
+    for (const c of claudeEntries) {
+      claudeByDir.set(dirOf(c.path), c);
+    }
+
+    return agentsEntries
+      .map((a) => {
+        const dir = dirOf(a.path);
+        const claudeEntry = claudeByDir.get(dir);
+        return {
+          dir,
+          agentsPath: a.path,
+          claudePath: dir ? `${dir}/CLAUDE.md` : "CLAUDE.md",
+          agentsSha: a.sha,
+          claudeSha: claudeEntry?.sha ?? null,
+          isAgentsSymlink: a.isSymlink ?? false,
+          isClaudeSymlink: claudeEntry?.isSymlink ?? false,
+          existsClaude: !!claudeEntry,
+        };
+      })
+      .sort((a, b) => a.agentsPath.localeCompare(b.agentsPath));
   }
 
   /**

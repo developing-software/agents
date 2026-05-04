@@ -33,6 +33,7 @@ export interface NormalizedTreeEntry {
   path: string;
   sha: string;
   size?: number;
+  isSymlink?: boolean;
 }
 
 export interface NormalizedBlob {

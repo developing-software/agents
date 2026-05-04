@@ -79,6 +79,7 @@ export function mapTreeEntry(entry: GitEntry): NormalizedTreeEntry {
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,
+    isSymlink: (entry as { mode?: string }).mode === "120000",
   };
 }
 

@@ -52,6 +52,7 @@ export function mapTreeEntry(entry: TreeEntry): NormalizedTreeEntry {
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,
+    isSymlink: entry.mode === "120000",
   };
 }
 
