@@ -66,22 +66,35 @@ export const githubProvider: GitProvider = {
     async getBlob(fullName, ref, path) {
       const { owner, repo } = splitFullName(fullName);
       const kit = await clientFor(fullName);
-      const { data } = await kit.rest.repos.getContent({
+      const { data: tree } = await kit.rest.git.getTree({
         owner,
         repo,
-        path,
-        ref,
+        tree_sha: ref,
+        recursive: "1",
       });
-      if (Array.isArray(data) || data.type !== "file") {
+      const entry = tree.tree.find(
+        (item): item is typeof item & { path: string; sha: string } =>
+          item.path === path && !!item.sha && item.type !== "tree",
+      );
+      if (!entry) {
         throw new VisibleError("validation", "not_a_file", `${path} is not a file`);
       }
-      const file = data as { sha: string; size: number; content: string; encoding: string };
+
+      const { data } = await kit.rest.git.getBlob({
+        owner,
+        repo,
+        file_sha: entry.sha,
+      });
+      const content =
+        data.encoding === "base64"
+          ? Buffer.from((data.content ?? "").replace(/\n/g, ""), "base64").toString("utf8")
+          : (data.content ?? "");
       return {
         path,
-        sha: file.sha,
-        size: file.size,
-        content: file.content,
-        encoding: file.encoding === "base64" ? "base64" : "utf8",
+        sha: entry.sha,
+        size: data.size ?? entry.size ?? Buffer.byteLength(content),
+        content,
+        encoding: "utf8",
       };
     },
 

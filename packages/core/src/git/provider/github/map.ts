@@ -47,8 +47,10 @@ export function mapRepo(data: RepoGetData | InstallationRepo): NormalizedRepo {
 }
 
 export function mapTreeEntry(entry: TreeEntry): NormalizedTreeEntry {
+  const type: NormalizedTreeEntry["type"] =
+    entry.mode === "120000" ? "symlink" : entry.type === "tree" ? "tree" : "blob";
   return {
-    type: entry.type === "tree" ? "tree" : "blob",
+    type,
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,

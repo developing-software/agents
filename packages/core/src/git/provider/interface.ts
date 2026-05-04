@@ -29,7 +29,7 @@ export interface NormalizedCommit {
 }
 
 export interface NormalizedTreeEntry {
-  type: "blob" | "tree";
+  type: "blob" | "tree" | "symlink";
   path: string;
   sha: string;
   size?: number;
