@@ -29,10 +29,11 @@ export interface NormalizedCommit {
 }
 
 export interface NormalizedTreeEntry {
-  type: "blob" | "tree";
+  type: "blob" | "tree" | "symlink" | "submodule";
   path: string;
   sha: string;
   size?: number;
+  mode?: string;
 }
 
 export interface NormalizedBlob {
@@ -213,6 +214,7 @@ export interface NormalizedDirEntry {
   path: string;
   sha: string;
   size: number;
+  target?: string;
 }
 
 export interface ContentOps {

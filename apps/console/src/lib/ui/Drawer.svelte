@@ -7,6 +7,7 @@
     title: string;
     width?: string;
     children: Snippet;
+    canclose?: () => boolean;
     onclose?: () => void;
   }
 
@@ -15,12 +16,14 @@
     title,
     width = '400px',
     children,
+    canclose,
     onclose,
   }: Props = $props();
 
   let drawer = $state<HTMLElement>();
 
   function close() {
+    if (canclose?.() === false) return;
     open = false;
     onclose?.();
   }

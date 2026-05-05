@@ -5,10 +5,12 @@
 		value = $bindable(),
 		placeholder = '',
 		minHeight = '200px',
+		readonly = false,
 	}: {
 		value: string;
 		placeholder?: string;
 		minHeight?: string;
+		readonly?: boolean;
 	} = $props();
 
 	let mode = $state<'write' | 'preview'>('write');
@@ -24,6 +26,7 @@
 		<textarea
 			class="editor-textarea"
 			bind:value
+			{readonly}
 			{placeholder}
 			style="min-height: {minHeight}"
 		></textarea>
@@ -81,6 +84,11 @@
 	}
 	.editor-textarea:focus {
 		border-color: var(--color-accent);
+	}
+
+	.editor-textarea[readonly] {
+		color: var(--color-muted);
+		background: var(--color-surface);
 	}
 
 	.preview {
