@@ -353,6 +353,22 @@ export const githubProvider: GitProvider = {
     async writeFile(fullName, input) {
       const { owner, repo } = splitFullName(fullName);
       const kit = await clientFor(fullName);
+      let sha = input.sha;
+      if (!sha) {
+        try {
+          const current = await kit.rest.repos.getContent({
+            owner,
+            repo,
+            path: input.path,
+            ref: input.branch,
+          });
+          if (!Array.isArray(current.data) && current.data.type === "file") {
+            sha = current.data.sha;
+          }
+        } catch (err) {
+          if ((err as { status?: number }).status !== 404) throw err;
+        }
+      }
       await kit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
@@ -360,7 +376,7 @@ export const githubProvider: GitProvider = {
         message: input.message,
         content: Buffer.from(input.content).toString("base64"),
         branch: input.branch,
-        sha: input.sha,
+        sha,
       });
     },
 

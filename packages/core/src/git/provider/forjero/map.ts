@@ -79,6 +79,7 @@ export function mapTreeEntry(entry: GitEntry): NormalizedTreeEntry {
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,
+    mode: entry.mode ?? undefined,
   };
 }
 
@@ -92,6 +93,7 @@ export function mapDirEntry(entry: ContentsResponse): NormalizedDirEntry {
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size ?? 0,
+    target: entry.target ?? undefined,
   };
 }
 

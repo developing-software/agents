@@ -361,7 +361,16 @@ export const forjeroProvider: GitProvider = {
       const { owner, repo } = splitFullName(fullName);
       const sdk = await sdkFor(fullName);
       const content = Buffer.from(input.content).toString("base64");
-      if (input.sha) {
+      let sha = input.sha;
+      if (!sha) {
+        const existing = unwrapOrNull(
+          await sdk.repoGetContents({ owner, repo, filepath: input.path, ref: input.branch }),
+        );
+        if (existing?.type === "file" && existing.sha) {
+          sha = existing.sha;
+        }
+      }
+      if (sha) {
         unwrap(
           await sdk.repoUpdateFile({
             owner,
@@ -369,7 +378,7 @@ export const forjeroProvider: GitProvider = {
             filepath: input.path,
             updateFileOptions: {
               content,
-              sha: input.sha,
+              sha,
               branch: input.branch,
               message: input.message,
             },
