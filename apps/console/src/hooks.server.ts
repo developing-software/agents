@@ -4,7 +4,7 @@ import { VisibleError } from "@agents/core/error";
 import { dev } from "$app/environment";
 import { Actor } from "@agents/core/actor";
 import { sequence } from "@sveltejs/kit/hooks";
-import { withDatabase } from "@agents/core/drizzle";
+import { Database } from "@agents/core/drizzle";
 import { withCacheContext, CacheApiAdapter } from "@agents/core/cache";
 import { Email } from "@agents/core/email";
 import { createCloudflareSender } from "@agents/core/email/cloudflare";
@@ -37,7 +37,7 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 const handleDb: Handle = async ({ event, resolve }) => {
   const url = event.platform?.env?.HYPERDRIVE?.connectionString ?? process.env.DATABASE_URL;
   if (!url) return resolve(event);
-  return await withDatabase(url, async () => await resolve(event));
+  return await Database.provide(url, async () => await resolve(event));
 };
 const handleCache: Handle = async ({ event, resolve }) => {
   if (!event.platform?.caches) return resolve(event);

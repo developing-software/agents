@@ -142,7 +142,7 @@
       <section class="section">
         <div class="section-label">Dispatched</div>
         <div class="results">
-          {#each dispatchResults as result (result.harness)}
+          {#each dispatchResults as result, i (i)}
             <div class="result-row">
               <span class="result-harness">{result.harness}</span>
               <span class="result-status success">{result.status}</span>

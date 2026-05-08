@@ -4,9 +4,55 @@
 /* deno-fmt-ignore-file */
 /* biome-ignore-all lint: auto-generated */
 
-import "sst"
 declare module "sst" {
   export interface Resource {
+    "AntropicApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "Api": import("@cloudflare/workers-types").Service
+    "Artifacts": import("@cloudflare/workers-types").R2Bucket
+    "AuthKv": import("@cloudflare/workers-types").KVNamespace
+    "AuthWorker": import("@cloudflare/workers-types").Service
+    "Bus": import("@cloudflare/workers-types").Queue
+    "Console": import("@cloudflare/workers-types").Service
+    "Database": {
+      "database": string
+      "host": string
+      "password": string
+      "port": number
+      "type": "sst.sst.Linkable"
+      "url": string
+      "username": string
+    }
+    "GitHubAppId": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubAppPrivateKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubAppSlug": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubClientId": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubWebhookSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "SessionSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
   }
 }
 

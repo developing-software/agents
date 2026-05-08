@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { healthcheck, withDatabase } from "@agents/core/drizzle";
+import { Database } from "@agents/core/drizzle";
 
 export const GET = async ({ platform }: { platform: App.Platform | undefined }) => {
   const runtime = platform ? "worker" : "node";
@@ -7,7 +7,7 @@ export const GET = async ({ platform }: { platform: App.Platform | undefined }) 
 
   try {
     const dbCheck: { status: "ok" | "degraded"; message: string } = url
-      ? await withDatabase(url, async () => await healthcheck())
+      ? await Database.provide(url, async () => await Database.healthcheck())
       : { status: "degraded", message: "no db url" };
 
     const status = dbCheck.status === "ok" ? 200 : 503;
