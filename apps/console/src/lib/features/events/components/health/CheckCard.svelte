@@ -1,5 +1,6 @@
 <script lang="ts">
   import FallowReport from './FallowReport.svelte';
+  import TrivyReport from './TrivyReport.svelte';
   import { getToolDef } from './tools';
 
   interface Props {
@@ -120,7 +121,11 @@
         </div>
         {#if view === 'report'}
           {#if parsedJson}
-            <FallowReport data={parsedJson} />
+            {#if category === 'trivy'}
+              <TrivyReport data={parsedJson} />
+            {:else}
+              <FallowReport data={parsedJson} />
+            {/if}
           {:else}
             <pre class="content-pre">{content}</pre>
           {/if}
