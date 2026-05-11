@@ -1,0 +1,120 @@
+name: Run Trivy Security Scan
+description: Run Trivy vulnerability and secret scans — CI-only, always uploads artifacts
+
+outputs:
+  vuln-outcome:
+    description: Vulnerability scan outcome
+    value: ${{ steps.vuln-parse.outputs.outcome }}
+  vuln-summary:
+    description: Vulnerability scan summary
+    value: ${{ steps.vuln-parse.outputs.summary }}
+  secret-outcome:
+    description: Secret scan outcome
+    value: ${{ steps.secret-parse.outputs.outcome }}
+  secret-summary:
+    description: Secret scan summary
+    value: ${{ steps.secret-parse.outputs.summary }}
+  outcome:
+    description: Overall outcome (success only if all trivy checks pass)
+    value: ${{ steps.result.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    # --- Vulnerabilities ---
+    - name: Run Trivy vulnerability scan
+      id: vuln-scan
+      if: always()
+      uses: aquasecurity/trivy-action@0.32.0
+      with:
+        scan-type: fs
+        scan-ref: .
+        scanners: vuln
+        format: json
+        output: ${{ runner.temp }}/trivy-vuln.json
+        exit-code: 0
+
+    - name: Parse vulnerability results
+      id: vuln-parse
+      if: always()
+      shell: bash
+      run: |
+        file="$RUNNER_TEMP/trivy-vuln.json"
+        critical=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$file" 2>/dev/null || echo 0)
+        high=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' "$file" 2>/dev/null || echo 0)
+        medium=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM")] | length' "$file" 2>/dev/null || echo 0)
+        total=$(jq '[.Results[]?.Vulnerabilities[]?] | length' "$file" 2>/dev/null || echo 0)
+        if [ "${critical:-0}" -gt 0 ] || [ "${high:-0}" -gt 0 ]; then
+          outcome="failure"
+        else
+          outcome="success"
+        fi
+        echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
+        echo "summary=${total:-0} vulnerabilities — ${critical:-0} critical, ${high:-0} high, ${medium:-0} medium" >> "$GITHUB_OUTPUT"
+
+    - uses: developing-software/agents/actions/event/data@dev
+      if: always()
+      with:
+        key: checks/trivy/vuln
+        data: '{"outcome":"${{ steps.vuln-parse.outputs.outcome }}","summary":"${{ steps.vuln-parse.outputs.summary }}"}'
+        tag: check:trivy/vuln:${{ steps.vuln-parse.outputs.outcome }}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always()
+      with:
+        path: ${{ runner.temp }}/trivy-vuln.json
+        name: checks/trivy/vuln.json
+
+    # --- Secrets ---
+    - name: Run Trivy secret scan
+      id: secret-scan
+      if: always()
+      uses: aquasecurity/trivy-action@0.32.0
+      with:
+        scan-type: fs
+        scan-ref: .
+        scanners: secret
+        format: json
+        output: ${{ runner.temp }}/trivy-secret.json
+        exit-code: 0
+
+    - name: Parse secret results
+      id: secret-parse
+      if: always()
+      shell: bash
+      run: |
+        file="$RUNNER_TEMP/trivy-secret.json"
+        total=$(jq '[.Results[]?.Secrets[]?] | length' "$file" 2>/dev/null || echo 0)
+        if [ "${total:-0}" -gt 0 ]; then
+          outcome="failure"
+        else
+          outcome="success"
+        fi
+        echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
+        echo "summary=${total:-0} secrets found" >> "$GITHUB_OUTPUT"
+
+    - uses: developing-software/agents/actions/event/data@dev
+      if: always()
+      with:
+        key: checks/trivy/secret
+        data: '{"outcome":"${{ steps.secret-parse.outputs.outcome }}","summary":"${{ steps.secret-parse.outputs.summary }}"}'
+        tag: check:trivy/secret:${{ steps.secret-parse.outputs.outcome }}
+
+    - uses: developing-software/agents/actions/artifact/upload@dev
+      if: always()
+      with:
+        path: ${{ runner.temp }}/trivy-secret.json
+        name: checks/trivy/secret.json
+
+    # --- Overall ---
+    - name: Compute outcome
+      id: result
+      if: always()
+      shell: bash
+      run: |
+        if [ "${{ steps.vuln-parse.outputs.outcome }}" = "success" ] \
+          && [ "${{ steps.secret-parse.outputs.outcome }}" = "success" ]; then
+          echo "outcome=success" >> "$GITHUB_OUTPUT"
+        else
+          echo "outcome=failure" >> "$GITHUB_OUTPUT"
+        fi

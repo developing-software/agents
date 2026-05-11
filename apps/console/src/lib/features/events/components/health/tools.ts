@@ -86,6 +86,27 @@ export const HEALTH_TOOLS: ToolDef[] = [
       return n ? { value: n, unit: "clones" } : null;
     },
   },
+  {
+    id: "trivy/vuln",
+    label: "Vulnerabilities",
+    glyph: "◈",
+    hint: "Known CVEs in dependencies (critical + high)",
+    headline: (s) => {
+      // "5 vulnerabilities — 2 critical, 3 high, 0 medium"
+      const n = firstNumber(s);
+      return n ? { value: n, unit: "vulns" } : null;
+    },
+  },
+  {
+    id: "trivy/secret",
+    label: "Secrets",
+    glyph: "⊠",
+    hint: "Hardcoded credentials and API keys",
+    headline: (s) => {
+      const n = firstNumber(s);
+      return n ? { value: n, unit: "found" } : null;
+    },
+  },
   // --- Extension points for other projects ---------------------------
   // Projects can push ToolDef entries for their own category/name pairs
   // before the page renders. Example:
