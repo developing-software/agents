@@ -49,6 +49,7 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "HYPERDRIVE": import("@cloudflare/workers-types").Hyperdrive
     "SessionSecret": {
       "type": "sst.sst.Secret"
       "value": string

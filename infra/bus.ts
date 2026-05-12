@@ -1,4 +1,5 @@
-import { database } from "./database";
+import { r2 } from "./console";
+import { database, hyperdrive } from "./database";
 import { environment } from "./secrets";
 
 export const bus = new sst.cloudflare.Queue("Bus", {})
@@ -9,17 +10,11 @@ bus.subscribe({
   environment,
   link: [
     database,
+    hyperdrive,
+    r2
   ],
   transform: {
     worker: (args) => {
-      // args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
-      //   ...bindings,
-      //   {
-      //     type: "hyperdrive",
-      //     name: "HYPERDRIVE",
-      //     id: hyperdrive.id,
-      //   },
-      // ]);
       args.observability = {
         enabled: true,
         headSamplingRate: 1,

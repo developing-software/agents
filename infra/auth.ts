@@ -1,4 +1,4 @@
-import { database } from "./database.ts";
+import { database, hyperdrive } from "./database.ts";
 import { environment } from "./secrets";
 import { baseDomain, subdomain } from './stage.ts'
 
@@ -16,7 +16,8 @@ if ($app.stage === "prod") {
     },
     link: [
       authKv,
-      database
+      database,
+      hyperdrive
     ],
     environment,
     build: {
@@ -29,11 +30,7 @@ if ($app.stage === "prod") {
         args.compatibilityFlags = ["nodejs_compat"];
         args.bindings = $resolve(args.bindings ?? []).apply((bindings) => [
           ...bindings,
-          {
-            type: "hyperdrive",
-            name: "HYPERDRIVE",
-            id: "ebb41070546a4f5baf5bf1a37877f13c",
-          },
+
           {
             type: "send_email",
             name: "SEND_EMAIL",

@@ -40,6 +40,18 @@ const role = new planetscale.PostgresBranchRole("DatabaseRole", {
 
 })
 
+export const hyperdrive = new sst.cloudflare.Hyperdrive("HYPERDRIVE", {
+  origin: {
+    host: role.accessHostUrl,
+    database: role.databaseName,
+    user: role.username,
+    password: role.password,
+    port: 6432, // Use 5432 for direct connection instead of PgBouncer
+    scheme: "postgres",
+  },
+  caching: false,
+})
+
 
 export const database = new sst.Linkable("Database", {
   properties: {
