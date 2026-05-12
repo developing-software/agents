@@ -11,10 +11,7 @@ import pg from "postgres";
 import { Context } from "../context";
 import { Log } from "../util/log";
 
-
-
 export namespace Database {
-
   const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
   const log = Log.create({ namespace: "drizzle" });
 
@@ -34,7 +31,6 @@ export namespace Database {
   const DatabaseContext = Context.create<{ db: PostgresJsDatabase }>();
   let cachedDb: PostgresJsDatabase | undefined;
 
-
   function createDb(url: string): PostgresJsDatabase {
     const client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20 });
     return drizzle({
@@ -42,15 +38,14 @@ export namespace Database {
       logger:
         process.env.DRIZZLE_LOG === "true"
           ? {
-            logQuery(query, params) {
-              log.info("query", { query });
-              log.info("params", { params });
-            },
-          }
+              logQuery(query, params) {
+                log.info("query", { query });
+                log.info("params", { params });
+              },
+            }
           : undefined,
     });
   }
-
 
   function getDatabase(): PostgresJsDatabase {
     try {
@@ -137,5 +132,4 @@ export namespace Database {
       };
     }
   }
-
 }

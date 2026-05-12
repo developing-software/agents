@@ -115,7 +115,6 @@ export namespace User {
       ),
   );
 
-
   export const invite = fn(
     z.object({ email: z.email(), role: Role.default("member") }),
     async (input) => {
