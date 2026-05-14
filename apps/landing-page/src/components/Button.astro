@@ -1,0 +1,17 @@
+---
+type Props = {
+  text: string;
+  variant: keyof typeof variants;
+};
+const { text, variant = "base" } = Astro.props;
+
+let variants = {
+  base: "cursor-pointer inline-flex h-10.5 items-center gap-2 rounded-[10px] from-acc-soft to-acc px-4 text-[14px] font-semibold border border-base-200 hover:border-base-300 transition-all hover:bg-base-200/50 duration-300",
+  primary:
+    "cursor-pointer inline-flex h-10.5 items-center gap-2 rounded-[10px] border border-white/18 bg-linear-to-b from-acc-soft to-acc px-4 text-[14px] font-semibold text-[#07120d] shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_0_0_1px_rgba(52,211,153,0.25),0_0_32px_rgba(52,211,153,0.45)] transition hover:-translate-y-px hover:from-[#a7f3d0] hover:to-acc-soft",
+};
+---
+
+<button class={`${variants.base} ${variants[variant]}`}>
+  {text}
+</button>
