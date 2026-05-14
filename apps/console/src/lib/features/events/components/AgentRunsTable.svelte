@@ -71,281 +71,365 @@
   }
 </script>
 
-<div class="runs-table">
-  {#each runs as run (run.id)}
-    {@const status = runStatus(run.checks, run.conclusion)}
-    {@const issue = issueRef(run.tags)}
-    {@const pr = prRef(run.tags)}
-    {@const branch = branchTag(run.tags)}
-    {@const ghWorkflow = workflowRef(run.tags)}
-    {@const isExpanded = expandedId === run.id}
+<table class="runs-table">
+  <colgroup>
+    <col class="col-dot" />
+    <col class="col-agent" />
+    <col class="col-model" />
+    <col class="col-cost" />
+    <col class="col-dur" />
+    <col class="col-tokens" />
+    <col class="col-turns" />
+    <col class="col-origin" />
+    <col class="col-ref" />
+    <col class="col-time" />
+  </colgroup>
 
-    <div class="run-row-wrap" class:run-row-expanded={isExpanded}>
-      <button
-        type="button"
+  <thead>
+    <tr class="header-row">
+      <th></th>
+      <th>Agent</th>
+      <th>Model</th>
+      <th>Cost</th>
+      <th>Duration</th>
+      <th>Tokens</th>
+      <th>Turns</th>
+      <th>Origin</th>
+      <th>Ref</th>
+      <th>Time</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {#each runs as run (run.id)}
+      {@const status = runStatus(run.checks, run.conclusion)}
+      {@const issue = issueRef(run.tags)}
+      {@const pr = prRef(run.tags)}
+      {@const branch = branchTag(run.tags)}
+      {@const ghWorkflow = workflowRef(run.tags)}
+      {@const isExpanded = expandedId === run.id}
+      {@const estimated = run.pricing_heuristic !== null && run.pricing_heuristic !== 'agent-reported'}
+
+      <tr
         class="run-row"
+        class:run-row-expanded={isExpanded}
         onclick={() => toggleRow(run.id)}
+        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleRow(run.id)}
+        role="button"
+        tabindex="0"
       >
-        <span class="status-dot" style="background:{statusDotColor(status)};"></span>
+        <td class="td-dot">
+          <span class="status-dot" style="background:{statusDotColor(status)};"></span>
+        </td>
 
-        <span class="agent-name">{capitalize(run.agent)}</span>
+        <td class="td-agent">{capitalize(run.agent)}</td>
 
-        {#if run.model}
-          <span class="model-name" title={run.model}>{run.model}</span>
-        {/if}
+        <td class="td-model">
+          {#if run.model}
+            <span class="model-name" title={run.model}>{run.model}</span>
+          {/if}
+        </td>
 
-        {#if run.cost_usd !== null}
-          {@const estimated = run.pricing_heuristic !== null && run.pricing_heuristic !== 'agent-reported'}
-          <span
-            class="cost"
-            class:cost-estimated={estimated}
-            title={estimated ? 'Estimated from model pricing' : 'Agent-reported cost'}
-          >{#if estimated}~{/if}{formatCost(run.cost_usd)}</span>
-        {/if}
+        <td class="td-cost">
+          {#if run.cost_usd !== null}
+            <span
+              class="cost"
+              class:cost-estimated={estimated}
+              title={estimated ? 'Estimated from model pricing' : 'Agent-reported cost'}
+            >{#if estimated}~{/if}{formatCost(run.cost_usd)}</span>
+          {/if}
+        </td>
 
-        {#if run.durationMs !== null}
-          <span class="duration">{formatDuration(run.durationMs)}</span>
-        {/if}
+        <td class="td-dur">
+          {#if run.durationMs !== null}
+            <span class="duration">{formatDuration(run.durationMs)}</span>
+          {/if}
+        </td>
 
-        {#if run.input_tokens !== null || run.output_tokens !== null || run.reasoning_tokens !== null}
-          <span class="tokens">
-            {#if run.input_tokens !== null}{formatTokensCompact(run.input_tokens)} in{/if}
-            {#if run.input_tokens !== null && (run.output_tokens !== null || run.reasoning_tokens !== null)}
-              <span class="token-sep">/</span>
-            {/if}
-            {#if run.output_tokens !== null}{formatTokensCompact(run.output_tokens)} out{/if}
-            {#if run.reasoning_tokens !== null}
-              <span class="token-sep">/</span>
-              {formatTokensCompact(run.reasoning_tokens)} reasoning
-            {/if}
-          </span>
-        {/if}
+        <td class="td-tokens">
+          {#if run.input_tokens !== null || run.output_tokens !== null || run.reasoning_tokens !== null}
+            <span class="tokens">
+              {#if run.input_tokens !== null}{formatTokensCompact(run.input_tokens)} in{/if}
+              {#if run.input_tokens !== null && (run.output_tokens !== null || run.reasoning_tokens !== null)}
+                <span class="token-sep">/</span>
+              {/if}
+              {#if run.output_tokens !== null}{formatTokensCompact(run.output_tokens)} out{/if}
+              {#if run.reasoning_tokens !== null}
+                <span class="token-sep">/</span>
+                {formatTokensCompact(run.reasoning_tokens)} rsn
+              {/if}
+            </span>
+          {/if}
+        </td>
 
-        {#if run.turns !== null}
-          <span class="turns">{run.turns} turns</span>
-        {/if}
+        <td class="td-turns">
+          {#if run.turns !== null}
+            <span class="turns">{run.turns}t</span>
+          {/if}
+        </td>
 
-        <span class="badge" style={originBadgeStyle(run.origin)}>{run.origin}</span>
+        <td class="td-origin">
+          <span class="badge" style={originBadgeStyle(run.origin)}>{run.origin}</span>
+        </td>
 
-        {#if issue !== null}
-          <a
-            href="/{repo.provider}/{repo.organization}/{repo.repoName}/issues/{issue}"
-            class="ref ref-issue"
-            onclick={(ev) => ev.stopPropagation()}
-          >#{issue}</a>
-        {:else if pr !== null}
-          <a
-            href="/{repo.provider}/{repo.organization}/{repo.repoName}/pulls/{pr}"
-            class="ref ref-pr"
-            onclick={(ev) => ev.stopPropagation()}
-          >#{pr}</a>
-        {/if}
+        <td class="td-ref">
+          {#if issue !== null}
+            <a
+              href="/{repo.provider}/{repo.organization}/{repo.repoName}/issues/{issue}"
+              class="ref ref-issue"
+              onclick={(ev) => ev.stopPropagation()}
+            >#{issue}</a>
+          {:else if pr !== null}
+            <a
+              href="/{repo.provider}/{repo.organization}/{repo.repoName}/pulls/{pr}"
+              class="ref ref-pr"
+              onclick={(ev) => ev.stopPropagation()}
+            >#{pr}</a>
+          {/if}
+        </td>
 
-        <span class="time">{relativeTime(run.timeCreated)}</span>
-      </button>
+        <td class="td-time">{relativeTime(run.timeCreated)}</td>
+      </tr>
 
       {#if isExpanded}
-        <div class="detail-panel">
-          {#if run.finalMessage}
-            <div class="detail-section">
-              <span class="detail-label">Final message</span>
-              <pre class="final-message">{run.finalMessage}</pre>
-            </div>
-          {/if}
+        <tr class="detail-tr">
+          <td colspan="10">
+            <div class="detail-panel">
+              {#if run.finalMessage}
+                <div class="detail-section">
+                  <span class="detail-label">Final message</span>
+                  <pre class="final-message">{run.finalMessage}</pre>
+                </div>
+              {/if}
 
-          {#if run.checks.length > 0}
-            <div class="detail-section">
-              <span class="detail-label">Checks</span>
-              <div class="checks-list">
-                {#each run.checks as check (`${check.category}/${check.name}`)}
-                  <div class="check-item">
-                    <span
-                      class="check-dot"
-                      style="background:{check.outcome === 'success' ? 'var(--color-success)' : 'var(--color-danger)'};"
-                    ></span>
-                    <span class="check-category">{check.category}</span>
-                    <span class="check-sep">/</span>
-                    <span class="check-name">{check.name}</span>
-                    <span
-                      class="check-outcome"
-                      class:check-passed={check.outcome === 'success'}
-                      class:check-failed={check.outcome !== 'success'}
-                    >{check.outcome}</span>
+              {#if run.checks.length > 0}
+                <div class="detail-section">
+                  <span class="detail-label">Checks</span>
+                  <div class="checks-list">
+                    {#each run.checks as check (`${check.category}/${check.name}`)}
+                      <div class="check-item">
+                        <span
+                          class="check-dot"
+                          style="background:{check.outcome === 'success' ? 'var(--color-success)' : 'var(--color-danger)'};"
+                        ></span>
+                        <span class="check-category">{check.category}</span>
+                        <span class="check-sep">/</span>
+                        <span class="check-name">{check.name}</span>
+                        <span
+                          class="check-outcome"
+                          class:check-passed={check.outcome === 'success'}
+                          class:check-failed={check.outcome !== 'success'}
+                        >{check.outcome}</span>
+                      </div>
+                    {/each}
                   </div>
-                {/each}
+                </div>
+              {/if}
+
+              <div class="detail-section">
+                <span class="detail-label">Tokens</span>
+                <div class="token-breakdown">
+                  {#if run.input_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Input</span>
+                      <span class="token-val">{run.input_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                  {#if run.output_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Output</span>
+                      <span class="token-val">{run.output_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                  {#if run.reasoning_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Reasoning</span>
+                      <span class="token-val">{run.reasoning_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                  {#if run.cache_read_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Cache read</span>
+                      <span class="token-val">{run.cache_read_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                  {#if run.cache_creation_tokens !== null}
+                    <div class="token-row">
+                      <span class="token-key">Cache write</span>
+                      <span class="token-val">{run.cache_creation_tokens.toLocaleString()}</span>
+                    </div>
+                  {/if}
+                </div>
               </div>
-            </div>
-          {/if}
 
-          <div class="detail-section">
-            <span class="detail-label">Tokens</span>
-            <div class="token-breakdown">
-              {#if run.input_tokens !== null}
-                <div class="token-row">
-                  <span class="token-key">Input</span>
-                  <span class="token-val">{run.input_tokens.toLocaleString()}</span>
-                </div>
-              {/if}
-              {#if run.output_tokens !== null}
-                <div class="token-row">
-                  <span class="token-key">Output</span>
-                  <span class="token-val">{run.output_tokens.toLocaleString()}</span>
-                </div>
-              {/if}
-              {#if run.reasoning_tokens !== null}
-                <div class="token-row">
-                  <span class="token-key">Reasoning</span>
-                  <span class="token-val">{run.reasoning_tokens.toLocaleString()}</span>
-                </div>
-              {/if}
-              {#if run.cache_read_tokens !== null}
-                <div class="token-row">
-                  <span class="token-key">Cache read</span>
-                  <span class="token-val">{run.cache_read_tokens.toLocaleString()}</span>
-                </div>
-              {/if}
-              {#if run.cache_creation_tokens !== null}
-                <div class="token-row">
-                  <span class="token-key">Cache write</span>
-                  <span class="token-val">{run.cache_creation_tokens.toLocaleString()}</span>
-                </div>
-              {/if}
-            </div>
-          </div>
-
-          {#if run.provider || run.pricing_heuristic}
-            <div class="detail-section">
-              <span class="detail-label">Pricing</span>
-              <div class="pricing-info">
-                {#if run.provider}
-                  <div class="pricing-row">
-                    <span class="pricing-key">Provider</span>
-                    <span class="pricing-val">{run.provider}</span>
+              {#if run.provider || run.pricing_heuristic}
+                <div class="detail-section">
+                  <span class="detail-label">Pricing</span>
+                  <div class="pricing-info">
+                    {#if run.provider}
+                      <div class="pricing-row">
+                        <span class="pricing-key">Provider</span>
+                        <span class="pricing-val">{run.provider}</span>
+                      </div>
+                    {/if}
+                    {#if run.pricing_heuristic}
+                      {@const isReported = run.pricing_heuristic === 'agent-reported'}
+                      <div class="pricing-row">
+                        <span class="pricing-key">Cost source</span>
+                        <span class="pricing-val">
+                          <span class="heuristic-dot" style="background:{isReported ? 'var(--color-success)' : 'var(--color-warning)'};"></span>
+                          {isReported ? 'agent-reported' : run.pricing_heuristic === 'models-dev' ? 'estimated (model pricing)' : run.pricing_heuristic}
+                        </span>
+                      </div>
+                    {/if}
                   </div>
-                {/if}
-                {#if run.pricing_heuristic}
-                  {@const isReported = run.pricing_heuristic === 'agent-reported'}
-                  <div class="pricing-row">
-                    <span class="pricing-key">Cost source</span>
-                    <span class="pricing-val">
-                      <span class="heuristic-dot" style="background:{isReported ? 'var(--color-success)' : 'var(--color-warning)'};"></span>
-                      {isReported ? 'agent-reported' : run.pricing_heuristic === 'models-dev' ? 'estimated (model pricing)' : run.pricing_heuristic}
-                    </span>
+                </div>
+              {/if}
+
+              {#if run.conclusion || run.agentStatus || branch || ghWorkflow !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
+                <div class="detail-section">
+                  <span class="detail-label">Context</span>
+                  <div class="context-items">
+                    {#if run.conclusion}
+                      <span
+                        class="context-status"
+                        class:status-success={run.conclusion === 'success'}
+                        class:status-failure={run.conclusion === 'failure'}
+                        class:status-cancelled={run.conclusion === 'cancelled'}
+                      >workflow: {run.conclusion}</span>
+                    {/if}
+                    {#if run.agentStatus}
+                      <span
+                        class="context-status"
+                        class:status-success={run.agentStatus === 'success'}
+                        class:status-failure={run.agentStatus === 'failure'}
+                        class:status-cancelled={run.agentStatus === 'cancelled'}
+                      >agent: {run.agentStatus}</span>
+                    {/if}
+                    {#if branch}
+                      <span class="context-branch">&#x2387; {branch}</span>
+                    {/if}
+                    {#if ghWorkflow !== null}
+                      <span class="context-dim">workflow #{ghWorkflow}</span>
+                    {/if}
+                    {#if run.linesAdded !== null || run.linesRemoved !== null}
+                      <span class="context-lines">
+                        {#if run.linesAdded !== null}<span class="lines-added">+{run.linesAdded}</span>{/if}{#if run.linesAdded !== null && run.linesRemoved !== null} / {/if}{#if run.linesRemoved !== null}<span class="lines-removed">-{run.linesRemoved}</span>{/if}
+                      </span>
+                    {/if}
+                    {#if run.prUrl !== null}
+                      <a href={run.prUrl} class="context-link" target="_blank" rel="noopener">PR</a>
+                    {/if}
+                    {#if run.runUrl !== null}
+                      <a href={run.runUrl} class="context-link" target="_blank" rel="noopener">GH Run</a>
+                    {/if}
                   </div>
-                {/if}
-              </div>
-            </div>
-          {/if}
+                </div>
+              {/if}
 
-          {#if run.conclusion || run.agentStatus || branch || ghWorkflow !== null || run.linesAdded !== null || run.linesRemoved !== null || run.prUrl !== null || run.runUrl !== null}
-            <div class="detail-section">
-              <span class="detail-label">Context</span>
-              <div class="context-items">
-                {#if run.conclusion}
-                  <span
-                    class="context-status"
-                    class:status-success={run.conclusion === 'success'}
-                    class:status-failure={run.conclusion === 'failure'}
-                    class:status-cancelled={run.conclusion === 'cancelled'}
-                  >workflow: {run.conclusion}</span>
-                {/if}
-                {#if run.agentStatus}
-                  <span
-                    class="context-status"
-                    class:status-success={run.agentStatus === 'success'}
-                    class:status-failure={run.agentStatus === 'failure'}
-                    class:status-cancelled={run.agentStatus === 'cancelled'}
-                  >agent: {run.agentStatus}</span>
-                {/if}
-                {#if branch}
-                  <span class="context-branch">&#x2387; {branch}</span>
-                {/if}
-                {#if ghWorkflow !== null}
-                  <span class="context-dim">workflow #{ghWorkflow}</span>
-                {/if}
-                {#if run.linesAdded !== null || run.linesRemoved !== null}
-                  <span class="context-lines">
-                    {#if run.linesAdded !== null}<span class="lines-added">+{run.linesAdded}</span>{/if}{#if run.linesAdded !== null && run.linesRemoved !== null} / {/if}{#if run.linesRemoved !== null}<span class="lines-removed">-{run.linesRemoved}</span>{/if}
-                  </span>
-                {/if}
-                {#if run.prUrl !== null}
-                  <a href={run.prUrl} class="context-link" target="_blank" rel="noopener">PR</a>
-                {/if}
-                {#if run.runUrl !== null}
-                  <a href={run.runUrl} class="context-link" target="_blank" rel="noopener">GH Run</a>
-                {/if}
-              </div>
-            </div>
-          {/if}
+              {#if run.tags.length > 0}
+                <div class="detail-section">
+                  <span class="detail-label">Tags</span>
+                  <div class="tag-list">
+                    {#each run.tags as tag (tag)}
+                      <span class="tag-pill">{tag}</span>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
 
-          {#if run.tags.length > 0}
-            <div class="detail-section">
-              <span class="detail-label">Tags</span>
-              <div class="tag-list">
-                {#each run.tags as tag (tag)}
-                  <span class="tag-pill">{tag}</span>
-                {/each}
-              </div>
+              <ArtifactList eventId={run.id} />
             </div>
-          {/if}
-
-          <ArtifactList eventId={run.id} />
-        </div>
+          </td>
+        </tr>
       {/if}
-    </div>
-  {/each}
-</div>
+    {/each}
+  </tbody>
+</table>
 
 <style>
   .runs-table {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  .run-row-wrap {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .run-row-expanded {
-    background: color-mix(in srgb, var(--color-accent) 4%, transparent);
-    border-radius: 3px;
-  }
-
-  .run-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 4px;
-    min-width: 0;
     width: 100%;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-align: left;
+    border-collapse: collapse;
+    table-layout: fixed;
   }
 
-  .run-row:hover {
+  /* Column widths — tokens column is auto (takes remaining) */
+  .col-dot    { width: 20px; }
+  .col-agent  { width: 100px; }
+  .col-model  { width: 148px; }
+  .col-cost   { width: 68px; }
+  .col-dur    { width: 68px; }
+  .col-turns  { width: 32px; }
+  .col-origin { width: 64px; }
+  .col-ref    { width: 40px; }
+  .col-time   { width: 76px; }
+
+  /* Header */
+  .header-row th {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-dim);
+    padding: 0 6px 6px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .header-row th.th-num {
+    text-align: right;
+  }
+
+  /* Data rows */
+  .run-row {
+    cursor: pointer;
+  }
+
+  .run-row:hover td {
     background: color-mix(in srgb, var(--color-text) 3%, transparent);
-    border-radius: 2px;
+  }
+
+  .run-row-expanded td {
+    background: color-mix(in srgb, var(--color-accent) 4%, transparent);
+  }
+
+  .run-row td,
+  .detail-tr td {
+    padding: 5px 6px;
+    vertical-align: middle;
+  }
+
+  /* Dot column */
+  .td-dot {
+    text-align: center;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
   }
 
   .status-dot {
+    display: inline-block;
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    flex-shrink: 0;
+    vertical-align: middle;
   }
 
-  .agent-name {
+  /* Agent */
+  .td-agent {
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
     font-weight: 600;
     color: var(--color-text);
-    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
+  /* Model */
   .model-name {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
@@ -353,92 +437,111 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 160px;
-    flex-shrink: 1;
-    min-width: 0;
+    display: block;
+  }
+
+  /* Cost */
+  .td-cost {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
   }
 
   .cost {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: var(--color-accent);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
   }
 
   .cost-estimated {
     color: var(--color-warning);
   }
 
+  /* Duration */
+  .td-dur {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
   .duration {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: var(--color-text);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
+  }
+
+  /* Tokens */
+  .td-tokens {
+    overflow: hidden;
   }
 
   .tokens {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     color: var(--color-muted);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    font-variant-numeric: tabular-nums;
   }
 
   .token-sep {
     color: var(--color-dim);
-    margin: 0 1px;
+    margin: 0 2px;
+  }
+
+  /* Turns */
+  .td-turns {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
   }
 
   .turns {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     color: var(--color-dim);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
   }
 
+  /* Origin badge */
   .badge {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     padding: 1px 5px;
     border-radius: 3px;
-    flex-shrink: 0;
     line-height: 1.6;
+    white-space: nowrap;
   }
 
+  /* Ref */
   .ref {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     text-decoration: none;
-    flex-shrink: 0;
   }
 
   .ref:hover {
     text-decoration: underline;
   }
 
-  .ref-issue {
-    color: var(--color-success);
-  }
+  .ref-issue { color: var(--color-success); }
+  .ref-pr    { color: var(--color-merged); }
 
-  .ref-pr {
-    color: var(--color-merged);
-  }
-
-  .time {
+  /* Time */
+  .td-time {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: var(--color-dim);
-    flex-shrink: 0;
+    text-align: right;
     font-variant-numeric: tabular-nums;
-    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* Detail expansion row */
+  .detail-tr td {
+    padding: 0 !important;
   }
 
   .detail-panel {
-    padding: 4px 8px 10px 20px;
+    padding: 4px 8px 10px 26px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -519,13 +622,8 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .check-passed {
-    color: var(--color-success);
-  }
-
-  .check-failed {
-    color: var(--color-danger);
-  }
+  .check-passed { color: var(--color-success); }
+  .check-failed { color: var(--color-danger); }
 
   .token-breakdown {
     display: flex;
@@ -614,8 +712,8 @@
     font-size: 10px;
   }
 
-  .status-success { color: var(--color-success); }
-  .status-failure { color: var(--color-danger); }
+  .status-success  { color: var(--color-success); }
+  .status-failure  { color: var(--color-danger); }
   .status-cancelled { color: var(--color-warning); }
 
   .context-lines {
@@ -624,13 +722,8 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .lines-added {
-    color: var(--color-success);
-  }
-
-  .lines-removed {
-    color: var(--color-danger);
-  }
+  .lines-added   { color: var(--color-success); }
+  .lines-removed { color: var(--color-danger); }
 
   .context-link {
     font-family: "JetBrains Mono", monospace;

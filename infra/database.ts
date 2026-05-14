@@ -59,24 +59,24 @@ export const database = new sst.Linkable("Database", {
     database: cluster.name,
     username: role.username,
     password: role.password,
-    port: 5432,
+    port: 5432, // Use 5432 for direct connection instead of PgBouncer(6432)
     url: $interpolate`postgresql://${role.username}:${role.password}@${role.accessHostUrl}/postgres?sslmode=require`,
   },
 })
 
 
-// const migrator_role = new planetscale.PostgresBranchRole("DatabaseMigratorRole", {
-//   database: cluster.name,
-//   organization: cluster.organization,
-//   branch: branch.name,
-//   name: `${$app.name}-migrator-${$app.stage}`,
-//   inheritedRoles: [
-//     "pg_read_all_data",
-//     "pg_write_all_data",
-//     "postgres", // Only needed for pushing schema changes
-//   ],
+const migrator_role = new planetscale.PostgresBranchRole("DatabaseMigratorRole", {
+  database: cluster.name,
+  organization: cluster.organization,
+  branch: branch.name,
+  name: `${$app.name}-migrator-${$app.stage}`,
+  inheritedRoles: [
+    "pg_read_all_data",
+    "pg_write_all_data",
+    "postgres", // Only needed for pushing schema changes
+  ],
 
-// })
+})
 
 
 // const migration = await command.local.run({
