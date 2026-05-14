@@ -1,0 +1,335 @@
+---
+import Button from "@components/Button.astro";
+
+const MODELS = [
+  {
+    id: "gpt",
+    name: "GPT-5",
+    color: "#ffffff",
+    logo: "/ai/openai.svg",
+    score: "0.74",
+  },
+  {
+    id: "claude",
+    name: "Claude",
+    color: "#f59e0b",
+    logo: "/ai/claude.svg",
+    score: "0.91",
+  },
+  {
+    id: "gemini",
+    name: "Gemini",
+    color: "#3b82f6",
+    logo: "/ai/gemini.svg",
+    score: "0.66",
+  },
+  {
+    id: "grok",
+    name: "Grok",
+    color: "#ffffff",
+    logo: "/ai/grok.svg",
+    score: "0.83",
+  },
+];
+
+const FINALISTS = [
+  {
+    name: "Claude",
+    score: "0.91",
+    color: "#f59e0b",
+    logo: "/ai/claude.svg",
+    win: true,
+  },
+  {
+    name: "Grok",
+    score: "0.83",
+    color: "#ffffff",
+    logo: "/ai/grok.svg",
+    win: false,
+  },
+];
+
+const W = 740;
+const H = 460;
+const colX = [0, 210, 415];
+const chipW = 185;
+const finalistW = 180;
+const prW = 325;
+const r1y = [40, 140, 240, 340];
+const r2y = [90, 290];
+const finalY = (r2y[0] + r2y[1]) / 2 + 28;
+
+const linesR1: string[] = [];
+for (let i = 0; i < 2; i++) {
+  const top = r1y[i * 2];
+  const bot = r1y[i * 2 + 1];
+  const tgt = r2y[i];
+  const xStart = colX[0] + chipW;
+  const xMid = (xStart + colX[1]) / 2;
+  const xEnd = colX[1];
+  linesR1.push(
+    `M ${xStart} ${top + 22} L ${xMid} ${top + 22} L ${xMid} ${tgt + 28} L ${xEnd} ${tgt + 28}`,
+    `M ${xStart} ${bot + 22} L ${xMid} ${bot + 22} L ${xMid} ${tgt + 28}`,
+  );
+}
+const xStart2 = colX[1] + finalistW;
+const xMid2 = (xStart2 + colX[2]) / 2;
+const xEnd2 = colX[2];
+const linesR2 = [
+  `M ${xStart2} ${r2y[0] + 28} L ${xMid2} ${r2y[0] + 28} L ${xMid2} ${finalY} L ${xEnd2} ${finalY}`,
+  `M ${xStart2} ${r2y[1] + 28} L ${xMid2} ${r2y[1] + 28} L ${xMid2} ${finalY}`,
+];
+const winR1 = `M ${colX[0] + chipW} ${r1y[1] + 22} L ${(colX[0] + chipW + colX[1]) / 2} ${r1y[1] + 22} L ${(colX[0] + chipW + colX[1]) / 2} ${r2y[0] + 28} L ${colX[1]} ${r2y[0] + 28}`;
+const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW + colX[2]) / 2} ${r2y[0] + 28} L ${(colX[1] + finalistW + colX[2]) / 2} ${finalY} L ${colX[2]} ${finalY}`;
+---
+
+<section class="relative mx-auto container py-40">
+  <div
+    class="grid items-center gap-14 grid-cols-1 lg:grid-cols-2 justify-between"
+  >
+    <div class="min-w-0">
+      <h1
+        class="mt-6 font-sans text-7xl font-semibold leading-[0.98] tracking-[-0.035em]"
+      >
+        <span
+          class="bg-linear-to-b from-white to-white/65 bg-clip-text text-transparent"
+        >
+          Many models enter.<br />
+        </span>
+        <span
+          class="bg-linear-to-b font-bold! from-acc-soft via-acc to-acc-deep bg-clip-text text-transparent"
+          >One PR</span
+        >
+        <span
+          class="bg-linear-to-b from-white to-white/65 bg-clip-text text-transparent"
+          >wins.</span
+        >
+      </h1>
+
+      <p class="mt-6 max-w-125 text-[18px] leading-[1.55] text-fg-muted">
+        Connect your repo. Issues become plans. Frontier models race to write
+        the code. You review and approve.
+      </p>
+
+      <div class="mt-8 flex flex-wrap gap-3">
+        <Button text="Start for free" variant="primary" />
+
+        <Button text="Read the docs" href="/" />
+      </div>
+    </div>
+
+    <div class="min-w-0">
+      <div
+        class="bracket-fit relative w-full"
+        data-native-w={W}
+        data-native-h={H}
+      >
+        <div
+          class="bracket-inner absolute right-0 top-0 origin-top-left"
+          style={`width: ${W}px; height: ${H}px;`}
+        >
+          <div class="relative" style={`height: ${H}px;`}>
+            <svg
+              height={H}
+              viewBox={`0 0 ${W} ${H}`}
+              class="w-full"
+              aria-hidden="true"
+            >
+              {
+                [...linesR1, ...linesR2].map((d) => (
+                  <path d={d} class="flow-line" />
+                ))
+              }
+              <path d={winR1} class="flow-line-active"></path>
+              <path d={winR2} class="flow-line-active"></path>
+            </svg>
+
+            {
+              MODELS.map((m, i) => (
+                <div
+                  class="absolute"
+                  style={`left: ${colX[0]}px; top: ${r1y[i]}px; width: ${chipW}px;`}
+                >
+                  <div
+                    class:list={[
+                      "flex w-full items-center gap-2.5 rounded-2xl border border-border-soft bg-bg-card px-[11px] py-[9px]",
+                      i === 1 &&
+                        "shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_0_1px_rgba(52,211,153,0.35),0_20px_80px_-20px_rgba(52,211,153,0.45)]",
+                    ]}
+                  >
+                    <img
+                      src={m.logo}
+                      alt={m.name}
+                      class:list={[
+                        "w-5 h-5 rounded-sm object-contain",
+                        m.color === "#ffffff" && "invert brightness-0",
+                      ]}
+                    />
+                    <div class="flex min-w-0 flex-col leading-none">
+                      <span class="text-[13.5px] font-medium text-fg">
+                        {m.name}
+                      </span>
+                      <span
+                        class:list={[
+                          "mt-0.75 font-mono text-[10px]",
+                          i === 1 ? "text-acc-soft" : "text-fg-faint",
+                        ]}
+                      >
+                        score · {m.score}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            }
+
+            {
+              FINALISTS.map((m, i) => (
+                <div
+                  class="absolute"
+                  style={`left: ${colX[1]}px; top: ${r2y[i]}px;`}
+                >
+                  <div
+                    class:list={[
+                      "flex items-center gap-2.5 rounded-2xl border border-border-soft bg-bg-card px-3 py-2.5",
+                      m.win &&
+                        "shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_0_1px_rgba(52,211,153,0.35),0_20px_80px_-20px_rgba(52,211,153,0.45)]",
+                    ]}
+                    style={`width: ${finalistW}px;`}
+                  >
+                    <img
+                      src={m.logo}
+                      alt={m.name}
+                      class:list={[
+                        "w-5 h-5 rounded-sm object-contain",
+                        m.color === "#ffffff" && "invert brightness-0",
+                      ]}
+                    />
+                    <div class="flex-1">
+                      <div class="text-[13px] font-medium">{m.name}</div>
+                      <div
+                        class:list={[
+                          "font-mono text-[10px]",
+                          m.win ? "text-acc-soft" : "text-fg-faint",
+                        ]}
+                      >
+                        final · {m.score}
+                      </div>
+                    </div>
+                    {m.win && (
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <path
+                          d="M5 12 L10 17 L19 7"
+                          stroke="var(--color-acc)"
+                          stroke-width="2.2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              ))
+            }
+
+            <div
+              class="absolute -translate-y-1/2"
+              style={`left: ${colX[2]}px; top: ${finalY}px;`}
+            >
+              <div
+                class="relative overflow-hidden rounded-2xl border border-border-soft bg-bg-card p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_0_1px_rgba(52,211,153,0.35),0_20px_80px_-20px_rgba(52,211,153,0.45)]"
+                style={`width: ${prW}px;`}
+              >
+                <div
+                  class="pointer-events-none absolute -inset-px bg-[radial-gradient(ellipse_at_top,rgba(52,211,153,0.18),transparent_60%)] opacity-90"
+                >
+                </div>
+                <div
+                  class="relative font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-acc"
+                >
+                  Final · synthesized
+                </div>
+                <div
+                  class="relative mt-1.5 text-[16px] font-semibold leading-tight tracking-[-0.015em]"
+                >
+                  fix: race condition in queue worker
+                </div>
+                <div class="relative mt-2.5 flex items-center gap-2.5">
+                  <span class="font-mono text-[12px] text-[#6ee7b7]">+31</span>
+                  <span class="font-mono text-[12px] text-[#fca5a5]">−8</span>
+                  <span class="font-mono text-[11px] text-fg-faint"
+                    >· 3 files</span
+                  >
+                </div>
+                <div class="relative mt-3 flex items-center gap-2">
+                  <span
+                    class="inline-flex h-5.5 items-center gap-1.5 rounded-full border border-acc/30 bg-acc/[0.08] px-2.5 font-mono text-[10px] text-acc-soft"
+                  >
+                    <span
+                      class="block size-1.5 rounded-full bg-acc shadow-[0_0_8px_var(--color-acc)]"
+                    ></span>
+                    CI passing
+                  </span>
+                  <span
+                    class="inline-flex h-5.5 items-center rounded-full border border-border-soft bg-bg-card px-2.5 font-mono text-[10px] text-fg-muted"
+                  >
+                    tests ✓
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  @keyframes flow-dash {
+    to {
+      stroke-dashoffset: -16;
+    }
+  }
+  .flow-line {
+    stroke: rgba(255, 255, 255, 0.14);
+    stroke-width: 1.2;
+    fill: none;
+  }
+  .flow-line-active {
+    stroke: var(--color-acc);
+    stroke-width: 1.4;
+    fill: none;
+    stroke-dasharray: 4 4;
+    animation: flow-dash 1.6s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.45));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flow-line-active {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const fits = document.querySelectorAll<HTMLElement>(".bracket-fit");
+  fits.forEach((el) => {
+    const native = Number(el.dataset.nativeW) || 0;
+    const height = Number(el.dataset.nativeH) || 0;
+    const inner = el.querySelector<HTMLElement>(".bracket-inner");
+    if (!inner || !native) return;
+    const update = () => {
+      const w = el.getBoundingClientRect().width;
+      const scale = Math.min(1, w / native);
+      el.style.height = height * scale + "px";
+      inner.style.transform = `scale(${scale})`;
+    };
+    update();
+    new ResizeObserver(update).observe(el);
+  });
+</script>
