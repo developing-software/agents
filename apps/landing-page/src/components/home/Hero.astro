@@ -92,7 +92,7 @@ const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW 
         class="mt-6 font-sans text-7xl font-semibold leading-[0.98] tracking-[-0.035em]"
       >
         <span
-          class="bg-linear-to-b from-white to-white/65 bg-clip-text text-transparent"
+          class="bg-linear-to-b from-fg to-fg/65 bg-clip-text text-transparent"
         >
           Many models enter.<br />
         </span>
@@ -101,7 +101,7 @@ const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW 
           >One PR</span
         >
         <span
-          class="bg-linear-to-b from-white to-white/65 bg-clip-text text-transparent"
+          class="bg-linear-to-b from-fg to-fg/65 bg-clip-text text-transparent"
           >wins.</span
         >
       </h1>
@@ -154,7 +154,7 @@ const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW 
                     class:list={[
                       "flex w-full items-center gap-2.5 rounded-2xl border border-border-soft bg-bg-card px-[11px] py-[9px]",
                       i === 1 &&
-                        "shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_0_1px_rgba(52,211,153,0.35),0_20px_80px_-20px_rgba(52,211,153,0.45)]",
+                        "shadow-[inset_0_1px_0_var(--color-ink-hl),0_0_0_1px_var(--color-border-glow),0_20px_80px_-20px_var(--color-acc-glow)]",
                     ]}
                   >
                     <img
@@ -193,7 +193,7 @@ const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW 
                     class:list={[
                       "flex items-center gap-2.5 rounded-2xl border border-border-soft bg-bg-card px-3 py-2.5",
                       m.win &&
-                        "shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_0_1px_rgba(52,211,153,0.35),0_20px_80px_-20px_rgba(52,211,153,0.45)]",
+                        "shadow-[inset_0_1px_0_var(--color-ink-hl),0_0_0_1px_var(--color-border-glow),0_20px_80px_-20px_var(--color-acc-glow)]",
                     ]}
                     style={`width: ${finalistW}px;`}
                   >
@@ -242,11 +242,11 @@ const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW 
               style={`left: ${colX[2]}px; top: ${finalY}px;`}
             >
               <div
-                class="relative overflow-hidden rounded-2xl border border-border-soft bg-bg-card p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_0_1px_rgba(52,211,153,0.35),0_20px_80px_-20px_rgba(52,211,153,0.45)]"
+                class="relative overflow-hidden rounded-2xl border border-border-soft bg-bg-card p-4 shadow-[inset_0_1px_0_var(--color-ink-hl),0_0_0_1px_var(--color-border-glow),0_20px_80px_-20px_var(--color-acc-glow)]"
                 style={`width: ${prW}px;`}
               >
                 <div
-                  class="pointer-events-none absolute -inset-px bg-[radial-gradient(ellipse_at_top,rgba(52,211,153,0.18),transparent_60%)] opacity-90"
+                  class="pointer-events-none absolute -inset-px bg-[radial-gradient(ellipse_at_top,var(--color-acc-glow-soft),transparent_60%)] opacity-90"
                 >
                 </div>
                 <div
@@ -297,7 +297,7 @@ const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW 
     }
   }
   .flow-line {
-    stroke: rgba(255, 255, 255, 0.14);
+    stroke: var(--color-border-strong);
     stroke-width: 1.2;
     fill: none;
   }
@@ -307,7 +307,7 @@ const winR2 = `M ${colX[1] + finalistW} ${r2y[0] + 28} L ${(colX[1] + finalistW 
     fill: none;
     stroke-dasharray: 4 4;
     animation: flow-dash 1.6s linear infinite;
-    filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.45));
+    filter: drop-shadow(0 0 6px var(--color-acc-glow));
   }
   @media (prefers-reduced-motion: reduce) {
     .flow-line-active {

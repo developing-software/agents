@@ -1,23 +1,77 @@
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme tokens
+   Dark is the default. Set `data-theme="light"` on <html> (or any wrapper)
+   to flip every utility (bg-bg, text-fg, border-border-soft, …) at once.
+   ────────────────────────────────────────────────────────────────────────── */
 @theme {
+  /* Surfaces */
   --color-bg: #0a0a0a;
+  --color-bg-elev: #0f0f10;
   --color-bg-card: rgba(255, 255, 255, 0.025);
+  --color-bg-card-strong: rgba(255, 255, 255, 0.04);
+
+  /* Borders */
   --color-border-soft: rgba(255, 255, 255, 0.08);
   --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-border-glow: rgba(34, 211, 238, 0.45);
+
+  /* Text */
   --color-fg: #f5f5f5;
   --color-fg-muted: rgba(245, 245, 245, 0.62);
   --color-fg-faint: rgba(245, 245, 245, 0.4);
-  --color-acc: #34d399;
-  --color-acc-soft: #6ee7b7;
-  --color-acc-deep: #10b981;
 
+  /* Accent palette */
+  --color-acc: #22d3ee;
+  --color-acc-soft: #a7f3d0;
+  --color-acc-deep: #10b981;
+  --color-acc-glow: rgba(34, 211, 238, 0.45);
+  --color-acc-glow-soft: rgba(34, 211, 238, 0.20);
+
+  /* Subtle inset highlight (top-light bevel on cards) */
+  --color-ink-hl: rgba(255, 255, 255, 0.06);
+
+  /* Generic neutral overlays */
   --color-base-100: rgba(255, 255, 255, 0.12);
   --color-base-200: rgba(255, 255, 255, 0.18);
   --color-base-300: rgba(255, 255, 255, 0.24);
 
+  /* Body-grid line color */
+  --color-grid-line: rgba(255, 255, 255, 0.025);
+
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ── Light overrides ────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --color-bg: #fafaf9;
+  --color-bg-elev: #ffffff;
+  --color-bg-card: rgba(10, 10, 10, 0.025);
+  --color-bg-card-strong: rgba(10, 10, 10, 0.04);
+
+  --color-border-soft: rgba(10, 10, 10, 0.08);
+  --color-border-strong: rgba(10, 10, 10, 0.14);
+  --color-border-glow: rgba(34, 211, 238, 0.45);
+
+  --color-fg: #0a0a0a;
+  --color-fg-muted: rgba(10, 10, 10, 0.62);
+  --color-fg-faint: rgba(10, 10, 10, 0.45);
+
+  --color-acc: #22d3ee;
+  --color-acc-soft: #a7f3d0;
+  --color-acc-deep: #10b981;
+  --color-acc-glow: rgba(34, 211, 238, 0.45);
+  --color-acc-glow-soft: rgba(34, 211, 238, 0.20);
+
+  --color-ink-hl: rgba(10, 10, 10, 0.05);
+
+  --color-base-100: rgba(10, 10, 10, 0.06);
+  --color-base-200: rgba(10, 10, 10, 0.10);
+  --color-base-300: rgba(10, 10, 10, 0.16);
+
+  --color-grid-line: rgba(10, 10, 10, 0.05);
 }
 
 html,
@@ -30,24 +84,26 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Ambient cyan glow */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(52, 211, 153, 0.18), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(16, 185, 129, 0.08), transparent 70%);
+    radial-gradient(ellipse 80% 50% at 50% -10%, var(--color-acc-glow-soft), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, var(--color-acc-glow-soft), transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
 
+/* Grid backdrop */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(var(--color-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
   background-size: 48px 48px;
   background-position: -1px -1px;
   mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);

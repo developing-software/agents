@@ -8,11 +8,11 @@ import Button from "@components/Button.astro";
       class="relative overflow-hidden rounded-[18px] border border-border-strong bg-bg-card px-10 py-20 text-center"
     >
       <div
-        class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_100%,rgba(52,211,153,0.18),transparent_70%)] opacity-90"
+        class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_100%,var(--color-acc-glow-soft),transparent_70%)] opacity-90"
       >
       </div>
       <div
-        class="pointer-events-none absolute left-1/2 -top-1/2 h-full w-[120%] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(52,211,153,0.18),transparent_60%)] opacity-55"
+        class="pointer-events-none absolute left-1/2 -top-1/2 h-full w-[120%] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,var(--color-acc-glow-soft),transparent_60%)] opacity-55"
       >
       </div>
 
@@ -21,7 +21,7 @@ import Button from "@components/Button.astro";
           class="mx-auto max-w-190 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-5xl lg:text-6xl"
         >
           <span
-            class="bg-linear-to-b from-white to-white/65 bg-clip-text text-transparent"
+            class="bg-linear-to-b from-fg to-fg/65 bg-clip-text text-transparent"
           >
             Stop writing boilerplate.<br />
           </span>

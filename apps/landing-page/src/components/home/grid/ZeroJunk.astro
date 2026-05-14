@@ -1,0 +1,48 @@
+---
+const rows = [
+  { l: "claude draft 1", k: "reject" },
+  { l: "gemini draft", k: "reject" },
+  { l: "synth PR #1247", k: "merge" },
+] as const;
+---
+
+<article
+  class="relative flex min-h-[260px] flex-col overflow-hidden rounded-[18px] border border-border-soft bg-bg-card p-6"
+>
+  <span
+    class="font-mono text-[11px] tracking-[0.12em] text-acc"
+  >04 · ZERO JUNK</span>
+  <h3
+    class="mt-2.5 text-[22px] font-semibold leading-[1.18] tracking-[-0.015em]"
+  >
+    Only synthesized PRs.
+  </h3>
+  <p class="mt-2.5 text-sm leading-[1.5] text-fg-muted">
+    Losing drafts never touch your queue. CI must pass. Tests must hold.
+  </p>
+
+  <ul class="mt-auto flex flex-col gap-[7px] pt-[18px]">
+    {
+      rows.map((r) => (
+        <li class="flex items-center gap-2">
+          <span
+            class:list={[
+              "size-[7px] shrink-0 rounded-full",
+              r.k === "merge"
+                ? "bg-acc shadow-[0_0_8px_var(--color-acc-glow)]"
+                : "bg-fg/15",
+            ]}
+          />
+          <span
+            class:list={[
+              "font-mono text-[11px]",
+              r.k === "merge" ? "text-acc-soft" : "text-fg-faint line-through",
+            ]}
+          >
+            {r.l}
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+</article>
