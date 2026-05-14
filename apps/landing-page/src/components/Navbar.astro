@@ -2,22 +2,81 @@
 import Button from "./Button.astro";
 
 const links = [
-  { name: "Link 1", href: "#" },
-  { name: "Link 2", href: "#" },
+  { name: "Product", href: "#" },
+  { name: "Docs", href: "#" },
+  { name: "Pricing", href: "#" },
+  { name: "Changelog", href: "#" },
 ];
 ---
 
-<nav class="mx-auto container flex items-center justify-between py-4">
-  <div>
-    <a href="/" class="text-2xl font-bold">DevAgents</a>
-  </div>
+<div
+  id="navbar-wrapper"
+  data-at-top="true"
+  class="group fixed inset-x-0 top-0 z-60 flex justify-center transition-all duration-500 data-[scrolling=down]:-translate-y-[150%] data-[at-top=false]:pt-3 data-[at-top=true]:pt-5"
+>
+  <nav
+    class="flex w-full container mx-auto items-center justify-between gap-6 rounded-full border py-3 transition-all duration-500 group-data-[at-top=false]:px-4 group-data-[at-top=false]:max-w-360 group-data-[at-top=false]:border-border-soft group-data-[at-top=false]:bg-bg/30 group-data-[at-top=false]:shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(52,211,153,0.06)] group-data-[at-top=false]:backdrop-blur-md group-data-[at-top=true]:border-transparent group-data-[at-top=true]:bg-transparent"
+  >
+    <a href="/" class="flex items-center gap-2 shrink-0">
+      <span class="text-2xl font-semibold text-fg">DevAgents</span>
+    </a>
 
-  <div class="space-x-8">
-    {links.map((link) => <a href={link.href}>{link.name}</a>)}
-  </div>
+    <ul class="hidden items-center gap-1 md:flex">
+      {
+        links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="rounded-full px-3 py-1.5 text-[13.5px] font-medium text-fg-muted transition-colors hover:bg-white/5 hover:text-fg"
+            >
+              {link.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
 
-  <div class="space-x-4">
-    <a href="">Sign in</a>
-    <Button text="Connect Repository" variant="primary" size="sm" />
-  </div>
-</nav>
+    <div class="flex items-center gap-1.5">
+      <a
+        href="#"
+        class="hidden rounded-full px-3 py-1.5 text-[13.5px] font-medium text-fg-muted transition-colors hover:text-fg sm:inline-flex"
+      >
+        Sign in
+      </a>
+      <Button text="Connect Repository" variant="primary" size="sm" href="#" />
+    </div>
+  </nav>
+</div>
+
+<script>
+  function initNavbar() {
+    const navbar = document.getElementById("navbar-wrapper");
+    if (!navbar) return;
+
+    let lastScrollY = window.scrollY;
+
+    const updateScrollState = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 20) {
+        navbar.setAttribute("data-at-top", "true");
+      } else {
+        navbar.setAttribute("data-at-top", "false");
+      }
+
+      if (currentScrollY > lastScrollY && currentScrollY > 500) {
+        navbar.setAttribute("data-scrolling", "down");
+      } else {
+        navbar.setAttribute("data-scrolling", "up");
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+  }
+
+  document.addEventListener("DOMContentLoaded", initNavbar);
+  document.addEventListener("astro:page-load", initNavbar);
+</script>
