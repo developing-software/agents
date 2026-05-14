@@ -6,7 +6,10 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "cloudflare",
-      providers: { railway: "0.4.4", planetscale: "1.0.0" },
+      providers: {
+        planetscale: "1.0.0",
+        command: { package: "@pulumi/command", version: "1.2.1" },
+      },
     };
   },
   console: {
@@ -24,7 +27,6 @@ export default $config({
       },
     },
   },
-
   async run() {
     const outputs = {};
     const { readdirSync } = await import("fs");
