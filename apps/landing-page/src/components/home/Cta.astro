@@ -1,0 +1,47 @@
+---
+import Button from "@components/Button.astro";
+---
+
+<section class="relative py-30">
+  <div class="container mx-auto">
+    <div
+      class="relative overflow-hidden rounded-[18px] border border-border-strong bg-bg-card px-10 py-20 text-center"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_100%,rgba(52,211,153,0.18),transparent_70%)] opacity-90"
+      >
+      </div>
+      <div
+        class="pointer-events-none absolute left-1/2 -top-1/2 h-full w-[120%] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(52,211,153,0.18),transparent_60%)] opacity-55"
+      >
+      </div>
+
+      <div class="relative">
+        <h2
+          class="mx-auto max-w-190 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-5xl lg:text-6xl"
+        >
+          <span
+            class="bg-linear-to-b from-white to-white/65 bg-clip-text text-transparent"
+          >
+            Stop writing boilerplate.<br />
+          </span>
+          <span
+            class="bg-linear-to-b from-acc-soft via-acc to-acc-deep bg-clip-text font-bold text-transparent"
+          >
+            Start reviewing perfection.
+          </span>
+        </h2>
+        <p
+          class="mx-auto mt-5 max-w-130 text-[17px] leading-[1.55] text-fg-muted"
+        >
+          Two-minute setup with GitHub, GitLab, or self-hosted. Free forever for
+          open source.
+        </p>
+        <div class="mt-8 inline-flex gap-3.5">
+          <Button text="Get Started" variant="primary" size="lg" href="#" />
+          <Button text="Book a demo" size="lg" href="#" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
