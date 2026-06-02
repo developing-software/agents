@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onClickOutside } from 'runed';
   import type { Snippet } from 'svelte';
+  import { fade, fly } from 'svelte/transition';
 
   interface Props {
     open: boolean;
@@ -29,8 +30,8 @@
 </script>
 
 {#if open}
-  <div class="overlay"></div>
-  <div bind:this={drawer} class="drawer" role="dialog" aria-modal="true" aria-label={title} style="width: {width}; max-width: 100vw;">
+  <div class="overlay" transition:fade></div>
+  <div bind:this={drawer} transition:fly={{ x: 1000 }} class="drawer" role="dialog" aria-modal="true" aria-label={title} style="width: {width}; max-width: 100vw;">
     <div class="drawer-header">
       <span class="drawer-title">{title}</span>
       <button type="button" class="close-btn" onclick={close}>&times;</button>
@@ -47,6 +48,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
     z-index: 100;
   }
 
