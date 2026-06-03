@@ -3,7 +3,6 @@
   import PlanDetail from '$lib/features/agents/plans/PlanDetail.svelte';
   import Events from '$lib/features/events/components/feed/Feed.svelte';
   import DispatchDrawer from '$lib/features/agents/dispatch/DispatchDrawer.svelte';
-  import DispatchOptions from '$lib/features/agents/dispatch/DispatchOptions.svelte';
   import PlannerDrawer from '$lib/features/agents/ai/components/PlannerDrawer.svelte';
   import PlanImplementations from '$lib/features/agents/views/PlanImplementations.svelte';
   import { updatePlan } from '$lib/features/agents/api/plans.remote';
@@ -16,7 +15,6 @@
   let { data }: PageProps = $props();
 
   let drawer = $state<DispatchDrawer>();
-  let options = $state<DispatchOptions>();
   let dispatched = $state(false);
   let statusValue = $state(data.plan?.status ?? 'draft');
   let plannerOpen = $state(false);
@@ -32,11 +30,15 @@
 
   function openDispatch() {
     if (!data.plan) return;
-    options!.open();
+    drawer!.open({
+      title: 'Dispatch Plan',
+      tags: [`plan:${data.plan.id}`, ...data.plan.tags],
+      planId: data.plan.id,
+    });
   }
 
   async function handleGenerate(options: Plan.ToPromptOptions) {
-    if (!data.plan) return;
+    if (!data.plan) throw new Error('No plan');
     const planId = data.plan.id;
     const { prompt, tags: extTags } = await previewPrompt({
       organization: data.organization,
@@ -44,12 +46,7 @@
       planId,
       options,
     });
-    drawer!.open({
-      title: 'Dispatch Plan',
-      prompt,
-      tags: [`plan:${planId}`, ...data.plan.tags, ...extTags],
-      planId,
-    });
+    return { prompt, tags: [`plan:${planId}`, ...data.plan.tags, ...extTags] };
   }
 
   async function handleDispatchFix(prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) {
@@ -144,15 +141,10 @@
     />
   </div>
 
-  <DispatchOptions
-    bind:this={options}
-    title="Prepare Plan Dispatch"
-    onconfirm={handleGenerate}
-  />
-
   <DispatchDrawer
     bind:this={drawer}
     ondispatched={handleDispatched}
+    ongenerate={handleGenerate}
   />
 
   <PlannerDrawer

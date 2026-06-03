@@ -282,7 +282,7 @@
 
   .chip-remove {
     font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
+    font-size: 14px;
     color: var(--color-dim);
     background: none;
     border: none;
@@ -352,21 +352,30 @@
 
   /* Tab content area */
   .tab-content {
-    max-height: 160px;
+    max-height: 180px;
     overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2px;
+    align-content: start;
   }
 
   .model-cost {
     font-size: 9px;
-    color: var(--color-dim);
+    font-weight: 600;
+    color: var(--color-text);
     margin-left: 4px;
   }
 
   .provider-logo {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
-    opacity: 0.7;
+    padding: 2px;
+    box-sizing: border-box;
+    background: #fff;
+    border-radius: 4px;
+    object-fit: contain;
   }
 
   /* All Models tab */
@@ -395,6 +404,7 @@
 
   /* Result rows (both tabs) */
   .results-status {
+    grid-column: 1 / -1;
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     color: var(--color-dim);
@@ -433,11 +443,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--color-text)
   }
 
   .result-family {
     font-size: 9px;
-    color: var(--color-dim);
+    color: var(--color-muted);
     background: var(--color-surface);
     padding: 0 4px;
     border-radius: 3px;

@@ -116,6 +116,7 @@ export const dispatch = command(
       z.object({
         harness: z.enum(AgentWorkflow.Agents),
         model: z.string().optional(),
+        prompt: z.string().optional(),
       }),
     ),
     ref: z.string().default("dev"),
@@ -131,7 +132,7 @@ export const dispatch = command(
           owner: organization,
           repo: repoName,
           agent: agent.harness,
-          prompt,
+          prompt: agent.prompt ?? prompt,
           tags,
           model: agent.model,
           ref,

@@ -3,7 +3,6 @@
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import { updateAudit, createPlanFromAudit } from '$lib/features/agents/api/audits.remote';
   import DispatchDrawer from '$lib/features/agents/dispatch/DispatchDrawer.svelte';
-  import DispatchOptions from '$lib/features/agents/dispatch/DispatchOptions.svelte';
   import { previewPrompt } from '$lib/features/agents/api/dispatch.remote';
   import type { Plan } from '@agents/core/events/plan';
   import { Tags } from '@agents/core/events/tag';
@@ -20,7 +19,6 @@
   let creatingPlan = $state<Record<string, boolean>>({});
   let dispatched = $state<Record<string, boolean>>({});
   let drawer = $state<DispatchDrawer>();
-  let options = $state<DispatchOptions>();
   let drawerPlan = $state<PlanItem | null>(null);
   let pendingAudit = $state<{ planId: string; tags: string[] } | null>(null);
 
@@ -88,14 +86,18 @@
         planId: result.id,
         tags: [`plan:${result.id}`, ...drawerPlan.tags],
       };
-      options!.open();
+      drawer!.open({
+        title: 'Dispatch Audit',
+        tags: pendingAudit.tags,
+        planId: result.id,
+      });
     } finally {
       creatingPlan[audit.name] = false;
     }
   }
 
   async function handleGenerate(options: Plan.ToPromptOptions) {
-    if (!pendingAudit) return;
+    if (!pendingAudit) throw new Error('No audit selected');
     const { planId, tags } = pendingAudit;
     const { prompt, tags: extTags } = await previewPrompt({
       organization: data.organization,
@@ -103,12 +105,7 @@
       planId,
       options,
     });
-    drawer!.open({
-      title: 'Dispatch Audit',
-      prompt,
-      tags: [...tags, ...extTags],
-      planId,
-    });
+    return { prompt, tags: [...tags, ...extTags] };
   }
 
   function handleDispatched() {
@@ -338,15 +335,10 @@
   </div>
 {/if}
 
-<DispatchOptions
-  bind:this={options}
-  title="Prepare Audit Dispatch"
-  onconfirm={handleGenerate}
-/>
-
 <DispatchDrawer
   bind:this={drawer}
   ondispatched={handleDispatched}
+  ongenerate={handleGenerate}
 />
 
 <style>
