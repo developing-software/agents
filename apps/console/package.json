@@ -20,6 +20,7 @@
     "@agents/sdk": "workspace:*",
     "@ai-sdk/anthropic": "^3.0.64",
     "@ai-sdk/svelte": "^4.0.142",
+    "@fontsource-variable/inter": "^5.2.8",
     "@openauthjs/openauth": "^0.4.3",
     "ai": "^6.0.142",
     "marked": "^17.0.5",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "catalog:testing",
+    "@sveltejs/adapter-auto": "catalog:frontend",
     "@sveltejs/adapter-cloudflare": "catalog:frontend",
     "@sveltejs/kit": "catalog:frontend",
     "@sveltejs/vite-plugin-svelte": "catalog:frontend",

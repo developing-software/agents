@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import '@fontsource/inter';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Theme tokens
@@ -27,7 +28,7 @@
   --color-acc-soft: #a7f3d0;
   --color-acc-deep: #10b981;
   --color-acc-glow: rgba(34, 211, 238, 0.45);
-  --color-acc-glow-soft: rgba(34, 211, 238, 0.20);
+  --color-acc-glow-soft: rgba(34, 211, 238, 0.2);
 
   /* Subtle inset highlight (top-light bevel on cards) */
   --color-ink-hl: rgba(255, 255, 255, 0.06);
@@ -40,7 +41,7 @@
   /* Body-grid line color */
   --color-grid-line: rgba(255, 255, 255, 0.025);
 
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "'Inter', sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
@@ -63,12 +64,12 @@
   --color-acc-soft: #a7f3d0;
   --color-acc-deep: #10b981;
   --color-acc-glow: rgba(34, 211, 238, 0.45);
-  --color-acc-glow-soft: rgba(34, 211, 238, 0.20);
+  --color-acc-glow-soft: rgba(34, 211, 238, 0.2);
 
   --color-ink-hl: rgba(10, 10, 10, 0.05);
 
   --color-base-100: rgba(10, 10, 10, 0.06);
-  --color-base-200: rgba(10, 10, 10, 0.10);
+  --color-base-200: rgba(10, 10, 10, 0.1);
   --color-base-300: rgba(10, 10, 10, 0.16);
 
   --color-grid-line: rgba(10, 10, 10, 0.05);

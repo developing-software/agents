@@ -1,4 +1,4 @@
-import adapter from "@sveltejs/adapter-cloudflare";
+import adapter from "@sveltejs/adapter-auto";
 import * as child_process from "node:child_process";
 
 const gitRevision = (() => {
