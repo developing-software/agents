@@ -2,6 +2,11 @@
 
 Platform-orchestrated AI development lifecycle for brownfield repositories. Plans are approved by humans, implemented by agents, and tracked through repository events, health checks, and reviews.
 
+## Agent
+
+- **Name:** OpenCode
+- **Purpose:** Implements and maintains repository changes based on human-approved plans.
+
 ## Docs
 
 ### User Docs
