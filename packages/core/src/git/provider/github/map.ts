@@ -52,6 +52,7 @@ export function mapTreeEntry(entry: TreeEntry): NormalizedTreeEntry {
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,
+    mode: entry.mode ?? undefined,
   };
 }
 
@@ -66,6 +67,7 @@ export function mapDirEntry(entry: ContentItem): NormalizedDirEntry {
     path: entry.path,
     sha: entry.sha,
     size: entry.size,
+    target: "target" in entry && typeof entry.target === "string" ? entry.target : undefined,
   };
 }
 

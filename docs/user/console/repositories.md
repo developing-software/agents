@@ -23,6 +23,15 @@ Links render immediately. Metrics load after page becomes interactive.
 - skills, prompts, audits, and plans
 - event timelines and health views
 
+## Agent Config Page
+
+The repository `Agents > Config` page groups agent guidance by directory-local `AGENTS.md` / `CLAUDE.md` pairs.
+
+- paired rows show quick links for both files and open a split editor with write, preview, and diff modes
+- missing `CLAUDE.md` rows expose a generate flow that drafts content from the local `AGENTS.md` plus optional Claude-specific instructions
+- symlinked copies are collapsed into their original files so the table stays focused on canonical config sources
+- status, search, and sort controls help narrow large repos by paired, missing, or symlinked entries
+
 ## Repository Context
 
 Most activity in the platform is scoped to a repository:

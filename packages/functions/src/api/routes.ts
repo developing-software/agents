@@ -12,6 +12,7 @@ import { ForjeroApi } from "./handler/forjero";
 import { GitHubApi } from "./handler/github";
 import { ModelsApi } from "./handler/models";
 import { BranchArtifactApi } from "./handler/branch-artifact";
+import { AgentConfigApi } from "./handler/agent-config";
 import { auth } from "./middleware";
 
 const log = Log.create({ namespace: "api" });
@@ -35,6 +36,7 @@ export const routes = app
   .route("/forjero", ForjeroApi.route)
   .route("/models", ModelsApi.route)
   .route("/branch-artifacts", BranchArtifactApi.route)
+  .route("/agent-config", AgentConfigApi.route)
   .onError((error, c) => {
     if (error instanceof VisibleError) {
       return c.json<ErrorResponseType>(error.toResponse(), error.statusCode());

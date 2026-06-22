@@ -38,7 +38,12 @@
             "example": "sec_******XXXX"
           }
         },
-        "required": ["id", "name", "redirectURI", "secret"],
+        "required": [
+          "id",
+          "name",
+          "redirectURI",
+          "secret"
+        ],
         "description": "App.",
         "example": {
           "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -61,28 +66,45 @@
               "internal"
             ],
             "description": "The error type category",
-            "examples": ["validation", "authentication"]
+            "examples": [
+              "validation",
+              "authentication"
+            ]
           },
           "code": {
             "type": "string",
             "description": "Machine-readable error code identifier",
-            "examples": ["invalid_parameter", "missing_required_field", "unauthorized"]
+            "examples": [
+              "invalid_parameter",
+              "missing_required_field",
+              "unauthorized"
+            ]
           },
           "message": {
             "type": "string",
             "description": "Human-readable error message",
-            "examples": ["The request was invalid", "Authentication required"]
+            "examples": [
+              "The request was invalid",
+              "Authentication required"
+            ]
           },
           "param": {
             "description": "The parameter that caused the error (if applicable)",
-            "examples": ["email", "user_id"],
+            "examples": [
+              "email",
+              "user_id"
+            ],
             "type": "string"
           },
           "details": {
             "description": "Additional error context information"
           }
         },
-        "required": ["type", "code", "message"],
+        "required": [
+          "type",
+          "code",
+          "message"
+        ],
         "description": "Permission error"
       },
       "Token": {
@@ -135,7 +157,14 @@
             ]
           }
         },
-        "required": ["id", "name", "created", "token", "lastUsedAt", "expiresAt"],
+        "required": [
+          "id",
+          "name",
+          "created",
+          "token",
+          "lastUsedAt",
+          "expiresAt"
+        ],
         "description": "Personal access token.",
         "example": {
           "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -197,7 +226,14 @@
           },
           "origin": {
             "type": "string",
-            "enum": ["api", "webhook", "action", "console", "cli", "cron"],
+            "enum": [
+              "api",
+              "webhook",
+              "action",
+              "console",
+              "cli",
+              "cron"
+            ],
             "description": "What triggered this event.",
             "example": "webhook"
           },
@@ -249,7 +285,11 @@
           "sourceId": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "origin": "webhook",
           "type": "github.issues.opened",
-          "tags": ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
+          "tags": [
+            "git:provider:github",
+            "git:repo:github:octocat/hello-world",
+            "git:issue:42"
+          ],
           "data": {
             "action": "opened"
           },
@@ -269,7 +309,9 @@
                     "example": "rep_XXXXXXXXXXXXXXXXXXXXXXXXX"
                   }
                 },
-                "required": ["repositoryId"]
+                "required": [
+                  "repositoryId"
+                ]
               },
               {
                 "type": "object",
@@ -280,7 +322,9 @@
                     "example": "octocat/hello-world"
                   }
                 },
-                "required": ["repoFullName"]
+                "required": [
+                  "repoFullName"
+                ]
               }
             ],
             "description": "Source identifier — provide one of `repositoryId` or `repoFullName`."
@@ -307,7 +351,14 @@
               },
               "origin": {
                 "type": "string",
-                "enum": ["api", "webhook", "action", "console", "cli", "cron"],
+                "enum": [
+                  "api",
+                  "webhook",
+                  "action",
+                  "console",
+                  "cli",
+                  "cron"
+                ],
                 "description": "What triggered this event.",
                 "example": "webhook"
               },
@@ -340,7 +391,10 @@
                 }
               }
             },
-            "required": ["origin", "type"]
+            "required": [
+              "origin",
+              "type"
+            ]
           }
         ],
         "description": "Event payload submitted by external producers.",
@@ -348,7 +402,11 @@
           "repoFullName": "octocat/hello-world",
           "origin": "webhook",
           "type": "github.issues.opened",
-          "tags": ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
+          "tags": [
+            "git:provider:github",
+            "git:repo:github:octocat/hello-world",
+            "git:issue:42"
+          ],
           "data": {
             "action": "opened"
           }
@@ -380,7 +438,12 @@
             "example": "2024-01-01T00:00:00.000Z"
           }
         },
-        "required": ["key", "name", "size", "uploaded"],
+        "required": [
+          "key",
+          "name",
+          "size",
+          "uploaded"
+        ],
         "description": "An artifact stored in R2 associated with an event.",
         "example": {
           "key": "events/evt_XXXXXXXXXXXXXXXXXXXXXXXXX/artifacts/execution.json",
@@ -410,7 +473,9 @@
     "/app": {
       "get": {
         "operationId": "getApp",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "List apps",
         "description": "List the current user's registered apps.",
         "responses": {
@@ -493,7 +558,9 @@
       },
       "post": {
         "operationId": "postApp",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "Create app",
         "description": "Create an app.",
         "responses": {
@@ -514,7 +581,10 @@
                       "example": "sec_******XXXX"
                     }
                   },
-                  "required": ["id", "secret"]
+                  "required": [
+                    "id",
+                    "secret"
+                  ]
                 },
                 "example": {
                   "id": "app_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -600,7 +670,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["name", "redirectURI"],
+                "required": [
+                  "name",
+                  "redirectURI"
+                ],
                 "description": "Basic app information.",
                 "example": {
                   "name": "Example App",
@@ -615,7 +688,9 @@
     "/app/{id}": {
       "get": {
         "operationId": "getAppById",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "Get app",
         "description": "Get the app with the given ID.",
         "responses": {
@@ -711,7 +786,9 @@
       },
       "delete": {
         "operationId": "deleteAppById",
-        "tags": ["App (OAuth)"],
+        "tags": [
+          "App (OAuth)"
+        ],
         "summary": "Delete app",
         "description": "Delete the app with the given ID.",
         "responses": {
@@ -836,7 +913,9 @@
     "/token": {
       "get": {
         "operationId": "getToken",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "List tokens",
         "description": "List the current user's personal access tokens.",
         "responses": {
@@ -923,7 +1002,9 @@
       },
       "post": {
         "operationId": "postToken",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "Create token",
         "description": "Create a personal access token.",
         "responses": {
@@ -944,7 +1025,10 @@
                       "example": "tok_test_******XXXX"
                     }
                   },
-                  "required": ["id", "token"]
+                  "required": [
+                    "id",
+                    "token"
+                  ]
                 },
                 "example": {
                   "id": "pat_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -1005,7 +1089,9 @@
     "/token/{id}": {
       "get": {
         "operationId": "getTokenById",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "Get token",
         "description": "Get the personal access token with the given ID.",
         "responses": {
@@ -1103,7 +1189,9 @@
       },
       "delete": {
         "operationId": "deleteTokenById",
-        "tags": ["Token"],
+        "tags": [
+          "Token"
+        ],
         "summary": "Delete token",
         "description": "Delete the personal access token with the given ID.",
         "responses": {
@@ -1197,7 +1285,9 @@
     "/events": {
       "post": {
         "operationId": "postEvents",
-        "tags": ["Event"],
+        "tags": [
+          "Event"
+        ],
         "summary": "Create event",
         "description": "Record an event linked to a repository.",
         "responses": {
@@ -1320,7 +1410,9 @@
     "/events/{id}": {
       "patch": {
         "operationId": "patchEventsById",
-        "tags": ["Event"],
+        "tags": [
+          "Event"
+        ],
         "summary": "Update event",
         "description": "Update data and/or tags on an existing event.",
         "responses": {
@@ -1480,7 +1572,9 @@
     "/events/{id}/artifacts": {
       "post": {
         "operationId": "postEventsByIdArtifacts",
-        "tags": ["Event"],
+        "tags": [
+          "Event"
+        ],
         "summary": "Upload artifact",
         "description": "Upload a file artifact associated with an event.",
         "responses": {
@@ -1594,7 +1688,9 @@
     "/github/dispatch": {
       "post": {
         "operationId": "postGithubDispatch",
-        "tags": ["GitHub"],
+        "tags": [
+          "GitHub"
+        ],
         "summary": "Dispatch agent workflow",
         "description": "Trigger an agent workflow via GitHub Actions workflow_dispatch. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).",
         "responses": {
@@ -1608,7 +1704,9 @@
                       "type": "boolean"
                     }
                   },
-                  "required": ["ok"]
+                  "required": [
+                    "ok"
+                  ]
                 }
               }
             },
@@ -1695,7 +1793,11 @@
                   },
                   "agent": {
                     "type": "string",
-                    "enum": ["claude", "opencode", "codex"],
+                    "enum": [
+                      "claude",
+                      "opencode",
+                      "codex"
+                    ],
                     "description": "Agent to dispatch"
                   },
                   "prompt": {
@@ -1725,7 +1827,11 @@
                     "type": "string"
                   }
                 },
-                "required": ["owner", "repo", "agent"]
+                "required": [
+                  "owner",
+                  "repo",
+                  "agent"
+                ]
               }
             }
           }
@@ -1735,7 +1841,9 @@
     "/models/pricing": {
       "get": {
         "operationId": "getModelsPricing",
-        "tags": ["Models"],
+        "tags": [
+          "Models"
+        ],
         "summary": "List all model pricing",
         "description": "Returns pricing data for all models. Costs are in dollars per 1M tokens.",
         "responses": {
@@ -1814,12 +1922,18 @@
                             "description": "Model pricing in USD per 1M tokens"
                           }
                         },
-                        "required": ["model", "provider", "cost"],
+                        "required": [
+                          "model",
+                          "provider",
+                          "cost"
+                        ],
                         "description": "Pricing record for a model"
                       }
                     }
                   },
-                  "required": ["models"]
+                  "required": [
+                    "models"
+                  ]
                 }
               }
             },
@@ -1897,7 +2011,9 @@
             "description": "Provider ID to filter pricing lookup (e.g. anthropic, openai)"
           }
         ],
-        "tags": ["Models"],
+        "tags": [
+          "Models"
+        ],
         "summary": "Get pricing for a model",
         "description": "Looks up pricing for a model ID using exact match, then longest-prefix-match. Costs are in dollars per 1M tokens.",
         "responses": {
@@ -1973,7 +2089,11 @@
                               "description": "Model pricing in USD per 1M tokens"
                             }
                           },
-                          "required": ["model", "provider", "cost"],
+                          "required": [
+                            "model",
+                            "provider",
+                            "cost"
+                          ],
                           "description": "Pricing record for a model"
                         },
                         {
@@ -1982,7 +2102,9 @@
                       ]
                     }
                   },
-                  "required": ["pricing"]
+                  "required": [
+                    "pricing"
+                  ]
                 }
               }
             },
@@ -2092,16 +2214,24 @@
                         "maximum": 9007199254740991
                       }
                     },
-                    "required": ["input", "output"],
+                    "required": [
+                      "input",
+                      "output"
+                    ],
                     "description": "Token counts from model usage"
                   }
                 },
-                "required": ["model", "tokens"]
+                "required": [
+                  "model",
+                  "tokens"
+                ]
               }
             }
           }
         },
-        "tags": ["Models"],
+        "tags": [
+          "Models"
+        ],
         "summary": "Calculate cost for model usage",
         "description": "Given a model ID and token counts, resolves pricing via longest-prefix-match and returns the calculated cost in USD.",
         "responses": {
@@ -2177,7 +2307,11 @@
                               "description": "Model pricing in USD per 1M tokens"
                             }
                           },
-                          "required": ["model", "provider", "cost"],
+                          "required": [
+                            "model",
+                            "provider",
+                            "cost"
+                          ],
                           "description": "Pricing record for a model"
                         },
                         {
@@ -2198,7 +2332,10 @@
                       "example": 0.225
                     }
                   },
-                  "required": ["pricing", "cost_usd"]
+                  "required": [
+                    "pricing",
+                    "cost_usd"
+                  ]
                 }
               }
             },
@@ -2283,6 +2420,973 @@
         ],
         "responses": {
           "200": {}
+        }
+      }
+    },
+    "/agent-config/{provider}/{owner}/{repo}/pairs": {
+      "get": {
+        "operationId": "getAgentConfigByProviderByOwnerByRepoPairs",
+        "tags": [
+          "Agent Config"
+        ],
+        "summary": "List agent config pairs",
+        "description": "List AGENTS.md files with their paired CLAUDE.md metadata.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "directory": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "paired",
+                          "missing_claude"
+                        ]
+                      },
+                      "hasSymlink": {
+                        "type": "boolean"
+                      },
+                      "agents": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "AGENTS",
+                              "CLAUDE"
+                            ]
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "sha": {
+                            "type": "string"
+                          },
+                          "isSymlink": {
+                            "type": "boolean"
+                          },
+                          "symlinkTarget": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "resolvedPath": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "editable": {
+                            "type": "boolean"
+                          },
+                          "collapsed": {
+                            "type": "boolean"
+                          },
+                          "collapsedInto": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "path",
+                          "sha",
+                          "isSymlink",
+                          "symlinkTarget",
+                          "resolvedPath",
+                          "editable",
+                          "collapsed",
+                          "collapsedInto"
+                        ]
+                      },
+                      "claude": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "AGENTS",
+                                  "CLAUDE"
+                                ]
+                              },
+                              "path": {
+                                "type": "string"
+                              },
+                              "sha": {
+                                "type": "string"
+                              },
+                              "isSymlink": {
+                                "type": "boolean"
+                              },
+                              "symlinkTarget": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "resolvedPath": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "editable": {
+                                "type": "boolean"
+                              },
+                              "collapsed": {
+                                "type": "boolean"
+                              },
+                              "collapsedInto": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "path",
+                              "sha",
+                              "isSymlink",
+                              "symlinkTarget",
+                              "resolvedPath",
+                              "editable",
+                              "collapsed",
+                              "collapsedInto"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "hiddenSymlinkPaths": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "directory",
+                      "status",
+                      "hasSymlink",
+                      "agents",
+                      "claude",
+                      "hiddenSymlinkPaths"
+                    ]
+                  }
+                }
+              }
+            },
+            "description": "Agent config pairs."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "github",
+                "gitlab",
+                "bitbucket",
+                "gitea",
+                "forjero"
+              ],
+              "example": "github"
+            },
+            "required": true,
+            "description": "Repository source provider."
+          },
+          {
+            "in": "path",
+            "name": "owner",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/agent-config/{provider}/{owner}/{repo}/file": {
+      "get": {
+        "operationId": "getAgentConfigByProviderByOwnerByRepoFile",
+        "tags": [
+          "Agent Config"
+        ],
+        "summary": "Read an agent config file",
+        "description": "Read AGENTS.md or CLAUDE.md content from the repository.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "content"
+                  ]
+                }
+              }
+            },
+            "description": "Config file contents."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "github",
+                "gitlab",
+                "bitbucket",
+                "gitea",
+                "forjero"
+              ],
+              "example": "github"
+            },
+            "required": true,
+            "description": "Repository source provider."
+          },
+          {
+            "in": "path",
+            "name": "owner",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ]
+      },
+      "put": {
+        "operationId": "putAgentConfigByProviderByOwnerByRepoFile",
+        "tags": [
+          "Agent Config"
+        ],
+        "summary": "Update an agent config file",
+        "description": "Write AGENTS.md or CLAUDE.md content back to the repository.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "validation": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "valid": {
+                            "type": "boolean"
+                          },
+                          "issues": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "level": {
+                                  "type": "string",
+                                  "enum": [
+                                    "error",
+                                    "warning"
+                                  ]
+                                },
+                                "message": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "level",
+                                "message"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "valid",
+                          "issues"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "saved",
+                    "validation"
+                  ]
+                }
+              }
+            },
+            "description": "Updated file metadata."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "github",
+                "gitlab",
+                "bitbucket",
+                "gitea",
+                "forjero"
+              ],
+              "example": "github"
+            },
+            "required": true,
+            "description": "Repository source provider."
+          },
+          {
+            "in": "path",
+            "name": "owner",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "path",
+                        "content"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "files"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-config/{provider}/{owner}/{repo}/generate": {
+      "post": {
+        "operationId": "postAgentConfigByProviderByOwnerByRepoGenerate",
+        "tags": [
+          "Agent Config"
+        ],
+        "summary": "Generate a CLAUDE.md draft",
+        "description": "Generate CLAUDE.md content from an AGENTS.md file and optional instructions.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "validation": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string"
+                        },
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "issues": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "level": {
+                                "type": "string",
+                                "enum": [
+                                  "error",
+                                  "warning"
+                                ]
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "level",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "path",
+                        "valid",
+                        "issues"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "content",
+                    "validation"
+                  ]
+                }
+              }
+            },
+            "description": "Generated CLAUDE.md draft."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "github",
+                "gitlab",
+                "bitbucket",
+                "gitea",
+                "forjero"
+              ],
+              "example": "github"
+            },
+            "required": true,
+            "description": "Repository source provider."
+          },
+          {
+            "in": "path",
+            "name": "owner",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agentsPath": {
+                    "type": "string"
+                  },
+                  "instructions": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "agentsPath"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-config/{provider}/{owner}/{repo}/validate": {
+      "post": {
+        "operationId": "postAgentConfigByProviderByOwnerByRepoValidate",
+        "tags": [
+          "Agent Config"
+        ],
+        "summary": "Validate agent config files",
+        "description": "Validate AGENTS.md or CLAUDE.md content before saving.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "valid": {
+                        "type": "boolean"
+                      },
+                      "issues": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "level": {
+                              "type": "string",
+                              "enum": [
+                                "error",
+                                "warning"
+                              ]
+                            },
+                            "message": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "level",
+                            "message"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "valid",
+                      "issues"
+                    ]
+                  }
+                }
+              }
+            },
+            "description": "Validation results."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "github",
+                "gitlab",
+                "bitbucket",
+                "gitea",
+                "forjero"
+              ],
+              "example": "github"
+            },
+            "required": true,
+            "description": "Repository source provider."
+          },
+          {
+            "in": "path",
+            "name": "owner",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "path",
+                        "content"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "files"
+                ]
+              }
+            }
+          }
         }
       }
     }
