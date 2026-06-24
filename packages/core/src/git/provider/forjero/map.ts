@@ -74,11 +74,22 @@ export function mapCommit(data: Commit): NormalizedCommit {
 }
 
 export function mapTreeEntry(entry: GitEntry): NormalizedTreeEntry {
+  const rawType = entry.type;
+  const type: NormalizedTreeEntry["type"] =
+    entry.mode === "120000" || rawType === "symlink"
+      ? "symlink"
+      : rawType === "tree"
+        ? "tree"
+        : rawType === "commit" || rawType === "submodule"
+          ? "submodule"
+          : "blob";
+
   return {
-    type: entry.type === "tree" ? "tree" : "blob",
+    type,
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,
+    mode: entry.mode ?? undefined,
   };
 }
 
@@ -92,6 +103,7 @@ export function mapDirEntry(entry: ContentsResponse): NormalizedDirEntry {
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size ?? 0,
+    target: typeof (entry as { target?: unknown }).target === "string" ? entry.target : undefined,
   };
 }
 

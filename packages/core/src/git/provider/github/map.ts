@@ -47,11 +47,21 @@ export function mapRepo(data: RepoGetData | InstallationRepo): NormalizedRepo {
 }
 
 export function mapTreeEntry(entry: TreeEntry): NormalizedTreeEntry {
+  const type: NormalizedTreeEntry["type"] =
+    entry.mode === "120000"
+      ? "symlink"
+      : entry.type === "tree"
+        ? "tree"
+        : entry.type === "commit"
+          ? "submodule"
+          : "blob";
+
   return {
-    type: entry.type === "tree" ? "tree" : "blob",
+    type,
     path: entry.path ?? "",
     sha: entry.sha ?? "",
     size: entry.size,
+    mode: entry.mode ?? undefined,
   };
 }
 
@@ -66,6 +76,7 @@ export function mapDirEntry(entry: ContentItem): NormalizedDirEntry {
     path: entry.path,
     sha: entry.sha,
     size: entry.size,
+    target: "target" in entry && typeof entry.target === "string" ? entry.target : undefined,
   };
 }
 
