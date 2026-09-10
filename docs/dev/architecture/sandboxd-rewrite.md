@@ -221,3 +221,8 @@ change as a type error; ours reports it after the fact.
 6. Preview links on the task page.
 7. Retire `agent-*.yml` and `actions/event/*` once the flag is on everywhere. Keep
    `actions/git/*` and the check actions — CI never moved.
+
+## Next
+
+How the dependency itself would work — packaging, release policy, and where to hold
+the boundary — is in [Depending On sandboxd](./sandboxd-dependency.md).
