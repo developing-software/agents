@@ -22,6 +22,7 @@ Platform-orchestrated AI development lifecycle for brownfield repositories. Plan
 - [Events and Tags](./docs/dev/architecture/events-and-tags.md)
 - [Git Providers](./docs/dev/architecture/git-providers.md)
 - [Actions and CI](./docs/dev/architecture/actions-and-ci.md)
+- [Rebuilding on sandboxd](./docs/dev/architecture/sandboxd-rewrite.md)
 - [Monorepo Layout](./docs/dev/repo/monorepo.md)
 - [Testing and Generation](./docs/dev/repo/testing-and-generation.md)
 - [Contributing](./docs/dev/contributing.md)
