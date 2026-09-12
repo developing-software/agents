@@ -1,0 +1,193 @@
+---
+import BrowserWindow from "@components/BrowserWindow.astro";
+import Bends from "@components/svelte/Bends.svelte";
+import Grainient from "@components/svelte/Grainient.svelte";
+
+const items = [
+  {
+    title: "Lorem ipsum dolor sit amet.",
+    body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut aliquam tincidunt, nunc nisl aliquam nunc, eu aliquam nunc nisl euismod nunc.",
+    overlay:
+      "First feature",
+  },
+  {
+    title: "Lorem ipsum dolor sit amet.",
+    body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut aliquam tincidunt, nunc nisl aliquam nunc, eu aliquam nunc nisl euismod nunc.",
+    overlay: "Second feature",
+  },
+  {
+    title: "Lorem ipsum dolor sit amet.",
+    body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut aliquam tincidunt, nunc nisl aliquam nunc, eu aliquam nunc nisl euismod nunc.",
+    overlay: "Third feature",
+  },
+];
+
+const INTERVAL_MS = 4000;
+---
+
+<section
+  class="border border-base-300 rounded-md overflow-hidden"
+  data-interactive
+  data-interval={INTERVAL_MS}
+>
+  <div class="border-b border-base-300 p-6">
+    <h1 class="text-2xl font-medium">Lorem ipsum dolor sit amet.</h1>
+  </div>
+
+  <div class="grid lg:grid-cols-2">
+    <div class="w-full">
+      {
+        items.map((item, i) => (
+          <button
+            type="button"
+            data-index={i}
+            data-overlay={item.overlay}
+            class:list={[
+              "relative block w-full text-left p-6 cursor-pointer transition-colors",
+              i < items.length - 1 && "border-b border-base-300",
+              "data-[active=true]:bg-base-200",
+            ]}
+            data-active={i === 0}
+          >
+            <p class="text-lg font-medium">{item.title}</p>
+            <p class="text-base text-fg-muted">{item.body}</p>
+            <span class="absolute bottom-0 left-0 h-0.5 w-full ">
+              <span data-bar class="block h-full w-0 origin-left bg-acc" />
+            </span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="relative h-full">
+      <!-- <img
+        src="/bg.webp"
+        alt="Interactive"
+        class="absolute inset-0 w-full h-full object-cover"
+      /> -->
+      <div class="absolute inset-0 w-full h-full object-cover bg-black">
+<!-- <Bends
+      client:only="svelte"
+      rotation={74}
+      autoRotate={0}
+      speed={0.08}
+      scale={5}
+      frequency={3.5}
+      warpStrength={0.95}
+      mouseInfluence={0.02}
+      parallax={0.35}
+      noise={0.02}
+      iterations={2}
+      intensity={1.3}
+      bandWidth={3}
+      colors={["#ff5024"]}
+    /> -->
+    <Grainient
+      client:only="svelte"
+      grainAmount={0}
+      color1="#ee5222"
+      color2="#fff"
+      color3="#ee5222"
+      zoom={0.5}
+      warpFrequency={20}
+      contrast={1.15}
+      timeSpeed={0.5}
+      saturation={1}
+    />
+      </div>
+      <div class="absolute inset-0 flex items-center justify-center p-8">
+        <BrowserWindow class="w-full">
+          <div class="rounded-md bg-base-100/80 px-6 py-4 backdrop-blur-sm">
+            <h1 data-overlay-target>{items[0].overlay}</h1>
+          </div>
+        </BrowserWindow>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>("[data-interactive]")
+    .forEach((section) => {
+      const buttons = Array.from(
+        section.querySelectorAll<HTMLButtonElement>("[data-index]"),
+      );
+      const bars = buttons.map((btn) =>
+        btn.querySelector<HTMLElement>("[data-bar]"),
+      );
+      const overlayEl = section.querySelector<HTMLElement>(
+        "[data-overlay-target]",
+      );
+      const interval = Number(section.dataset.interval) || 4000;
+
+      let current = 0;
+      let paused = false;
+
+      const startBar = (duration: number) => {
+        const bar = bars[current];
+        if (!bar) return;
+        void bar.offsetWidth;
+        bar.style.transition = `width ${duration}ms linear`;
+        bar.style.width = "100%";
+      };
+
+      const freezeBar = () => {
+        const bar = bars[current];
+        if (!bar) return;
+        bar.style.width = getComputedStyle(bar).width;
+        bar.style.transition = "none";
+      };
+
+      const remainingMs = () => {
+        const bar = bars[current];
+        if (!bar) return interval;
+        const track = bar.parentElement!.getBoundingClientRect();
+        const progress = track.width
+          ? bar.getBoundingClientRect().width / track.width
+          : 0;
+        return Math.max(0, interval * (1 - progress));
+      };
+
+      const select = (index: number) => {
+        current = index;
+        buttons.forEach((btn, i) => {
+          btn.dataset.active = String(i === index);
+        });
+
+        bars.forEach((bar) => {
+          if (!bar) return;
+          bar.style.transition = "none";
+          bar.style.width = "0%";
+        });
+
+        const overlay = buttons[index]?.dataset.overlay;
+        if (overlayEl && overlay) overlayEl.textContent = overlay;
+
+        if (!paused) startBar(interval);
+      };
+
+      buttons.forEach((btn, i) => {
+        btn.addEventListener("click", () => select(i));
+      });
+
+      const setPaused = (value: boolean) => {
+        if (value === paused) return;
+        paused = value;
+        if (value) freezeBar();
+        else startBar(remainingMs());
+      };
+
+      section.addEventListener("mouseenter", () => setPaused(true));
+      section.addEventListener("mouseleave", () => setPaused(false));
+
+      bars.forEach((bar, i) => {
+        bar?.addEventListener("transitionend", () => {
+          if (paused || i !== current) return;
+          select((current + 1) % buttons.length);
+        });
+      });
+
+      select(0);
+    });
+</script>

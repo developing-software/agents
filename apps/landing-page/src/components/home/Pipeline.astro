@@ -1,0 +1,471 @@
+---
+const models = [
+  { name: "Claude", logo: "/ai/claude.svg" },
+  { name: "GPT-5", logo: "/ai/openai.svg" },
+  { name: "Gemini", logo: "/ai/gemini.svg" },
+  { name: "Grok", logo: "/ai/grok.svg" },
+];
+
+const cols = [50, 150, 250, 350];
+---
+
+<section class="relative py-30">
+  <div class="container mx-auto">
+    <div class="relative overflow-hidden rounded-md border border-border-soft">
+      <div class="grid lg:grid-cols-2">
+        <div class="p-8 lg:p-12">
+          <h2
+            class="max-w-110 bg-linear-to-b text-fg bg-clip-text text-4xl font-medium sm:text-5xl"
+          >
+            Many drafts compete. The best PR ships.
+          </h2>
+
+          <p class="mt-5 max-w-110 text-base leading-[1.55] text-fg-muted">
+            Every issue fans out to multiple frontier models in parallel. A
+            judge scores their drafts, a synthesizer merges the strongest hunks,
+            and only a green, tested pull request reaches your review.
+          </p>
+
+          <ul class="mt-8 flex flex-col gap-3.5">
+            <li class="flex items-center gap-3">
+              <span
+                class="grid size-9 place-items-center rounded-md border border-border-soft bg-bg-elev text-fg-muted"
+              >
+                <svg
+                  class="size-4.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="6" y1="3" x2="6" y2="15"></line>
+                  <circle cx="18" cy="6" r="3"></circle>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <path d="M18 9a9 9 0 0 1-9 9"></path>
+                </svg>
+              </span>
+              <span class="text-[15px] font-medium text-fg"
+                >Parallel drafts</span
+              >
+            </li>
+            <li class="flex items-center gap-3">
+              <span
+                class="grid size-9 place-items-center rounded-md border border-border-soft bg-bg-elev text-fg-muted"
+              >
+                <svg
+                  class="size-4.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"
+                  ></path>
+                  <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"
+                  ></path>
+                  <path d="M7 21h10"></path>
+                  <path d="M12 3v18"></path>
+                  <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path>
+                </svg>
+              </span>
+              <span class="text-[15px] font-medium text-fg">LLM judge</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <span
+                class="grid size-9 place-items-center rounded-md border border-border-soft bg-bg-elev text-fg-muted"
+              >
+                <svg
+                  class="size-4.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"
+                  ></path>
+                  <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path>
+                  <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path>
+                </svg>
+              </span>
+              <span class="text-[15px] font-medium text-fg"
+                >Synthesized diff</span
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div
+          class="relative border-t border-border-soft p-6 sm:p-8 lg:border-l lg:border-t-0"
+        >
+          <div
+            class="relative overflow-hidden rounded-md border border-border-soft bg-bg-elev"
+          >
+            <div
+              class="flex items-center gap-2 border-b border-border-soft px-4 py-3"
+            >
+              <svg
+                class="size-3.5 text-fg-faint"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="18" cy="18" r="3"></circle>
+                <circle cx="6" cy="6" r="3"></circle>
+                <path d="M6 21V9a9 9 0 0 0 9 9"></path>
+              </svg>
+              <span
+                class="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-faint"
+              >
+                Pipeline
+              </span>
+            </div>
+
+            <div class="flex flex-col items-center px-5 py-6 sm:px-8">
+              <div
+                class="w-full max-w-70 rounded-md border border-border-soft px-3.5 py-3"
+              >
+                <div class="flex items-center justify-between">
+                  <span
+                    class="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-fg-faint"
+                  >
+                    <svg
+                      class="size-3.5 text-green-600"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"
+                      ></path>
+                      <path
+                        d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"
+                      ></path>
+                    </svg>
+                    Issue
+                  </span>
+                  <span class="font-mono text-[10px] text-fg-faint">#4821</span>
+                </div>
+                <p class="mt-1.5 text-[13px] font-medium text-fg">
+                  Add rate limiting to the public API
+                </p>
+              </div>
+
+              <svg
+                class="h-9 w-full"
+                viewBox="0 0 400 36"
+                preserveAspectRatio="none"
+                fill="none"
+              >
+                {
+                  cols.map((x) => (
+                    <path
+                      class="flow [stroke:var(--color-border-strong)]"
+                      d={`M200 1 C 200 22, ${x} 14, ${x} 36`}
+                      stroke-width="1"
+                      stroke-dasharray="4 4"
+                      vector-effect="non-scaling-stroke"
+                    />
+                  ))
+                }
+              </svg>
+
+              <!-- stage 2 · models -->
+              <div class="grid w-full grid-cols-4 gap-2">
+                {
+                  models.map((m) => (
+                    <div class="flex gap-2 justify-center items-center rounded-sm border border-border-soft bg-bg-card px-1.5 py-2.5 text-center">
+                      <img src={m.logo} alt={m.name} class="size-5" />
+                      <span class=" truncate text-[11px] font-medium text-fg">
+                        {m.name}
+                      </span>
+                      {/* <span class="mt-1 flex items-center gap-1">
+                        <span class="size-1.5 rounded-full bg-acc-deep" />
+                        <span class="font-mono text-[9px] uppercase tracking-[0.08em] text-fg-faint">
+                          draft
+                        </span>
+                      </span> */}
+                    </div>
+                  ))
+                }
+              </div>
+
+              <!-- merge -->
+              <svg
+                class="h-9 w-full"
+                viewBox="0 0 400 36"
+                preserveAspectRatio="none"
+                fill="none"
+              >
+                {
+                  cols.map((x) => (
+                    <path
+                      class="flow stroke-border-strong"
+                      d={`M${x} 0 C ${x} 22, 200 14, 200 35`}
+                      stroke-width="1"
+                      stroke-dasharray="4 4"
+                      vector-effect="non-scaling-stroke"
+                    />
+                  ))
+                }
+              </svg>
+
+              <div
+                class="relative w-full max-w-[280px] rounded-md border border-border-strong bg-bg-card px-3.5 py-3"
+              >
+                <div class="relative flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <svg
+                      class="size-4 text-fg-muted"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"
+                      ></path>
+                      <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"
+                      ></path>
+                      <path d="M7 21h10"></path>
+                      <path d="M12 3v18"></path>
+                      <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path>
+                    </svg>
+                    <span class="text-[13px] font-medium text-fg">Judge</span>
+                  </div>
+                  <span class="font-mono text-[10px] uppercase text-fg-faint"
+                    >scoring 4</span
+                  >
+                </div>
+                <!-- <p class="relative mt-1 text-[12px] text-fg-muted">
+                  Ranks every draft on correctness, tests &amp; style
+                </p> -->
+              </div>
+
+              <svg
+                class="h-8 w-4"
+                viewBox="0 0 16 32"
+                preserveAspectRatio="none"
+                fill="none"
+              >
+                <path
+                  class="flow [stroke:var(--color-border-strong)]"
+                  d="M8 0V32"
+                  stroke-width="1"
+                  stroke-dasharray="4 4"
+                  vector-effect="non-scaling-stroke"></path>
+              </svg>
+
+              <div
+                class="w-full max-w-[280px] rounded-md border border-border-soft bg-bg-card px-3.5 py-3"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <svg
+                      class="size-4 text-fg-muted"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"
+                      ></path>
+                      <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"
+                      ></path>
+                      <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"
+                      ></path>
+                    </svg>
+                    <span class="text-[13px] font-medium text-fg"
+                      >Synthesized PR</span
+                    >
+                  </div>
+                  <span class="flex items-center gap-1.5 font-mono text-[10px]">
+                    <span class="text-green-600">+412</span>
+                    <span class="text-red-600">−58</span>
+                  </span>
+                </div>
+                <!-- <p class="mt-1 text-[12px] text-fg-muted">
+                  Best hunks from every draft, merged into one
+                </p> -->
+              </div>
+
+              <svg
+                class="h-8 w-4"
+                viewBox="0 0 16 32"
+                preserveAspectRatio="none"
+                fill="none"
+              >
+                <path
+                  class="flow [stroke:var(--color-border-strong)]"
+                  d="M8 0V32"
+                  stroke-width="1"
+                  stroke-dasharray="4 4"
+                  vector-effect="non-scaling-stroke"></path>
+              </svg>
+
+              <div
+                class="flex w-full max-w-[280px] items-center justify-between rounded-md border border-green-600 bg-green-50 px-3.5 py-3"
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    class="grid size-5 place-items-center rounded-full bg-green-600 text-bg-elev"
+                  >
+                    <svg
+                      class="size-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </span>
+                  <span class="text-[13px] font-medium text-fg"
+                    >Merged &amp; working PR</span
+                  >
+                </div>
+                <span class="font-mono text-[10px] uppercase text-green-600"
+                  >218 tests ✓</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="grid grid-cols-1 border-t border-border-soft md:grid-cols-2 lg:grid-cols-4"
+      >
+        <div class="border-border-soft p-7 md:border-r lg:p-8">
+          <svg
+            class="size-5 text-acc"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="6" y1="3" x2="6" y2="15"></line>
+            <circle cx="18" cy="6" r="3"></circle>
+            <circle cx="6" cy="18" r="3"></circle>
+            <path d="M18 9a9 9 0 0 1-9 9"></path>
+          </svg>
+          <h3 class="mt-4 text-[17px] font-medium leading-snug text-fg">
+            Parallel model drafts
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.5] text-fg-muted">
+            Several frontier models attempt the same issue at once, each in its
+            own isolated branch.
+          </p>
+        </div>
+
+        <div class="border-border-soft p-7 lg:border-r lg:p-8">
+          <svg
+            class="size-5 text-acc"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path>
+            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path>
+            <path d="M7 21h10"></path>
+            <path d="M12 3v18"></path>
+            <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path>
+          </svg>
+          <h3 class="mt-4 text-[17px] font-medium leading-snug text-fg">
+            Impartial judge
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.5] text-fg-muted">
+            A judge model scores every draft on correctness, tests, and style —
+            with no favorites.
+          </p>
+        </div>
+
+        <div class="border-border-soft p-7 md:border-r lg:p-8">
+          <svg
+            class="size-5 text-acc"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"
+            ></path>
+            <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path>
+            <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path>
+          </svg>
+          <h3 class="mt-4 text-[17px] font-medium leading-snug text-fg">
+            Diff-level synthesis
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.5] text-fg-muted">
+            The strongest hunks from each draft are merged into a single,
+            improved pull request.
+          </p>
+        </div>
+
+        <div class="p-7 lg:p-8">
+          <svg
+            class="size-5 text-acc"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 12l2 2 4-4"></path>
+            <path
+              d="M12 3c1.5 1.5 4 2 6 2 0 6-2 9-6 11-4-2-6-5-6-11 2 0 4.5-.5 6-2Z"
+            ></path>
+          </svg>
+          <h3 class="mt-4 text-[17px] font-medium leading-snug text-fg">
+            Merged only when green
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.5] text-fg-muted">
+            The synthesized PR runs your full suite and merges only when every
+            check passes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .flow {
+    animation: flow 0.9s linear infinite;
+  }
+
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -8;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flow {
+      animation: none;
+    }
+  }
+</style>

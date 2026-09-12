@@ -1,0 +1,81 @@
+---
+import Button from "./Button2.astro";
+
+const links = [
+  { name: "Product", href: "#" },
+  { name: "Docs", href: "#" },
+  { name: "Pricing", href: "#" },
+];
+---
+
+<div
+  id="navbar-wrapper"
+  data-at-top="true"
+  class="group fixed inset-x-0 top-0 z-60 flex justify-center transition-all duration-500 data-[scrolling=down]:translate-y-[-150%] data-[at-top=false]:pt-3 data-[at-top=true]:pt-5"
+>
+  <nav
+    class="flex max-w-330 w-full container mx-auto items-center justify-between gap-6 rounded-md py-2 transition-all duration-500 group-data-[at-top=false]:px-4 group-data-[at-top=false]:max-w-7xl group-data-[at-top=false]:bg-bg/30 group-data-[at-top=false]:backdrop-blur-md group-data-[at-top=true]:bg-transparent"
+  >
+    <a href="/" class="flex items-center gap-2 shrink-0">
+      <span class="text-2xl font-medium text-fg">DevAgents</span>
+    </a>
+
+    <ul class="hidden items-center gap-1 md:flex">
+      {
+        links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="rounded-full px-3 py-1.5 text-[13.5px] font-medium text-fg-muted transition-colors hover:bg-white/5 hover:text-fg"
+            >
+              {link.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="flex items-center gap-1.5">
+      <a
+        href="#"
+        class="hidden rounded-full px-3 py-1.5 text-[13.5px] font-medium text-fg-muted transition-colors hover:text-fg sm:inline-flex"
+      >
+        Log in
+      </a>
+      <Button text="Connect Repository" variant="primary" size="xs" href="#" />
+    </div>
+  </nav>
+</div>
+
+<script>
+  function initNavbar() {
+    const navbar = document.getElementById("navbar-wrapper");
+    if (!navbar) return;
+
+    let lastScrollY = window.scrollY;
+
+    const updateScrollState = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 20) {
+        navbar.setAttribute("data-at-top", "true");
+      } else {
+        navbar.setAttribute("data-at-top", "false");
+      }
+
+      if (currentScrollY > lastScrollY && currentScrollY > 500) {
+        navbar.setAttribute("data-scrolling", "down");
+      } else {
+        navbar.setAttribute("data-scrolling", "up");
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+  }
+
+  document.addEventListener("DOMContentLoaded", initNavbar);
+  document.addEventListener("astro:page-load", initNavbar);
+</script>

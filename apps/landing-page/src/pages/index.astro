@@ -1,14 +1,24 @@
 ---
 import Hero from "@components/home/Hero.astro";
 import Stats from "@components/home/Stats.astro";
-import MainLayout from "@layouts/Layout.astro";
+import MainLayout from "@layouts/Layou2.astro";
 import Cta from "@components/home/Cta.astro";
 import Main from "@components/home/grid/Main.astro";
+import Hero2 from "@components/home/Hero2.astro";
+import Interactive from "@components/home/Interactive.astro";
+import Pipeline from "@components/home/Pipeline.astro";
+
+import Silk from "@components/svelte/Bg.svelte";
 ---
 
-<MainLayout title="DevAgents">
+<!-- <MainLayout title="DevAgents">
   <Hero />
   <Stats />
   <Main />
+  </MainLayout> -->
+<MainLayout title="DevAgents">
+  <Hero2 />
+  <Pipeline />
+  <Interactive />
   <Cta />
 </MainLayout>
