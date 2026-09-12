@@ -9,24 +9,21 @@ import Preview from "@components/mock/Preview.astro";
 
 <section
   id="how"
-  class="scroll-mt-24 border-t border-border-soft py-28 sm:py-36"
+  class="scroll-mt-24 py-28 sm:py-28"
 >
   <div class="shell">
     <SectionHead
-      index="01"
-      label="How a run works"
       title="Five stages between a sentence and a mergeable PR."
-      sub="You describe the outcome. The pipeline does intake, implementation, judging, synthesis and a live preview."
     />
 
-    <div class="mt-16 grid gap-4 lg:grid-cols-6">
-      <article
+    <div class="mt-6 grid gap-4 lg:grid-cols-6">
+      <!-- <article
         data-reveal
         class="flex flex-col justify-between gap-8 rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8 lg:col-span-3"
       >
+      <img src="/phone.webp" alt="Mock thread" class="" />
         <Thread />
         <div>
-          <p class="font-mono text-[11px] text-fg-faint">1.0 Intake</p>
           <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
             Ask like a human
           </h3>
@@ -50,7 +47,7 @@ import Preview from "@components/mock/Preview.astro";
             Same spec, isolated branches, no sight of each other. No groupthink.
           </p>
         </div>
-      </article>
+      </article> -->
 
       <article
         data-reveal
@@ -58,7 +55,7 @@ import Preview from "@components/mock/Preview.astro";
       >
         <Checks />
         <div>
-          <p class="font-mono text-[11px] text-fg-faint">3.0 Gate</p>
+          <!-- <p class="font-mono text-[11px] text-fg-faint">3.0 Gate</p> -->
           <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
             Your CI votes first
           </h3>
@@ -74,7 +71,7 @@ import Preview from "@components/mock/Preview.astro";
       >
         <Diff />
         <div>
-          <p class="font-mono text-[11px] text-fg-faint">4.0 Synthesis</p>
+          <!-- <p class="font-mono text-[11px] text-fg-faint">4.0 Synthesis</p> -->
           <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
             The best of all four, merged
           </h3>
@@ -90,7 +87,7 @@ import Preview from "@components/mock/Preview.astro";
       >
         <Preview />
         <div>
-          <p class="font-mono text-[11px] text-fg-faint">5.0 Review</p>
+          <!-- <p class="font-mono text-[11px] text-fg-faint">5.0 Review</p> -->
           <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
             Click it before you merge
           </h3>
