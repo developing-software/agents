@@ -5,18 +5,18 @@ const columns = [
   {
     title: "Product",
     links: [
-      { label: "Features", href: "#features" },
-      { label: "Pricing", href: "#" },
+      { label: "How it works", href: "#how" },
+      { label: "Inside a run", href: "#product" },
+      { label: "Pricing", href: "#pricing" },
       { label: "Changelog", href: "#" },
-      { label: "Roadmap", href: "#" },
     ],
   },
   {
     title: "Resources",
     links: [
       { label: "Documentation", href: "#" },
-      { label: "API reference", href: "#" },
-      { label: "Guides", href: "#" },
+      { label: "Self-hosting", href: "#" },
+      { label: "FAQ", href: "#faq" },
       { label: "Status", href: "#" },
     ],
   },
@@ -58,8 +58,8 @@ const socials = [
 const year = new Date().getFullYear();
 ---
 
-<footer class="relative mt-32 overflow-hidden border-t border-border-soft">
-  <div class="relative z-10 pt-16">
+<footer class="relative overflow-hidden border-t border-border-soft bg-bg-elev/50">
+  <div class="shell relative z-10 pt-16">
     <!-- top: brand + navigation -->
     <div class="grid gap-12 lg:grid-cols-[1.5fr_2fr]">
       <!-- brand -->
@@ -70,13 +70,14 @@ const year = new Date().getFullYear();
           >
         </a>
         <p class="mt-4 text-[15px] leading-[1.55] text-fg-muted">
-          Many models enter, one PR wins. Connect your repo and review
-          perfection instead of writing boilerplate.
+          A message at midnight, a reviewed pull request by morning. Your
+          clients describe features, frontier models build them, your engineers
+          approve them.
         </p>
 
         <div class="mt-6">
           <Button
-            text="Connect Repository"
+            text="Connect your repo"
             variant="primary"
             size="sm"
             href="#"
@@ -110,7 +111,7 @@ const year = new Date().getFullYear();
         {
           columns.map((col) => (
             <nav class="flex flex-col">
-              <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-fg-faint">
+              <span class="font-mono text-[11px] text-fg-faint">
                 {col.title}
               </span>
               <ul class="mt-4 flex flex-col gap-3">
@@ -162,7 +163,7 @@ const year = new Date().getFullYear();
             ></span>
           </span>
           <span
-            class="font-mono text-[10px] uppercase tracking-[0.1em] text-fg-muted"
+            class="font-mono text-[11px] text-fg-muted"
             >All systems operational</span
           >
         </span>
@@ -171,9 +172,9 @@ const year = new Date().getFullYear();
   </div>
 
   <!-- oversized wordmark watermark -->
-  <div aria-hidden="true" class="pointer-events-none relative select-none">
+  <div aria-hidden="true" class="pointer-events-none relative select-none px-4">
     <span
-      class="-mb-[2.5vw] block bg-linear-to-b from-fg/[0.08] to-transparent bg-clip-text text-center text-[20vw] font-semibold leading-[0.8] tracking-[-0.05em] text-transparent"
+      class="-mb-[1.2vw] block bg-linear-to-b from-fg/[0.055] to-transparent bg-clip-text text-center text-[20vw] font-semibold leading-[0.8] tracking-[-0.05em] text-transparent"
     >
       DevAgents
     </span>

@@ -1,0 +1,122 @@
+---
+import Button from "@components/Button2.astro";
+import LineArt from "@components/LineArt.astro";
+
+const rails = [
+  {
+    art: "approval" as const,
+    title: "It never merges itself",
+    body: "Approval is a human action, always. The agent can open, update and explain a pull request — it cannot land one.",
+  },
+  {
+    art: "ci" as const,
+    title: "Your CI is the referee",
+    body: "Attempts are judged by your own tests, types and linters running in your pipeline — not by a model's opinion of its own work.",
+  },
+  {
+    art: "branches" as const,
+    title: "Isolated, disposable environments",
+    body: "Every attempt gets a throwaway branch and sandbox. Nothing shares state, and nothing ever touches production.",
+  },
+  {
+    art: "keys" as const,
+    title: "Secrets stay where they are",
+    body: "Bring your own model keys, scope the repository access you grant, or run the entire pipeline inside your own infrastructure.",
+  },
+  {
+    art: "audit" as const,
+    title: "Every run is auditable",
+    body: "The spec, each attempt, each score, each rejected hunk and who approved what — all kept, all exportable.",
+  },
+  {
+    art: "sealed" as const,
+    title: "Your code is not training data",
+    body: "Repositories are used to implement your request and nothing else. No training, no cross-customer context, no retention you didn't ask for.",
+  },
+];
+---
+
+<section id="guardrails" class="relative scroll-mt-24 overflow-hidden border-t border-border-soft">
+  <!-- header field -->
+  <div class="relative py-20 sm:py-24">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+      <div
+        class="absolute inset-0 opacity-[0.55]"
+        style="background-image:linear-gradient(var(--color-border-soft) 1px,transparent 1px),linear-gradient(90deg,var(--color-border-soft) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(80% 70% at 70% 30%,#000,transparent 75%);-webkit-mask-image:radial-gradient(80% 70% at 70% 30%,#000,transparent 75%)"
+      >
+      </div>
+      <div
+        class="absolute -left-40 top-1/2 size-[38rem] -translate-y-1/2 rounded-full border border-border-soft opacity-70"
+      >
+      </div>
+      <div
+        class="absolute -left-24 top-1/2 size-[26rem] -translate-y-1/2 rounded-full border border-border-soft opacity-60"
+      >
+      </div>
+      <div
+        class="absolute -left-6 top-1/2 size-[15rem] -translate-y-1/2 rounded-full opacity-70 blur-2xl"
+        style="background:radial-gradient(closest-side,rgba(28,140,228,0.16),transparent)"
+      >
+      </div>
+    </div>
+
+    <div class="shell">
+      <h2
+        data-reveal
+        class="max-w-3xl text-balance text-[clamp(2.1rem,4.6vw,3.6rem)] font-medium leading-[1.03] tracking-[-0.04em]"
+      >
+        Safety, permissions, and control<span class="text-fg-faint">—</span>by
+        <span class="italic font-normal text-acc">design</span>
+      </h2>
+
+      <p data-reveal class="mt-5 max-w-xl text-[16.5px] leading-[1.6] text-fg-muted">
+        Letting models write production code is easy. Making it safe enough for
+        the team that has to support it on Monday is the actual product.
+      </p>
+
+      <div data-reveal class="mt-8 flex flex-wrap items-center gap-3">
+        <Button text="Read the security docs" variant="primary" size="md" href="#" />
+        <Button text="Talk to us" variant="outline" size="md" href="#" />
+      </div>
+    </div>
+  </div>
+
+  <!-- grid -->
+  <div class="shell pb-24 sm:pb-28">
+    <div
+      class="grid gap-px overflow-hidden rounded-2xl border border-border-soft bg-border-soft sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {
+        rails.map((r) => (
+          <article
+            data-reveal
+            class="group flex flex-col bg-bg p-7 transition-colors duration-300 hover:bg-bg-elev sm:p-9"
+          >
+            <div class="grid min-h-52 place-items-center py-8">
+              <LineArt
+                name={r.art}
+                class="size-30 text-fg-faint transition-colors duration-300 group-hover:text-acc"
+              />
+            </div>
+
+            <h3 class="mt-2 text-[17px] font-medium leading-snug tracking-[-0.01em] text-fg">
+              {r.title}
+            </h3>
+            <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">{r.body}</p>
+          </article>
+        ))
+      }
+    </div>
+
+    <p
+      data-reveal
+      class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-fg-faint"
+    >
+      <span>Self-hosted deployment available</span>
+      <span class="text-border-strong">/</span>
+      <span>Bring your own model keys</span>
+      <span class="text-border-strong">/</span>
+      <span>SSO &amp; audit export on Enterprise</span>
+    </p>
+  </div>
+</section>

@@ -1,0 +1,156 @@
+---
+import Button from "@components/Button2.astro";
+import Icon from "@components/Icon.astro";
+import LineArt from "@components/LineArt.astro";
+
+const chips = [
+  { label: "GitHub", icon: "issue" as const },
+  { label: "GitLab", icon: "branch" as const },
+  { label: "WhatsApp", icon: "chat" as const },
+  { label: "Slack", icon: "hash" as const },
+  { label: "Linear", icon: "zap" as const },
+  { label: "Your CI", icon: "cpu" as const },
+  { label: "Preview hosting", icon: "globe" as const },
+  { label: "BYO model keys", icon: "lock" as const },
+];
+---
+
+<section class="relative overflow-hidden border-t border-border-soft py-24 sm:py-28">
+  <div class="shell">
+    <p
+      data-reveal
+      class="font-mono text-[10.5px] font-medium uppercase tracking-[0.18em] text-fg-faint"
+    >
+      One workflow
+    </p>
+
+    <div class="mt-4 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+      <h2
+        data-reveal
+        class="max-w-2xl text-balance text-[clamp(2.1rem,4.4vw,3.4rem)] font-medium leading-[1.03] tracking-[-0.04em]"
+      >
+        It drops into the stack<br class="hidden sm:block" />
+        <span class="italic font-normal text-acc">you already ship with</span>
+      </h2>
+
+      <div data-reveal class="flex flex-wrap items-center gap-3">
+        <Button text="See the integrations" variant="primary" size="md" href="#" />
+        <Button text="Read the docs" variant="outline" size="md" href="#" />
+      </div>
+    </div>
+
+    <!-- wide card -->
+    <div
+      data-reveal
+      class="mt-12 overflow-hidden rounded-2xl border border-border-soft bg-bg-elev"
+    >
+      <div class="grid items-center gap-10 p-7 sm:p-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div>
+          <h3 class="text-[19px] font-medium tracking-[-0.015em] text-fg">
+            No new place for your team to live
+          </h3>
+          <p class="mt-3 max-w-md text-[14.5px] leading-[1.6] text-fg-muted">
+            Requests arrive where your clients already talk. Work happens in your
+            repository, on your CI, behind your branch protection. The only new
+            surface is the run page — and even that links straight back to the PR.
+          </p>
+
+          <ul class="mt-6 space-y-2.5">
+            {
+              [
+                "No migration, no new repo host, no proprietary format",
+                "Works alongside the agents your engineers already run",
+                "Turn it off and every merged commit stays exactly where it is",
+              ].map((line) => (
+                <li class="flex gap-2.5 text-[14px] leading-[1.5] text-fg-muted">
+                  <Icon name="check" class="mt-0.5 size-3.5 shrink-0 text-acc" stroke={2.4} />
+                  {line}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="relative">
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0 -m-4 opacity-60"
+            style="background-image:linear-gradient(var(--color-border-soft) 1px,transparent 1px),linear-gradient(90deg,var(--color-border-soft) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent 78%);-webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent 78%)"
+          >
+          </div>
+
+          <div class="relative flex flex-wrap justify-center gap-2.5">
+            {
+              chips.map((chip) => (
+                <span class="inline-flex items-center gap-2 rounded-lg border border-border-soft bg-bg px-3 py-2 text-[13px] font-medium text-fg transition-colors hover:border-acc/40 hover:bg-acc-wash">
+                  <Icon name={chip.icon} class="size-4 text-acc" stroke={1.6} />
+                  {chip.label}
+                </span>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- two cards -->
+    <div class="mt-5 grid gap-5 lg:grid-cols-2">
+      <article
+        data-reveal
+        class="group overflow-hidden rounded-2xl border border-border-soft bg-bg-elev p-7 sm:p-9"
+      >
+        <div class="relative overflow-hidden rounded-xl border border-border-soft bg-bg-sunk">
+          <div
+            class="flex items-center justify-between border-b border-border-soft px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+          >
+            <span>devagents.yml</span><span>repo root</span>
+          </div>
+          <pre class="overflow-x-auto px-4 py-4 font-mono text-[11.5px] leading-[1.8] text-fg-muted"><code><span class="text-fg-faint">models:</span> [claude, gpt-5, gemini, grok]
+<span class="text-fg-faint">gate:</span>   bun test && bun run typecheck
+<span class="text-fg-faint">merge:</span>  <span class="text-acc">requires_human_approval</span>
+<span class="text-fg-faint">touch:</span>  ["src/**"] <span class="text-fg-faint"># never migrations</span></code></pre>
+        </div>
+
+        <h3 class="mt-6 text-[17px] font-medium tracking-[-0.01em] text-fg">
+          Your conventions, enforced
+        </h3>
+        <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+          One file in the repo decides which models run, what has to pass, which
+          paths are off-limits, and who is allowed to approve.
+        </p>
+      </article>
+
+      <article
+        data-reveal
+        class="group overflow-hidden rounded-2xl border border-border-soft bg-bg-elev p-7 sm:p-9"
+      >
+        <div
+          class="relative grid min-h-[11.5rem] place-items-center overflow-hidden rounded-xl border border-border-soft bg-bg-sunk"
+        >
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0 opacity-70"
+            style="background:radial-gradient(80% 70% at 50% 0%,rgba(28,140,228,0.14),transparent 70%)"
+          >
+          </div>
+          <LineArt name="preview" class="relative size-28 text-fg-faint" />
+          <span
+            class="absolute bottom-4 inline-flex items-center gap-2 rounded-md border border-border-soft bg-bg-elev px-2.5 py-1.5 font-mono text-[10px] text-fg-muted"
+          >
+            <Icon name="globe" class="size-3 text-acc" stroke={1.8} />
+            preview-4821.devagents.app
+          </span>
+        </div>
+
+        <h3 class="mt-6 text-[17px] font-medium tracking-[-0.01em] text-fg">
+          Previews without friction
+        </h3>
+        <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+          Every run deploys its branch to a disposable environment and links it on
+          the PR, so the person who asked for the feature can try it before anyone
+          reviews a line.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>

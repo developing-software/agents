@@ -1,0 +1,41 @@
+---
+/** The synthesized pull request, as a diff. */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const lines = [
+  ["ctx", "async function invoicePdf(id) {"],
+  ["del", "  return null // TODO"],
+  ["add", "  const inv = await db.find(id)"],
+  ["add", "  return render(Receipt, inv)"],
+  ["ctx", "}"],
+] as const;
+
+const tone = {
+  add: "bg-ok-wash text-ok",
+  del: "bg-err-wash text-err",
+  ctx: "text-fg-faint",
+};
+const sign = { add: "+", del: "−", ctx: " " };
+---
+
+<div class:list={["overflow-hidden", className]}>
+  <div
+    class="flex items-baseline gap-2 border-b border-border-soft pb-2 font-mono text-[10.5px]"
+  >
+    <span class="text-fg">lib/pdf/invoice.ts</span>
+    <span class="text-ok">+148</span>
+    <span class="text-err">−12</span>
+  </div>
+
+  <pre class="overflow-x-auto pt-2 font-mono text-[11px] leading-[1.75]">{
+    lines.map(([kind, text]) => (
+      <div class:list={["flex gap-2 px-1", tone[kind]]}>
+        <span class="select-none opacity-70">{sign[kind]}</span>
+        <span>{text}</span>
+      </div>
+    ))
+  }</pre>
+</div>

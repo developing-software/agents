@@ -1,0 +1,39 @@
+---
+/** An incoming request as it actually arrives: a chat thread. */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<div class:list={["flex flex-col gap-2.5", className]}>
+  <div class="flex items-center gap-2 pb-1">
+    <span class="size-5 rounded-full bg-acc-deep/15 text-center text-[10px] leading-5 text-acc-deep"
+      >M</span
+    >
+    <span class="text-[12px] font-medium text-fg">Marina — Acme</span>
+    <span class="ml-auto font-mono text-[10.5px] text-fg-faint">23:41</span>
+  </div>
+
+  <p
+    class="max-w-[19rem] self-start rounded-xl rounded-bl-sm border border-border-soft bg-bg-elev px-3.5 py-2.5 text-[13px] leading-[1.5] text-fg"
+  >
+    the invoice page needs a download button, pdf like the receipts
+  </p>
+
+  <p
+    class="max-w-[17rem] self-end rounded-xl rounded-br-sm bg-fg px-3.5 py-2.5 text-[13px] leading-[1.5] text-bg"
+  >
+    Same filename convention as receipts?
+  </p>
+
+  <p
+    class="max-w-[10rem] self-start rounded-xl rounded-bl-sm border border-border-soft bg-bg-elev px-3.5 py-2.5 text-[13px] leading-[1.5] text-fg"
+  >
+    yes exactly
+  </p>
+
+  <p class="mt-1 font-mono text-[10.5px] text-fg-faint">
+    spec locked · 2 files in scope
+  </p>
+</div>

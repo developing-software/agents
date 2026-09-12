@@ -1,0 +1,39 @@
+---
+/** The disposable environment, linked on the PR. */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<div
+  class:list={[
+    "overflow-hidden rounded-md border border-border-soft bg-bg-elev",
+    className,
+  ]}
+>
+  <div class="flex items-center gap-2 border-b border-border-soft px-3 py-2">
+    <span class="size-1.5 rounded-full bg-base-300"></span>
+    <span class="size-1.5 rounded-full bg-base-300"></span>
+    <span
+      class="ml-1 flex-1 truncate rounded bg-base-100 px-2 py-1 font-mono text-[9.5px] text-fg-faint"
+      >preview-4821.devagents.app</span
+    >
+  </div>
+
+  <!-- a miniature of the page the client asked for -->
+  <div class="p-3">
+    <div class="flex items-center justify-between">
+      <span class="text-[10.5px] font-medium text-fg">Invoice #2032</span>
+      <span
+        class="rounded bg-fg px-2 py-1 text-[8.5px] font-medium text-bg"
+        >Download PDF</span
+      >
+    </div>
+    <div class="mt-2.5 space-y-1.5">
+      <span class="block h-1.5 w-full rounded-full bg-base-100"></span>
+      <span class="block h-1.5 w-4/5 rounded-full bg-base-100"></span>
+      <span class="block h-1.5 w-2/3 rounded-full bg-base-100"></span>
+    </div>
+  </div>
+</div>

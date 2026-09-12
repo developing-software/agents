@@ -1,0 +1,55 @@
+---
+/**
+ * Asymmetric section header, after Linear: a mono index row on its own rule,
+ * then the title on the left with the supporting line set against it on the
+ * right. No eyebrow pill, no accent-coloured phrase inside the heading.
+ */
+interface Props {
+  index?: string;
+  label?: string;
+  title: string;
+  sub?: string;
+  class?: string;
+}
+
+const { index, label, title, sub, class: className = "" } = Astro.props;
+---
+
+<div class:list={["", className]}>
+  {
+    (index || label) && (
+      <p
+        data-reveal
+        class="flex items-center gap-3 border-b border-border-soft pb-4 font-mono text-[11px] text-fg-faint"
+      >
+        {index && <span class="tabular-nums">{index}</span>}
+        {label && <span class="text-fg-muted">{label}</span>}
+      </p>
+    )
+  }
+
+  <div
+    class:list={[
+      "grid gap-x-16 gap-y-5 lg:grid-cols-2",
+      index || label ? "pt-8" : "",
+    ]}
+  >
+    <h2
+      data-reveal
+      class="text-balance text-[clamp(1.75rem,3.1vw,2.45rem)] font-medium leading-[1.08] tracking-[-0.03em] text-fg"
+    >
+      {title}
+    </h2>
+
+    {
+      sub && (
+        <p
+          data-reveal
+          class="max-w-xl text-pretty text-[15px] leading-[1.65] text-fg-muted lg:pt-1"
+        >
+          {sub}
+        </p>
+      )
+    }
+  </div>
+</div>

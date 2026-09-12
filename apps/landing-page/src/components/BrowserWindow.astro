@@ -12,7 +12,7 @@ const {
   url,
   dots = "mono",
   class: className = "",
-  contentClass = "",
+  contentClass = "flex min-h-48 items-center justify-center p-2",
 } = Astro.props;
 
 const dotColors =
@@ -47,7 +47,7 @@ const dotColors =
   </div>
 
   <div
-    class={`flex min-h-48 items-center justify-center p-2 text-sm text-fg-muted ${contentClass}`}
+    class={`text-sm text-fg-muted ${contentClass}`}
   >
     <slot>Hello!</slot>
   </div>

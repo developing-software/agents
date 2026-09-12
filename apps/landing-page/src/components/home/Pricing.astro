@@ -1,0 +1,130 @@
+---
+import Button from "@components/Button2.astro";
+import SectionHead from "@components/SectionHead.astro";
+
+const plans = [
+  {
+    name: "Solo",
+    price: "$0",
+    unit: "forever",
+    pitch: "For one repo and the occasional late-night idea.",
+    cta: "Start free",
+    features: [
+      "1 repository",
+      "5 runs per month",
+      "2 models per run",
+      "GitHub issue intake",
+      "Preview deploys",
+      "Community support",
+    ],
+  },
+  {
+    name: "Studio",
+    price: "$399",
+    unit: "per month",
+    pitch: "For teams and agencies shipping client work every week.",
+    cta: "Connect your repo",
+    featured: true,
+    features: [
+      "10 repositories",
+      "100 runs per month",
+      "4 models per run",
+      "WhatsApp, Slack & Linear intake",
+      "Ephemeral preview environments",
+      "Client-facing run status page",
+      "Priority queue",
+    ],
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    unit: "annual",
+    pitch: "For codebases with compliance attached to them.",
+    cta: "Talk to us",
+    features: [
+      "Self-hosted or private cloud",
+      "Bring your own model keys",
+      "SSO / SAML & audit export",
+      "Custom gates and merge policies",
+      "Unlimited repositories",
+      "SLA + shared Slack channel",
+    ],
+  },
+];
+---
+
+<section
+  id="pricing"
+  class="scroll-mt-24 border-t border-border-soft py-28 sm:py-36"
+>
+  <div class="shell">
+    <SectionHead
+      index="05"
+      label="Pricing"
+      title="Priced per run, not per seat you'll never fill."
+      sub="A run is one request, start to finish: spec, every attempt, the synthesis, the preview and the PR."
+    />
+
+    <!-- Columns on hairlines. No featured card, no ring, no glow — the
+         recommended plan is marked by its solid button alone. -->
+    <div class="mt-20 grid border-t border-border-soft lg:grid-cols-3">
+      {
+        plans.map((plan, i) => (
+          <div
+            data-reveal
+            class:list={[
+              "flex flex-col border-border-soft pt-7 pb-8",
+              i > 0 && "border-t lg:border-t-0 lg:border-l lg:pl-10",
+              i < 2 && "lg:pr-10",
+            ]}
+          >
+            <p class="flex items-baseline justify-between gap-4 font-mono text-[11px] text-fg-faint">
+              <span class="text-fg-muted">{plan.name}</span>
+              {plan.featured && <span>most teams</span>}
+            </p>
+
+            <p class="mt-8 flex items-baseline gap-2">
+              <span class="text-[clamp(2rem,3.2vw,2.6rem)] font-medium leading-none tracking-[-0.04em] text-fg">
+                {plan.price}
+              </span>
+              <span class="font-mono text-[11px] text-fg-faint">
+                {plan.unit}
+              </span>
+            </p>
+
+            <p class="mt-4 min-h-10 max-w-xs text-[14px] leading-[1.55] text-fg-muted">
+              {plan.pitch}
+            </p>
+
+            <div class="mt-7">
+              <Button
+                text={plan.cta}
+                variant={plan.featured ? "ink" : "outline"}
+                size="md"
+                href="#"
+                class="w-full"
+              />
+            </div>
+
+            <ul class="mt-8 border-t border-border-soft">
+              {plan.features.map((f) => (
+                <li class="border-b border-border-soft py-3 text-[14px] leading-normal text-fg-muted">
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+
+    <p
+      data-reveal
+      class="mt-8 flex flex-wrap gap-x-8 gap-y-2 font-mono text-[11px] text-fg-faint"
+    >
+      <span>Unused runs roll over</span>
+      <span>Failed runs aren't billed</span>
+      <span>Cancel anytime</span>
+    </p>
+  </div>
+</section>

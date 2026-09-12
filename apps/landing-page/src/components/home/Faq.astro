@@ -1,0 +1,96 @@
+---
+import Icon from "@components/Icon.astro";
+import SectionHead from "@components/SectionHead.astro";
+
+const faqs = [
+  {
+    q: "Does it really merge code without a human?",
+    a: "No. It opens, tests, explains and previews a pull request — approval and merge are always a human action. You can tighten that further with branch protection and path allowlists, but you can never loosen it into auto-merge.",
+  },
+  {
+    q: "What happens when the models get it wrong?",
+    a: "Most wrong attempts die at your CI before anyone sees them. If a synthesized PR is still wrong, you reject it with a normal review comment — that comment becomes the new spec, and the run restarts from it instead of starting over from scratch.",
+  },
+  {
+    q: "Which models does it use?",
+    a: "Frontier models from several vendors, and the set is configurable per repository. On Enterprise you bring your own keys, so requests go straight from your infrastructure to the providers you already have contracts with.",
+  },
+  {
+    q: "Isn't running four models on every issue expensive?",
+    a: "You choose the number of attempts per repo, and can scale it by priority — one model for a copy change, four for a feature. Attempts that fail your gate stop early, so you're not paying for a broken branch to finish.",
+  },
+  {
+    q: "Will it work on a large, old codebase?",
+    a: "That's the normal case. The intake agent indexes the repo and quotes real files back at you before implementing anything. You can restrict which paths runs are allowed to touch — migrations, infra and generated code are usually off-limits from day one.",
+  },
+  {
+    q: "How do preview environments get their secrets?",
+    a: "You provide a scoped preview environment: separate database, separate keys, no production credentials. The sandbox is destroyed with the branch, and previews are only reachable by people you've invited.",
+  },
+  {
+    q: "Can a non-technical client really trigger a run?",
+    a: "Yes — that's the point. Each person is mapped to the repositories they're allowed to request against, with their own limits. They describe the outcome in WhatsApp or Slack; the engineer still owns everything downstream of the spec.",
+  },
+  {
+    q: "What if we want to stop using it?",
+    a: "Everything it produces is ordinary git: branches, commits and pull requests in your own repository. Turn it off and the work you already merged stays exactly where it is.",
+  },
+];
+---
+
+<section class="relative border-t border-border-soft py-24 sm:py-28" id="faq">
+  <div class="shell">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
+      <div class="lg:sticky lg:top-28 lg:self-start">
+        <SectionHead
+          eyebrow="Questions"
+          title="The objections we get"
+          accent="most often."
+          align="left"
+        />
+        <p data-reveal class="mt-6 text-[15px] leading-[1.6] text-fg-muted">
+          Still unsure?
+          <a
+            href="#"
+            class="inline-flex items-center gap-1 font-medium text-acc underline-offset-4 hover:underline"
+          >
+            Book a 20-minute walkthrough
+            <Icon name="arrow-up-right" class="size-3.5" stroke={2} />
+          </a>
+        </p>
+      </div>
+
+      <div class="divide-y divide-border-soft border-y border-border-soft">
+        {
+          faqs.map((f) => (
+            <details class="faq group" name="faq">
+              <summary
+                class="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-left"
+              >
+                <span class="text-[16.5px] font-medium leading-snug tracking-[-0.01em] text-fg transition-colors group-hover:text-acc">
+                  {f.q}
+                </span>
+                <span class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border border-border-soft text-fg-faint transition-all duration-300 group-open:rotate-45 group-open:border-acc group-open:text-acc">
+                  <Icon name="plus" class="size-3" stroke={2} />
+                </span>
+              </summary>
+              <p class="answer max-w-2xl pb-6 pr-10 text-[14.5px] leading-[1.65] text-fg-muted">
+                {f.a}
+              </p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq[open] .answer {
+    animation: rise 0.45s var(--ease-out-quint) forwards;
+  }
+</style>

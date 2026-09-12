@@ -1,0 +1,35 @@
+---
+/** Your own CI, acting as the referee. */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const checks = [
+  ["bun test", "214 passed", true],
+  ["typecheck", "no errors", true],
+  ["lint", "clean", true],
+  ["migrations", "2 failed", false],
+] as const;
+---
+
+<div class:list={["flex flex-col", className]}>
+  {
+    checks.map(([name, detail, ok]) => (
+      <div class="flex items-center gap-2.5 border-b border-border-soft py-2.5 last:border-b-0">
+        <span
+          class:list={[
+            "grid size-4 shrink-0 place-items-center rounded-full text-[9px] leading-none",
+            ok ? "bg-ok-wash text-ok" : "bg-err-wash text-err",
+          ]}
+        >
+          {ok ? "✓" : "✕"}
+        </span>
+        <span class="font-mono text-[11px] text-fg">{name}</span>
+        <span class="ml-auto font-mono text-[10.5px] text-fg-faint">
+          {detail}
+        </span>
+      </div>
+    ))
+  }
+</div>
