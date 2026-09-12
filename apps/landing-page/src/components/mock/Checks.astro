@@ -6,24 +6,35 @@ interface Props {
 const { class: className = "" } = Astro.props;
 
 const checks = [
-  ["bun test", "214 passed", true],
-  ["typecheck", "no errors", true],
-  ["lint", "clean", true],
-  ["migrations", "2 failed", false],
+  ["Unit tests", "214 passed", true],
+  ["Type checks", "No errors", true],
+  ["Lint", "Clean", true],
+  ["Migrations", "Applied", true],
 ] as const;
 ---
 
 <div class:list={["flex flex-col", className]}>
   {
     checks.map(([name, detail, ok]) => (
-      <div class="flex items-center gap-2.5 border-b border-border-soft py-2.5 last:border-b-0">
+      <div class="flex items-center gap-2 border-b border-border-soft py-2 last:border-b-0">
         <span
           class:list={[
-            "grid size-4 shrink-0 place-items-center rounded-full text-[9px] leading-none",
+            "grid size-4 shrink-0 place-items-center rounded-full",
             ok ? "bg-ok-wash text-ok" : "bg-err-wash text-err",
           ]}
         >
-          {ok ? "✓" : "✕"}
+          <svg
+            viewBox="0 0 12 12"
+            class="size-2.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            {ok ? <path d="m2.5 6.3 2.4 2.4 4.6-5" /> : <path d="M3 3l6 6M9 3l-6 6" />}
+          </svg>
         </span>
         <span class="font-mono text-[11px] text-fg">{name}</span>
         <span class="ml-auto font-mono text-[10.5px] text-fg-faint">
