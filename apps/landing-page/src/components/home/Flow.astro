@@ -1,0 +1,533 @@
+---
+import SectionHead from "@components/SectionHead.astro";
+import Icon from "@components/Icon.astro";
+import Wire from "./Wire.astro";
+
+const card = "relative w-full rounded-lg border border-border-soft bg-bg-elev";
+
+const plan = [
+  "Add /api/invoices/:id/pdf",
+  "Render the receipt template",
+  "Wire the download button",
+  "Cover the empty state",
+];
+
+const agents = [
+  {
+    name: "claude",
+    logo: "/ai/claude.svg",
+    branch: "run/4821-a",
+    pct: 100,
+    done: true,
+  },
+  {
+    name: "gpt-5",
+    logo: "/ai/openai.svg",
+    branch: "run/4821-b",
+    pct: 100,
+    done: true,
+  },
+  {
+    name: "gemini",
+    logo: "/ai/gemini.svg",
+    branch: "run/4821-c",
+    pct: 74,
+    done: false,
+  },
+  {
+    name: "grok",
+    logo: "/ai/grok.svg",
+    branch: "run/4821-d",
+    pct: 48,
+    done: false,
+  },
+];
+
+const hunks = [
+  { file: "lib/pdf/invoice.ts", from: "claude", logo: "/ai/claude.svg" },
+  { file: "app/billing/page.tsx", from: "gpt-5", logo: "/ai/openai.svg" },
+  { file: "tests/invoice.test.ts", from: "claude", logo: "/ai/claude.svg" },
+];
+
+const invoices = [
+  ["#2032", "Mar 2026", "$1,240"],
+  ["#2031", "Feb 2026", "$980"],
+  ["#2030", "Jan 2026", "$1,110"],
+] as const;
+---
+
+<section
+  id="how"
+  class="scroll-mt-24 border-t border-border-soft py-24 sm:py-28"
+>
+  <div class="shell">
+    <SectionHead
+      title="What happens between the ask"
+      accent="and the merge"
+      sub="Six steps, identical on every run. You only have to show up for the last one."
+    />
+
+    <div class="mt-14 grid gap-5 lg:grid-cols-3">
+      <div data-reveal class="relative z-20 flex flex-col gap-5">
+        <div
+          class="relative flex flex-1 flex-col items-center justify-center rounded-2xl border border-border-soft bg-bg-card-strong px-6 py-11 sm:px-8"
+        >
+          <div class="flex w-full max-w-[20rem] flex-col items-center">
+            <div class="relative w-full">
+              <span
+                aria-hidden="true"
+                class="absolute -top-2.5 inset-x-5 h-5 rounded-t-lg border border-b-0 border-border-soft bg-bg-elev/55"
+              ></span>
+              <span
+                aria-hidden="true"
+                class="absolute -top-1.5 inset-x-2.5 h-5 rounded-t-lg border border-b-0 border-border-soft bg-bg-elev/80"
+              ></span>
+
+              <div class={card}>
+                <div class="flex items-start gap-2.5 px-3 py-3">
+                  <img
+                    src="/brands/whatsapp-svgrepo-com.svg"
+                    alt=""
+                    width="20"
+                    height="20"
+                    loading="lazy"
+                    class="mt-px size-5 shrink-0"
+                  />
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-baseline gap-2">
+                      <span class="truncate text-[12px] font-medium text-fg"
+                        >Your Customer</span
+                      >
+                      <span
+                        class="ml-auto shrink-0 font-mono text-[9.5px] text-fg-faint"
+                        >Just now</span
+                      >
+                    </span>
+                    <span
+                      class="mt-1 block text-[11.5px] leading-[1.45] text-fg-muted"
+                      >“Can you add a download button to the customer invoices?”</span
+                    >
+                  </span>
+                </div>
+
+                <div
+                  class="flex items-center gap-2 border-t border-border-soft px-3 py-2"
+                >
+                  <span
+                    class="font-mono text-[9px] uppercase tracking-[0.14em] text-fg-faint"
+                    >also from</span
+                  >
+                  <img
+                    src="/brands/GitHub_Invertocat_Black.svg"
+                    alt="GitHub"
+                    width="13"
+                    height="13"
+                    loading="lazy"
+                    class="size-3.5 opacity-55"
+                  />
+                  <img
+                    src="/brands/gitlab-logo-500-rgb.svg"
+                    alt="GitLab"
+                    width="13"
+                    height="13"
+                    loading="lazy"
+                    class="size-3.5 opacity-75"
+                  />
+                  <Icon
+                    name="layers"
+                    class="size-3.5 text-fg-faint"
+                    stroke={1.7}
+                  />
+                  <span class="ml-auto font-mono text-[9px] text-fg-faint"
+                    >any channel</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <Wire>
+              <Icon name="spark" class="size-3" stroke={1.7} /> Plan drafted
+            </Wire>
+
+            <!-- one agent reads the repo and writes the spec -->
+            <div class={card}>
+              <div
+                class="flex items-center gap-2 rounded-t-lg border-b border-border-soft bg-bg-sunk px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+              >
+                <span>Plan · run 4821</span>
+                <span class="ml-auto normal-case tracking-normal">4 steps</span>
+              </div>
+
+              <div class="px-3 py-2">
+                {
+                  plan.map((line, i) => (
+                    <div class="flex items-center gap-2 border-b border-border-soft py-1.5 last:border-b-0">
+                      <span class="w-3.5 shrink-0 font-mono text-[9.5px] text-fg-faint">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span class="truncate font-mono text-[10.5px] text-fg-muted">
+                        {line}
+                      </span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+
+          <span aria-hidden="true" class="hop">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                d="M1.5 6h8M6.2 2.6 9.8 6l-3.6 3.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </div>
+
+        <div class="lg:min-h-36">
+          <!-- <span
+            class="inline-flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.18em] text-fg-faint"
+          >
+            <span class="inline-block h-px w-5 bg-acc"></span>01 · Intake
+          </span> -->
+          <h3
+            class="mt-3 text-balance text-[18px] font-medium leading-snug tracking-[-0.015em] text-fg"
+          >
+            The ask lands where your client already is
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+            WhatsApp, a GitHub issue, your own app. One agent reads the
+            repository first and turns the sentence into a plan.
+          </p>
+        </div>
+      </div>
+
+      <!-- ——— 02 · arena ———————————————————————————— -->
+      <div data-reveal class="relative z-10 flex flex-col gap-5">
+        <div
+          class="relative flex flex-1 flex-col items-center justify-center rounded-2xl border border-border-soft bg-bg-card-strong px-6 py-11 sm:px-8"
+        >
+          <div class="flex w-full max-w-[20rem] flex-col items-center">
+            <!-- N models, same plan, isolated branches -->
+            <div class={card}>
+              <div
+                class="flex items-center gap-2 rounded-t-lg border-b border-border-soft bg-bg-sunk px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+              >
+                <span>4 agents · same plan</span>
+                <span class="ml-auto normal-case tracking-normal">isolated</span
+                >
+              </div>
+
+              <div class="px-3 py-2">
+                {
+                  agents.map((a) => (
+                    <div class="flex items-center gap-2 border-b border-border-soft py-1.75 last:border-b-0">
+                      <img
+                        src={a.logo}
+                        alt=""
+                        width="14"
+                        height="14"
+                        loading="lazy"
+                        class="size-3.5 shrink-0"
+                      />
+                      <span class="w-12 shrink-0 font-mono text-[10.5px] text-fg">
+                        {a.name}
+                      </span>
+                      <span class="h-1 flex-1 overflow-hidden rounded-full bg-base-100">
+                        <span
+                          class:list={[
+                            "block h-full rounded-full",
+                            a.done ? "bg-ok" : "bg-acc",
+                          ]}
+                          style={`width:${a.pct}%`}
+                        />
+                      </span>
+                      <span class="shrink-0 font-mono text-[9px] text-fg-faint">
+                        {a.branch}
+                      </span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+
+            <Wire>
+              <Icon name="merge" class="size-3" stroke={1.7} /> Best parts merged
+            </Wire>
+
+            <!-- the judge keeps the strongest hunk from each attempt -->
+            <div class={card}>
+              <div
+                class="flex items-center gap-2 rounded-t-lg border-b border-border-soft bg-bg-sunk px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+              >
+                <span>Judge · synthesis</span>
+                <span class="ml-auto normal-case tracking-normal">#128</span>
+              </div>
+
+              <div class="px-3 py-2">
+                {
+                  hunks.map((h) => (
+                    <div class="flex items-center gap-2 border-b border-border-soft py-1.75 last:border-b-0">
+                      <span class="grid size-3.5 shrink-0 place-items-center rounded-full bg-ok-wash text-ok">
+                        <svg
+                          viewBox="0 0 12 12"
+                          class="size-2"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="m2.5 6.3 2.4 2.4 4.6-5" />
+                        </svg>
+                      </span>
+                      <span class="min-w-0 flex-1 truncate font-mono text-[10.5px] text-fg-muted">
+                        {h.file}
+                      </span>
+                      <span class="inline-flex shrink-0 items-center gap-1 rounded bg-base-100 px-1.5 py-0.5">
+                        <img
+                          src={h.logo}
+                          alt=""
+                          width="10"
+                          height="10"
+                          loading="lazy"
+                          class="size-2.5"
+                        />
+                        <span class="font-mono text-[9px] text-fg-muted">
+                          {h.from}
+                        </span>
+                      </span>
+                    </div>
+                  ))
+                }
+              </div>
+
+              <div
+                class="flex items-baseline gap-2 border-t border-border-soft px-3 py-2 font-mono text-[10px]"
+              >
+                <span class="text-fg">one pull request</span>
+                <span class="ml-auto text-ok">+148</span>
+                <span class="text-err">−12</span>
+              </div>
+            </div>
+          </div>
+
+          <span aria-hidden="true" class="hop">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                d="M1.5 6h8M6.2 2.6 9.8 6l-3.6 3.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </div>
+
+        <div class="lg:min-h-36">
+          <!-- <span
+            class="inline-flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.18em] text-fg-faint"
+          >
+            <span class="inline-block h-px w-5 bg-acc"></span>02 · Arena
+          </span> -->
+          <h3
+            class="mt-3 text-balance text-[18px] font-medium leading-snug tracking-[-0.015em] text-fg"
+          >
+            Four agents build it, one judge keeps the best
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+            Same plan, isolated branches, no sight of each other. The judge
+            takes the strongest work from each and writes a single diff.
+          </p>
+        </div>
+      </div>
+
+      <!-- ——— 03 · ship ————————————————————————————— -->
+      <div data-reveal class="flex flex-col gap-5">
+        <div
+          class="relative flex flex-1 flex-col items-center justify-center rounded-2xl border border-border-soft bg-bg-card-strong px-6 py-11 sm:px-8"
+        >
+          <div class="flex w-full max-w-[20rem] flex-col items-center">
+            <!-- the branch, deployed and clickable -->
+            <div class={card}>
+              <div
+                class="flex items-center gap-1.5 rounded-t-lg border-b border-border-soft bg-bg-sunk px-2.5 py-1.5"
+              >
+                <span class="size-1.5 rounded-full bg-base-300"></span>
+                <span class="size-1.5 rounded-full bg-base-300"></span>
+                <span class="size-1.5 rounded-full bg-base-300"></span>
+                <span
+                  class="ml-1 min-w-0 flex-1 truncate rounded bg-base-100 px-2 py-0.5 font-mono text-[9.5px] text-fg-faint"
+                  >preview-4821.devagents.app</span
+                >
+                <span
+                  class="flex shrink-0 items-center gap-1 font-mono text-[9px] text-ok"
+                >
+                  <span class="size-1.5 animate-pulse rounded-full bg-ok"
+                  ></span>live
+                </span>
+              </div>
+
+              <div class="px-3 py-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11.5px] font-medium text-fg"
+                    >Customer Invoices</span
+                  >
+                  <span
+                    class="ml-auto inline-flex shrink-0 items-center gap-1 rounded bg-fg px-2 py-1 text-[9.5px] font-medium text-bg"
+                  >
+                    <svg
+                      viewBox="0 0 10 10"
+                      class="size-2.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                    >
+                      <path
+                        d="M5 1v5.5M2.6 4.4 5 6.8l2.4-2.4M1.6 8.6h6.8"
+                        stroke-linecap="round"></path>
+                    </svg>
+                    Download
+                  </span>
+                </div>
+
+                <div class="mt-2">
+                  {
+                    invoices.map(([id, when, total]) => (
+                      <div class="flex items-center gap-2 border-t border-border-soft py-1.75 font-mono text-[10px]">
+                        <span class="text-fg-muted">{id}</span>
+                        <span class="ml-auto text-fg-faint">{when}</span>
+                        <span class="w-11 shrink-0 text-right text-fg">
+                          {total}
+                        </span>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+
+            <Wire>
+              <Icon name="eye" class="size-3" stroke={1.7} /> Approved by you
+            </Wire>
+
+            <!-- a human signs it off, then it ships -->
+            <div class={card}>
+              <div class="flex items-center gap-2.5 px-3 py-2.5">
+                <span
+                  class="grid size-6 shrink-0 place-items-center rounded-full bg-acc-wash text-acc"
+                >
+                  <Icon name="check" class="size-3" stroke={2.4} />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[12px] font-medium text-fg"
+                    >You approved the preview</span
+                  >
+                  <span class="block font-mono text-[9.5px] text-fg-faint"
+                    >after clicking it yourself</span
+                  >
+                </span>
+                <span class="shrink-0 font-mono text-[9.5px] text-fg-faint"
+                  >23:31</span
+                >
+              </div>
+
+              <div
+                class="flex items-center gap-2 border-t border-border-soft px-3 py-2.5"
+              >
+                <Icon
+                  name="merge"
+                  class="size-3.5 shrink-0 text-acc"
+                  stroke={1.8}
+                />
+                <span class="truncate font-mono text-[10.5px] text-fg-muted"
+                  >Merged into main · #128</span
+                >
+                <span
+                  class="ml-auto shrink-0 rounded bg-ok-wash px-1.5 py-0.5 font-mono text-[9px] font-medium text-ok"
+                  >shipped</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:min-h-36">
+          <!-- <span
+            class="inline-flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.18em] text-fg-faint"
+          >
+            <span class="inline-block h-px w-5 bg-acc"></span>03 · Ship
+          </span> -->
+          <h3
+            class="mt-3 text-balance text-[18px] font-medium leading-snug tracking-[-0.015em] text-fg"
+          >
+            You get a link, and the last word
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+            Every run deploys a live preview onto the pull request. Nothing
+            reaches main until a human approves it.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* the step-to-step arrow, only where the panels sit side by side */
+  .hop {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .hop {
+      position: absolute;
+      /* centred in the gap-5 gutter, not on the panel edge */
+      right: -0.625rem;
+      top: 50%;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      transform: translate(50%, -50%);
+      border-radius: 9999px;
+      background: var(--color-acc);
+      color: var(--color-bg);
+      /* box-shadow: 0 0 0 4px var(--color-bg); */
+    }
+  }
+
+  @keyframes hop-nudge {
+    0%,
+    100% {
+      transform: translateX(-1px);
+    }
+    50% {
+      transform: translateX(1.5px);
+    }
+  }
+
+  .hop svg {
+    animation: hop-nudge 1.8s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hop svg {
+      animation: none;
+    }
+  }
+</style>
