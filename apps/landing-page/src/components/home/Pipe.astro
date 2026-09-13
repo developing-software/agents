@@ -1,0 +1,130 @@
+---
+/**
+ * A hairline connector with an arrowhead and a single spark travelling along
+ * it. Paths that fan out or converge share one SVG so they read as one joint.
+ */
+interface Segment {
+  d: string;
+  /** A branch that was cut off: hairline only, nothing travelling it. */
+  off?: boolean;
+}
+
+interface Props {
+  paths: Segment[];
+  width: number;
+  height: number;
+  /** Spark phase in ms, so consecutive connectors fire in sequence. */
+  delay?: number;
+  /** Extra phase per path, to stagger a fan. */
+  stagger?: number;
+  class?: string;
+}
+
+const {
+  paths,
+  width,
+  height,
+  delay = 0,
+  stagger = 0,
+  class: className = "",
+} = Astro.props;
+
+const head = `head-${crypto.randomUUID().slice(0, 8)}`;
+---
+
+<svg
+  aria-hidden="true"
+  class:list={["pipe", className]}
+  width={width}
+  height={height}
+  viewBox={`0 0 ${width} ${height}`}
+  fill="none"
+>
+  <defs>
+    <marker
+      id={head}
+      markerUnits="userSpaceOnUse"
+      markerWidth="9"
+      markerHeight="9"
+      refX="7.4"
+      refY="4.5"
+      orient="auto"
+    >
+      <path d="M0.8 1.2 7.4 4.5 0.8 7.8Z" class="head"></path>
+    </marker>
+  </defs>
+
+  <g class="rail">
+    {
+      paths.map((p) => (
+        <path
+          d={p.d}
+          class:list={[p.off && "off"]}
+          marker-end={`url(#${head})`}
+        />
+      ))
+    }
+  </g>
+
+  <g class="spark">
+    {
+      paths.map(
+        (p, i) =>
+          !p.off && (
+            <path
+              d={p.d}
+              pathLength="100"
+              style={`animation-delay:${delay + i * stagger}ms`}
+            />
+          ),
+      )
+    }
+  </g>
+</svg>
+
+<style>
+  .pipe {
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  .rail path {
+    stroke: var(--color-border-strong);
+    stroke-width: 1.25;
+  }
+
+  .rail path.off {
+    stroke-dasharray: 3 4;
+    opacity: 0.6;
+  }
+
+  .head {
+    fill: var(--color-border-strong);
+  }
+
+  .spark path {
+    stroke: var(--color-acc);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 13 100;
+    stroke-dashoffset: 13;
+    animation: pipe-spark 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* travel, then wait out of sight past the end */
+  @keyframes pipe-spark {
+    0% {
+      stroke-dashoffset: 13;
+    }
+    30%,
+    100% {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spark {
+      display: none;
+    }
+  }
+</style>

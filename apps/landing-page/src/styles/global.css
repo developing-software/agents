@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./general-sans.css";
+@import "./pilat.css";
 
 @theme {
   /* ——— surfaces ——————————————————————————————— */
@@ -52,7 +53,10 @@
   --color-base-300: rgba(12, 18, 24, 0.16);
 
   --font-sans: "General Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* General Sans gets muddy below ~13px — use this for dense UI text */
+  --font-ui: "Pilat", Arial, Helvetica, sans-serif;
+  /* no monospace face on the page — the `font-mono` labels use Pilat too */
+  --font-mono: "Pilat", Arial, Helvetica, sans-serif;
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }

@@ -1,0 +1,136 @@
+---
+/** A single WhatsApp bubble in a thread — the ask, or the reply that ships. */
+interface Props {
+  class?: string;
+  name?: string;
+  avatar?: string;
+  /** "in" is the client asking, "out" is the reply going back. */
+  tone?: "in" | "out";
+  text: string;
+  link?: string;
+  time?: string;
+}
+
+const {
+  class: className = "",
+  name = "Your Customer",
+  avatar = "/face.webp",
+  tone = "in",
+  text,
+  link,
+  time = "23:02",
+} = Astro.props;
+
+const out = tone === "out";
+---
+
+<div
+  class:list={[
+    "wpp overflow-hidden rounded-lg border border-border-soft bg-bg-elev",
+    className,
+  ]}
+>
+  <div
+    class="flex items-center gap-2 border-b border-border-soft bg-bg-sunk px-2.5 py-2"
+  >
+    <img
+      src={avatar}
+      alt=""
+      width="22"
+      height="22"
+      loading="lazy"
+      class="size-5.5 shrink-0 rounded-full object-cover"
+    />
+    <span class="min-w-0 flex-1 truncate text-[12px] font-medium text-fg"
+      >{name}</span
+    >
+    <img
+      src="/brands/whatsapp-svgrepo-com.svg"
+      alt="WhatsApp"
+      width="14"
+      height="14"
+      loading="lazy"
+      class="size-3.5 shrink-0"
+    />
+  </div>
+
+  <div class="wpp-thread px-2.5 py-3">
+    <div
+      class:list={[
+        "bubble max-w-[92%] rounded-lg px-2 py-1.5 shadow-[0_1px_2px_-1px_rgba(12,22,34,0.3)]",
+        out
+          ? "ml-auto rounded-tr-none bg-[#d3f7c4]"
+          : "mr-auto rounded-tl-none bg-white",
+      ]}
+    >
+      <p class="text-[11.5px] leading-[1.4] text-[#111b21]">{text}</p>
+      {
+        link && (
+          <p class="truncate text-[10.5px] leading-[1.5]">
+            <a href="#" class="text-[#1a56db] underline">{link}</a>
+          </p>
+        )
+      }
+      <p
+        class:list={[
+          "mt-0.5 flex items-center gap-1 text-[9px] text-[#667781]",
+          out ? "justify-end" : "justify-start",
+        ]}
+      >
+        {time}
+        {
+          out && (
+            <svg
+              width="12"
+              height="8"
+              viewBox="0 0 16 11"
+              fill="none"
+              stroke="#53bdeb"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M1 6.2 3.6 8.8 9 2.2" />
+              <path d="M6.5 6.9 7.8 8.8 13.2 2.2" />
+            </svg>
+          )
+        }
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wpp {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .wpp-thread {
+    background-color: #f0e4de;
+    background-image: url("/wppbg.webp");
+    background-size: 170px auto;
+    background-blend-mode: multiply;
+  }
+
+  .bubble {
+    position: relative;
+  }
+  .bubble::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 7px;
+    height: 9px;
+  }
+  .bubble.mr-auto::before {
+    left: -6px;
+    background: #fff;
+    clip-path: polygon(100% 0, 100% 100%, 0 0);
+  }
+  .bubble.ml-auto::before {
+    right: -6px;
+    background: #d3f7c4;
+    clip-path: polygon(0 0, 0 100%, 100% 0);
+  }
+</style>
