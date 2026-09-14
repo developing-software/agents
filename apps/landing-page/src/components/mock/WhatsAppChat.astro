@@ -30,7 +30,7 @@ const {
 
 <div
   class:list={[
-    "cm overflow-hidden rounded-lg border border-border-soft bg-bg-elev ",
+    "cm flex flex-col overflow-hidden rounded-lg border border-border-soft bg-bg-elev ",
     className,
   ]}
 >
@@ -65,10 +65,10 @@ const {
     }
 
     <span class="min-w-0 flex-1">
-      <span class="block truncate text-[11.5px] font-semibold leading-tight text-[#111b21]"
+      <span class="block truncate text-[15px] font-semibold leading-tight text-[#111b21]"
         >{name}</span
       >
-      <span class="block truncate text-[9.5px] leading-tight text-fg-faint">{status}</span>
+      <!-- <span class="block truncate text-[9.5px] leading-tight text-fg-faint">{status}</span> -->
     </span>
 
     <span class="flex items-center gap-2 text-[#3b4754]">
@@ -89,16 +89,16 @@ const {
     </span>
   </div>
 
-  <div class="cm-thread flex flex-col gap-2 px-2.5 py-3">
+  <div class="cm-thread flex flex-1 flex-col justify-end gap-2 px-2.5 py-3">
     <span
-      class="mx-auto rounded bg-white/85 px-1.5 py-0.5 text-[8.5px] font-medium tracking-wide text-[#4a5560]"
+      class="mx-auto rounded bg-white/85 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-[#4a5560]"
       >TODAY</span
     >
 
     <div
       class="cm-bubble cm-in max-w-[88%] self-start rounded-lg rounded-tl-none bg-white px-2 py-1.5 shadow-[0_1px_3px_-1px_rgba(12,22,34,0.25)]"
     >
-      <p class="text-[11px] leading-[1.35] text-[#111b21]">
+      <p class="text-[15px] leading-[1.35] text-[#111b21]">
         {ask}
         <span class="ml-1.5 inline-block translate-y-px text-[8.5px] text-fg-faint">{askTime}</span>
       </p>
@@ -107,10 +107,10 @@ const {
     <div
       class="cm-bubble cm-out max-w-[88%] self-end rounded-lg rounded-tr-none bg-[#d3f7c4] px-2 py-1.5 shadow-[0_1px_3px_-1px_rgba(12,22,34,0.25)]"
     >
-      <p class="text-[11px] leading-[1.35] text-[#111b21]">{reply}</p>
+      <p class="text-[15px] leading-[1.35] text-[#111b21]">{reply}</p>
       {
         replyLink && (
-          <p class="mt-1 text-[11px] leading-[1.35]">
+          <p class="mt-1 text-[15px] leading-[1.35]">
             <a href="#" class="text-[#1a56db] underline">{replyLink}</a>
             <span class="mt-0.5 block text-right text-[8.5px] text-fg-faint">{replyTime}</span>
           </p>

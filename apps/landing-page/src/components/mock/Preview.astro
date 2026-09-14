@@ -11,9 +11,9 @@ const {
 } = Astro.props;
 
 const rows = [
-  ["#2032", "Mar 2026", "$1,240", "Due"],
-  ["#2031", "Feb 2026", "$980", "Paid"],
-  ["#2030", "Jan 2026", "$1,110", "Paid"],
+  ["#2033", "Acme Corp", "Mar 2026", "$1,240", "Due"],
+  ["#2034", "Globex Inc", "Feb 2026", "$980", "Paid"],
+  ["#2035", "Initech Ltd", "Jan 2026", "$1,110", "Paid"],
 ] as const;
 ---
 
@@ -59,18 +59,18 @@ const rows = [
 
       <div class="p-2.5">
         <div class="grid grid-cols-2 gap-1.5">
-          <div class="rounded border border-border-soft px-2 py-1.5">
+          <div class="rounded bg-bg-elev border border-border-soft px-2 py-1.5">
             <!-- <span class="block text-[7px] uppercase tracking-wide text-fg-faint">Outstanding</span> -->
             <span class="mt-0.5 block font-mono text-[12px] text-fg">$1,240</span>
           </div>
-          <div class="rounded border border-border-soft px-2 py-1.5">
+          <div class="rounded bg-bg-elev border border-border-soft px-2 py-1.5">
             <!-- <span class="block text-[7px] uppercase tracking-wide text-fg-faint">Paid ytd</span> -->
             <span class="mt-0.5 block font-mono text-[12px] text-fg">$2,090</span>
           </div>
         </div>
 
         <div class="mt-2.5 flex items-center justify-between gap-2">
-          <span class="text-[12px] font-medium text-fg">Customer Invoices</span>
+          <span class="text-[12px] font-medium text-fg">Customers Invoices</span>
           <button
             type="button"
             data-download
@@ -88,19 +88,21 @@ const rows = [
           </button>
         </div>
 
-        <div class="mt-1.5 overflow-hidden rounded border border-border-soft">
+        <div class="mt-1.5 overflow-hidden rounded border border-border-soft bg-bg-elev">
           <div
-            class="flex items-center gap-2 border-b border-border-soft bg-bg-sunk px-2 py-1 text-[7px] uppercase tracking-wide text-fg-faint"
+            class="flex items-center gap-2 border-b border-border-soft  px-2 py-1 text-[8px] uppercase tracking-wide text-fg-faint"
           >
             <span>Invoice</span>
+            <span>Customer</span>
             <span class="ml-auto">Date</span>
             <span class="w-9 text-right">Total</span>
             <span class="w-6 text-right">Status</span>
           </div>
           {
-            rows.map(([id, when, total, status]) => (
+            rows.map(([id,customer, when, total, status]) => (
               <div class="flex items-center gap-2 border-b border-border-soft px-2 py-1.5 text-[10px] last:border-b-0">
                 <span class="font-mono text-fg-muted">{id}</span>
+                <span class="min-w-0 flex-1 truncate font-mono text-fg">{customer}</span>
                 <span class="ml-auto truncate font-mono text-fg-faint">{when}</span>
                 <span class="w-9 shrink-0 text-right font-mono text-fg">{total}</span>
                 <span class="flex w-6 shrink-0 justify-end">

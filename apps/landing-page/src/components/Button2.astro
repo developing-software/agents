@@ -3,7 +3,7 @@ import { tv, type VariantProps } from "tailwind-variants";
 import type { HTMLAttributes } from "astro/types";
 
 export const buttonVariants = tv({
-  base: "group/button inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-sm border font-semibold outline-none transition-all duration-300 select-none focus-visible:ring-2 focus-visible:ring-border-glow active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+  base: "group/button inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-sm border font-semibold outline-none transition-all duration-300 select-none focus-visible:ring-2 focus-visible:ring-border-glow active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   variants: {
     variant: {
       default:
@@ -16,7 +16,7 @@ export const buttonVariants = tv({
       link: "border-transparent text-acc underline-offset-4 hover:underline",
     },
     size: {
-      xs: "h-7 px-3 text-xs",
+      xs: "h-7 px-3 text-[10px]",
       sm: "h-9 px-4 text-sm",
       md: "h-10.5 px-5 text-[14px]",
       lg: "h-12 px-6 text-base",

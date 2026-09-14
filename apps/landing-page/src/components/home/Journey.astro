@@ -3,8 +3,10 @@ import SectionHead from "@components/SectionHead.astro";
 import Icon from "@components/Icon.astro";
 import WppNote from "@components/mock/WppNote.astro";
 import Pipe from "./Pipe.astro";
+import Button from "@components/Button2.astro";
 
-const card = "w-full overflow-hidden rounded-lg border border-border-soft bg-bg-elev";
+const card =
+  "w-full overflow-hidden rounded-lg border border-border-soft bg-bg-elev";
 const bar =
   "border-b border-border-soft bg-bg-sunk px-2.5 py-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint";
 const caption =
@@ -15,16 +17,18 @@ const caption =
 const ROW = 60;
 const FAN = 64;
 const agents = [
-  { name: "claude", logo: "/ai/claude.svg", ci: true },
-  { name: "gpt-5", logo: "/ai/openai.svg", ci: true },
-  { name: "gemini", logo: "/ai/gemini.svg", ci: true },
-  { name: "grok", logo: "/ai/grok.svg", ci: false },
+  { name: "claude-fable-5-1", logo: "/ai/claude.svg", ci: true },
+  { name: "gpt-6-astra", logo: "/ai/openai.svg", ci: true },
+  { name: "gemini-3-8", logo: "/ai/gemini.svg", ci: true },
+  { name: "grok-4-6", logo: "/ai/grok.svg", ci: false },
 ];
 const H = agents.length * ROW;
 const mid = H / 2;
 const ys = agents.map((_, i) => i * ROW + ROW / 2);
 
-const fan = ys.map((y) => ({ d: `M0 ${mid} H6 C34 ${mid} 30 ${y} ${FAN} ${y}` }));
+const fan = ys.map((y) => ({
+  d: `M0 ${mid} H6 C34 ${mid} 30 ${y} ${FAN} ${y}`,
+}));
 /* whatever fails CI never reaches the judge */
 const merge = agents.map((a, i) => ({
   d: `M0 ${ys[i]} C34 ${ys[i]} 30 ${mid} ${FAN} ${mid}`,
@@ -45,35 +49,32 @@ const plan = [
 >
   <div class="shell">
     <SectionHead
-      title="From one WhatsApp message"
-      accent="to production"
-      sub="Four models build the same plan, CI drops what breaks, a judge keeps the best of the rest, and the preview goes back to the thread it started in."
+      title="How it"
+      accent="works?"
+      sub="Many models build the same plan, CI drops what breaks, a judge keeps the best of the rest, and the preview goes back to the thread it started in."
     />
 
     <div
       data-reveal
       data-journey
-      class="scrollbar-thin mt-14 overflow-x-auto rounded-2xl border border-border-soft bg-bg-card-strong"
+      class="scrollbar-thin mt-7 overflow-x-auto rounded-2xl border border-border-soft bg-bg-card-strong"
     >
       <div class="flex w-295 items-center px-4 pb-20 pt-16 font-ui">
-        <!-- 01 · the ask ——————————————————————————— -->
         <div
           class="relative flex w-40 shrink-0 flex-col justify-center self-stretch"
         >
           <WppNote text="Can you add a download button to the invoices?" />
-          <span class:list={[caption, "left-0"]}>01 · Ask</span>
+          <span class:list={[caption, "inset-x-0 text-center"]}>01 · Ask</span>
         </div>
 
         <Pipe paths={straight} width={32} height={8} />
 
-        <!-- 02 · the plan —————————————————————————— -->
         <div
           class="relative flex w-44 shrink-0 flex-col justify-center self-stretch"
         >
           <div class={card}>
             <div class:list={[bar, "flex items-center gap-1.5"]}>
-              <Icon name="spark" class="size-3 text-acc" stroke={1.8} />
-              <span>Plan</span>
+              <span>Generated Plan</span>
             </div>
             <div class="px-3 py-2">
               {
@@ -85,12 +86,11 @@ const plan = [
               }
             </div>
           </div>
-          <span class:list={[caption, "left-0"]}>02 · Plan</span>
+          <span class:list={[caption, "inset-x-0 text-center"]}>02 · Plan</span>
         </div>
 
         <Pipe paths={fan} width={FAN} height={H} delay={500} stagger={80} />
 
-        <!-- 03 · four models, same plan ————————————— -->
         <div
           class="relative flex w-44 shrink-0 flex-col justify-center self-stretch"
         >
@@ -147,12 +147,12 @@ const plan = [
               ))
             }
           </div>
-          <span class:list={[caption, "inset-x-0 text-center"]}>03 · Build</span>
+          <span class:list={[caption, "inset-x-0 text-center"]}>03 · Build</span
+          >
         </div>
 
         <Pipe paths={merge} width={FAN} height={H} delay={1300} stagger={50} />
 
-        <!-- 04 · the judge ————————————————————————— -->
         <div
           class="relative flex w-14 shrink-0 flex-col items-center justify-center self-stretch"
         >
@@ -166,41 +166,39 @@ const plan = [
               >
               <span
                 aria-hidden="true"
-                class="mt-1.5 h-10 border-l border-dotted border-acc"></span>
+                class="mt-1 h-10 border-l border-dotted border-acc"></span>
             </span>
 
             <span
-              class="grid size-14 place-items-center rounded-full border border-acc bg-bg-elev text-acc shadow-[0_0_0_5px_var(--color-acc-glow-soft)]"
+              class="grid size-14 place-items-center rounded-full border border-acc bg-bg-elev text-acc"
             >
-              <Icon name="scale" class="size-5.5" stroke={1.6} />
+              <Icon name="scale" class="size-8" stroke={1.6} />
             </span>
           </div>
         </div>
 
         <Pipe paths={straight} width={32} height={8} delay={2000} />
 
-        <!-- 05 · the preview, back in the thread ————— -->
         <div
           class="relative flex min-w-0 flex-1 flex-col justify-center self-stretch"
         >
           <WppNote
             tone="out"
-            text="Done — preview is up 👍"
+            text="Done, preview is up 👍"
             link="preview-4821.devagents.app"
             time="23:23"
           />
-          <span class:list={[caption, "left-0"]}>04 · Preview</span>
+          <span class:list={[caption, "inset-x-0 text-center"]}>04 · Preview</span>
         </div>
 
         <Pipe paths={straight} width={32} height={8} delay={2400} />
 
-        <!-- 06 · a human decides ————————————————————— -->
         <div
           class="relative flex w-42 shrink-0 flex-col justify-center self-stretch"
         >
           <div class={card}>
             <div class:list={[bar, "flex items-center gap-1.5"]}>
-              <Icon name="pr" class="size-3 text-acc" stroke={1.8} />
+              <!-- <Icon name="pr" class="size-3 text-acc" stroke={1.8} /> -->
               <span>Pull request</span>
               <span class="ml-auto normal-case tracking-normal">#128</span>
             </div>
@@ -211,20 +209,15 @@ const plan = [
               </p>
 
               <div class="mt-3 grid grid-cols-2 gap-1.5">
-                <span
-                  class="inline-flex items-center justify-center rounded border border-border-strong py-1.5 text-[10.5px] font-medium text-fg-muted"
-                  >Reject</span
-                >
-                <span
-                  class="inline-flex items-center justify-center gap-1 rounded bg-acc py-1.5 text-[10.5px] font-medium text-acc-foreground"
-                >
+                <Button size="xs"> Reject </Button>
+                <Button size="xs" variant="primary">
                   <Icon name="check" class="size-2.5" stroke={2.6} />
                   Approve
-                </span>
+                </Button>
               </div>
             </div>
           </div>
-          <span class:list={[caption, "left-0"]}>05 · Approve</span>
+          <span class:list={[caption, "inset-x-0 text-center"]}>05 · Approve</span>
         </div>
       </div>
     </div>
@@ -232,8 +225,6 @@ const plan = [
 </section>
 
 <script>
-  // Designed at one width; zoom it down to fit, and only scroll once the
-  // text would get too small to read.
   const DESIGN = 1180;
   const MIN = 0.62;
 

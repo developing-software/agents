@@ -1,5 +1,6 @@
 ---
 import Button from "@components/Button2.astro";
+import GithubMark from "@components/GithubMark.astro";
 import Icon from "@components/Icon.astro";
 import BrowserWindow from "@components/BrowserWindow.astro";
 
@@ -52,12 +53,13 @@ const channels = [
         style="--d:300ms"
       >
         <Button
-          text="Connect your repo"
           variant="primary"
           size="lg"
           href="#pricing"
           class="w-full sm:w-auto"
-        />
+        >
+          <GithubMark class="size-4.5" /> Connect your repo
+        </Button>
         <Button
           text="See how a run works"
           variant="outline"
