@@ -4,7 +4,7 @@
 
 @theme {
   /* ——— surfaces ——————————————————————————————— */
-  --color-bg:#f0f7ff;
+  --color-bg:#f3f0fb;
   --color-bg-elev: #ffffff;
   --color-bg-sunk: #f1f5f9;
   --color-bg-card: rgba(12, 20, 30, 0.022);
@@ -14,7 +14,7 @@
   --color-border-soft: rgba(12, 22, 34, 0.1);
   --color-border-strong: rgba(12, 22, 34, 0.17);
   --color-border-stronger: rgba(152, 174, 189, 0.8);
-  --color-border-glow: rgba(28, 140, 228, 0.45);
+  --color-border-glow: rgba(145, 120, 211, 0.45);
 
   /* ——— ink ——————————————————————————————————— */
   --color-fg: #0c1218;
@@ -22,10 +22,10 @@
   --color-fg-faint: rgba(12, 18, 24, 0.45);
 
   /* ——— accent ————————————————————————————————— */
-  --color-acc: #1c8ce4;
-  --color-acc-hot: #52b1f7;
-  --color-acc-soft: #cde6fb;
-  --color-acc-wash: #eef7fe;
+  --color-acc: #9178d3;
+  --color-acc-hot: #ac96e9;
+  --color-acc-soft: #ddd4f7;
+  --color-acc-wash: #f5f2fd;
   --color-acc-deep: #0f9d63;
 
   /* ——— status, for CI / diff artifacts ——————————— */
@@ -33,8 +33,8 @@
   --color-ok-wash: rgba(15, 157, 99, 0.09);
   --color-err: #d14343;
   --color-err-wash: rgba(209, 67, 67, 0.08);
-  --color-acc-glow: rgba(28, 140, 228, 0.45);
-  --color-acc-glow-soft: rgba(28, 140, 228, 0.16);
+  --color-acc-glow: rgba(145, 120, 211, 0.45);
+  --color-acc-glow-soft: rgba(145, 120, 211, 0.16);
   --color-acc-foreground: #fff;
 
   /* ——— night band (the section that runs while you sleep) ——— */
