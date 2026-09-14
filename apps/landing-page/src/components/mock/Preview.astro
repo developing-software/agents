@@ -30,7 +30,7 @@ const rows = [
     <span class="size-1.5 rounded-full bg-base-300"></span>
     <span
       class="ml-1 flex-1 w-full truncate rounded bg-base-100 px-2 py-1 font-mono text-[9.5px] text-fg-faint"
-      >{url}</span
+      >{url.replaceAll("vi", "v‌i") /* the mono face turns "vi" into an arrow */}</span
     >
     <!-- <span class="flex items-center gap-1 font-mono text-[8.5px] text-ok">
       <span class="size-1.5 animate-pulse rounded-full bg-ok"></span>live

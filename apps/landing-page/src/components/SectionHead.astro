@@ -48,7 +48,8 @@ const night = tone === "night";
   <h2
     data-reveal
     class:list={[
-      "mt-4 text-balance text-[clamp(2rem,4.2vw,3.35rem)] font-medium leading-[1.02] tracking-[-0.035em]",
+      "text-balance text-[clamp(2rem,4.2vw,3.35rem)] font-medium leading-[1.02] tracking-[-0.035em]",
+      eyebrow && "mt-4",
       night ? "text-night-fg" : "text-fg",
     ]}
   >

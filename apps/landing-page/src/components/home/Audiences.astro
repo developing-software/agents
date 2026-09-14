@@ -2,71 +2,96 @@
 import SectionHead from "@components/SectionHead.astro";
 import WhatsAppChat from "@components/mock/WhatsAppChat.astro";
 import Preview from "@components/mock/Preview.astro";
-import PullRequest from "@components/mock/PullRequest.astro";
+
+const stage =
+  "relative mt-auto flex flex-1 items-center overflow-hidden rounded-panel border border-border-soft bg-bg-sunk p-4 sm:p-8";
+const texture = "dotgrid pointer-events-none absolute inset-0 opacity-60";
+const fade =
+  "mask-image:radial-gradient(80% 80% at 50% 50%,#000,transparent 90%);-webkit-mask-image:radial-gradient(80% 80% at 50% 50%,#000,transparent 90%)";
+
+const steps = [
+  {
+    label: "01 · Ask",
+    title: "Describe it like you'd tell a friend.",
+    body: "Clients write in the chat they already use. No tickets to file, no repository access, no pull requests to understand.",
+    mock: "chat",
+  },
+  {
+    label: "02 · Click",
+    title: "Get a link you can click.",
+    body: "The change goes live on its own preview, so the person who asked checks the real thing before you approve the merge.",
+    mock: "preview",
+  },
+];
 ---
 
-<section class=" py-28">
+<section class="section">
   <div class="shell">
     <SectionHead
-
       title="It gives the client a way in"
       accent="without taking the keys."
+      sub="Your clients don't need to know what a pull request is. They ask in plain words, and you keep the veto."
     />
 
-    <div class="mt-8 grid gap-4 lg:grid-cols-2">
-      <article
-        data-reveal
-        class="flex flex-col rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8"
+    <div
+      data-reveal
+      class="relative mt-head overflow-hidden rounded-frame border border-border-soft bg-bg-sunk p-3 sm:p-4"
+    >
+      <div
+        aria-hidden="true"
+        class="dotgrid pointer-events-none absolute inset-0 opacity-70"
+        style="mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%);-webkit-mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%)"
       >
-        <h3
-          class=" text-balance text-[clamp(1.35rem,2.1vw,1.6rem)] font-medium leading-[1.15] tracking-tight text-fg"
-        >
-          You don't need to know what a pull request is.
-        </h3>
+      </div>
 
-        <div
-          class="relative mt-4 grid flex-1 content-center gap-2 sm:grid-cols-2"
-        >
-          <WhatsAppChat />
-          <div class="flex flex-col justify-center gap-3">
-            <Preview />
-          </div>
+      <div class="relative grid gap-3 lg:grid-cols-2">
+        {
+          steps.map((s, i) => (
+            <>
+            {i === 1 && (
+              /* stacked: sits in the gutter between the cards; side by side: centred on the frame */
+              <span
+                aria-hidden="true"
+                class="hop relative z-10 mx-auto -my-6.5 grid size-10 rotate-90 place-items-center rounded-full bg-acc text-bg ring-4 ring-bg-sunk lg:absolute lg:left-1/2 lg:top-1/2 lg:m-0 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rotate-0"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                >
+                  <path
+                    d="M1.5 6h8M6.2 2.6 9.8 6l-3.6 3.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            )}
+            <article class="flex flex-col rounded-card bg-bg-elev p-6 sm:p-7">
+              <span class="font-mono text-[10.5px] uppercase tracking-[0.16em] text-fg-faint">
+                {s.label}
+              </span>
+              <h3 class="mt-3 text-[19px] font-medium leading-snug tracking-[-0.015em] text-fg">
+                {s.title}
+              </h3>
+              <p class="mb-7 mt-3 text-[14px] leading-[1.6] text-fg-muted">
+                {s.body}
+              </p>
 
-          <span
-            aria-hidden="true"
-            class="hop absolute left-1/2 top-1/2 z-10 grid size-7 -translate-x-1/2 -translate-y-1/2 rotate-90 place-items-center rounded-full bg-acc text-bg ring-2 ring-bg-bg sm:rotate-0"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6">
-              <path d="M1.5 6h8M6.2 2.6 9.8 6l-3.6 3.4" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-          </span>
-        </div>
-
-        <p class="mt-3 pt-0 text-[16px] leading-[1.6] tracking-wide text-fg-muted">
-          Describe it like you'd describe it to a friend. Get a link you can
-          click.
-        </p>
-      </article>
-
-      <article
-        data-reveal
-        class="flex flex-col rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8"
-      >
-        <h3
-          class="text-balance text-[clamp(1.35rem,2.1vw,1.6rem)] font-medium leading-[1.15] tracking-tight text-fg"
-        >
-          You keep the veto, the conventions and the CI.
-        </h3>
-
-        <div class="mt-4 grid flex-1 content-center ">
-          <PullRequest />
-        </div>
-
-        <p class="mt-3 pt-0 text-[16px] leading-[1.6] tracking-wide text-fg-muted">
-          One diff, never four battling PRs. Nothing reaches prod
-          without you.
-        </p>
-      </article>
+              <div class={stage}>
+                <div aria-hidden="true" class={texture} style={fade} />
+                <div class="relative mx-auto w-full max-w-sm">
+                  {s.mock === "chat" ? <WhatsAppChat /> : <Preview />}
+                </div>
+              </div>
+            </article>
+            </>
+          ))
+        }
+      </div>
     </div>
   </div>
 </section>

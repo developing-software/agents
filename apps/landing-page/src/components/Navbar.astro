@@ -1,5 +1,7 @@
 ---
 import Button from "./Button2.astro";
+import GithubMark from "@components/GithubMark.astro";
+import Icon from "@components/Icon.astro";
 
 type Child = { name: string; href: string; desc?: string };
 type Column = { title: string; items: Child[] };
@@ -14,10 +16,26 @@ const links: Link[] = [
       {
         title: "The pipeline",
         items: [
-          { name: "Intake & spec", href: "#how", desc: "Plain language in, scope out" },
-          { name: "Parallel attempts", href: "#how", desc: "Frontier models, isolated branches" },
-          { name: "Judge & synthesis", href: "#how", desc: "One diff from the best parts" },
-          { name: "Preview deploys", href: "#product", desc: "Click it before it merges" },
+          {
+            name: "Intake & spec",
+            href: "#how",
+            desc: "Plain language in, scope out",
+          },
+          {
+            name: "Parallel attempts",
+            href: "#how",
+            desc: "Frontier models, isolated branches",
+          },
+          {
+            name: "Judge & synthesis",
+            href: "#how",
+            desc: "One diff from the best parts",
+          },
+          {
+            name: "Preview deploys",
+            href: "#product",
+            desc: "Click it before it merges",
+          },
         ],
       },
       {
@@ -48,7 +66,11 @@ const links: Link[] = [
       {
         title: "Get started",
         items: [
-          { name: "Quickstart", href: "#", desc: "Connect a repo in two minutes" },
+          {
+            name: "Quickstart",
+            href: "#",
+            desc: "Connect a repo in two minutes",
+          },
           { name: "Connect GitHub", href: "#" },
           { name: "WhatsApp intake", href: "#" },
           { name: "CLI", href: "#" },
@@ -132,27 +154,26 @@ const menus = links.filter((l) => l.columns);
       >
         Log in
       </a>
-      <Button text="Connect repository" variant="ink" size="xs" href="#pricing" />
+      <Button variant="primary" size="xs" href="#pricing">
+        <GithubMark class="size-3.5" /> Connect repository
+      </Button>
     </div>
   </nav>
 
   <!-- hover navigation -->
-  <div class="absolute inset-x-0 top-full hidden md:block">
+  <div class="absolute inset-x-0 top-full hidden px-5 md:block md:px-8">
     {
       menus.map((menu) => (
         <div
-          class="mega absolute inset-x-0 top-0 border-b border-border-soft bg-bg-elev/95 backdrop-blur-xl"
+          class="mega container absolute inset-x-0 top-2 mx-auto w-full max-w-330 overflow-hidden rounded-md  bg-bg-elev/80 backdrop-blur-xl group-data-[at-top=false]:max-w-7xl"
           data-panel={menu.id}
         >
-          <div class="shell grid gap-10 py-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,2fr)]">
+          <div class="grid gap-10 px-5 py-7 md:px-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,2fr)]">
             <div class="flex flex-col border-t border-border-soft">
               <a
                 href="#how"
                 class="group/card border-b border-border-soft py-4 transition-opacity hover:opacity-65"
               >
-                <span class="font-mono text-[11px] text-fg-faint">
-                  run #4821
-                </span>
                 <span class="mt-2 block text-[13.5px] font-medium text-fg">
                   See a run end to end
                 </span>
@@ -165,8 +186,9 @@ const menus = links.filter((l) => l.columns);
                 href="#pricing"
                 class="border-b border-border-soft py-4 transition-opacity hover:opacity-65"
               >
-                <span class="block text-[13.5px] font-medium text-fg">
-                  Connect your repo →
+                <span class="flex items-center gap-1.5 text-[13.5px] font-medium text-fg">
+                  Connect your repo
+                  <Icon name="arrow-right" class="size-3.5" stroke={2} />
                 </span>
                 <span class="mt-1 block text-[12.5px] text-fg-muted">
                   Free for the first five runs
@@ -177,9 +199,7 @@ const menus = links.filter((l) => l.columns);
             <div class="grid gap-8 sm:grid-cols-3">
               {menu.columns?.map((col) => (
                 <div>
-                  <p class="font-mono text-[11px] text-fg-faint">
-                    {col.title}
-                  </p>
+                  <p class="font-mono text-[11px] text-fg-faint">{col.title}</p>
                   <ul class="mt-4 space-y-3">
                     {col.items.map((item) => (
                       <li>
@@ -228,7 +248,6 @@ const menus = links.filter((l) => l.columns);
     transform: none;
   }
 
-  /* the bar goes solid while a panel is down, so the two read as one sheet */
   #navbar-wrapper:not([data-open=""]) .nav-bar {
     background: color-mix(in srgb, var(--color-bg-elev) 95%, transparent);
     backdrop-filter: blur(16px);

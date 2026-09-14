@@ -23,27 +23,26 @@ const faqs = [
     q: "Will it work on a large, old codebase?",
     a: "That's the normal case. The intake agent indexes the repo and quotes real files back at you before implementing anything. You can restrict which paths runs are allowed to touch — migrations, infra and generated code are usually off-limits from day one.",
   },
-  {
-    q: "How do preview environments get their secrets?",
-    a: "You provide a scoped preview environment: separate database, separate keys, no production credentials. The sandbox is destroyed with the branch, and previews are only reachable by people you've invited.",
-  },
-  {
-    q: "Can a non-technical client really trigger a run?",
-    a: "Yes — that's the point. Each person is mapped to the repositories they're allowed to request against, with their own limits. They describe the outcome in WhatsApp or Slack; the engineer still owns everything downstream of the spec.",
-  },
-  {
-    q: "What if we want to stop using it?",
-    a: "Everything it produces is ordinary git: branches, commits and pull requests in your own repository. Turn it off and the work you already merged stays exactly where it is.",
-  },
+  // {
+  //   q: "How do preview environments get their secrets?",
+  //   a: "You provide a scoped preview environment: separate database, separate keys, no production credentials. The sandbox is destroyed with the branch, and previews are only reachable by people you've invited.",
+  // },
+  // {
+  //   q: "Can a non-technical client really trigger a run?",
+  //   a: "Yes — that's the point. Each person is mapped to the repositories they're allowed to request against, with their own limits. They describe the outcome in WhatsApp or Slack; the engineer still owns everything downstream of the spec.",
+  // },
+  // {
+  //   q: "What if we want to stop using it?",
+  //   a: "Everything it produces is ordinary git: branches, commits and pull requests in your own repository. Turn it off and the work you already merged stays exactly where it is.",
+  // },
 ];
 ---
 
-<section class="relative border-t border-border-soft py-24 sm:py-28" id="faq">
+<section class="section relative" id="faq">
   <div class="shell">
     <div class="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
       <div class="lg:sticky lg:top-28 lg:self-start">
         <SectionHead
-          eyebrow="Questions"
           title="The objections we get"
           accent="most often."
           align="left"
