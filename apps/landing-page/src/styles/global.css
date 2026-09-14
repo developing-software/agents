@@ -60,6 +60,20 @@
   --font-mono: "Pilat", Arial, Helvetica, sans-serif;
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ——— rhythm: py-section, py-band, mt-head ——————————— */
+  --spacing-section: 5rem;
+  --spacing-section-lg: 7rem;
+  --spacing-band: 3rem;
+  --spacing-band-lg: 3.5rem;
+  --spacing-head: 3rem;
+
+  /* ——— radius: each nested layer rounds one step less than its parent ——— */
+  --radius-frame: 1.5rem;
+  --radius-card: 1rem;
+  --radius-panel: 0.75rem;
+  --radius-control: 0.5rem;
+  --radius-chip: 0.375rem;
 }
 
 [data-theme="dark"] {
@@ -124,6 +138,27 @@ body {
 @media (min-width: 768px) {
   .shell {
     padding-inline: 2rem;
+  }
+}
+
+/* Every section after the hero is one of these, so the hairline
+   between sections and the space around it never drift. */
+@utility section {
+  border-top: 1px solid var(--color-border-soft);
+  padding-block: var(--spacing-section);
+}
+
+@utility band {
+  border-top: 1px solid var(--color-border-soft);
+  padding-block: var(--spacing-band);
+}
+
+@media (min-width: 640px) {
+  .section {
+    padding-block: var(--spacing-section-lg);
+  }
+  .band {
+    padding-block: var(--spacing-band-lg);
   }
 }
 
@@ -213,6 +248,17 @@ body {
   opacity: 0;
   animation: rise 0.9s var(--ease-out-quint) forwards;
   animation-delay: var(--d, 0ms);
+}
+
+/* transform composes with an element's own translate/rotate, so placement is untouched */
+@keyframes chip-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 @keyframes marquee {

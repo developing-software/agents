@@ -34,29 +34,13 @@ const checks = ["Tests", "Types", "Lint", "Preview"];
 
 /* every visual sits in the same inset stage so the three cards read as a set */
 const stage =
-  "relative mt-auto h-72 overflow-hidden rounded-xl border border-border-soft bg-bg-sunk";
+  "relative mt-auto h-72 overflow-hidden rounded-panel border border-border-soft bg-bg-sunk";
 const texture = "dotgrid pointer-events-none absolute inset-0 opacity-60";
 const fade =
   "mask-image:linear-gradient(to bottom,#000,transparent 85%);-webkit-mask-image:linear-gradient(to bottom,#000,transparent 85%)";
 ---
 
-<style>
-  /* transform composes with the chip's own translate/rotate, so placement is untouched */
-  @keyframes chip-float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-4px);
-    }
-  }
-  .chip {
-    animation: chip-float 6s ease-in-out infinite;
-  }
-</style>
-
-<section class="py-28">
+<section class="section">
   <div class="shell">
     <SectionHead
       eyebrow="One run"
@@ -67,7 +51,7 @@ const fade =
 
     <div
       data-reveal
-      class="relative mt-12 overflow-hidden rounded-3xl border border-border-soft bg-bg-sunk p-3 sm:p-4"
+      class="relative mt-head overflow-hidden rounded-frame border border-border-soft bg-bg-sunk p-3 sm:p-4"
     >
       <div
         aria-hidden="true"
@@ -78,7 +62,7 @@ const fade =
 
       <div class="relative grid gap-3 lg:grid-cols-3">
         <!-- 1 · request -->
-        <article class="flex flex-col rounded-2xl bg-bg-elev p-6 sm:p-7">
+        <article class="flex flex-col rounded-card bg-bg-elev p-6 sm:p-7">
           <h3
             class="text-[19px] font-medium leading-snug tracking-[-0.015em] text-fg"
           >
@@ -96,7 +80,7 @@ const fade =
               {
                 channels.map((c, i) => (
                   <span
-                    class="chip absolute grid size-11 -translate-x-1/2 place-items-center rounded-xl border border-border-soft bg-bg-elev"
+                    class="absolute grid size-11 animate-[chip-float_6s_ease-in-out_infinite] -translate-x-1/2 place-items-center rounded-panel border border-border-soft bg-bg-elev"
                     style={`left:${c.left}%;top:${c.top}%;rotate:${c.rotate}deg;animation-duration:${(5 + (i % 3) * 0.9).toFixed(1)}s;animation-delay:-${(i * 0.7).toFixed(1)}s`}
                   >
                     <img src={c.src} alt="" class={c.imgClass} />
@@ -106,7 +90,7 @@ const fade =
             </div>
 
             <div
-              class="absolute inset-x-4 -bottom-3 rounded-xl border border-border-soft bg-bg-elev px-4 pb-6 pt-4"
+              class="absolute inset-x-4 -bottom-3 rounded-panel border border-border-soft bg-bg-elev px-4 pb-6 pt-4"
             >
               <div class="flex items-center gap-2">
                 <img
@@ -140,7 +124,7 @@ const fade =
         </article>
 
         <!-- 2 · agents -->
-        <article class="flex flex-col rounded-2xl bg-bg-elev p-6 sm:p-7">
+        <article class="flex flex-col rounded-card bg-bg-elev p-6 sm:p-7">
           <h3
             class="text-[19px] font-medium leading-snug tracking-[-0.015em] text-fg"
           >
@@ -155,7 +139,7 @@ const fade =
             <div aria-hidden="true" class={texture} style={fade}></div>
 
             <div
-              class="absolute inset-x-4 -bottom-px top-5 rounded-t-xl border border-b-0 border-border-soft bg-bg-elev"
+              class="absolute inset-x-4 -bottom-px top-5 rounded-t-panel border border-b-0 border-border-soft bg-bg-elev"
             >
               <div
                 class="flex items-center justify-between border-b border-border-soft px-4 py-3"
@@ -239,7 +223,7 @@ const fade =
         </article>
 
         <!-- 3 · pull request -->
-        <article class="flex flex-col rounded-2xl bg-bg-elev p-6 sm:p-7">
+        <article class="flex flex-col rounded-card bg-bg-elev p-6 sm:p-7">
           <h3
             class="text-[19px] font-medium leading-snug tracking-[-0.015em] text-fg"
           >
@@ -256,17 +240,17 @@ const fade =
             <!-- the attempts it was synthesised from, stacked behind -->
             <div
               aria-hidden="true"
-              class="absolute inset-x-10 top-8 h-16 rounded-xl border border-border-soft bg-bg-elev"
+              class="absolute inset-x-10 top-8 h-16 rounded-panel border border-border-soft bg-bg-elev"
             >
             </div>
             <div
               aria-hidden="true"
-              class="absolute inset-x-7 top-12 h-16 rounded-xl border border-border-soft bg-bg-elev"
+              class="absolute inset-x-7 top-12 h-16 rounded-panel border border-border-soft bg-bg-elev"
             >
             </div>
 
             <div
-              class="absolute inset-x-4 -bottom-px top-16 rounded-t-xl border border-b-0 border-border-soft bg-bg-elev"
+              class="absolute inset-x-4 -bottom-px top-16 rounded-t-panel border border-b-0 border-border-soft bg-bg-elev"
             >
               <div
                 class="flex items-center gap-2.5 border-b border-border-soft px-4 py-3"

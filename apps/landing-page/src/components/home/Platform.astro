@@ -2,20 +2,35 @@
 import Button from "@components/Button2.astro";
 import Icon from "@components/Icon.astro";
 
-const chips = [
-  { label: "GitHub", logo: "/brands/GitHub_Invertocat_Black.svg" },
-  { label: "GitLab", logo: "/brands/gitlab-logo-500-rgb.svg" },
-  { label: "WhatsApp", logo: "/brands/whatsapp-svgrepo-com.svg" },
-  { label: "Your own Application", icon: "layers" as const },
+/* x/y are percentages of the hub stage; the DevAgents node sits at 50/50 */
+const nodes = [
+  { label: "GitHub", logo: "/brands/GitHub_Invertocat_Black.svg", img: "size-6", x: 13, y: 27 },
+  { label: "GitLab", logo: "/brands/gitlab-logo-500-rgb.svg", img: "size-7", x: 13, y: 73 },
+  { label: "WhatsApp", logo: "/brands/whatsapp-svgrepo-com.svg", img: "size-6 rounded-[6px]", x: 87, y: 27 },
+  { label: "Slack", logo: "/brands/SLA-Slack-icon-RGB.svg", img: "size-6", x: 87, y: 73 },
+  { label: "Discord", logo: "/brands/Discord-Symbol-Blurple.svg", img: "w-7", x: 50, y: 13 },
+  { label: "Your own application", icon: "layers" as const, x: 50, y: 87 },
 ];
+
+const models = [
+  "/ai/claude.svg",
+  "/ai/openai.svg",
+  "/ai/gemini.svg",
+  "/ai/grok.svg",
+];
+
+const stage =
+  "relative overflow-hidden rounded-panel border border-border-soft bg-bg-sunk";
+const fade =
+  "mask-image:linear-gradient(to bottom,#000,transparent 90%);-webkit-mask-image:linear-gradient(to bottom,#000,transparent 90%)";
+const row = "flex items-center justify-between gap-4 px-4 py-3";
+const rowLabel = "whitespace-nowrap text-[12.5px] text-fg-muted";
 ---
 
-<section
-  class="relative overflow-hidden border-t border-border-soft py-28"
->
+<section class="section relative overflow-hidden">
   <div class="shell">
     <div
-      class="mt-4 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between"
+      class="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between"
     >
       <h2
         data-reveal
@@ -36,13 +51,20 @@ const chips = [
       </div>
     </div>
 
-    <!-- wide card -->
     <div
       data-reveal
-      class="mt-12 overflow-hidden rounded-2xl border border-border-soft bg-bg-elev"
+      class="relative mt-head overflow-hidden rounded-frame border border-border-soft bg-bg-sunk p-3 sm:p-4"
     >
       <div
-        class="grid items-center gap-10 p-7 sm:p-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"
+        aria-hidden="true"
+        class="dotgrid pointer-events-none absolute inset-0 opacity-70"
+        style="mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%);-webkit-mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%)"
+      >
+      </div>
+
+      <!-- wide card: where requests come from and where work lands -->
+      <div
+        class="relative grid items-center gap-8 rounded-card bg-bg-elev p-6 sm:p-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-10"
       >
         <div>
           <h3 class="text-[19px] font-medium tracking-[-0.015em] text-fg">
@@ -75,198 +97,293 @@ const chips = [
           </ul>
         </div>
 
-        <div class="relative">
-          <!-- <div
+        <div class:list={[stage, "h-72 sm:h-80"]}>
+          <div
             aria-hidden="true"
-            class="pointer-events-none absolute inset-0 -m-4 opacity-60"
-            style="background-image:linear-gradient(var(--color-border-soft) 1px,transparent 1px),linear-gradient(90deg,var(--color-border-soft) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent 78%);-webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent 78%)"
+            class="dotgrid pointer-events-none absolute inset-0 opacity-60"
+            style={fade}
           >
-          </div> -->
+          </div>
 
-          <div class="relative flex flex-wrap justify-center gap-2.5">
+          <svg
+            aria-hidden="true"
+            class="absolute inset-0 size-full"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            fill="none"
+          >
             {
-              chips.map((chip) => (
-                <span class="inline-flex items-center gap-2 rounded-lg border border-border-soft bg-bg px-3 py-2 text-[13px] font-medium text-fg transition-colors hover:border-acc/40 hover:bg-acc-wash">
-                  {chip.icon ? (
-                    <Icon
-                      name={chip.icon}
-                      class="size-5 text-acc"
-                      stroke={1.6}
-                    />
-                  ) : (
-                    <img src={chip.logo} alt={chip.label} class="size-5" />
-                  )}
-                  {chip.label}
-                </span>
+              nodes.map((n) => (
+                <line
+                  x1="50"
+                  y1="50"
+                  x2={n.x}
+                  y2={n.y}
+                  vector-effect="non-scaling-stroke"
+                  stroke-width="1.25"
+                  stroke-dasharray="3 5"
+                  style="stroke:var(--color-acc);stroke-opacity:0.45;animation:flow-dash 0.9s linear infinite"
+                />
               ))
             }
-          </div>
+          </svg>
+
+          <span
+            class="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-fg px-4 py-2 text-[13px] font-medium text-bg"
+          >
+            <span class="size-1.5 animate-pulse rounded-full bg-acc-hot"></span>
+            DevAgents
+          </span>
+
+          {
+            nodes.map((n) => (
+              <span
+                class="absolute grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-panel border border-border-soft bg-bg-elev"
+                style={`left:${n.x}%;top:${n.y}%`}
+                title={n.label}
+              >
+                {n.icon ? (
+                  <Icon name={n.icon} class="size-5 text-acc" stroke={1.7} />
+                ) : (
+                  <img src={n.logo} alt={n.label} class={n.img} />
+                )}
+              </span>
+            ))
+          }
         </div>
       </div>
-    </div>
 
-    <!-- two cards -->
-    <div class="mt-5 grid gap-5 lg:grid-cols-2">
-      <article
-        data-reveal
-        class="group overflow-hidden rounded-2xl border border-border-soft bg-bg-elev p-7 sm:p-9"
-      >
-        <div
-          class="relative overflow-hidden rounded-xl border border-border-soft bg-bg-sunk"
-        >
-          <div
-            class="flex items-center justify-between border-b border-border-soft px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
-          >
-            <span>devagents.yml</span><span>repo root</span>
-          </div>
-          <pre
-            class="overflow-x-auto px-4 py-4 font-mono text-[11.5px] leading-[1.8] text-fg-muted"><code><span class="text-fg-faint">models:</span> [claude, gpt-5, gemini, grok]
-<span class="text-fg-faint">gate:</span>   bun test && bun run typecheck
-<span class="text-fg-faint">merge:</span>  <span class="text-acc">requires_human_approval</span>
-<span class="text-fg-faint">touch:</span>  ["src/**"] <span class="text-fg-faint"># never migrations</span></code></pre>
-        </div>
-
-        <h3 class="mt-6 text-[17px] font-medium tracking-[-0.01em] text-fg">
-          Your conventions, enforced
-        </h3>
-        <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
-          One file in the repo decides which models run, what has to pass, which
-          paths are off-limits, and who is allowed to approve.
-        </p>
-      </article>
-
-      <article
-        data-reveal
-        class="group overflow-hidden rounded-2xl border border-border-soft bg-bg-elev p-7 sm:p-9"
-      >
-        <!-- a made-up app, as deployed from the run's branch -->
-        <div
-          aria-hidden="true"
-          class="relative overflow-hidden rounded-xl border border-border-soft bg-bg-sunk px-4 pt-5 sm:px-6"
-        >
-          <div
-            class="pointer-events-none absolute inset-0 opacity-70"
-            style="background:radial-gradient(80% 70% at 50% 0%,rgba(28,140,228,0.14),transparent 70%)"
-          >
-          </div>
-
-          <div
-            class="relative overflow-hidden rounded-t-lg border border-b-0 border-border-soft bg-bg-elev shadow-[0_18px_40px_-24px_rgba(12,22,34,0.45)]"
-          >
+      <div class="relative mt-3 grid gap-3 lg:grid-cols-2">
+        <!-- conventions: the repo's rules, as the run sees them -->
+        <article class="flex flex-col rounded-card bg-bg-elev p-6 sm:p-8">
+          <div class:list={[stage, "p-4 sm:p-5"]}>
             <div
-              class="flex items-center gap-1.5 border-b border-border-soft bg-bg-sunk px-2.5 py-1.5"
+              aria-hidden="true"
+              class="dotgrid pointer-events-none absolute inset-0 opacity-60"
+              style={fade}
             >
-              <span class="size-1.5 rounded-full bg-base-300"></span>
-              <span class="size-1.5 rounded-full bg-base-300"></span>
-              <span class="size-1.5 rounded-full bg-base-300"></span>
-              <span
-                class="ml-1 min-w-0 flex-1 truncate rounded bg-base-100 px-2 py-0.5 font-mono text-[9.5px] text-fg-faint"
-                >preview-4821.devagents.app/revenue</span
-              >
-              <span
-                class="flex shrink-0 items-center gap-1 font-mono text-[9px] text-ok"
-              >
-                <span class="size-1.5 animate-pulse rounded-full bg-ok"></span>live
-              </span>
             </div>
 
-            <div class="px-4 pb-4 pt-4 sm:px-5">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <span class="block text-[11px] text-fg-faint"
-                    >Monthly revenue</span
-                  >
-                  <span class="mt-1.5 flex items-baseline gap-2">
-                    <span
-                      class="text-[22px] font-medium leading-none tracking-[-0.02em] text-fg"
-                      >$42.8k</span
+            <div
+              class="relative overflow-hidden rounded-panel border border-border-soft bg-bg-elev"
+            >
+              <div
+                class="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3"
+              >
+                <span class="text-[12.5px] font-medium text-fg"
+                  >Repository rules</span
+                >
+                <span class="font-mono text-[10.5px] text-fg-faint"
+                  >from devagents.yml</span
+                >
+              </div>
+
+              <dl class="divide-y divide-border-soft">
+                <div class={row}>
+                  <dt class={rowLabel}>Models per run</dt>
+                  <dd class="flex items-center gap-2.5">
+                    <span class="flex -space-x-1.5">
+                      {
+                        models.map((m) => (
+                          <span class="grid size-6 place-items-center rounded-full border border-border-soft bg-bg-elev">
+                            <img src={m} alt="" class="size-3.5" />
+                          </span>
+                        ))
+                      }
+                    </span>
+                    <span class="font-mono text-[12px] tabular-nums text-fg"
+                      >4</span
                     >
-                    <span class="font-mono text-[10.5px] text-ok">+6.4%</span>
+                  </dd>
+                </div>
+
+                <div class={row}>
+                  <dt class={rowLabel}>Required checks</dt>
+                  <dd class="flex flex-wrap justify-end gap-1.5">
+                    <span
+                      class="inline-flex items-center gap-1 rounded-chip bg-ok-wash px-1.5 py-0.5 font-mono text-[10.5px] text-ok"
+                    >
+                      <Icon name="check" class="size-2.5" stroke={2.6} /> bun test
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1 rounded-chip bg-ok-wash px-1.5 py-0.5 font-mono text-[10.5px] text-ok"
+                    >
+                      <Icon name="check" class="size-2.5" stroke={2.6} /> typecheck
+                    </span>
+                  </dd>
+                </div>
+
+                <div class={row}>
+                  <dt class={rowLabel}>Off-limits paths</dt>
+                  <dd
+                    class="inline-flex items-center gap-1 rounded-chip bg-err-wash px-1.5 py-0.5 font-mono text-[10.5px] text-err"
+                  >
+                    <Icon name="lock" class="size-2.5" stroke={2.2} /> migrations/**
+                  </dd>
+                </div>
+
+                <div class={row}>
+                  <dt class={rowLabel}>Human approval to merge</dt>
+                  <dd class="flex items-center gap-2">
+                    <Icon name="lock" class="size-3 text-fg-faint" stroke={2} />
+                    <span
+                      class="flex h-4.5 w-8 items-center justify-end rounded-full bg-acc p-0.5"
+                    >
+                      <span class="size-3.5 rounded-full bg-white"></span>
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <h3 class="mt-6 text-[17px] font-medium tracking-[-0.01em] text-fg">
+            Your conventions, enforced
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+            One file in the repo decides which models run, what has to pass,
+            which paths are off-limits, and who is allowed to approve.
+          </p>
+        </article>
+
+        <!-- a made-up app, as deployed from the run's branch -->
+        <article class="flex flex-col rounded-card bg-bg-elev p-6 sm:p-8">
+          <div
+            aria-hidden="true"
+            class:list={[stage, "px-4 pt-5 sm:px-6"]}
+          >
+            <div
+              class="pointer-events-none absolute inset-0 opacity-70"
+              style="background:radial-gradient(80% 70% at 50% 0%,rgba(28,140,228,0.14),transparent 70%)"
+            >
+            </div>
+
+            <div
+              class="relative overflow-hidden rounded-t-panel border border-b-0 border-border-soft bg-bg-elev"
+            >
+              <div
+                class="flex items-center gap-1.5 border-b border-border-soft bg-bg-sunk px-2.5 py-1.5"
+              >
+                <span class="size-1.5 rounded-full bg-base-300"></span>
+                <span class="size-1.5 rounded-full bg-base-300"></span>
+                <span class="size-1.5 rounded-full bg-base-300"></span>
+                <span
+                  class="ml-1 min-w-0 flex-1 truncate rounded-chip bg-base-100 px-2 py-0.5 font-mono text-[9.5px] text-fg-faint"
+                  >preview-4821.devagents.app/revenue</span
+                >
+                <span
+                  class="flex shrink-0 items-center gap-1 font-mono text-[9px] text-ok"
+                >
+                  <span class="size-1.5 animate-pulse rounded-full bg-ok"></span>live
+                </span>
+              </div>
+
+              <div class="px-4 pb-4 pt-4 sm:px-5">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <span class="block text-[11px] text-fg-faint"
+                      >Monthly revenue</span
+                    >
+                    <span class="mt-1.5 flex items-baseline gap-2">
+                      <span
+                        class="text-[22px] font-medium leading-none tracking-[-0.02em] text-fg"
+                        >$42.8k</span
+                      >
+                      <span class="font-mono text-[10.5px] text-ok">+6.4%</span>
+                    </span>
+                  </div>
+
+                  <!-- the feature this run added -->
+                  <span
+                    class="inline-flex shrink-0 items-center gap-1 rounded-chip border border-acc-soft bg-acc-wash px-2 py-1 text-[10.5px] font-medium text-acc"
+                  >
+                    <Icon name="spark" class="size-3" stroke={1.8} /> Added in run
+                    4821
                   </span>
                 </div>
 
-                <!-- the feature this run added -->
-                <span
-                  class="inline-flex shrink-0 items-center gap-1 rounded-md border border-acc-soft bg-acc-wash px-2 py-1 text-[10.5px] font-medium text-acc"
-                >
-                  <Icon name="spark" class="size-3" stroke={1.8} /> Added in run 4821
-                </span>
-              </div>
+                <div class="relative mt-6 h-24">
+                  <svg
+                    class="absolute inset-0 size-full overflow-visible"
+                    viewBox="0 0 220 80"
+                    preserveAspectRatio="none"
+                    fill="none"
+                  >
+                    <defs>
+                      <linearGradient id="tidal-area" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="0"
+                          style="stop-color:var(--color-fg);stop-opacity:0.08"
+                        ></stop>
+                        <stop
+                          offset="1"
+                          style="stop-color:var(--color-fg);stop-opacity:0"
+                        ></stop>
+                      </linearGradient>
+                    </defs>
 
-              <div class="relative mt-6 h-24">
-                <svg
-                  class="absolute inset-0 size-full overflow-visible"
-                  viewBox="0 0 220 80"
-                  preserveAspectRatio="none"
-                  fill="none"
-                >
-                  <defs>
-                    <linearGradient id="tidal-area" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" style="stop-color:var(--color-fg);stop-opacity:0.08"></stop>
-                      <stop offset="1" style="stop-color:var(--color-fg);stop-opacity:0"></stop>
-                    </linearGradient>
-                  </defs>
+                    <path
+                      d="M0 62 L20 58 L40 60 L60 52 L80 54 L100 46 L120 44 L140 38 L160 34 L160 80 L0 80 Z"
+                      fill="url(#tidal-area)"></path>
+                    <path
+                      d="M0 62 L20 58 L40 60 L60 52 L80 54 L100 46 L120 44 L140 38 L160 34"
+                      vector-effect="non-scaling-stroke"
+                      stroke-width="1.75"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                      style="stroke:var(--color-fg-muted)"></path>
+                    <path
+                      d="M160 34 L180 29 L200 25 L220 20"
+                      vector-effect="non-scaling-stroke"
+                      stroke-width="2"
+                      stroke-dasharray="4 4"
+                      stroke-linecap="round"
+                      style="stroke:var(--color-acc)"></path>
+                  </svg>
 
-                  <path
-                    d="M0 62 L20 58 L40 60 L60 52 L80 54 L100 46 L120 44 L140 38 L160 34 L160 80 L0 80 Z"
-                    fill="url(#tidal-area)"
-                  ></path>
-                  <path
-                    d="M0 62 L20 58 L40 60 L60 52 L80 54 L100 46 L120 44 L140 38 L160 34"
-                    vector-effect="non-scaling-stroke"
-                    stroke-width="1.75"
-                    stroke-linejoin="round"
-                    stroke-linecap="round"
-                    style="stroke:var(--color-fg-muted)"
-                  ></path>
-                  <path
-                    d="M160 34 L180 29 L200 25 L220 20"
-                    vector-effect="non-scaling-stroke"
-                    stroke-width="2"
-                    stroke-dasharray="4 4"
-                    stroke-linecap="round"
-                    style="stroke:var(--color-acc)"
-                  ></path>
-                </svg>
-
-                <span
-                  class="absolute inset-y-0 left-[72.7%] border-l border-dashed border-border-soft"
-                ></span>
-
-                <span
-                  class="absolute left-full top-1/4 grid size-2.5 -translate-x-1/2 -translate-y-1/2 place-items-center"
-                >
                   <span
-                    class="absolute size-full rounded-full bg-acc/35 motion-safe:animate-ping"
+                    class="absolute inset-y-0 left-[72.7%] border-l border-dashed border-border-soft"
                   ></span>
-                  <span
-                    class="relative size-2.5 rounded-full border-2 border-bg-elev bg-acc"
-                  ></span>
-                </span>
-                <span
-                  class="absolute right-0 top-1/4 -translate-y-[calc(100%+0.625rem)] font-mono text-[10.5px] text-acc"
-                  >$48.2k</span
-                >
-              </div>
 
-              <div class="relative mt-2 h-3 font-mono text-[9.5px] text-fg-faint">
-                <span class="absolute left-0">Jan</span>
-                <span class="absolute left-[72.7%] -translate-x-1/2">Today</span>
-                <span class="absolute right-0">Dec</span>
+                  <span
+                    class="absolute left-full top-1/4 grid size-2.5 -translate-x-1/2 -translate-y-1/2 place-items-center"
+                  >
+                    <span
+                      class="absolute size-full rounded-full bg-acc/35 motion-safe:animate-ping"
+                    ></span>
+                    <span
+                      class="relative size-2.5 rounded-full border-2 border-bg-elev bg-acc"
+                    ></span>
+                  </span>
+                  <span
+                    class="absolute right-0 top-1/4 -translate-y-[calc(100%+0.625rem)] font-mono text-[10.5px] text-acc"
+                    >$48.2k</span
+                  >
+                </div>
+
+                <div
+                  class="relative mt-2 h-3 font-mono text-[9.5px] text-fg-faint"
+                >
+                  <span class="absolute left-0">Jan</span>
+                  <span class="absolute left-[72.7%] -translate-x-1/2"
+                    >Today</span
+                  >
+                  <span class="absolute right-0">Dec</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <h3 class="mt-6 text-[17px] font-medium tracking-[-0.01em] text-fg">
-          Previews without friction
-        </h3>
-        <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
-          Every run deploys its branch to a disposable environment and links it
-          on the PR, so the person who asked for the feature can try it before
-          anyone reviews a line.
-        </p>
-      </article>
+          <h3 class="mt-6 text-[17px] font-medium tracking-[-0.01em] text-fg">
+            Previews without friction
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+            Every run deploys its branch to a disposable environment and links
+            it on the PR, so the person who asked for the feature can try it
+            before anyone reviews a line.
+          </p>
+        </article>
+      </div>
     </div>
   </div>
 </section>

@@ -1,0 +1,130 @@
+---
+import SectionHead from "@components/SectionHead.astro";
+import Icon from "@components/Icon.astro";
+
+type Mark = "yes" | "partial" | "no";
+
+const columns = ["DevAgents", "IDE copilots", "Single cloud agents", "A freelancer"];
+
+/* categories, not named products — a mark describes what the category does out of the box */
+const rows: { label: string; marks: [Mark, Mark, Mark, Mark] }[] = [
+  { label: "Clients request in WhatsApp or Slack", marks: ["yes", "no", "partial", "yes"] },
+  { label: "Several models attempt every request", marks: ["yes", "no", "no", "no"] },
+  { label: "CI drops broken attempts before review", marks: ["yes", "no", "partial", "no"] },
+  { label: "Best parts merged into one pull request", marks: ["yes", "no", "no", "no"] },
+  { label: "Live preview the client can click", marks: ["yes", "no", "partial", "partial"] },
+  { label: "Keeps working while your team sleeps", marks: ["yes", "no", "yes", "partial"] },
+  { label: "A human approves every merge", marks: ["yes", "yes", "yes", "yes"] },
+  { label: "Priced per run, not per seat", marks: ["yes", "no", "partial", "no"] },
+];
+
+const spoken = { yes: "Yes", partial: "Partly", no: "No" };
+---
+
+<section id="compare" class="section scroll-mt-24">
+  <div class="shell">
+    <SectionHead
+      eyebrow="Compared"
+      title="How DevAgents compares"
+      accent="to the usual options."
+      sub="Categories, not specific products — each mark describes what that option does out of the box."
+    />
+
+    <div
+      data-reveal
+      class="relative mt-head overflow-hidden rounded-frame border border-border-soft bg-bg-sunk p-3 sm:p-4"
+    >
+      <div
+        aria-hidden="true"
+        class="dotgrid pointer-events-none absolute inset-0 opacity-70"
+        style="mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%);-webkit-mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%)"
+      >
+      </div>
+
+      <div class="relative overflow-x-auto rounded-card bg-bg-elev">
+        <table class="w-full min-w-152 border-collapse text-left sm:min-w-184">
+          <caption class="sr-only">
+            DevAgents compared with IDE copilots, single cloud agents and a
+            freelancer
+          </caption>
+          <thead>
+            <tr>
+              <th
+                scope="col"
+                class="sticky left-0 z-10 w-40 bg-bg-elev px-4 py-5 font-mono text-[10.5px] font-normal uppercase tracking-[0.16em] text-fg-faint sm:w-auto sm:px-7"
+              >
+                Capability
+              </th>
+              {
+                columns.map((c, i) => (
+                  <th
+                    scope="col"
+                    class:list={[
+                      "px-3 py-5 text-center text-[12.5px] sm:px-4 sm:text-[13.5px]",
+                      i === 0
+                        ? "bg-acc-wash font-semibold text-acc"
+                        : "font-medium text-fg-muted",
+                    ]}
+                  >
+                    {c}
+                  </th>
+                ))
+              }
+            </tr>
+          </thead>
+          <tbody>
+            {
+              rows.map((row) => (
+                <tr class="border-t border-border-soft">
+                  <th
+                    scope="row"
+                    class="sticky left-0 z-10 w-40 bg-bg-elev px-4 py-4 text-[13px] font-normal leading-snug text-fg sm:w-auto sm:px-7 sm:text-[14px]"
+                  >
+                    {row.label}
+                  </th>
+                  {row.marks.map((m, i) => (
+                    <td class:list={["px-3 py-4 text-center sm:px-4", i === 0 && "bg-acc-wash"]}>
+                      <span class="inline-grid place-items-center">
+                        {m === "yes" && (
+                          <Icon
+                            name="check"
+                            class:list={["size-4", i === 0 ? "text-acc" : "text-fg-muted"]}
+                            stroke={2.2}
+                          />
+                        )}
+                        {m === "partial" && (
+                          <Icon name="minus" class="size-4 text-fg-faint" stroke={2} />
+                        )}
+                        {m === "no" && (
+                          <Icon name="plus" class="size-4 rotate-45 text-fg-faint" stroke={1.8} />
+                        )}
+                        <span class="sr-only">{spoken[m]}</span>
+                      </span>
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ul
+        class="relative mt-3 flex flex-wrap gap-x-6 gap-y-2 rounded-card bg-bg-elev/60 px-6 py-4 text-[12.5px] text-fg-muted sm:px-7"
+      >
+        <li class="flex items-center gap-2">
+          <Icon name="check" class="size-3.5 text-acc" stroke={2.2} /> Built in
+        </li>
+        <li class="flex items-center gap-2">
+          <Icon name="minus" class="size-3.5 text-fg-faint" stroke={2} /> Partly, or
+          with extra setup
+        </li>
+        <li class="flex items-center gap-2">
+          <Icon name="plus" class="size-3.5 rotate-45 text-fg-faint" stroke={1.8} />
+          Not available
+        </li>
+        <li class="ml-auto text-fg-faint sm:hidden">Swipe to compare →</li>
+      </ul>
+    </div>
+  </div>
+</section>

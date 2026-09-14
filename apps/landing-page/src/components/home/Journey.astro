@@ -36,6 +36,14 @@ const merge = agents.map((a, i) => ({
 }));
 const straight = [{ d: "M0 4 H32" }];
 
+/* read off the run drawn above: asked 23:02, preview 23:23, grok failed CI */
+const stats = [
+  { value: "21 min", label: "from message to preview" },
+  { value: "4", label: "models attempted in parallel" },
+  { value: "3 of 4", label: "attempts passed your CI" },
+  { value: "1", label: "pull request to review" },
+];
+
 const plan = [
   "Add the PDF endpoint",
   "Wire up the button",
@@ -45,7 +53,7 @@ const plan = [
 
 <section
   id="journey"
-  class="scroll-mt-24 border-t border-border-soft py-24 sm:py-28"
+  class="section scroll-mt-24"
 >
   <div class="shell">
     <SectionHead
@@ -56,9 +64,42 @@ const plan = [
 
     <div
       data-reveal
-      data-journey
-      class="scrollbar-thin mt-7 overflow-x-auto rounded-2xl border border-border-soft bg-bg-card-strong"
+      class="relative mt-head overflow-hidden rounded-frame border border-border-soft bg-bg-sunk p-3 sm:p-4"
     >
+      <div
+        aria-hidden="true"
+        class="dotgrid pointer-events-none absolute inset-0 opacity-70"
+        style="mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%);-webkit-mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%)"
+      >
+      </div>
+
+      <div
+        class="relative overflow-hidden rounded-card border border-border-soft bg-bg-elev"
+      >
+        <div
+          class="flex items-center justify-between gap-4 border-b border-border-soft px-5 py-3 sm:px-6"
+        >
+          <span class="flex items-center gap-2.5">
+            <span class="relative grid size-2 place-items-center">
+              <span
+                class="absolute size-2 rounded-full bg-acc/40 motion-safe:animate-ping"
+              ></span>
+              <span class="relative size-2 rounded-full bg-acc"></span>
+            </span>
+            <span
+              class="font-mono text-[10.5px] uppercase tracking-[0.16em] text-fg-muted"
+              >Run 4821</span
+            >
+            <span class="hidden text-[12.5px] text-fg sm:inline"
+              >Invoice PDF download</span
+            >
+          </span>
+          <span class="font-mono text-[10.5px] tabular-nums text-fg-faint"
+            >23:02 → 23:23</span
+          >
+        </div>
+
+        <div data-journey class="scrollbar-thin overflow-x-auto bg-bg-sunk">
       <div class="flex w-295 items-center px-4 pb-20 pt-16 font-ui">
         <div
           class="relative flex w-40 shrink-0 flex-col justify-center self-stretch"
@@ -220,6 +261,23 @@ const plan = [
           <span class:list={[caption, "inset-x-0 text-center"]}>05 · Approve</span>
         </div>
       </div>
+        </div>
+      </div>
+
+      <dl class="relative mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {
+          stats.map((s) => (
+            <div class="rounded-card bg-bg-elev/70 px-5 py-4 sm:px-6">
+              <dd class="text-[clamp(1.5rem,2.4vw,1.9rem)] font-medium leading-none tracking-[-0.03em] tabular-nums text-fg">
+                {s.value}
+              </dd>
+              <dt class="mt-2 text-[12.5px] leading-snug text-fg-muted">
+                {s.label}
+              </dt>
+            </div>
+          ))
+        }
+      </dl>
     </div>
   </div>
 </section>

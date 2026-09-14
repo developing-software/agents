@@ -1,73 +1,66 @@
 ---
+/* channels drift in from the left, models from the right — only where there is room beside the headline */
+const chips = [
+  { src: "/brands/whatsapp-svgrepo-com.svg", img: "size-6 rounded-[6px]", style: "left:5%;top:16%;rotate:-8deg" },
+  { src: "/brands/SLA-Slack-icon-RGB.svg", img: "size-5", style: "left:13%;top:48%;rotate:6deg" },
+  { src: "/brands/GitHub_Invertocat_Black.svg", img: "size-5", style: "left:6%;top:76%;rotate:-4deg" },
+  { src: "/ai/claude.svg", img: "size-5", style: "right:5%;top:18%;rotate:7deg" },
+  { src: "/ai/openai.svg", img: "size-5", style: "right:13%;top:50%;rotate:-6deg" },
+  { src: "/ai/gemini.svg", img: "size-5", style: "right:6%;top:76%;rotate:5deg" },
+];
 ---
 
-<section class="relative overflow-hidden">
-  <div class="shell py-14 sm:py-16">
+<section class="section">
+  <div class="shell">
     <div
-      class="grain relative overflow-hidden rounded-3xl px-6 py-20 text-center sm:px-12 sm:py-28"
-      style="background:#0a0c10"
+      data-reveal
+      class="relative overflow-hidden rounded-frame border border-border-soft bg-bg-sunk p-3 sm:p-4"
     >
-      <!-- grid -->
       <div
-        aria-hidden="true"
-        class="absolute inset-0 opacity-[0.55]"
-        style="background-image:linear-gradient(rgba(255,255,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.06) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(75% 75% at 50% 40%,#000,transparent 85%);-webkit-mask-image:radial-gradient(75% 75% at 50% 40%,#000,transparent 85%)"
+        class="relative overflow-hidden rounded-card bg-bg-elev px-6 py-20 text-center sm:px-12 sm:py-24"
       >
-      </div>
-
-      <!-- faceted shapes, top-left -->
-      <div
-        aria-hidden="true"
-        class="pointer-events-none absolute -left-16 -top-16 size-64 -rotate-[18deg] opacity-90 sm:-left-10 sm:-top-14"
-      >
-        <div
-          class="absolute inset-0"
-          style="clip-path:polygon(50% 0%,100% 38%,62% 100%,38% 62%);background:linear-gradient(135deg,#ff9d6c 0%,#ef6f8e 45%,#8f7bf0 100%)"
-        >
-        </div>
-        <div
-          class="absolute inset-0 translate-x-6 translate-y-3 opacity-80"
-          style="clip-path:polygon(50% 0%,100% 38%,62% 100%,38% 62%);background:linear-gradient(135deg,#8f7bf0 0%,#5aa8f5 60%,#52d6c8 100%)"
-        >
-        </div>
-      </div>
-
-      <!-- faceted shapes, bottom-right -->
-      <div
-        aria-hidden="true"
-        class="pointer-events-none absolute -bottom-20 -right-14 size-64 rotate-[24deg] opacity-90 sm:-bottom-16 sm:-right-10"
-      >
-        <div
-          class="absolute inset-0"
-          style="clip-path:polygon(50% 0%,100% 38%,62% 100%,38% 62%);background:linear-gradient(135deg,#52d6c8 0%,#5aa8f5 55%,#8f7bf0 100%)"
-        >
-        </div>
-        <div
-          class="absolute inset-0 -translate-x-6 -translate-y-3 opacity-80"
-          style="clip-path:polygon(50% 0%,100% 38%,62% 100%,38% 62%);background:linear-gradient(135deg,#8f7bf0 0%,#ef6f8e 55%,#ff9d6c 100%)"
-        >
-        </div>
-      </div>
-
-      <div class="relative">
-        <h2
-          data-reveal
-          class="mx-auto max-w-3xl text-balance text-[clamp(1.9rem,4.4vw,3.4rem)] font-medium leading-[1.08] tracking-[-0.03em] text-white"
-        >
-          Shipping software wasn't built for
-          <span
-            style="background:linear-gradient(90deg,#7fb8ff 0%,#c48cf0 50%,#ff9d6c 100%);-webkit-background-clip:text;background-clip:text;color:transparent"
-            >one engineer and five clients.</span
+        <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+          <div
+            class="absolute left-1/2 -top-40 h-96 w-[48rem] -translate-x-1/2 rounded-[50%] opacity-80 blur-[80px]"
+            style="background:radial-gradient(closest-side,rgba(28,140,228,0.16),rgba(28,140,228,0.05) 60%,transparent 80%)"
           >
-        </h2>
+          </div>
+          <div
+            class="dotgrid absolute inset-0 opacity-60"
+            style="mask-image:radial-gradient(70% 80% at 50% 45%,#000,transparent 85%);-webkit-mask-image:radial-gradient(70% 80% at 50% 45%,#000,transparent 85%)"
+          >
+          </div>
 
-        <p
-          data-reveal
-          style="--d:80ms"
-          class="mt-3 text-[clamp(1.5rem,3vw,2.1rem)] italic font-normal leading-none text-white/85"
-        >
-          DevAgents was.
-        </p>
+          {
+            chips.map((c, i) => (
+              <span
+                class="absolute hidden size-12 animate-[chip-float_6s_ease-in-out_infinite] place-items-center rounded-panel border border-border-soft bg-bg-elev xl:grid"
+                style={`${c.style};animation-duration:${(5 + (i % 3) * 0.9).toFixed(1)}s;animation-delay:-${(i * 0.8).toFixed(1)}s`}
+              >
+                <img src={c.src} alt="" class={c.img} />
+              </span>
+            ))
+          }
+        </div>
+
+        <div class="relative">
+          <h2
+            data-reveal
+            class="mx-auto max-w-3xl text-balance text-[clamp(2rem,4.2vw,3.35rem)] font-medium leading-[1.05] tracking-[-0.035em] text-fg"
+          >
+            Shipping software wasn't built for
+            <span class="italic font-normal text-acc"
+              >one engineer and five clients.</span
+            >
+          </h2>
+
+          <p
+            data-reveal
+            class="mt-6 text-[clamp(1.6rem,3vw,2.2rem)] font-medium leading-none tracking-[-0.035em] text-fg"
+          >
+            DevAgents was.
+          </p>
+        </div>
       </div>
     </div>
   </div>
