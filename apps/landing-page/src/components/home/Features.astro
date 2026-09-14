@@ -24,7 +24,7 @@ const top: Feature[] = [
       { label: "WhatsApp", logo: "/brands/whatsapp-svgrepo-com.svg" },
       { label: "Slack", logo: "/brands/SLA-Slack-icon-RGB.svg" },
       { label: "GitHub issues", logo: "/brands/GitHub_Invertocat_Black.svg" },
-      { label: "Linear", icon: "zap" },
+      { label: "Your own app", icon: "zap" },
     ],
   },
   {
@@ -187,7 +187,6 @@ const blocks = [
 
       <div>
         <SectionHead
-          eyebrow="Platform"
           title="Everything a run needs,"
           accent="built in."
           sub="Every client asks for something different, but the pipeline behind it is the same. These are the building blocks behind every run on DevAgents."
@@ -216,7 +215,7 @@ const blocks = [
           {g === 1 && (
             <div
               data-reveal
-              class="relative mt-3 overflow-hidden rounded-card border border-border-soft bg-bg-sunk px-6 py-5 text-center"
+              class="relative mt-3 overflow-hidden rounded-card border border-border-soft bg-acc/15 px-6 py-5 text-center"
             >
               {[false, true].map((mirror) => (
                 <svg
@@ -259,9 +258,9 @@ const blocks = [
                 data-reveal
                 class="flex flex-col rounded-card border border-border-soft bg-bg-elev p-6 sm:p-7"
               >
-                <span class="grid size-10 place-items-center rounded-control border border-acc-soft bg-acc-wash text-acc">
+                {/* <span class="grid size-10 place-items-center rounded-control border border-acc-soft bg-acc-wash text-acc">
                   <Icon name={f.icon} class="size-4.5" stroke={1.8} />
-                </span>
+                </span> */}
                 <h3 class="mt-5 text-[17px] font-medium tracking-[-0.01em] text-fg">
                   {f.title}
                 </h3>
