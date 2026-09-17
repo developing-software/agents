@@ -16,7 +16,9 @@
     contentUrl: string;
   } = $props();
 
-  const isClaudeExecution = $derived(name === 'claude_code_execution.json');
+  const isClaudeExecution = $derived(
+    name === 'claude_code_execution.json' || name === 'claude_code_execution.jsonl',
+  );
   const isCodexExecution = $derived(name === 'codex_session.jsonl');
   const isOpencodeExecution = $derived(name === 'opencode_session.json');
   const hasStructuredViewer = $derived(isClaudeExecution || isCodexExecution || isOpencodeExecution);
@@ -109,8 +111,8 @@
             >Raw</button>
           </div>
           {#if view === 'report'}
-            {#if isClaudeExecution && Array.isArray(parsedJson)}
-              <ClaudeExecutionViewer data={parsedJson} />
+            {#if isClaudeExecution && content}
+              <ClaudeExecutionViewer {content} />
             {:else if isCodexExecution && content}
               <CodexExecutionViewer {content} />
             {:else if isOpencodeExecution && parsedJson}

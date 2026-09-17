@@ -140,7 +140,7 @@ export namespace AgentDispatch {
       source: "repository",
       sourceId: repository.id,
       tags: [...new Set(tags)],
-      data: { run },
+      data: { run, agent: { name: AgentEvent.resolveAgent(input.agent) } },
     });
 
     const [git, apiToken] = await Promise.all([
@@ -301,6 +301,11 @@ export namespace AgentDispatch {
       );
     }
     const data = AgentEvent.Completed.parse(event.data);
+    // Runs dispatched before the name was recorded up front still carry it as a tag.
+    if (data.agent.name === "unknown") {
+      const harness = event.tags.find((t) => t.startsWith("harness:"));
+      if (harness) data.agent.name = AgentEvent.resolveAgent(harness.slice("harness:".length));
+    }
     return { event, data, repository, sandboxId: data.run?.id ?? null };
   }
 

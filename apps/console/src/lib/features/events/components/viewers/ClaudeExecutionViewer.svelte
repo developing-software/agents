@@ -1,7 +1,27 @@
 <script lang="ts">
   import { SvelteSet, SvelteMap } from 'svelte/reactivity';
 
-  let { data }: { data: any[] } = $props();
+  /** A JSON array of entries, or `claude -p --output-format stream-json` output (JSONL). */
+  let { content }: { content: string } = $props();
+
+  const data: any[] = $derived.by(() => {
+    const trimmed = content.trim();
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return trimmed.split('\n').flatMap((line) => {
+      try {
+        return line.trim() ? [JSON.parse(line)] : [];
+      } catch {
+        return [];
+      }
+    });
+  });
 
   // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -50,7 +70,16 @@
     data.findLast((e: any) => e.type === 'result') as any | undefined,
   );
 
-  const model = $derived(resultEntry?.model ?? 'unknown');
+  const initEntry = $derived(
+    data.find((e: any) => e.type === 'system' && e.subtype === 'init') as any | undefined,
+  );
+
+  const model = $derived(
+    resultEntry?.model ??
+      initEntry?.model ??
+      Object.keys(resultEntry?.modelUsage ?? {})[0] ??
+      'unknown',
+  );
   const numTurns = $derived(resultEntry?.num_turns ?? 0);
   const totalCost = $derived(resultEntry?.total_cost_usd ?? 0);
   const usage = $derived(resultEntry?.usage ?? {});
@@ -77,7 +106,8 @@
   const entries: ConversationEntry[] = $derived.by(() => {
     const result: ConversationEntry[] = [];
     for (const entry of data) {
-      if (entry.type === 'human') {
+      // stream-json calls these `user`; tool results live there too and carry no text blocks.
+      if (entry.type === 'human' || entry.type === 'user') {
         const text = getTextContent(entry.message?.content);
         if (text.trim()) {
           result.push({ kind: 'human', text });
