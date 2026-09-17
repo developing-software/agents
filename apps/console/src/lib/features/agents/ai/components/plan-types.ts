@@ -14,6 +14,8 @@ export type PlanRun = {
   prState: string | null;
   prUrl: string | null;
   runUrl: string | null;
+  /** Sandbox lifecycle; null for runs recorded before sandboxd. */
+  runState: "queued" | "creating" | "running" | "ended" | null;
   cost_usd: number | null;
   input_tokens: number | null;
   output_tokens: number | null;

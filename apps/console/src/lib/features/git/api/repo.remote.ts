@@ -1,6 +1,5 @@
 import { command, query, getRequestEvent } from "$app/server";
 import { z } from "zod";
-import { AgentWorkflow } from "@agents/core/agent";
 import { Api } from "@agents/core/api/api";
 import { getProvider } from "@agents/core/git";
 import { error } from "@sveltejs/kit";
@@ -14,34 +13,6 @@ async function resolveRepo(provider: string, organization: string, repo: string)
     return found;
   });
 }
-
-export const dispatchAgent = command(
-  z.object({
-    provider: z.string(),
-    organization: z.string(),
-    repo: z.string(),
-    agent: z.enum(AgentWorkflow.Agents),
-    prompt: z.string().optional(),
-    issueNumber: z.number().int().positive().optional(),
-    tags: z.array(z.string()).optional(),
-    model: z.string().optional(),
-    ref: z.string().default("dev"),
-  }),
-  async ({ provider, organization, repo, agent, prompt, issueNumber, tags, model, ref }) => {
-    return resolveRepo(provider, organization, repo).then(async () => {
-      await AgentWorkflow.dispatch({
-        owner: organization,
-        repo,
-        agent,
-        prompt,
-        issueNumber,
-        tags,
-        model,
-        ref,
-      });
-    });
-  },
-);
 
 export const dispatchAction = command(
   z.object({

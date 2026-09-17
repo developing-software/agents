@@ -8,6 +8,7 @@ import {
 } from "./client";
 import { client } from "./client.gen";
 import type {
+  AgentRunFinishInput,
   DeleteAppByIdErrors,
   DeleteAppByIdResponses,
   DeleteTokenByIdErrors,
@@ -27,6 +28,12 @@ import type {
   GetTokenResponses,
   PatchEventsByIdErrors,
   PatchEventsByIdResponses,
+  PostAgentsDispatchErrors,
+  PostAgentsDispatchResponses,
+  PostAgentsRunsByIdEndErrors,
+  PostAgentsRunsByIdEndResponses,
+  PostAgentsRunsByIdFinishErrors,
+  PostAgentsRunsByIdFinishResponses,
   PostAppErrors,
   PostAppResponses,
   PostBranchArtifactsByOwnerByRepoByBranchResponses,
@@ -34,8 +41,6 @@ import type {
   PostEventsByIdArtifactsResponses,
   PostEventsErrors,
   PostEventsResponses,
-  PostGithubDispatchErrors,
-  PostGithubDispatchResponses,
   PostModelsCostErrors,
   PostModelsCostResponses,
   PostTokenErrors,
@@ -369,11 +374,11 @@ export class DevAgentSdk extends HeyApiClient {
   }
 
   /**
-   * Dispatch agent workflow
+   * Dispatch agent
    *
-   * Trigger an agent workflow via GitHub Actions workflow_dispatch. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).
+   * Run a coding agent on a repository in a sandboxd sandbox. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).
    */
-  public postGithubDispatch<ThrowOnError extends boolean = false>(
+  public postAgentsDispatch<ThrowOnError extends boolean = false>(
     parameters: {
       owner: string;
       repo: string;
@@ -382,7 +387,8 @@ export class DevAgentSdk extends HeyApiClient {
       issue_number?: number;
       tags?: Array<string>;
       model?: string;
-      ref?: string;
+      base_branch?: string;
+      branch?: string;
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -398,18 +404,19 @@ export class DevAgentSdk extends HeyApiClient {
             { in: "body", key: "issue_number" },
             { in: "body", key: "tags" },
             { in: "body", key: "model" },
-            { in: "body", key: "ref" },
+            { in: "body", key: "base_branch" },
+            { in: "body", key: "branch" },
           ],
         },
       ],
     );
     return (options?.client ?? this.client).post<
-      PostGithubDispatchResponses,
-      PostGithubDispatchErrors,
+      PostAgentsDispatchResponses,
+      PostAgentsDispatchErrors,
       ThrowOnError
     >({
       security: [{ scheme: "bearer", type: "http" }],
-      url: "/github/dispatch",
+      url: "/agents/dispatch",
       ...options,
       ...params,
       headers: {
@@ -417,6 +424,70 @@ export class DevAgentSdk extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
+    });
+  }
+
+  /**
+   * Finish agent run
+   *
+   * Called by the runner when the agent exits. Opens a pull request for a pushed branch and completes the agent event.
+   */
+  public postAgentsRunsByIdFinish<ThrowOnError extends boolean = false>(
+    parameters: {
+      id: string;
+      agentRunFinishInput: AgentRunFinishInput;
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "id" },
+            { key: "agentRunFinishInput", map: "body" },
+          ],
+        },
+      ],
+    );
+    return (options?.client ?? this.client).post<
+      PostAgentsRunsByIdFinishResponses,
+      PostAgentsRunsByIdFinishErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/agents/runs/{id}/finish",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    });
+  }
+
+  /**
+   * Stop agent run
+   *
+   * End the run's sandbox now.
+   */
+  public postAgentsRunsByIdEnd<ThrowOnError extends boolean = false>(
+    parameters: {
+      id: string;
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "id" }] }]);
+    return (options?.client ?? this.client).post<
+      PostAgentsRunsByIdEndResponses,
+      PostAgentsRunsByIdEndErrors,
+      ThrowOnError
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/agents/runs/{id}/end",
+      ...options,
+      ...params,
     });
   }
 

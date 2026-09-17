@@ -5,7 +5,9 @@ The platform is built from four main layers:
 - `apps/console` for the operator UI
 - `packages/functions` for the HTTP API
 - `packages/core` for business logic and shared models
-- `actions/*` for workflow-side collection and emission
+- `actions/*` for CI-side collection and emission
+- `apps/runner` for the sandboxd image that runs agents and reports back
+- `libs/sandboxd` for the generated sandboxd client
 
 ## High-Level Diagram
 
@@ -29,8 +31,8 @@ Issues / Plans
 
 1. A repository is connected through a git provider.
 2. Webhooks and human actions create events.
-3. Agents run through workflow automation and write structured results.
-4. Actions emit tags, artifacts, and final event data.
+3. Agents run in sandboxd sandboxes and report structured results back through the API (see `agent-runs.md`).
+4. CI actions emit tags, artifacts, and final event data.
 5. The console reads those events back as repository, plan, and health views.
 
 ## Important Boundaries

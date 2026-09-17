@@ -38,6 +38,15 @@ export namespace AgentEvent {
 
     export const Status = z.enum(["success", "failure", "cancelled"]).nullable().catch(null);
 
+    /** Where the agent runs. `state` mirrors the runtime (sandboxd) status. */
+    export const Run = z.object({
+      provider: z.string().catch("sandboxd"),
+      id: z.string().nullable().catch(null),
+      state: z.enum(["queued", "creating", "running", "ended"]).nullable().catch(null),
+      endedReason: z.string().nullable().catch(null),
+      baseBranch: z.string().nullable().catch(null),
+    });
+
     export const Data = z.object({
       agent: z
         .object({
@@ -64,6 +73,7 @@ export namespace AgentEvent {
           conclusion: Status,
         })
         .catch({ durationMs: 0, runUrl: "", trigger: "", conclusion: null }),
+      run: Run.optional().catch(undefined),
       diff: z
         .object({
           linesAdded: z.number().catch(0),
@@ -95,6 +105,7 @@ export namespace AgentEvent {
     export type Data = z.infer<typeof Data>;
     export type Metrics = z.infer<typeof Metrics>;
     export type Pricing = z.infer<typeof Pricing>;
+    export type Run = z.infer<typeof Run>;
 
     /** Parse untyped event data — never throws, returns defaults for missing/invalid fields.
      *  Normalizes agent name via aliases and applies pricing→metrics cost fallback. */

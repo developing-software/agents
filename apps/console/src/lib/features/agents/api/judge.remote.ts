@@ -76,6 +76,7 @@ export const listPlanRuns = query(
           prState: null,
           prUrl: parsed.pr?.url || null,
           runUrl: parsed.workflow.runUrl || null,
+          runState: parsed.run?.state ?? null,
           cost_usd: metrics?.cost_usd ?? null,
           input_tokens: tokens?.input ?? null,
           output_tokens: tokens?.output ?? null,

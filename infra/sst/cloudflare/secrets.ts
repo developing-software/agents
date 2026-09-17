@@ -6,6 +6,7 @@ export const GitHubAppPrivateKey = new sst.Secret("GitHubAppPrivateKey");
 export const GitHubAppSlug = new sst.Secret("GitHubAppSlug");
 
 export const LlmApiKey = new sst.Secret("LlmApiKey");
+export const SandboxdToken = new sst.Secret("SandboxdToken");
 
 export const SessionSecret = new sst.Secret("SessionSecret");
 
@@ -21,5 +22,9 @@ export const environment = {
   GITHUB_APP_SLUG: GitHubAppSlug.value,
   LLM_API_KEY: LlmApiKey.value,
   LLM_BASE_URL: "https://llm.developing.company/v1",
+  SANDBOXD_URL: "https://sandboxd.developing.company",
+  SANDBOXD_TOKEN: SandboxdToken.value,
+  SANDBOXD_AGENT_IMAGE: "ghcr.io/developing-software/agents-runner:latest",
+  AGENTS_API_URL: "https://api.agents.developing.company/api",
   SESSION_SECRET: SessionSecret.value,
 };

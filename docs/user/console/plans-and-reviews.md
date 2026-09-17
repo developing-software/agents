@@ -30,5 +30,6 @@ Plans are the unit of approved work. Nothing should be dispatched to an implemen
 ## In Console
 
 - Plan detail pages show implementations and related events.
+- Live runs show their sandbox state; **Terminal** attaches to the running agent and **Stop** ends it. See [sandboxd](../integrations/sandboxd.md).
 - Reviews and fix runs stay grouped under the same plan.
 - Winner selection is a human-controlled step.

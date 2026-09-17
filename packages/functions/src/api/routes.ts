@@ -3,6 +3,7 @@ import { logger } from "hono/logger";
 import { HTTPException } from "hono/http-exception";
 import { VisibleError, ErrorCodes, type ErrorResponseType } from "@agents/core/error";
 import { Log } from "@agents/core/util/log";
+import { AgentApi } from "./handler/agent";
 import { AppApi } from "./handler/app";
 import { TokenApi } from "./handler/token";
 import { AuthApi } from "./handler/auth";
@@ -30,6 +31,7 @@ export const routes = app
   .route("/app", AppApi.route)
   .route("/token", TokenApi.route)
   .route("/events", EventApi.route)
+  .route("/agents", AgentApi.route)
   .route("/github", GitHubApi.route)
   .route("/forjero", ForjeroApi.route)
   .route("/models", ModelsApi.route)

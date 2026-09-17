@@ -4,6 +4,8 @@
   import ArtifactList from '$lib/features/events/components/feed/ArtifactList.svelte';
   import type { PlanRun, ReviewResult, CompareResult } from './plan-types';
   import { repoContext } from '$lib/features/git/context.svelte';
+  import { stopRun, refreshRun } from '$lib/features/agents/api/run.remote';
+  import RunTerminal from '$lib/features/agents/components/RunTerminal.svelte';
 
   let {
     run,
@@ -15,6 +17,7 @@
     onError,
     onDispatchFix,
     agentColor,
+    onRunChanged,
   }: {
     run: PlanRun;
     review: ReviewResult | undefined;
@@ -25,6 +28,7 @@
     onError: (message: string) => void;
     onDispatchFix?: (prNumber: number, reviewEventId: string, review: { verdict: string; suggestions?: string[] }) => void;
     agentColor: (agent: string) => string;
+    onRunChanged?: () => void;
   } = $props();
 
   const repo = repoContext.get();
@@ -49,6 +53,11 @@
   const isWinner = $derived(judgment != null && run.prNumber != null && judgment.winner.prNumber === run.prNumber);
   const effectiveStatus = $derived(run.status ?? run.workflowConclusion);
   const isFailed = $derived(effectiveStatus === 'failure' || effectiveStatus === 'cancelled');
+  const live = $derived(run.runState != null && run.runState !== 'ended');
+
+  // -- Sandbox run state --
+  let showTerminal = $state(false);
+  let runPending = $state(false);
   const cc = $derived.by(() => {
     let passed = 0;
     let failed = 0;
@@ -80,6 +89,20 @@
 
   function avgScore(scores: { adherence: number; quality: number; completeness: number }): string {
     return ((scores.adherence + scores.quality + scores.completeness) / 3).toFixed(1);
+  }
+
+  // -- Sandbox actions --
+
+  async function runAction(action: typeof stopRun | typeof refreshRun, failMessage: string) {
+    runPending = true;
+    try {
+      await action({ organization: repo.organization, repoName: repo.repoName, eventId: run.id });
+      onRunChanged?.();
+    } catch (e) {
+      onError(e instanceof Error ? e.message : failMessage);
+    } finally {
+      runPending = false;
+    }
   }
 
   // -- Review actions --
@@ -142,6 +165,8 @@
     <span class="agent-name">{capitalize(run.agent)}</span>
     {#if effectiveStatus}
       <span class="status-badge status-{effectiveStatus}">{effectiveStatus}</span>
+    {:else if live}
+      <span class="status-badge status-live">{run.runState}</span>
     {/if}
     {#if run.model}
       <span class="model-tag">{run.model}</span>
@@ -220,6 +245,27 @@
           <span class="metric-label">workflow</span>
           <span class="metric-value">
             <a href={run.runUrl} target="_blank" rel="noopener noreferrer" class="run-link">view run</a>
+          </span>
+        {/if}
+
+        {#if run.runState != null}
+          <span class="metric-label">sandbox</span>
+          <span class="metric-value sandbox-actions">
+            <button type="button" class="action-btn" onclick={() => (showTerminal = true)}>Terminal</button>
+            {#if live}
+              <button
+                type="button"
+                class="action-btn fix-btn"
+                disabled={runPending}
+                onclick={() => runAction(stopRun, 'Stop failed')}
+              >Stop</button>
+              <button
+                type="button"
+                class="action-btn"
+                disabled={runPending}
+                onclick={() => runAction(refreshRun, 'Refresh failed')}
+              >Refresh</button>
+            {/if}
           </span>
         {/if}
       </div>
@@ -319,6 +365,15 @@
     {/if}
   </div>
 </div>
+
+{#if showTerminal}
+  <RunTerminal
+    organization={repo.organization}
+    repoName={repo.repoName}
+    eventId={run.id}
+    onclose={() => (showTerminal = false)}
+  />
+{/if}
 
 <style>
   /* ── Card ────────────────────────────────────────────────────────────── */
@@ -479,6 +534,18 @@
     color: var(--color-dim);
     background: color-mix(in srgb, var(--color-dim) 12%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-dim) 25%, transparent);
+  }
+
+  .status-live {
+    color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  .sandbox-actions {
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   /* ── Failure message ────────────────────────────────────────────────── */

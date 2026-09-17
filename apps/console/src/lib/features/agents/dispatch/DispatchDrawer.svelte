@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AgentCompat, AgentWorkflow } from "@agents/core/agent";
+  import type { AgentCompat, AgentDispatch } from "@agents/core/agent";
   import type { Plan } from "@agents/core/events/plan";
   import Drawer from "$lib/ui/Drawer.svelte";
   import DispatchOptions from "./DispatchOptions.svelte";
@@ -45,14 +45,16 @@
   let planId = $state<string | undefined>(undefined);
 
   let selectedModels = new SvelteSet<string>();
-  let activeAgent = $state<AgentWorkflow.Agent | undefined>(undefined);
-  let ref = $state("dev");
+  let activeAgent = $state<AgentDispatch.Agent | undefined>(undefined);
+  let baseBranch = $state("");
   let promptValue = $state("");
   let promptMode = $state<"shared" | "per-model">("shared");
   let perModelPrompts = new SvelteMap<string, string>();
   let dispatching = $state(false);
   let dispatchError = $state<string | null>(null);
-  let dispatchResults = $state<{ harness: string; status: string }[] | null>(
+  let dispatchResults = $state<
+    { harness: string; branch: string; status: string }[] | null
+  >(
     null,
   );
 
@@ -124,7 +126,7 @@
   }
 
   type AgentConfig = {
-    id: AgentWorkflow.Agent;
+    id: AgentDispatch.Agent;
     label: string;
     multiProvider: boolean;
     defaultModel: string;
@@ -194,7 +196,7 @@
       const agentList = Array.from(selectedModels).map((key) => {
         const [harness, ...rest] = key.split(":");
         return {
-          harness: harness as "claude" | "opencode" | "codex",
+          harness: harness as AgentDispatch.Agent,
           model: rest.join(":"),
           prompt:
             promptMode === "per-model"
@@ -208,7 +210,7 @@
         repoName: repo.repoName,
         prompt: promptValue,
         agents: agentList,
-        ref: branch ?? ref,
+        baseBranch: branch ? undefined : baseBranch || undefined,
         tags,
         branch,
       });
@@ -239,7 +241,7 @@
         activeAgent = agents[0].id;
       }
     });
-    ref = "dev";
+    baseBranch = "";
     currentStep = 0;
   }
 </script>
@@ -253,6 +255,7 @@
           {#each dispatchResults as result, i (i)}
             <div class="result-row">
               <span class="result-harness">{result.harness}</span>
+              <span class="result-branch">{result.branch}</span>
               <span class="result-status success">{result.status}</span>
             </div>
           {/each}
@@ -405,8 +408,8 @@
       <section class="section">
         <div class="section-label">Configuration</div>
         <div class="config-grid">
-          <label class="config-label" for="ref-input">Branch</label>
-          <BranchSelect bind:value={ref} />
+          <label class="config-label" for="ref-input">Base branch</label>
+          <BranchSelect bind:value={baseBranch} />
         </div>
       </section>
     {/if}
@@ -1043,7 +1046,16 @@
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: var(--color-text);
+  }
+
+  .result-branch {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--color-dim);
     flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .result-status.success {

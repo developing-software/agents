@@ -2,7 +2,7 @@ import { command, query } from "$app/server";
 import { z } from "zod";
 import { error } from "@sveltejs/kit";
 import { getProvider, isReservedBranch, type NormalizedPullRequest } from "@agents/core/git";
-import { AgentWorkflow } from "@agents/core/agent";
+import { AgentDispatch } from "@agents/core/agent";
 import { withRequestRepoActor } from "$lib/server/repository.server";
 import { repoInput } from "$lib/remote";
 
@@ -28,7 +28,7 @@ export interface BranchDetails {
   hasMergedPR: boolean;
 }
 
-const AGENT_SET: ReadonlySet<string> = new Set(AgentWorkflow.Agents);
+const AGENT_SET: ReadonlySet<string> = new Set(AgentDispatch.Agents);
 
 function detectAgent(branchName: string): string | null {
   const prefix = branchName.split("/")[0];

@@ -41,9 +41,8 @@ Teardown reads both and emits the completed event.
 - `actions/event/emit`
 - `actions/event/data`
 - `actions/event/tag`
-- `actions/git/branch`
-- `actions/git/commit`
-- `actions/git/pr`
+
+Agent runs no longer use actions. They run in sandboxd; see `agent-runs.md`.
 
 ## CI And Health
 

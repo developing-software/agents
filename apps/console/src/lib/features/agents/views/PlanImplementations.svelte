@@ -127,6 +127,7 @@
               onError={handleError}
               {onDispatchFix}
               {agentColor}
+              onRunChanged={() => dataQuery.refresh()}
             />
           {/each}
         </div>
@@ -148,6 +149,7 @@
                 onError={handleError}
                 {onDispatchFix}
                 {agentColor}
+                onRunChanged={() => dataQuery.refresh()}
               />
             {/each}
           </div>

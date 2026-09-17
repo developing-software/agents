@@ -194,6 +194,49 @@ export type EventArtifact = {
   uploaded: string;
 };
 
+export type AgentDispatchResult = {
+  eventId: string;
+  sandboxId: string;
+  branch: string;
+};
+
+/**
+ * What the runner reports when the agent exits.
+ */
+export type AgentRunFinishInput = {
+  status: "success" | "failure" | "cancelled";
+  sessionId?: string | null;
+  finalMessage?: string | null;
+  metrics?: {
+    tokens: {
+      input: number | null;
+      output: number | null;
+      reasoning: number | null;
+      cache_read: number | null;
+      cache_creation: number | null;
+    };
+    turns: number | null;
+    cost_usd: number | null;
+    model: string | null;
+  } | null;
+  pricing?: {
+    heuristic: string;
+    model: string;
+    provider: string;
+    cost: {
+      [key: string]: unknown;
+    };
+    cost_usd: number | null;
+  } | null;
+  durationMs?: number;
+  diff?: {
+    linesAdded: number;
+    linesRemoved: number;
+  } | null;
+  pushed?: boolean;
+  title?: string;
+};
+
 export type GetAppData = {
   body?: never;
   path?: never;
@@ -678,7 +721,7 @@ export type PostEventsByIdArtifactsResponses = {
 export type PostEventsByIdArtifactsResponse =
   PostEventsByIdArtifactsResponses[keyof PostEventsByIdArtifactsResponses];
 
-export type PostGithubDispatchData = {
+export type PostAgentsDispatchData = {
   body: {
     /**
      * Repository owner
@@ -701,24 +744,28 @@ export type PostGithubDispatchData = {
      */
     issue_number?: number;
     /**
-     * Additional tags for event linking (e.g. git:issue:42)
+     * Additional tags for event linking (e.g. plan:pln_...)
      */
     tags?: Array<string>;
     /**
-     * Model override
+     * Model override (LiteLLM model name)
      */
     model?: string;
     /**
-     * Git ref to dispatch on
+     * Branch to clone from (default: repository default branch)
      */
-    ref?: string;
+    base_branch?: string;
+    /**
+     * Existing branch to work on, e.g. an open PR's head branch
+     */
+    branch?: string;
   };
   path?: never;
   query?: never;
-  url: "/github/dispatch";
+  url: "/agents/dispatch";
 };
 
-export type PostGithubDispatchErrors = {
+export type PostAgentsDispatchErrors = {
   /**
    * Bad Request
    */
@@ -737,19 +784,103 @@ export type PostGithubDispatchErrors = {
   500: ErrorResponse;
 };
 
-export type PostGithubDispatchError = PostGithubDispatchErrors[keyof PostGithubDispatchErrors];
+export type PostAgentsDispatchError = PostAgentsDispatchErrors[keyof PostAgentsDispatchErrors];
 
-export type PostGithubDispatchResponses = {
+export type PostAgentsDispatchResponses = {
   /**
-   * Workflow dispatched successfully.
+   * Agent run started.
+   */
+  200: AgentDispatchResult;
+};
+
+export type PostAgentsDispatchResponse =
+  PostAgentsDispatchResponses[keyof PostAgentsDispatchResponses];
+
+export type PostAgentsRunsByIdFinishData = {
+  body: AgentRunFinishInput;
+  path: {
+    /**
+     * Agent run event ID
+     */
+    id: string;
+  };
+  query?: never;
+  url: "/agents/runs/{id}/finish";
+};
+
+export type PostAgentsRunsByIdFinishErrors = {
+  /**
+   * Bad Request
+   */
+  400: ErrorResponse;
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Not Found
+   */
+  404: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type PostAgentsRunsByIdFinishError =
+  PostAgentsRunsByIdFinishErrors[keyof PostAgentsRunsByIdFinishErrors];
+
+export type PostAgentsRunsByIdFinishResponses = {
+  /**
+   * The completed agent event.
+   */
+  200: Event;
+};
+
+export type PostAgentsRunsByIdFinishResponse =
+  PostAgentsRunsByIdFinishResponses[keyof PostAgentsRunsByIdFinishResponses];
+
+export type PostAgentsRunsByIdEndData = {
+  body?: never;
+  path: {
+    /**
+     * Agent run event ID
+     */
+    id: string;
+  };
+  query?: never;
+  url: "/agents/runs/{id}/end";
+};
+
+export type PostAgentsRunsByIdEndErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Not Found
+   */
+  404: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type PostAgentsRunsByIdEndError =
+  PostAgentsRunsByIdEndErrors[keyof PostAgentsRunsByIdEndErrors];
+
+export type PostAgentsRunsByIdEndResponses = {
+  /**
+   * Sandbox told to stop.
    */
   200: {
     ok: boolean;
   };
 };
 
-export type PostGithubDispatchResponse =
-  PostGithubDispatchResponses[keyof PostGithubDispatchResponses];
+export type PostAgentsRunsByIdEndResponse =
+  PostAgentsRunsByIdEndResponses[keyof PostAgentsRunsByIdEndResponses];
 
 export type GetModelsPricingData = {
   body?: never;

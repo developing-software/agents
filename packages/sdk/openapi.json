@@ -388,6 +388,252 @@
           "size": 4096,
           "uploaded": "2024-01-01T00:00:00.000Z"
         }
+      },
+      "AgentDispatchResult": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "sandboxId": {
+            "type": "string"
+          },
+          "branch": {
+            "type": "string"
+          }
+        },
+        "required": ["eventId", "sandboxId", "branch"]
+      },
+      "AgentRunFinishInput": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success", "failure", "cancelled"]
+          },
+          "sessionId": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finalMessage": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metrics": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "tokens": {
+                    "default": {
+                      "input": null,
+                      "output": null,
+                      "reasoning": null,
+                      "cache_read": null,
+                      "cache_creation": null
+                    },
+                    "type": "object",
+                    "properties": {
+                      "input": {
+                        "default": null,
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "output": {
+                        "default": null,
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "reasoning": {
+                        "default": null,
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "cache_read": {
+                        "default": null,
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "cache_creation": {
+                        "default": null,
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["input", "output", "reasoning", "cache_read", "cache_creation"]
+                  },
+                  "turns": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "cost_usd": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["tokens", "turns", "cost_usd", "model"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pricing": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "heuristic": {
+                    "default": "unknown",
+                    "type": "string"
+                  },
+                  "model": {
+                    "default": "",
+                    "type": "string"
+                  },
+                  "provider": {
+                    "default": "",
+                    "type": "string"
+                  },
+                  "cost": {
+                    "default": {},
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "cost_usd": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["heuristic", "model", "provider", "cost", "cost_usd"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationMs": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "diff": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "linesAdded": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "linesRemoved": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": ["linesAdded", "linesRemoved"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pushed": {
+            "default": false,
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": ["status"],
+        "description": "What the runner reports when the agent exits."
       }
     }
   },
@@ -1591,28 +1837,22 @@
         ]
       }
     },
-    "/github/dispatch": {
+    "/agents/dispatch": {
       "post": {
-        "operationId": "postGithubDispatch",
-        "tags": ["GitHub"],
-        "summary": "Dispatch agent workflow",
-        "description": "Trigger an agent workflow via GitHub Actions workflow_dispatch. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).",
+        "operationId": "postAgentsDispatch",
+        "tags": ["Agent"],
+        "summary": "Dispatch agent",
+        "description": "Run a coding agent on a repository in a sandboxd sandbox. Accepts either a direct prompt or an issue number (which auto-fetches the issue to build the prompt).",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": ["ok"]
+                  "$ref": "#/components/schemas/AgentDispatchResult"
                 }
               }
             },
-            "description": "Workflow dispatched successfully."
+            "description": "Agent run started."
           },
           "400": {
             "content": {
@@ -1709,19 +1949,22 @@
                     "maximum": 9007199254740991
                   },
                   "tags": {
-                    "description": "Additional tags for event linking (e.g. git:issue:42)",
+                    "description": "Additional tags for event linking (e.g. plan:pln_...)",
                     "type": "array",
                     "items": {
                       "type": "string"
                     }
                   },
                   "model": {
-                    "description": "Model override",
+                    "description": "Model override (LiteLLM model name)",
                     "type": "string"
                   },
-                  "ref": {
-                    "default": "dev",
-                    "description": "Git ref to dispatch on",
+                  "base_branch": {
+                    "description": "Branch to clone from (default: repository default branch)",
+                    "type": "string"
+                  },
+                  "branch": {
+                    "description": "Existing branch to work on, e.g. an open PR's head branch",
                     "type": "string"
                   }
                 },
@@ -1730,6 +1973,192 @@
             }
           }
         }
+      }
+    },
+    "/agents/runs/{id}/finish": {
+      "post": {
+        "operationId": "postAgentsRunsByIdFinish",
+        "tags": ["Agent"],
+        "summary": "Finish agent run",
+        "description": "Called by the runner when the agent exits. Opens a pull request for a pushed branch and completes the agent event.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            },
+            "description": "The completed agent event."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "validation",
+                  "code": "invalid_parameter",
+                  "message": "The request was invalid",
+                  "param": "email"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            },
+            "required": true,
+            "description": "Agent run event ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRunFinishInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/runs/{id}/end": {
+      "post": {
+        "operationId": "postAgentsRunsByIdEnd",
+        "tags": ["Agent"],
+        "summary": "Stop agent run",
+        "description": "End the run's sandbox now.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["ok"]
+                }
+              }
+            },
+            "description": "Sandbox told to stop."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "authentication",
+                  "code": "unauthorized",
+                  "message": "Authentication required"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "not_found",
+                  "code": "resource_not_found",
+                  "message": "The requested resource could not be found"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "type": "internal",
+                  "code": "internal_error",
+                  "message": "Internal server error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "evt_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            },
+            "required": true,
+            "description": "Agent run event ID"
+          }
+        ]
       }
     },
     "/models/pricing": {

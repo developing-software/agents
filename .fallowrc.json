@@ -9,8 +9,7 @@
     "packages/core/src/events/agent/index.ts",
     "apps/console/src/hooks.server.ts",
     "actions/core/src/index.ts",
-    "actions/agent/src/main.ts",
-    "actions/comment/src/main.ts",
+    "apps/runner/src/report.ts",
     "actions/event/emit/src/main.ts",
     "actions/event/init/src/setup.ts",
     "actions/event/init/src/teardown.ts",
@@ -24,6 +23,7 @@
   "ignorePatterns": [
     "packages/sdk/ts/**",
     "packages/sdk/openapi.json",
+    "libs/sandboxd/src/**",
     "**/dist/**",
     "dist/**",
     "**/.svelte-kit/**",
@@ -49,7 +49,7 @@
     "ignore": ["infra/**", "**/dist/**", "packages/sdk/ts/**", "packages/core/migrations/**"]
   },
   "workspaces": {
-    "packages": ["packages/*", "packages/sdk/ts", "apps/*", "actions/*", "actions/*/*", "scripts"]
+    "packages": ["packages/*", "packages/sdk/ts", "libs/*", "apps/*", "actions/*", "actions/*/*", "scripts"]
   },
   "rules": {}
 }

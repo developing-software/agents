@@ -1,6 +1,6 @@
 import { command, query } from "$app/server";
 import { z } from "zod";
-import { AgentWorkflow, AgentCompat } from "@agents/core/agent";
+import { AgentDispatch, AgentCompat } from "@agents/core/agent";
 import { getProvider } from "@agents/core/git";
 import { Plan } from "@agents/core/events/plan";
 import { error } from "@sveltejs/kit";
@@ -8,7 +8,7 @@ import { withRequestRepoActor } from "$lib/server/repository.server";
 import { repoQuery } from "$lib/remote";
 
 export const listAgentConfigs = query(z.object({}), async () => {
-  return AgentWorkflow.Agents.map((id) => {
+  return AgentDispatch.Agents.map((id) => {
     const cfg = AgentCompat.config[id];
     return {
       id,
@@ -20,12 +20,12 @@ export const listAgentConfigs = query(z.object({}), async () => {
 });
 
 export const listFeaturedModels = query(
-  z.object({ agent: z.enum(AgentWorkflow.Agents) }),
+  z.object({ agent: z.enum(AgentDispatch.Agents) }),
   async ({ agent }) => AgentCompat.featuredModels(agent),
 );
 
 export const searchAgentModels = query(
-  z.object({ agent: z.enum(AgentWorkflow.Agents), search: z.string().optional() }),
+  z.object({ agent: z.enum(AgentDispatch.Agents), search: z.string().optional() }),
   async ({ agent, search }) => {
     const models = await AgentCompat.allModels(agent);
     if (!search) return models;
@@ -114,31 +114,32 @@ export const dispatch = command(
     prompt: z.string(),
     agents: z.array(
       z.object({
-        harness: z.enum(AgentWorkflow.Agents),
+        harness: z.enum(AgentDispatch.Agents),
         model: z.string().optional(),
         prompt: z.string().optional(),
       }),
     ),
-    ref: z.string().default("dev"),
+    baseBranch: z.string().optional(),
     tags: z.array(z.string()).default([]),
     branch: z.string().optional(),
   }),
-  async ({ organization, repoName, prompt, agents, ref, tags, branch }) => {
+  async ({ organization, repoName, prompt, agents, baseBranch, tags, branch }) => {
     return withRequestRepoActor({ organization, repoName }, async () => {
-      const results: { harness: string; status: string }[] = [];
+      const results: (AgentDispatch.DispatchResult & { harness: string; status: string })[] = [];
 
       for (const agent of agents) {
-        await AgentWorkflow.dispatch({
+        const run = await AgentDispatch.dispatch({
           owner: organization,
           repo: repoName,
           agent: agent.harness,
           prompt: agent.prompt ?? prompt,
           tags,
           model: agent.model,
-          ref,
+          baseBranch,
           branch,
+          origin: "console",
         });
-        results.push({ harness: agent.harness, status: "dispatched" });
+        results.push({ ...run, harness: agent.harness, status: "dispatched" });
       }
 
       return results;

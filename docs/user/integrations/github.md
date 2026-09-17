@@ -7,11 +7,11 @@ GitHub is currently the most complete provider integration in the repo.
 - repository installation and sync
 - issue and pull request views
 - provider webhooks for issues, PRs, and pushes
-- workflow dispatch for agent runs
-- comments and PR updates through GitHub Actions
+- CI events from GitHub Actions workflows (checks, deploys, builds)
+- installation tokens so agent runs can clone, push, and open PRs
 
 ## What To Expect
 
 - repository activity appears in the console as normalized events
-- agent dispatches run through GitHub Actions
+- agent runs execute in sandboxd, not GitHub Actions — see [sandboxd](./sandboxd.md)
 - PR review and fix loops are centered around GitHub PRs
