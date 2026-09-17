@@ -11,7 +11,7 @@
       "hono": "^4.11.3",
       "ulid": "^3.0.2",
       "zod": "^4.3.5",
-      "sst": "^4.11.0",
+      "sst": "^4.17.1",
       "typescript": "^6"
     },
     "catalogs": {
@@ -82,9 +82,9 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260511.1",
     "@types/bun": "catalog:",
-    "fallow": "^2.71.1",
-    "oxfmt": "^0.49.0",
-    "oxlint": "^1.64.0"
+    "fallow": "^3.26.0",
+    "oxfmt": "^0.68.0",
+    "oxlint": "^1.83.0"
   },
   "peerDependencies": {
     "typescript": "^6.0.3"
