@@ -4,7 +4,7 @@
 
 @theme {
   /* ——— surfaces ——————————————————————————————— */
-  --color-bg:#f3f0fb;
+  --color-bg: #f3f0fb;
   --color-bg-elev: #ffffff;
   --color-bg-sunk: #f1f5f9;
   --color-bg-card: rgba(12, 20, 30, 0.022);
@@ -106,7 +106,9 @@ html,
 body {
   color: var(--color-fg);
   font-family: var(--font-sans);
-  font-feature-settings: "ss01" on, "cv01" on;
+  font-feature-settings:
+    "ss01" on,
+    "cv01" on;
 }
 
 body {
@@ -192,10 +194,7 @@ body {
 }
 
 @utility dotgrid {
-  background-image: radial-gradient(
-    var(--color-border-strong) 1px,
-    transparent 1px
-  );
+  background-image: radial-gradient(var(--color-border-strong) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
