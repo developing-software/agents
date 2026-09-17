@@ -30,7 +30,8 @@ export default $config({
   async run() {
     const outputs = {};
     const { readdirSync } = await import("fs");
-    for (const value of readdirSync("./infra/")) {
+    // Only the top-level modules: infra/docker holds compose files, not SST resources.
+    for (const value of readdirSync("./infra/").filter((file) => file.endsWith(".ts"))) {
       const result = await import("./infra/" + value);
       if (result.outputs) Object.assign(outputs, result.outputs);
     }

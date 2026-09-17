@@ -29,6 +29,11 @@ export namespace Email {
     return ctx.provide(sender, fn);
   }
 
+  /** Curried form of `provide` for composition via `Context.withProviders`. */
+  export function provider(sender: Sender) {
+    return <R>(fn: () => R) => ctx.provide(sender, fn);
+  }
+
   let fallback: Promise<Sender> | undefined;
 
   export function use(): Sender {

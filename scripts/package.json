@@ -3,11 +3,20 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "bun dev.ts",
+    "seed": "bun seed.ts",
+    "reset": "bun reset.ts",
+    "prototype": "bun prototype.ts",
+    "typecheck": "tsc --noEmit",
     "db:migrate": "bunx sst shell bun \"migrate.ts\""
   },
   "dependencies": {
+    "@agents/core": "workspace:*",
     "@electric-sql/pglite": "^0.3.14",
     "@electric-sql/pglite-socket": "^0.0.19",
     "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
   }
 }

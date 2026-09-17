@@ -3,10 +3,9 @@
   "entry": [
     "sst.config.ts",
     "scripts/*.ts",
-    "packages/functions/src/index.ts",
+    "packages/functions/src/*/target/*.ts",
     "packages/functions/scripts/**/*.ts",
     "apps/cli/src/cli.ts",
-    "packages/workers/src/**/*.ts",
     "packages/core/src/events/agent/index.ts",
     "apps/console/src/hooks.server.ts",
     "actions/core/src/index.ts",

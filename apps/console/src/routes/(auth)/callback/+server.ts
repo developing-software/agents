@@ -2,7 +2,7 @@ import type { RequestHandler } from "@sveltejs/kit";
 import { redirect, error } from "@sveltejs/kit";
 import { authClient } from "$lib/server/auth";
 import { addAccountToSession } from "$lib/server/session";
-import { subjects } from "@agents/functions/src/auth/subject";
+import { subjects } from "@agents/functions/auth/subject";
 
 export const GET: RequestHandler = async (event) => {
   const code = event.url.searchParams.get("code");

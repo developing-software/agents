@@ -1,22 +1,9 @@
-// import "zod-openapi/extend";
+import { Hono } from "hono";
+import { health } from "../health";
 import { app, routes } from "./routes";
-// import {  } from "hono/bun";
 
+export { app, routes };
 export type Routes = typeof routes;
 
-import { createAuth } from "../auth";
-const auth = createAuth();
-const port = parseInt(process.env.PORT!) || 3000;
-console.log(`Running at http://localhost:${port}`);
-
-export default {
-  port,
-  fetch: (req: Request) => {
-    const url = new URL(req.url);
-    url.protocol = req.headers.get("x-forwarded-proto") ?? url.protocol;
-    if (url.pathname.startsWith("/api/")) {
-      return auth.fetch(new Request(String(url), req));
-    }
-    return app.fetch(new Request(String(url), req));
-  },
-};
+/** What every target serves: probes at the root, the API under `/api`. */
+export const server = new Hono().route("/", health).route("/api", routes);

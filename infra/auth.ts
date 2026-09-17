@@ -8,7 +8,7 @@ if ($app.stage === "prod") {
   const authKv = new sst.cloudflare.Kv("AuthKv", {});
 
   const auth = new sst.cloudflare.Worker("AuthWorker", {
-    handler: "./packages/workers/src/auth.ts",
+    handler: "./packages/functions/src/auth/target/worker.ts",
     domain: subdomain(`auth`),
     url: true,
     placement: {

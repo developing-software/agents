@@ -5,7 +5,7 @@ import { subdomain } from './stage.ts'
 
 
 const api = new sst.cloudflare.Worker("Api", {
-  handler: "./packages/workers/src/api.ts",
+  handler: "./packages/functions/src/api/target/worker.ts",
   domain: subdomain(`api`),
   url: true,
   placement: {

@@ -1,3 +1,4 @@
+import { Hono } from "hono";
 import { issuer } from "@openauthjs/openauth/issuer";
 import { GithubProvider } from "@openauthjs/openauth/provider/github";
 import { CodeProvider } from "@openauthjs/openauth/provider/code";
@@ -15,9 +16,11 @@ import { logger } from "hono/logger";
 import type { StorageAdapter } from "@openauthjs/openauth/storage/storage";
 import { MemoryStorage } from "@openauthjs/openauth/storage/memory";
 import { Template } from "@agents/core/email/template";
+import { health } from "../health";
 
 export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
-  return issuer({
+  // The issuer's own routes are all deeper paths, so the probes sit in front of it.
+  const app = issuer({
     subjects,
     storage,
     ttl: { access: 60 * 30 },
@@ -98,4 +101,5 @@ export function createAuth(storage: StorageAdapter = MemoryStorage({})) {
       return ctx.subject("account", { accountID, email });
     },
   }).use(logger());
+  return new Hono().route("/", health).route("/", app);
 }

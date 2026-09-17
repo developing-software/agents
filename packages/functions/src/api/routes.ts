@@ -3,7 +3,6 @@ import { logger } from "hono/logger";
 import { HTTPException } from "hono/http-exception";
 import { VisibleError, ErrorCodes, type ErrorResponseType } from "@agents/core/error";
 import { Log } from "@agents/core/util/log";
-import { getRuntimeKey } from "hono/adapter";
 import { AppApi } from "./handler/app";
 import { TokenApi } from "./handler/token";
 import { AuthApi } from "./handler/auth";
@@ -62,13 +61,3 @@ export const routes = app
       500,
     );
   });
-
-app.get("/healthz", async (c) => {
-  const runtime = getRuntimeKey();
-  const { Database } = await import("@agents/core/drizzle");
-  const dbCheck = await Database.healthcheck();
-  return c.json(
-    { status: dbCheck.status, runtime, db: dbCheck.message },
-    dbCheck.status === "ok" ? 200 : 503,
-  );
-});

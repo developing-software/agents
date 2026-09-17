@@ -12,7 +12,7 @@ import { Context } from "../context";
 import { Log } from "../util/log";
 
 export namespace Database {
-  const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
+  export const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
   const log = Log.create({ namespace: "drizzle" });
 
   export type Transaction = PgAsyncTransaction<
@@ -28,23 +28,50 @@ export namespace Database {
     effects: (() => void | Promise<void>)[];
   }>();
 
-  const DatabaseContext = Context.create<{ db: PostgresJsDatabase }>();
-  let cachedDb: PostgresJsDatabase | undefined;
+  /** A connection pool and the drizzle instance over it. Build one with `connect`. */
+  export type Client = { db: PostgresJsDatabase; sql: ReturnType<typeof pg> };
 
-  function createDb(url: string): PostgresJsDatabase {
-    const client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20 });
-    return drizzle({
-      client,
-      logger:
-        process.env.DRIZZLE_LOG === "true"
-          ? {
-              logQuery(query, params) {
-                log.info("query", { query });
-                log.info("params", { params });
-              },
-            }
-          : undefined,
+  const DatabaseContext = Context.create<Client>();
+  let fallback: Client | undefined;
+
+  /**
+   * Builds a pool. Long-lived processes create one at startup and `provide` it per
+   * request — a client per request leaks a pool per request. Workers are the exception:
+   * they forbid reusing a socket across requests, so they create one each time.
+   */
+  export function connect(
+    url = process.env.DATABASE_URL ?? DEFAULT_URL,
+    opts: pg.Options<{}> = {},
+  ): Client {
+    const client = pg(url, {
+      connect_timeout: 10,
+      prepare: false,
+      // A shared client serves the whole process, so it needs room for concurrent
+      // requests. pglite accepts exactly one connection — dev sets PG_MAX=1 for it.
+      max: Number(process.env.PG_MAX ?? 10),
+      idle_timeout: 20,
+      // pglite emits a DEBUG notice per parse/bind; postgres.js console.logs every notice by default
+      onnotice: (notice) => {
+        if (notice.severity === "DEBUG") return;
+        log.info(notice.message ?? "notice", { severity: notice.severity, code: notice.code });
+      },
+      ...opts,
     });
+    return {
+      sql: client,
+      db: drizzle({
+        client,
+        logger:
+          process.env.DRIZZLE_LOG === "true"
+            ? {
+                logQuery(query, params) {
+                  log.info("query", { query });
+                  log.info("params", { params });
+                },
+              }
+            : undefined,
+      }),
+    };
   }
 
   function getDatabase(): PostgresJsDatabase {
@@ -56,11 +83,8 @@ export namespace Database {
       }
 
       log.warn("no database context, falling back to env");
-      if (process.env.NODE_ENV === "test") {
-        cachedDb ??= createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
-        return cachedDb;
-      }
-      return createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
+      fallback ??= connect();
+      return fallback.db;
     }
   }
 
@@ -83,8 +107,22 @@ export namespace Database {
     return callback(getDatabase());
   }
 
-  export function provide<T>(url: string, fn: () => T): T {
-    return DatabaseContext.provide({ db: createDb(url) }, fn);
+  /** Scopes a client to `fn` — everything under it reads through that pool. */
+  export function provide<T>(client: Client, fn: () => T): T {
+    return DatabaseContext.provide(client, fn);
+  }
+
+  /** Curried form of `provide` for composition via `Context.withProviders`. */
+  export function provider(client: Client) {
+    return <R>(fn: () => R) => DatabaseContext.provide(client, fn);
+  }
+
+  /**
+   * Closes the pool — lets pglite's single connection pass between dev processes.
+   * The client is spent afterwards; further queries throw.
+   */
+  export function release(client: Client) {
+    return client.sql.end({ timeout: 5 });
   }
 
   export async function effect(effect: () => any | Promise<any>): Promise<void> {
@@ -120,16 +158,19 @@ export namespace Database {
     return (input: Input) => use(async (tx) => callback(input, tx));
   }
 
-  export async function healthcheck(): Promise<{ status: "ok" | "degraded"; message: string }> {
+  export async function healthcheck(): Promise<{
+    status: "ok" | "degraded";
+    message: string;
+    cause?: string;
+  }> {
     try {
       await Database.use((tx) => tx.execute(sql`SELECT 1`));
       return { status: "ok", message: "ok" };
     } catch (err) {
-      log.error(err instanceof Error ? err : new Error(String(err)));
-      return {
-        status: "degraded",
-        message: err instanceof Error ? err.message : "unreachable",
-      };
+      const e = err instanceof Error ? err : new Error(String(err));
+      log.error(e);
+      const cause = e.cause instanceof Error ? e.cause.message : undefined;
+      return { status: "degraded", message: e.message, cause };
     }
   }
 }

@@ -3,10 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "module": "src/index.ts",
+  "module": "src/api/index.ts",
+  "exports": {
+    ".": "./src/api/index.ts",
+    "./api": "./src/api/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./auth/*": "./src/auth/*.ts",
+    "./health": "./src/health.ts",
+    "./*/target/bun": "./src/*/target/bun.ts"
+  },
   "scripts": {
+    "dev": "bun run --hot src/api/target/bun.ts",
+    "dev:auth": "bun run --hot src/auth/target/bun.ts",
     "typecheck": "tsc --noEmit",
-    "dev:auth": "PORT=3002 bun run --hot src/auth/dev.ts",
     "test": "bun test",
     "gen:spec": "bun run scripts/gen-spec.ts"
   },
@@ -18,6 +27,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
     "@types/bun": "catalog:"
   },
   "peerDependencies": {

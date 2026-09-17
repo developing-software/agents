@@ -34,10 +34,29 @@ const handleAuth: Handle = async ({ event, resolve }) => {
   );
 };
 
+let shared: Database.Client | undefined;
+
+/**
+ * Workers forbid reusing a socket across requests, so they get a pool per request. A
+ * long-lived server shares one, unless PG_RELEASE=true cycles it so pglite's single
+ * connection can pass between the dev processes.
+ */
 const handleDb: Handle = async ({ event, resolve }) => {
-  const url = event.platform?.env?.HYPERDRIVE?.connectionString ?? process.env.DATABASE_URL;
+  const hyperdrive = event.platform?.env?.HYPERDRIVE?.connectionString;
+  if (hyperdrive) return Database.provide(Database.connect(hyperdrive), () => resolve(event));
+
+  const url = process.env.DATABASE_URL;
   if (!url) return resolve(event);
-  return await Database.provide(url, async () => await resolve(event));
+  if (process.env.PG_RELEASE !== "true") {
+    shared ??= Database.connect(url);
+    return Database.provide(shared, () => resolve(event));
+  }
+  const db = Database.connect(url);
+  try {
+    return await Database.provide(db, () => resolve(event));
+  } finally {
+    await Database.release(db);
+  }
 };
 const handleCache: Handle = async ({ event, resolve }) => {
   if (!event.platform?.caches) return resolve(event);

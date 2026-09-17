@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { app } from "@agents/functions/src/api/routes";
+import { app } from "@agents/functions/api";
 import { Account } from "@agents/core/account";
 import { Api } from "@agents/core/api/api";
 import { Actor } from "@agents/core/actor";

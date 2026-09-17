@@ -1,2 +1,2 @@
 [test]
-preload = ["../../scripts/pglite.ts"]
+preload = ["./tests/setup.ts", "../../scripts/pglite.ts"]
