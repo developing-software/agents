@@ -31,8 +31,8 @@ export default $config({
     const outputs = {};
     const { readdirSync } = await import("fs");
     // Only the top-level modules: infra/docker holds compose files, not SST resources.
-    for (const value of readdirSync("./infra/").filter((file) => file.endsWith(".ts"))) {
-      const result = await import("./infra/" + value);
+    for (const value of readdirSync("./infra/sst/cloudflare").filter((file) => file.endsWith(".ts"))) {
+      const result = await import("./infra/sst/cloudflare/" + value);
       if (result.outputs) Object.assign(outputs, result.outputs);
     }
     return outputs;

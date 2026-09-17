@@ -15,7 +15,7 @@ import type { PlanRun } from "../ai/components/plan-types";
 // -- Helpers --
 
 function getApiKey(): string | undefined {
-  return getRequestEvent().platform?.env?.ANTHROPIC_API_KEY;
+  return getRequestEvent().platform?.env?.LLM_API_KEY;
 }
 
 function extractPrNumber(tags: string[]): number | null {

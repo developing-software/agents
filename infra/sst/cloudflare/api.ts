@@ -1,7 +1,7 @@
-import { database, hyperdrive } from "./database.ts";
-import { environment } from "./secrets.ts";
-import { r2 } from "./console.ts";
-import { subdomain } from './stage.ts'
+import { database, hyperdrive } from "./sst/cloudflare/database.ts";
+import { environment } from "../../secrets.tss.ts";
+import { r2 } from "../../console.tslare/console.ts";
+import { subdomain } from '../../stage.tse.tsdflare/stage.ts'
 
 
 const api = new sst.cloudflare.Worker("Api", {

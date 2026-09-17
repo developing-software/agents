@@ -4,7 +4,7 @@ declare global {
   namespace App {
     interface Platform {
       env: Env & {
-        ANTHROPIC_API_KEY?: string;
+        LLM_API_KEY?: string;
         SEND_EMAIL?: { send(message: Record<string, unknown>): Promise<unknown> };
       };
       ctx: ExecutionContext;

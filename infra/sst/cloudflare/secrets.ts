@@ -5,7 +5,7 @@ export const GitHubAppId = new sst.Secret("GitHubAppId");
 export const GitHubAppPrivateKey = new sst.Secret("GitHubAppPrivateKey");
 export const GitHubAppSlug = new sst.Secret("GitHubAppSlug");
 
-export const AnthropicApiKey = new sst.Secret("AntropicApiKey");
+export const LlmApiKey = new sst.Secret("LlmApiKey");
 
 export const SessionSecret = new sst.Secret("SessionSecret");
 
@@ -19,6 +19,7 @@ export const environment = {
   GITHUB_APP_ID: GitHubAppId.value,
   GITHUB_APP_PRIVATE_KEY: GitHubAppPrivateKey.value,
   GITHUB_APP_SLUG: GitHubAppSlug.value,
-  ANTHROPIC_API_KEY: AnthropicApiKey.value,
+  LLM_API_KEY: LlmApiKey.value,
+  LLM_BASE_URL: "https://llm.developing.company/v1",
   SESSION_SECRET: SessionSecret.value,
 };

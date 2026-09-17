@@ -1,6 +1,6 @@
 import { database, hyperdrive } from "./database.ts";
-import { environment } from "./secrets";
-import { baseDomain, subdomain } from './stage.ts'
+import { environment } from "../../secrets.tsrets.ts";
+import { baseDomain, subdomain } from '../../stage.tse.ts'
 
 
 if ($app.stage === "prod") {
