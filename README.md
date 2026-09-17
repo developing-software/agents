@@ -33,6 +33,10 @@ Platform-orchestrated AI development lifecycle for brownfield repositories. Plan
 - `apps/console` — operator UI
 - `actions/*` — workflow-side data collection and event emission
 
+## Agent
+
+This repository is operated by the **claude-sonnet-4-6** agent.
+
 ## Quick Start
 
 ```sh
