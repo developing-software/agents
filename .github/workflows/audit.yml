@@ -71,10 +71,53 @@ jobs:
             echo "PROMPT_DELIMITER"
           } >> "$GITHUB_OUTPUT"
 
-      - uses: ./.github/actions/audit
+      - name: Fetch previous audit context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .agents/context .agents/reports
+          PREV=$(gh issue list --label "audit-${{ matrix.name }}" --state all --limit 1 --json number -q '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$PREV" ]; then
+            gh issue view "$PREV" --json body -q '.body' > .agents/context/previous-audit-${{ matrix.name }}.md
+          else
+            echo "No previous audit available." > .agents/context/previous-audit-${{ matrix.name }}.md
+          fi
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
         with:
-          audit_name: ${{ matrix.name }}
-          report_title: ${{ matrix.title }}
-          prompt: ${{ steps.prompt.outputs.content }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --output-format stream-json
+            --verbose
+            --allowedTools "Read,Write,Glob,Grep,Edit(.agents/reports/*),Bash(ls *),Bash(find *),Bash(wc *),Agent"
+          show_full_output: true
+          prompt: ${{ steps.prompt.outputs.content }}
+
+      - name: Publish audit issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT: .agents/reports/audit-${{ matrix.name }}.md
+        run: |
+          if [ ! -f "$REPORT" ]; then
+            echo "::error::Report file not found at $REPORT"
+            exit 1
+          fi
+          gh issue list --label "audit-${{ matrix.name }}" --state open --json number -q '.[].number' | while read -r num; do
+            gh issue close "$num" --comment "Superseded by new audit run: ${{ github.run_id }}"
+          done
+          gh label create "audit-${{ matrix.name }}" --color "0e8a16" --description "Automated ${{ matrix.name }} audit" 2>/dev/null || true
+          gh label create audit --color "d4c5f9" --description "Audit report" 2>/dev/null || true
+          gh issue create \
+            --title "${{ matrix.title }}: $(date -u +%Y-%m-%d)" \
+            --body-file "$REPORT" \
+            --label "audit-${{ matrix.name }},audit"
+
+      - uses: developing-software/agents/actions/event/emit@dev
+        if: always()
+        with:
           token: ${{ secrets.AGENTS_TOKEN }}
+          type: audit
+          tags: "type:audit-${{ matrix.name }}"
+          data: '{"outcome":"${{ steps.claude.outcome }}"}'

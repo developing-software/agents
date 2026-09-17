@@ -1,11 +1,11 @@
 import * as child_process from "node:child_process";
 
-// SVELTE_ADAPTER=node builds the standalone server `dev-agents serve console` and Docker run;
-// otherwise adapter-auto keeps producing the Cloudflare worker SST deploys.
+// SVELTE_ADAPTER=cloudflare builds the worker SST deploys (set by `infra/sst/cloudflare/console.ts`);
+// anything else builds the standalone node server `dev-agents serve console` and Docker run.
 const { default: adapter } =
-  process.env.SVELTE_ADAPTER === "node"
-    ? await import("@sveltejs/adapter-node")
-    : await import("@sveltejs/adapter-auto");
+  process.env.SVELTE_ADAPTER === "cloudflare"
+    ? await import("@sveltejs/adapter-cloudflare")
+    : await import("@sveltejs/adapter-node");
 
 const gitRevision = (() => {
   try {

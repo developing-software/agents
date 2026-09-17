@@ -50,6 +50,14 @@ declare module "sst" {
       "value": string
     }
     "HYPERDRIVE": import("@cloudflare/workers-types").Hyperdrive
+    "LlmApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "SandboxdToken": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "SessionSecret": {
       "type": "sst.sst.Secret"
       "value": string

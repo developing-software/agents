@@ -1,11 +1,36 @@
+import { createHash } from "crypto"
+import { readdirSync, statSync } from "fs"
 import { database, hyperdrive } from "./database.ts";
 import { environment } from "./secrets";
 import { domain } from './stage.ts'
 
 export const r2 = new sst.cloudflare.Bucket("Artifacts");
 
+const dir = `${process.cwd()}/apps/console`
+
+const hash = readdirSync(`${dir}/src`, { recursive: true, withFileTypes: true })
+  .filter((e) => e.isFile())
+  .reduce((h, e) => {
+    const p = `${e.parentPath}/${e.name}`
+    const s = statSync(p)
+    return h.update(`${p}:${s.size}:${s.mtimeMs}`)
+  }, createHash("sha1"))
+  .digest("hex")
+
+const build = new command.local.Command("ConsoleBuild", {
+  dir,
+  create: "bun run build",
+  update: "bun run build",
+  environment: {
+    SVELTE_ADAPTER: "cloudflare",
+  },
+  triggers: [hash],
+})
+
+// Threading `build.stdout` makes `handler` an Output resolved only after ConsoleBuild,
+// so `_worker.js` exists on disk before esbuild reads it (`dependsOn` can't order that).
 const console = new sst.cloudflare.Worker("Console", {
-  handler: "./apps/console/.svelte-kit/cloudflare/_worker.js",
+  handler: build.stdout.apply(() => "./apps/console/.svelte-kit/cloudflare/_worker.js"),
   url: true,
   domain,
   assets: {
@@ -47,6 +72,8 @@ const console = new sst.cloudflare.Worker("Console", {
       };
     },
   },
+}, {
+  dependsOn: [build],
 });
 
 

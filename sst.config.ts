@@ -20,7 +20,6 @@ export default $config({
           await $`bun sst remove`;
           return;
         }
-        await $`bun run build`.cwd("./apps/console");
         await $`bun sst deploy`;
         // if (event.type === "branch" && event.branch === "dev")
         //   await $`bun run test`.cwd("./packages/functions");

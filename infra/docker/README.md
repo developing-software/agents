@@ -46,7 +46,7 @@ lands in `docker inspect` → `State.Health.Log`. On Kubernetes the three map on
 
 ## Notes
 
-- The console is built with `SVELTE_ADAPTER=node`; without it, adapter-auto keeps
-  producing the Cloudflare worker SST deploys.
+- The console is built with `SVELTE_ADAPTER=node`; SST deploys build it with
+  `SVELTE_ADAPTER=cloudflare` to produce the Cloudflare worker.
 - `.env` is git-ignored and read by Compose at runtime, never baked into the image.
 - Re-run migrations with `bun docker run --rm migrate`.

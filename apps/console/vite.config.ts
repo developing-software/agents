@@ -9,7 +9,7 @@ export default defineConfig({
     sveltekit(),
     devtoolsJson(),
     // The node build talks to postgres over real sockets, so it keeps the Node driver.
-    ...(process.env.SVELTE_ADAPTER === "node" ? [] : [cloudflaredPg()]),
+    ...(process.env.SVELTE_ADAPTER === "cloudflare" ? [cloudflaredPg()] : []),
   ],
 });
 
