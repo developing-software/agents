@@ -147,23 +147,15 @@ Uploads a file or directory to the Agents API R2 storage under the current event
 {type}.started      emitted by event/init setup
 {type}.completed    emitted by event/init teardown (parent: started event)
   data: { workflow: {durationMs, runUrl}, ...collected data }
-
-lint.started        emitted by .github/actions/lint
-lint.completed      emitted by .github/actions/lint (parent: lint.started)
-
-tests.started       emitted by .github/actions/test
-tests.completed     emitted by .github/actions/test (parent: tests.started)
-
-typecheck.started   emitted by .github/actions/typecheck
-typecheck.completed emitted by .github/actions/typecheck (parent: typecheck.started)
 ```
 
-## Standalone CI Workflow
+## CI Workflow (`.github/workflows/ci.yml`)
 
 ```
-actions/checkout
- oven-sh/setup-bun + bun install
-./actions/event/init            type: checks, exports token to env
-./.github/actions/check         runs lint + typecheck + tests, writes checks via event/data
-[auto] event/init teardown      updates checks event with check data
+typecheck | lint | test | fallow | trivy     parallel jobs, plain steps
+report (needs: all, if: always())
+  ./actions/event/init            type: checks
+  Record check results            writes checks/<category>/<name> from `needs.*.result`
+  Summarize results               job table in step summary + PR comment
+  [auto] event/init teardown      updates checks event with check data
 ```
