@@ -1,6 +1,18 @@
-import { and, arrayContains, desc, eq, gte, inArray, isNull, like, lte, notLike, sql } from "drizzle-orm";
+import {
+  and,
+  arrayContains,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  like,
+  lte,
+  notLike,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
-import { createTransaction, useTransaction } from "../drizzle/transaction";
+import { Database } from "../drizzle";
 import { Identifier } from "../identifier";
 import { fn } from "../util/fn";
 import { Log } from "../util/log";
@@ -10,6 +22,7 @@ import { eventTable } from "./event.sql";
 import { OriginType } from "./types";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { Repository } from "../repository/index";
+import { Tags } from "./tag";
 
 const log = Log.create({ service: "event" });
 
@@ -41,7 +54,7 @@ export namespace Event {
         example: Examples.Event.origin,
       }),
       tags: z.array(z.string()).meta({
-        description: "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+        description: "Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.",
         example: Examples.Event.tags,
       }),
       data: z.record(z.string(), z.unknown()).meta({
@@ -94,7 +107,7 @@ export namespace Event {
     /** Resolve a SourceRef to a concrete source type and ID. */
     export async function resolve(input: Ref): Promise<Resolved | null> {
       if ("repositoryId" in input) {
-        const repo = await Repository.findByID(input.repositoryId);
+        const repo = await Repository.fromID(input.repositoryId);
         if (repo) return { source: "repository", sourceId: repo.id, label: input.repositoryId };
       }
 
@@ -119,7 +132,7 @@ export namespace Event {
       data: z.record(z.string(), z.unknown()).optional(),
     }),
     async (input) => {
-      return createTransaction(async (tx) => {
+      return Database.transaction(async (tx) => {
         const id = input.id ?? Identifier.create("event");
         const parentEventId = await inferParentEventId(input);
         log.info("create", {
@@ -154,7 +167,7 @@ export namespace Event {
       tags?: string[];
     },
   ): Promise<void> {
-    return createTransaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       const values: Record<string, unknown> = { timeUpdated: new Date() };
       if (patch.data) {
         const row = await tx
@@ -174,7 +187,7 @@ export namespace Event {
   }
 
   export const fromID = fn(Info.shape.id, async (id) => {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const row = await tx
         .select()
         .from(eventTable)
@@ -194,7 +207,7 @@ export namespace Event {
     from?: string;
     to?: string;
   }): Promise<Info[]> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const conditions = [];
       if (opts.source) conditions.push(eq(eventTable.source, opts.source));
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
@@ -219,7 +232,7 @@ export namespace Event {
     tags?: string[];
     excludeTypePrefix?: string;
   }): Promise<string | undefined> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const conditions = [];
       if (opts.source) conditions.push(eq(eventTable.source, opts.source));
       if (opts.sourceId) conditions.push(eq(eventTable.sourceId, opts.sourceId));
@@ -240,15 +253,19 @@ export namespace Event {
 
   /** Find the most recent event matching a type prefix and tags (no root constraint). */
   export async function findByTypeAndTags(opts: {
+    source: string;
+    sourceId: string;
     typePrefix: string;
     tags: string[];
   }): Promise<string | undefined> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const row = await tx
         .select({ id: eventTable.id })
         .from(eventTable)
         .where(
           and(
+            eq(eventTable.source, opts.source),
+            eq(eventTable.sourceId, opts.sourceId),
             like(eventTable.type, opts.typePrefix + "%"),
             arrayContains(eventTable.tags, opts.tags),
           ),
@@ -295,30 +312,28 @@ export namespace Event {
       if (planId) return planId;
     }
 
-    const prTag = opts.tags?.find((tag) => tag.startsWith("gh:pr:"));
+    if (!opts.source || !opts.sourceId) {
+      return opts.parentEventId;
+    }
+
+    const prTag = opts.tags ? Tags.Git.find(opts.tags, "pr") : null;
     if (prTag) {
       // For non-agent events (e.g. deploy), prefer parenting under the agent
       // that created/owns the PR, so deploys nest under the implementation.
       if (!opts.type?.startsWith("agent")) {
         const agentId = await findByTypeAndTags({
+          source: opts.source,
+          sourceId: opts.sourceId,
           typePrefix: "agent",
-          tags: [prTag],
+          tags: [prTag.tag],
         }).catch(() => undefined);
         if (agentId) return agentId;
       }
 
-      const parentEventId = await findParent({ tags: [prTag], excludeTypePrefix: "agent" }).catch(
-        () => undefined,
-      );
-      if (parentEventId) {
-        return parentEventId;
-      }
-    }
-
-    const workflowTag = opts.tags?.find((tag) => tag.startsWith("gh:workflow:"));
-    if (workflowTag) {
       const parentEventId = await findParent({
-        tags: [workflowTag],
+        source: opts.source,
+        sourceId: opts.sourceId,
+        tags: [prTag.tag],
         excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {
@@ -326,10 +341,25 @@ export namespace Event {
       }
     }
 
-    const issueTag = opts.tags?.find((tag) => tag.startsWith("gh:issue:"));
+    const workflowTag = opts.tags ? Tags.Git.find(opts.tags, "workflow") : null;
+    if (workflowTag) {
+      const parentEventId = await findParent({
+        source: opts.source,
+        sourceId: opts.sourceId,
+        tags: [workflowTag.tag],
+        excludeTypePrefix: "agent",
+      }).catch(() => undefined);
+      if (parentEventId) {
+        return parentEventId;
+      }
+    }
+
+    const issueTag = opts.tags ? Tags.Git.find(opts.tags, "issue") : null;
     if (issueTag) {
       const parentEventId = await findParent({
-        tags: [issueTag],
+        source: opts.source,
+        sourceId: opts.sourceId,
+        tags: [issueTag.tag],
         excludeTypePrefix: "agent",
       }).catch(() => undefined);
       if (parentEventId) {
@@ -349,17 +379,21 @@ export namespace Event {
     to?: string;
     rootEventId?: string;
   }): Promise<TreeNode[]> {
-    return useTransaction(async (tx) => {
+    return Database.use(async (tx) => {
       const rows = await tx.execute(sql`
         WITH RECURSIVE event_tree AS (
           SELECT id, time_created, time_updated, source, source_id, parent_event_id, type, origin, tags, data FROM ${eventTable}
-          WHERE ${opts.rootEventId ? sql`id = ${opts.rootEventId}` : sql`parent_event_id IS NULL
+          WHERE ${
+            opts.rootEventId
+              ? sql`id = ${opts.rootEventId}`
+              : sql`parent_event_id IS NULL
             ${opts.source ? sql`AND source = ${opts.source}` : sql``}
             ${opts.sourceId ? sql`AND source_id = ${opts.sourceId}` : sql``}
             ${opts.tags?.length ? sql`AND tags @> ${JSON.stringify(opts.tags)}::text[]` : sql``}
             ${opts.type ? sql`AND type = ${opts.type}` : sql``}
             ${opts.from ? sql`AND time_created >= ${opts.from}::timestamptz` : sql``}
-            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}`}
+            ${opts.to ? sql`AND time_created <= ${opts.to}::timestamptz` : sql``}`
+          }
           UNION ALL
           SELECT e.id, e.time_created, e.time_updated, e.source, e.source_id, e.parent_event_id, e.type, e.origin, e.tags, e.data FROM ${eventTable} e
           JOIN event_tree et ON e.parent_event_id = et.id

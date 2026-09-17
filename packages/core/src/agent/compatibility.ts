@@ -1,5 +1,5 @@
 import { Models } from "../models/client";
-import { AgentWorkflow } from "./workflow";
+import type { AgentDispatch } from "./dispatch";
 
 export namespace AgentCompat {
   export interface AgentConfig {
@@ -9,13 +9,13 @@ export namespace AgentCompat {
     providers: string[];
     /** Curated model family prefixes shown by default */
     featured: string[];
-    /** Default model ID (formatted for the agent's workflow) */
+    /** Default model ID (as served by the LiteLLM gateway) */
     defaultModel: string;
-    /** Transform a models.dev model ID to the format this agent's workflow expects */
+    /** Transform a models.dev model ID to the name the LiteLLM gateway serves */
     formatModelId: (modelId: string, providerId: string) => string;
   }
 
-  export const config: Record<AgentWorkflow.Agent, AgentConfig> = {
+  export const config: Record<AgentDispatch.Agent, AgentConfig> = {
     claude: {
       label: "Claude",
       providers: ["anthropic"],
@@ -37,8 +37,8 @@ export namespace AgentCompat {
         "gemini-pro",
         "gemini-flash",
       ],
-      defaultModel: "openai/gpt-5.4-pro",
-      formatModelId: (modelId, providerId) => `${providerId}/${modelId}`,
+      defaultModel: "gpt-5.4-pro",
+      formatModelId: (modelId) => modelId,
     },
     codex: {
       label: "Codex",
@@ -104,7 +104,7 @@ export namespace AgentCompat {
   }
 
   /** Returns curated models matching the agent's featured family prefixes. */
-  export async function featuredModels(agent: AgentWorkflow.Agent): Promise<AgentModelInfo[]> {
+  export async function featuredModels(agent: AgentDispatch.Agent): Promise<AgentModelInfo[]> {
     const agentConfig = config[agent];
     const all = await Models.allModels();
     const compatible = compatibleModels(all, agentConfig);
@@ -118,7 +118,7 @@ export namespace AgentCompat {
   }
 
   /** Returns all compatible models for the agent (filtered by provider + tool_call support). */
-  export async function allModels(agent: AgentWorkflow.Agent): Promise<AgentModelInfo[]> {
+  export async function allModels(agent: AgentDispatch.Agent): Promise<AgentModelInfo[]> {
     const agentConfig = config[agent];
     const all = await Models.allModels();
     return compatibleModels(all, agentConfig).map((m) => toModelInfo(m, agentConfig));

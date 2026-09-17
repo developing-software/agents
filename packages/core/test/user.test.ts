@@ -1,12 +1,11 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect } from "bun:test";
 import { User } from "../src/user";
+import { withTestWorkspace } from "./util";
 
 describe("user", () => {
-  it("create", async () => {
-    const user = await User.create({
-      email: "test@example.com",
-    });
-    expect(await User.fromID(user)).toBeDefined();
-    // expect(await User.fromFingerprint("test")).toBeDefined();
+  withTestWorkspace("admin user exists after workspace create", async ({ userID }) => {
+    const user = await User.fromID(userID);
+    expect(user).not.toBeNull();
+    expect(user?.role).toBe("admin");
   });
 });

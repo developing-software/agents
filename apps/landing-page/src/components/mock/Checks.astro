@@ -1,0 +1,46 @@
+---
+/** Your own CI, acting as the referee. */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const checks = [
+  ["Unit tests", "214 passed", true],
+  ["Type checks", "No errors", true],
+  ["Lint", "Clean", true],
+  ["Migrations", "Applied", true],
+] as const;
+---
+
+<div class:list={["flex flex-col", className]}>
+  {
+    checks.map(([name, detail, ok]) => (
+      <div class="flex items-center gap-2 border-b border-border-soft py-2 last:border-b-0">
+        <span
+          class:list={[
+            "grid size-4 shrink-0 place-items-center rounded-full",
+            ok ? "bg-ok-wash text-ok" : "bg-err-wash text-err",
+          ]}
+        >
+          <svg
+            viewBox="0 0 12 12"
+            class="size-2.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            {ok ? <path d="m2.5 6.3 2.4 2.4 4.6-5" /> : <path d="M3 3l6 6M9 3l-6 6" />}
+          </svg>
+        </span>
+        <span class="font-mono text-[11px] text-fg">{name}</span>
+        <span class="ml-auto font-mono text-[10.5px] text-fg-faint">
+          {detail}
+        </span>
+      </div>
+    ))
+  }
+</div>

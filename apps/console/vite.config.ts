@@ -4,7 +4,13 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig, type PluginOption } from "vite";
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit(), devtoolsJson(), cloudflaredPg()],
+  plugins: [
+    tailwindcss(),
+    sveltekit(),
+    devtoolsJson(),
+    // The node build talks to postgres over real sockets, so it keeps the Node driver.
+    ...(process.env.SVELTE_ADAPTER === "node" ? [] : [cloudflaredPg()]),
+  ],
 });
 
 function cloudflaredPg(): PluginOption {

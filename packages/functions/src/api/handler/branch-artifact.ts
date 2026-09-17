@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { ErrorCodes, VisibleError } from "@agents/core/error";
-import { BranchArtifact } from "@agents/core/branch-artifact";
+import { BranchArtifact } from "@agents/core/git/branch-artifact";
 import { authRequired, validator } from "../common";
 
 export namespace BranchArtifactApi {

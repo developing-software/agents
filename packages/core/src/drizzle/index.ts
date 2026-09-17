@@ -1,63 +1,176 @@
-import { Log } from "../util/log";
 import { sql } from "drizzle-orm";
 export * from "drizzle-orm";
+import {
+  PgAsyncTransaction,
+  type PgQueryResultHKT,
+  type PgTransactionConfig,
+} from "drizzle-orm/pg-core";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { ExtractTablesWithRelations } from "drizzle-orm/relations";
 import pg from "postgres";
 import { Context } from "../context";
-// import { Resource } from "sst/resource";
+import { Log } from "../util/log";
 
-const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
-const log = Log.create({ namespace: "drizzle" });
+export namespace Database {
+  export const DEFAULT_URL = "postgresql://postgres:password@localhost:5432/postgres";
+  const log = Log.create({ namespace: "drizzle" });
 
-// const clientMap = new Map<string, pg.Sql>();
+  export type Transaction = PgAsyncTransaction<
+    PgQueryResultHKT,
+    Record<string, never>,
+    ExtractTablesWithRelations<Record<any, never>, Record<any, never>>
+  >;
 
-function createDb(url: string): PostgresJsDatabase {
-  const client = pg(url, { connect_timeout: 10, prepare: false, max: 1, idle_timeout: 20 });
-  return drizzle({
-    client,
-    logger:
-      process.env.DRIZZLE_LOG === "true"
-        ? {
-          logQuery(query, params) {
-            log.info("query", { query });
-            log.info("params", { params });
-          },
-        }
-        : undefined,
-  });
-}
+  export type TxOrDb = Transaction | PostgresJsDatabase;
 
-const DatabaseContext = Context.create<{ db: PostgresJsDatabase }>();
+  const TransactionContext = Context.create<{
+    tx: Transaction;
+    effects: (() => void | Promise<void>)[];
+  }>();
 
-/** Wrap a request handler — worker calls this once per request */
-export function withDatabase<T>(url: string, fn: () => T): T {
-  return DatabaseContext.provide({ db: createDb(url) }, fn);
-}
+  /** A connection pool and the drizzle instance over it. Build one with `connect`. */
+  export type Client = { db: PostgresJsDatabase; sql: ReturnType<typeof pg> };
 
-let cachedDb: PostgresJsDatabase | undefined;
-/** All business logic calls this — no manual init needed */
-export function useDatabase(): PostgresJsDatabase {
-  try {
-    return DatabaseContext.use().db;
-  } catch {
-    log.warn("no database context, falling back to env");
-    if (process.env.NODE_ENV === "test") {
-      cachedDb ??= createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
-      return cachedDb;
-    }
-    return createDb(process.env.DATABASE_URL ?? DEFAULT_URL);
-  }
-}
+  const DatabaseContext = Context.create<Client>();
+  let fallback: Client | undefined;
 
-export async function healthcheck(): Promise<{ status: "ok" | "degraded"; message: string }> {
-  try {
-    await useDatabase().execute(sql`SELECT 1`);
-    return { status: "ok", message: "ok" };
-  } catch (err) {
-    log.error(err instanceof Error ? err : new Error(String(err)));
+  /**
+   * Builds a pool. Long-lived processes create one at startup and `provide` it per
+   * request — a client per request leaks a pool per request. Workers are the exception:
+   * they forbid reusing a socket across requests, so they create one each time.
+   */
+  export function connect(
+    url = process.env.DATABASE_URL ?? DEFAULT_URL,
+    opts: pg.Options<{}> = {},
+  ): Client {
+    const client = pg(url, {
+      connect_timeout: 10,
+      prepare: false,
+      // A shared client serves the whole process, so it needs room for concurrent
+      // requests. pglite accepts exactly one connection — dev sets PG_MAX=1 for it.
+      max: Number(process.env.PG_MAX ?? 10),
+      idle_timeout: 20,
+      // pglite emits a DEBUG notice per parse/bind; postgres.js console.logs every notice by default
+      onnotice: (notice) => {
+        if (notice.severity === "DEBUG") return;
+        log.info(notice.message ?? "notice", { severity: notice.severity, code: notice.code });
+      },
+      ...opts,
+    });
     return {
-      status: "degraded",
-      message: err instanceof Error ? err.message : "unreachable",
+      sql: client,
+      db: drizzle({
+        client,
+        logger:
+          process.env.DRIZZLE_LOG === "true"
+            ? {
+                logQuery(query, params) {
+                  log.info("query", { query });
+                  log.info("params", { params });
+                },
+              }
+            : undefined,
+      }),
     };
+  }
+
+  function getDatabase(): PostgresJsDatabase {
+    try {
+      return DatabaseContext.use().db;
+    } catch (err) {
+      if (!(err instanceof Context.NotFound)) {
+        throw err;
+      }
+
+      log.warn("no database context, falling back to env");
+      fallback ??= connect();
+      return fallback.db;
+    }
+  }
+
+  function current() {
+    try {
+      return TransactionContext.use();
+    } catch (err) {
+      if (err instanceof Context.NotFound) {
+        return;
+      }
+      throw err;
+    }
+  }
+
+  export async function use<T>(callback: (tx: TxOrDb) => Promise<T>): Promise<T> {
+    const existing = current();
+    if (existing) {
+      return callback(existing.tx);
+    }
+    return callback(getDatabase());
+  }
+
+  /** Scopes a client to `fn` — everything under it reads through that pool. */
+  export function provide<T>(client: Client, fn: () => T): T {
+    return DatabaseContext.provide(client, fn);
+  }
+
+  /** Curried form of `provide` for composition via `Context.withProviders`. */
+  export function provider(client: Client) {
+    return <R>(fn: () => R) => DatabaseContext.provide(client, fn);
+  }
+
+  /**
+   * Closes the pool — lets pglite's single connection pass between dev processes.
+   * The client is spent afterwards; further queries throw.
+   */
+  export function release(client: Client) {
+    return client.sql.end({ timeout: 5 });
+  }
+
+  export async function effect(effect: () => any | Promise<any>): Promise<void> {
+    const existing = current();
+    if (existing) {
+      existing.effects.push(effect);
+      return;
+    }
+    await effect();
+  }
+
+  export async function transaction<T>(
+    callback: (tx: Transaction) => Promise<T>,
+    isolationLevel?: PgTransactionConfig["isolationLevel"],
+  ): Promise<T> {
+    const existing = current();
+    if (existing) {
+      return callback(existing.tx);
+    }
+
+    const effects: (() => void | Promise<void>)[] = [];
+    const result = await getDatabase().transaction(
+      async (tx) => TransactionContext.provide({ tx, effects }, () => callback(tx)),
+      {
+        isolationLevel: isolationLevel || "read committed",
+      },
+    );
+    await Promise.all(effects.map((effect) => effect()));
+    return result as T;
+  }
+
+  export async function fn<Input, T>(callback: (input: Input, trx: TxOrDb) => Promise<T>) {
+    return (input: Input) => use(async (tx) => callback(input, tx));
+  }
+
+  export async function healthcheck(): Promise<{
+    status: "ok" | "degraded";
+    message: string;
+    cause?: string;
+  }> {
+    try {
+      await Database.use((tx) => tx.execute(sql`SELECT 1`));
+      return { status: "ok", message: "ok" };
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      log.error(e);
+      const cause = e.cause instanceof Error ? e.cause.message : undefined;
+      return { status: "degraded", message: e.message, cause };
+    }
   }
 }

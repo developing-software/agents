@@ -1,0 +1,142 @@
+---
+import Button from "@components/Button2.astro";
+import GithubMark from "@components/GithubMark.astro";
+import Icon from "@components/Icon.astro";
+import BrowserWindow from "@components/BrowserWindow.astro";
+
+const channels = [
+  { label: "WhatsApp", icon: "chat" as const },
+  { label: "GitHub Issues", icon: "issue" as const },
+  { label: "Slack", icon: "hash" as const },
+  { label: "Linear", icon: "zap" as const },
+  { label: "Email", icon: "at" as const },
+];
+---
+
+<section class="relative overflow-hidden pb-section pt-32 sm:pb-section-lg sm:pt-36 lg:pt-40">
+
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+    <div
+      class="absolute left-1/2 -top-72 h-152 w-248 -translate-x-1/2 rounded-[50%] opacity-70 blur-[90px]"
+      style="background:radial-gradient(closest-side,rgba(145,120,211,0.2),rgba(145,120,211,0.07) 55%,transparent 78%)"
+    >
+    </div>
+    <div
+      class="dotgrid absolute inset-x-0 top-0 h-200 opacity-[0.5]"
+      style="mask-image:radial-gradient(70% 60% at 50% 0%,#000,transparent 75%);-webkit-mask-image:radial-gradient(70% 60% at 50% 0%,#000,transparent 75%)"
+    >
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="flex flex-col items-center text-center">
+
+      <h1
+        class="rise mt-7 max-w-5xl text-balance text-[clamp(2.6rem,6.6vw,5.1rem)] font-medium leading-[0.97] tracking-[-0.042em]"
+        style="--d:140ms"
+      >
+        A message at midnight.<br />
+        <span class="italic font-normal text-acc">A shipped feature</span> by morning.
+      </h1>
+
+      <p
+        class="rise mt-7 max-w-2xl text-pretty text-[17px] leading-[1.6] text-fg-muted sm:text-[18px]"
+        style="--d:220ms"
+      >
+        Your client describes what they need. Models
+        implement it, one agent merges the best of every attempt into
+        a single pull request, and a live preview goes up.
+      </p>
+
+      <div
+        class="rise mt-9 flex flex-col items-center gap-3 sm:flex-row"
+        style="--d:300ms"
+      >
+        <Button
+          variant="primary"
+          size="lg"
+          href="#pricing"
+          class="w-full sm:w-auto"
+        >
+          <GithubMark class="size-4.5" /> Connect your repo
+        </Button>
+        <Button
+          text="See how a run works"
+          variant="outline"
+          size="lg"
+          href="#journey"
+          class="w-full sm:w-auto"
+        />
+      </div>
+
+    </div>
+
+    <!-- product window -->
+    <div class="rise mt-14 sm:mt-16 perspective-[2200px]" style="--d:440ms">
+      <BrowserWindow
+        url="devagents.dev"
+        dots="traffic"
+        class="console-tilt mx-auto origin-bottom will-change-transform"
+        contentClass="p-2"
+      >
+        <iframe
+          src="https://google.com"
+          class="block w-full h-160 rounded-sm border-0"
+          title="DevAgents console"></iframe>
+      </BrowserWindow>
+    </div>
+  </div>
+
+  <!-- <div class="mt-16 border-y border-border-soft bg-bg-elev/60">
+    <div
+      class="shell flex flex-col items-center gap-5 py-6 md:flex-row md:justify-between md:gap-8"
+    >
+      <p
+        class="shrink-0 font-mono text-[10.5px] uppercase tracking-[0.16em] text-fg-faint"
+      >
+        Requests arrive however your client talks
+      </p>
+      <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+        {
+          channels.map((c) => (
+            <li class="flex items-center gap-2 text-[13.5px] font-medium text-fg-muted transition-colors hover:text-fg">
+              <Icon name={c.icon} class="size-4 text-acc" stroke={1.6} />
+              {c.label}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div> -->
+</section>
+
+<script>
+  const el = document.querySelector<HTMLElement>(".console-tilt");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (el && !reduce) {
+    const maxDeg = 13;
+    const distance = 340;
+    let ticking = false;
+
+    const update = () => {
+      const progress = Math.min(window.scrollY / distance, 1);
+      const deg = maxDeg * (1 - progress);
+      el.style.transform = `rotateX(${deg}deg) scale(${0.975 + progress * 0.025})`;
+      ticking = false;
+    };
+
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!ticking) {
+          requestAnimationFrame(update);
+          ticking = true;
+        }
+      },
+      { passive: true },
+    );
+
+    update();
+  }
+</script>

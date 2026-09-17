@@ -1,0 +1,292 @@
+---
+import Icon from "@components/Icon.astro";
+
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const lanes = [
+  { name: "Claude", logo: "/ai/claude.svg", w: 100, add: 412, del: 58, score: "0.94", state: "passed", tests: "218/218", used: true },
+  { name: "GPT-5", logo: "/ai/openai.svg", w: 100, add: 386, del: 44, score: "0.88", state: "passed", tests: "218/218", used: true },
+  { name: "Gemini", logo: "/ai/gemini.svg", w: 78, add: 298, del: 31, score: "—", state: "running", tests: "running", used: false },
+  { name: "Grok", logo: "/ai/grok.svg", w: 100, add: 344, del: 96, score: "0.61", state: "failed", tests: "204/218", used: false },
+];
+---
+
+<div
+  class={`overflow-hidden rounded-xl border border-border-strong bg-bg-elev shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_30px_60px_-24px_rgba(16,14,12,0.28),0_2px_6px_-2px_rgba(16,14,12,0.1)] ${className}`}
+>
+  <!-- window chrome -->
+  <div
+    class="flex items-center gap-3 border-b border-border-soft bg-bg-sunk/80 px-3.5 py-2.5"
+  >
+    <div class="flex items-center gap-1.5">
+      <span class="size-2.5 rounded-full bg-[#ff5f57]/70"></span>
+      <span class="size-2.5 rounded-full bg-[#febc2e]/70"></span>
+      <span class="size-2.5 rounded-full bg-[#28c840]/70"></span>
+    </div>
+
+    <div
+      class="ml-1 hidden h-6.5 flex-1 items-center gap-2 rounded-md border border-border-soft bg-bg-elev px-2.5 font-mono text-[10.5px] text-fg-faint sm:flex"
+    >
+      <Icon name="lock" class="size-3" stroke={1.8} />
+      app.devagents.dev/runs/<span class="text-fg-muted">4821</span>
+    </div>
+
+    <span
+      class="ml-auto inline-flex items-center gap-1.5 rounded-full border border-acc/25 bg-acc-wash px-2.5 py-1 font-mono text-[9.5px] font-medium uppercase tracking-[0.14em] text-acc"
+    >
+      <span class="relative flex size-1.5">
+        <span
+          class="absolute inline-flex size-full rounded-full bg-acc [animation:pulse-ring_2s_ease-out_infinite]"
+        ></span>
+        <span class="relative inline-flex size-1.5 rounded-full bg-acc"></span>
+      </span>
+      Run live
+    </span>
+  </div>
+
+  <div class="grid lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)]">
+    <!-- ——— intake ——— -->
+    <div class="border-b border-border-soft p-4 sm:p-5 lg:border-b-0 lg:border-r">
+      <div
+        class="flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.16em] text-fg-faint"
+      >
+        <span class="inline-flex items-center gap-1.5">
+          <Icon name="chat" class="size-3.5" stroke={1.8} /> Intake · WhatsApp
+        </span>
+        <span>23:14</span>
+      </div>
+
+      <div class="mt-4 space-y-2.5">
+        <div
+          class="max-w-[92%] rounded-lg rounded-tl-sm border border-border-soft bg-bg-sunk px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg"
+        >
+          <span class="mb-1 block font-mono text-[9.5px] uppercase tracking-[0.12em] text-fg-faint"
+            >Marina · client</span
+          >
+          can customers export their invoices as a PDF from the billing page? two
+          asked today
+        </div>
+
+        <div
+          class="ml-auto max-w-[92%] rounded-lg rounded-tr-sm border border-acc/20 bg-acc-wash px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg"
+        >
+          <span class="mb-1 block font-mono text-[9.5px] uppercase tracking-[0.12em] text-acc"
+            >DevAgents</span
+          >
+          On it. Same styling as the receipt PDF you already have?
+        </div>
+
+        <div
+          class="max-w-[80%] rounded-lg rounded-tl-sm border border-border-soft bg-bg-sunk px-3 py-2.5 text-[12.5px] leading-[1.5] text-fg"
+        >
+          yes exactly 🙏
+        </div>
+      </div>
+
+      <div
+        class="mt-4 rounded-lg border border-border-soft bg-bg-card p-3"
+      >
+        <div class="flex items-center justify-between">
+          <span
+            class="inline-flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+          >
+            <Icon name="issue" class="size-3.5" stroke={1.8} /> Spec locked
+          </span>
+          <span class="font-mono text-[9.5px] text-fg-faint">23:19</span>
+        </div>
+        <p class="mt-2 text-[13px] font-medium leading-snug text-fg">
+          Invoice PDF export on /billing
+        </p>
+        <ul class="mt-2.5 space-y-1.5">
+          {
+            [
+              "Reuse ReceiptDocument renderer",
+              "Stream from /api/invoices/[id].pdf",
+              "Rate-limit: 20 / hour / account",
+            ].map((s) => (
+              <li class="flex items-start gap-2 text-[11.5px] leading-[1.45] text-fg-muted">
+                <Icon name="check" class="mt-px size-3 shrink-0 text-acc-deep" stroke={2.4} />
+                {s}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <!-- ——— arena ——— -->
+    <div class="relative p-4 sm:p-5">
+      <div
+        class="flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.16em] text-fg-faint"
+      >
+        <span class="inline-flex items-center gap-1.5">
+          <Icon name="branch" class="size-3.5" stroke={1.8} /> Parallel attempts
+        </span>
+        <span>4 branches · isolated</span>
+      </div>
+
+      <div class="mt-4 space-y-2">
+        {
+          lanes.map((lane, i) => (
+            <div
+              class:list={[
+                "grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
+                lane.used
+                  ? "border-border-strong bg-bg-card-strong"
+                  : "border-border-soft bg-bg-elev",
+              ]}
+            >
+              <span class="flex items-center gap-2">
+                <img src={lane.logo} alt="" class="size-4 opacity-80" />
+                <span class="w-14 truncate text-[12px] font-medium text-fg">
+                  {lane.name}
+                </span>
+              </span>
+
+              <span class="relative block h-1 overflow-hidden rounded-full bg-base-100">
+                <span
+                  class="lane-bar absolute inset-y-0 left-0 rounded-full"
+                  style={`--w:${lane.w}%;--d:${300 + i * 220}ms;background:${
+                    lane.state === "failed"
+                      ? "rgba(16,14,12,0.25)"
+                      : "var(--color-acc)"
+                  }`}
+                />
+              </span>
+
+              <span class="flex items-center gap-2.5 font-mono text-[10px]">
+                <span class="hidden text-acc-deep sm:inline">+{lane.add}</span>
+                <span class="hidden text-fg-faint sm:inline">−{lane.del}</span>
+                <span
+                  class:list={[
+                    "inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-[9.5px] font-medium",
+                    lane.state === "passed" && "bg-acc-deep/10 text-acc-deep",
+                    lane.state === "running" && "bg-base-100 text-fg-faint",
+                    lane.state === "failed" && "bg-base-100 text-fg-faint line-through",
+                  ]}
+                >
+                  {lane.score}
+                </span>
+              </span>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- funnel -->
+      <div class="relative mx-auto mt-2.5 mb-2.5 h-8 w-44">
+        <svg
+          class="h-full w-full"
+          viewBox="0 0 200 32"
+          preserveAspectRatio="none"
+          fill="none"
+        >
+          {
+            [12, 71, 129, 188].map((x) => (
+              <path
+                d={`M${x} 0 L100 32`}
+                stroke="var(--color-border-strong)"
+                stroke-width="1"
+                stroke-dasharray="3 4"
+                vector-effect="non-scaling-stroke"
+                class="dash"
+              />
+            ))
+          }
+        </svg>
+      </div>
+
+      <div
+        class="rounded-lg border border-border-strong bg-bg-card-strong px-3 py-2.5"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <span class="inline-flex items-center gap-2 text-[12px] font-medium text-fg">
+            <Icon name="merge" class="size-3.5 text-acc" stroke={1.8} />
+            Synthesis
+          </span>
+          <span class="font-mono text-[9.5px] uppercase tracking-[0.12em] text-fg-faint">
+            best hunks · 2 of 4
+          </span>
+        </div>
+        <div class="mt-2 h-1 overflow-hidden rounded-full bg-base-100">
+          <span
+            class="lane-bar block h-full rounded-full bg-fg"
+            style="--w:100%;--d:1500ms"></span>
+        </div>
+      </div>
+
+      <div class="mx-auto my-1 h-5 w-px bg-border-strong"></div>
+
+      <!-- shipped PR -->
+      <div
+        class="rounded-lg border border-acc-deep/35 bg-acc-deep/[0.055] px-3 py-3"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="flex items-center gap-2 text-[12.5px] font-medium text-fg">
+              <Icon name="pr" class="size-3.5 text-acc-deep" stroke={1.8} />
+              <span class="truncate">feat: invoice PDF export</span>
+            </p>
+            <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9.5px] text-fg-faint">
+              <span class="text-acc-deep">218 checks passed</span>
+              <span>+412 −58</span>
+              <span>12 files</span>
+            </p>
+          </div>
+          <span
+            class="shrink-0 rounded-sm border border-border-soft bg-bg-elev px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-fg-muted"
+          >
+            02:31
+          </span>
+        </div>
+
+        <a
+          href="#how"
+          class="mt-2.5 flex items-center gap-2 rounded-md border border-border-soft bg-bg-elev px-2.5 py-1.5 font-mono text-[10px] text-fg-muted transition-colors hover:border-border-strong hover:text-fg"
+        >
+          <Icon name="globe" class="size-3 text-acc" stroke={1.8} />
+          <span class="truncate">preview-4821.devagents.app</span>
+          <Icon name="arrow-up-right" class="ml-auto size-3" stroke={1.8} />
+        </a>
+      </div>
+
+      <p
+        class="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+      >
+        <Icon name="users" class="size-3.5" stroke={1.8} />
+        Waiting for human approval
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lane-bar {
+    width: 0;
+    animation: grow 1.1s var(--ease-out-quint) forwards;
+    animation-delay: var(--d, 0ms);
+  }
+
+  @keyframes grow {
+    to {
+      width: var(--w);
+    }
+  }
+
+  .dash {
+    animation: flow-dash 0.9s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lane-bar {
+      width: var(--w);
+      animation: none;
+    }
+    .dash {
+      animation: none;
+    }
+  }
+</style>

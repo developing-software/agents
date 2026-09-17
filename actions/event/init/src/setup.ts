@@ -1,12 +1,12 @@
 import { join } from "path";
 import { mkdirSync, writeFileSync } from "fs";
 import * as core from "@actions/core";
-import { createApiClient, uniqueTags } from "@agents/actions-core";
+import { GitTags, createApiClient, uniqueTags } from "@agents/actions-core";
 import { Identifier } from "@agents/core/identifier";
 
 function slugify(tag: string): string {
   // Extract the key portion (everything before the last :value segment for known patterns)
-  // For "gh:repo:owner/repo" → "gh-repo"
+  // For "git:repo:github:owner/repo" → "git-repo-github"
   // For "harness:claude-code" → "harness"
   // For "check:tests/unit:success" → "check-tests-unit"
   const parts = tag.split(":");
@@ -48,27 +48,41 @@ async function run() {
   const runId = process.env.GITHUB_RUN_ID ?? "";
   const runUrl = `https://github.com/${repository}/actions/runs/${runId}`;
   core.exportVariable("DEV_AGENTS_RUN_URL", runUrl);
+  const trigger = process.env.GITHUB_EVENT_NAME ?? "";
+  const githubRef = process.env.GITHUB_REF ?? "";
+  const prMatch = githubRef.match(/^refs\/pull\/(\d+)/);
+
+  const contextTags = uniqueTags(
+    [
+      repository ? GitTags.provider("github") : "",
+      repository ? GitTags.repo("github", repository) : "",
+      runId ? GitTags.workflow(runId) : "",
+      trigger ? GitTags.trigger(trigger) : "",
+      prMatch ? GitTags.pr(Number.parseInt(prMatch[1]!, 10)) : "",
+      githubRef.startsWith("refs/heads/")
+        ? GitTags.branch(githubRef.replace("refs/heads/", ""))
+        : "",
+    ].filter(Boolean),
+  );
 
   // Write GitHub context tags
   if (repository) {
-    writeTag(tagsDir, "gh-repo", `gh:repo:${repository}`);
+    writeTag(tagsDir, "git-provider", GitTags.provider("github"));
+    writeTag(tagsDir, "git-repo", GitTags.repo("github", repository));
   }
   if (runId) {
-    writeTag(tagsDir, "gh-workflow", `gh:workflow:${runId}`);
+    writeTag(tagsDir, "git-workflow", GitTags.workflow(runId));
   }
 
-  const trigger = process.env.GITHUB_EVENT_NAME ?? "";
   if (trigger) {
-    writeTag(tagsDir, "gh-trigger", `gh:trigger:${trigger}`);
+    writeTag(tagsDir, "git-trigger", GitTags.trigger(trigger));
   }
 
-  const githubRef = process.env.GITHUB_REF ?? "";
-  const prMatch = githubRef.match(/^refs\/pull\/(\d+)/);
   if (prMatch) {
-    writeTag(tagsDir, "gh-pr", `gh:pr:${prMatch[1]}`);
+    writeTag(tagsDir, "git-pr", GitTags.pr(Number.parseInt(prMatch[1]!, 10)));
   } else if (githubRef.startsWith("refs/heads/")) {
     const branch = githubRef.replace("refs/heads/", "");
-    writeTag(tagsDir, "gh-branch", `gh:branch:${branch}`);
+    writeTag(tagsDir, "git-branch", GitTags.branch(branch));
   }
 
   // Write user-provided tags
@@ -98,17 +112,7 @@ async function run() {
   if (agentsToken) {
     try {
       // Collect all tags
-      const allTags = uniqueTags(
-        extraTags.concat(
-          repository ? [`gh:repo:${repository}`] : [],
-          runId ? [`gh:workflow:${runId}`] : [],
-          trigger ? [`gh:trigger:${trigger}`] : [],
-          prMatch ? [`gh:pr:${prMatch[1]}`] : [],
-          githubRef.startsWith("refs/heads/")
-            ? [`gh:branch:${githubRef.replace("refs/heads/", "")}`]
-            : [],
-        ),
-      );
+      const allTags = uniqueTags(extraTags.concat(contextTags));
 
       let extraData: Record<string, unknown> = {};
       const dataInput = core.getInput("data");

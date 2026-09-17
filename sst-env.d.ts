@@ -4,13 +4,18 @@
 /* deno-fmt-ignore-file */
 /* biome-ignore-all lint: auto-generated */
 
-import "sst"
 declare module "sst" {
   export interface Resource {
     "AntropicApiKey": {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Api": import("@cloudflare/workers-types").Service
+    "Artifacts": import("@cloudflare/workers-types").R2Bucket
+    "AuthKv": import("@cloudflare/workers-types").KVNamespace
+    "AuthWorker": import("@cloudflare/workers-types").Service
+    "Bus": import("@cloudflare/workers-types").Queue
+    "Console": import("@cloudflare/workers-types").Service
     "Database": {
       "database": string
       "host": string
@@ -28,6 +33,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "GitHubAppSlug": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "GitHubClientId": {
       "type": "sst.sst.Secret"
       "value": string
@@ -40,26 +49,11 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "ResendApiKey": {
+    "HYPERDRIVE": import("@cloudflare/workers-types").Hyperdrive
+    "SessionSecret": {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "SenderEmailDomain": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-  }
-}
-// cloudflare 
-import * as cloudflare from "@cloudflare/workers-types";
-declare module "sst" {
-  export interface Resource {
-    "Api": cloudflare.Service
-    "Artifacts": cloudflare.R2Bucket
-    "AuthKv": cloudflare.KVNamespace
-    "AuthWorker": cloudflare.Service
-    "Bus": cloudflare.Queue
-    "Console": cloudflare.Service
   }
 }
 

@@ -1,0 +1,166 @@
+---
+/** A request as the client actually sends it: a WhatsApp thread. */
+interface Props {
+  class?: string;
+  name?: string;
+  status?: string;
+  /** Avatar image; falls back to a neutral initial disc. */
+  avatar?: string;
+  /** Incoming message, from the client. */
+  ask?: string;
+  askTime?: string;
+  /** Outgoing reply, from the agent. */
+  reply?: string;
+  replyLink?: string;
+  replyTime?: string;
+}
+
+const {
+  class: className = "",
+  name = "Your Customer",
+  status = "online",
+  avatar = "/face.webp",
+  ask = "Could you add a download button to the customer invoices?",
+  askTime = "23:02",
+  reply = "Done! Check out the preview! 👍",
+  replyLink = "preview-4821.devagents.app",
+  replyTime = "23:23",
+} = Astro.props;
+---
+
+<div
+  class:list={[
+    "cm flex flex-col overflow-hidden rounded-lg border border-border-soft bg-bg-elev ",
+    className,
+  ]}
+>
+  <div class="flex items-center gap-2 border-b border-border-soft bg-[#eef1f5] px-2.5 py-2">
+    <span class="text-[#3b4754]">
+      <svg width="6" height="10" viewBox="0 0 10 17" aria-hidden="true">
+        <path
+          d="M8.5 1L2 8.5L8.5 16"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"></path>
+      </svg>
+    </span>
+
+    {
+      avatar ? (
+        <img
+          src={avatar}
+          alt=""
+          width="28"
+          height="28"
+          loading="lazy"
+          class="size-7 shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <span class="grid size-7 shrink-0 place-items-center rounded-full bg-acc-deep/15 text-[11px] font-medium text-acc-deep">
+          {name.slice(0, 1)}
+        </span>
+      )
+    }
+
+    <span class="min-w-0 flex-1">
+      <span class="block truncate text-[15px] font-semibold leading-tight text-[#111b21]"
+        >{name}</span
+      >
+      <!-- <span class="block truncate text-[9.5px] leading-tight text-fg-faint">{status}</span> -->
+    </span>
+
+    <span class="flex items-center gap-2 text-[#3b4754]">
+      <svg width="13" height="9" viewBox="0 0 21 15" fill="currentColor" aria-hidden="true">
+        <rect x="0" y="0" width="13" height="15" rx="3.5"></rect>
+        <path d="M14.5 5.4 21 1.4v12.2l-6.5-4z"></path>
+      </svg>
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path
+          d="M3.2 1h2.3l1.2 3-1.5 1.2a10 10 0 0 0 4.6 4.6L11 8.3l3 1.2v2.3c0 .8-.7 1.4-1.5 1.3A12 12 0 0 1 1.9 2.5C1.8 1.7 2.4 1 3.2 1z"
+        ></path>
+      </svg>
+      <svg width="3" height="11" viewBox="0 0 4 17" fill="currentColor" aria-hidden="true">
+        <circle cx="2" cy="2" r="1.9"></circle>
+        <circle cx="2" cy="8.5" r="1.9"></circle>
+        <circle cx="2" cy="15" r="1.9"></circle>
+      </svg>
+    </span>
+  </div>
+
+  <div class="cm-thread flex flex-1 flex-col justify-end gap-2 px-2.5 py-3">
+    <span
+      class="mx-auto rounded bg-white/85 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-[#4a5560]"
+      >TODAY</span
+    >
+
+    <div
+      class="cm-bubble cm-in max-w-[88%] self-start rounded-lg rounded-tl-none bg-white px-2 py-1.5 shadow-[0_1px_3px_-1px_rgba(12,22,34,0.25)]"
+    >
+      <p class="text-[15px] leading-[1.35] text-[#111b21]">
+        {ask}
+        <span class="ml-1.5 inline-block translate-y-px text-[8.5px] text-fg-faint">{askTime}</span>
+      </p>
+    </div>
+
+    <div
+      class="cm-bubble cm-out max-w-[88%] self-end rounded-lg rounded-tr-none bg-[#d3f7c4] px-2 py-1.5 shadow-[0_1px_3px_-1px_rgba(12,22,34,0.25)]"
+    >
+      <p class="text-[15px] leading-[1.35] text-[#111b21]">{reply}</p>
+      {
+        replyLink && (
+          <p class="mt-1 text-[15px] leading-[1.35]">
+            <a href="#" class="text-[#1a56db] underline">{replyLink}</a>
+            <span class="mt-0.5 block text-right text-[8.5px] text-fg-faint">{replyTime}</span>
+          </p>
+        )
+      }
+    </div>
+  </div>
+
+  <div class="flex items-center gap-1.5 border-t border-border-soft bg-[#eef1f5] px-2 py-1.5">
+    <span class="flex-1 truncate rounded-full bg-white px-2.5 py-1.5 text-[10.5px] text-fg-faint"
+      >Message</span
+    >
+    <!-- <span class="grid size-7 shrink-0 place-items-center rounded-full bg-[#22c55e] text-white">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M1 14.5 15 8 1 1.5 1 6.5 10 8 1 9.5z"></path>
+      </svg>
+    </span> -->
+  </div>
+</div>
+
+<style>
+  .cm {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .cm-thread {
+    background-color: #f0e4de;
+    background-image: url("/wppbg.webp");
+    background-size: 180px auto;
+    background-blend-mode: multiply;
+  }
+
+  .cm-bubble {
+    position: relative;
+  }
+  .cm-bubble::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 7px;
+    height: 9px;
+  }
+  .cm-in::before {
+    left: -6px;
+    background: #fff;
+    clip-path: polygon(100% 0, 100% 100%, 0 0);
+  }
+  .cm-out::before {
+    right: -6px;
+    background: #d3f7c4;
+    clip-path: polygon(0 0, 0 100%, 100% 0);
+  }
+</style>

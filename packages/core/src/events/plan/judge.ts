@@ -13,9 +13,7 @@ export namespace PlanJudge {
       .number()
       .describe("How well the implementation fulfills the plan requirements (1-10)"),
     quality: z.number().describe("Code quality, readability, and correctness (1-10)"),
-    completeness: z
-      .number()
-      .describe("Coverage of plan requirements and test coverage (1-10)"),
+    completeness: z.number().describe("Coverage of plan requirements and test coverage (1-10)"),
   });
   export type ReviewScores = z.infer<typeof ReviewScores>;
 
@@ -32,8 +30,6 @@ export namespace PlanJudge {
   export type ReviewResult = z.infer<typeof ReviewResult>;
   /** `github.pull_request.reviewed` — ReviewResult payload per reviewed PR. */
   export const ReviewedDef = EventRegistry.define("github.pull_request.reviewed", ReviewResult);
-
-
 
   export const CompareRanking = z.object({
     rank: z.number().describe("Rank position, 1 being the best"),
@@ -153,8 +149,12 @@ export namespace PlanJudge {
   export function composeComparePrompt(input: CompareInput): string {
     const reviewSections = input.reviews
       .map((r, i) => {
-        const avg = ((r.scores.adherence + r.scores.quality + r.scores.completeness) / 3).toFixed(1);
-        const suggestions = r.suggestions?.length ? `\nSuggestions: ${r.suggestions.join("; ")}` : "";
+        const avg = ((r.scores.adherence + r.scores.quality + r.scores.completeness) / 3).toFixed(
+          1,
+        );
+        const suggestions = r.suggestions?.length
+          ? `\nSuggestions: ${r.suggestions.join("; ")}`
+          : "";
         return `### ${i + 1}. ${r.agent} (PR #${r.prNumber})
 Scores: adherence=${r.scores.adherence}, quality=${r.scores.quality}, completeness=${r.scores.completeness} (avg ${avg})
 Verdict: ${r.verdict}${suggestions}`;

@@ -1,0 +1,95 @@
+<script lang="ts">
+  import QueryLoader from '$lib/ui/QueryLoader.svelte';
+  import Section from '../components/Section.svelte';
+  import ComparisonView from '../components/metrics/ComparisonView.svelte';
+  import { getAgentComparison, getAgentStats, invalidateComparisonCache } from '../api/metrics.remote';
+  import { repoContext } from '$lib/features/git/context.svelte';
+
+  const repo = repoContext.get();
+
+  const comparison = $derived(getAgentComparison({ organization: repo.organization, repoName: repo.repoName }));
+  const stats = $derived(getAgentStats({ organization: repo.organization, repoName: repo.repoName }));
+
+  const loading = $derived(comparison.loading || stats.loading);
+
+  async function refresh() {
+    await invalidateComparisonCache({ organization: repo.organization, repoName: repo.repoName });
+    comparison.refresh();
+    stats.refresh();
+  }
+</script>
+
+<Section title="Agents" cachedAt={comparison.current?.cachedAt ?? null} loading={loading} onrefresh={refresh}>
+  <QueryLoader query={comparison}>
+    {#snippet loading()}
+      <div class="cards">
+        {#each [1, 2] as i (i)}
+          <div class="agent-card">
+            <div class="skel-header">
+              <div class="skel-dot"></div>
+              <div class="skel-name"></div>
+              <div class="skel-badge"></div>
+            </div>
+            <div class="skel-pills">
+              <div class="skel-pill"></div>
+              <div class="skel-pill short"></div>
+            </div>
+            <div class="skel-grid">
+              {#each [1, 2, 3, 4] as j (j)}
+                <div class="skel-metric">
+                  <div class="skel-label"></div>
+                  <div class="skel-value"></div>
+                  <div class="skel-avg"></div>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/snippet}
+    {#snippet error(_)}
+      <p class="empty">Failed to load agent data</p>
+    {/snippet}
+    {#snippet children(data)}
+      <div class="scroll-container">
+        <ComparisonView
+          agents={data.data ?? []}
+          stats={stats.current?.data ?? []}
+        />
+      </div>
+    {/snippet}
+  </QueryLoader>
+</Section>
+
+<style>
+  .scroll-container {
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  .cards { display: flex; flex-wrap: wrap; gap: 8px; }
+  .agent-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 12px 14px;
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .skel-header { display: flex; align-items: center; gap: 6px; }
+  .skel-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-elevated); animation: pulse 1.4s ease-in-out infinite; }
+  .skel-name { width: 60px; height: 13px; border-radius: 2px; background: var(--color-elevated); animation: pulse 1.4s ease-in-out infinite; }
+  .skel-badge { margin-left: auto; width: 36px; height: 10px; border-radius: 2px; background: var(--color-elevated); animation: pulse 1.4s ease-in-out infinite; }
+  .skel-pills { display: flex; gap: 4px; }
+  .skel-pill { width: 80px; height: 14px; border-radius: 3px; background: var(--color-elevated); animation: pulse 1.4s ease-in-out infinite; }
+  .skel-pill.short { width: 56px; }
+  .skel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .skel-metric { display: flex; flex-direction: column; gap: 2px; }
+  .skel-label { width: 48px; height: 10px; border-radius: 2px; background: var(--color-elevated); animation: pulse 1.4s ease-in-out infinite; }
+  .skel-value { width: 56px; height: 14px; border-radius: 2px; background: var(--color-elevated); animation: pulse 1.4s ease-in-out infinite; }
+  .skel-avg { width: 40px; height: 11px; border-radius: 2px; background: var(--color-elevated); animation: pulse 1.4s ease-in-out infinite; }
+  .empty { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--color-dim); padding: 20px 0; text-align: center; margin: 0; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+</style>

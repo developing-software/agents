@@ -1,0 +1,522 @@
+---
+import SectionHead from "@components/SectionHead.astro";
+import Button from "@components/Button2.astro";
+import Icon from "@components/Icon.astro";
+
+const plans = [
+  {
+    name: "Solo",
+    price: { monthly: "$0", yearly: "$0" },
+    unit: { monthly: "forever", yearly: "forever" },
+    perRun: { monthly: "5 runs a month, free", yearly: "5 runs a month, free" },
+    pitch: "One repo and the occasional late-night idea.",
+    cta: "Start free",
+    variant: "outline" as const,
+    specs: [
+      ["Repositories", "1"],
+      ["Runs a month", "5"],
+      ["Models per run", "2"],
+    ],
+    includes: "What's included",
+    features: ["GitHub issue intake", "Preview deploys", "Community support"],
+  },
+  {
+    name: "Studio",
+    price: { monthly: "$399", yearly: "$319" },
+    unit: { monthly: "per month", yearly: "per month, billed yearly" },
+    perRun: { monthly: "≈ $3.99 per run", yearly: "≈ $3.19 per run" },
+    pitch: "Teams and agencies shipping client work every week.",
+    cta: "Connect your repo",
+    variant: "ink" as const,
+    recommended: true,
+    specs: [
+      ["Repositories", "10"],
+      ["Runs a month", "100"],
+      ["Models per run", "4"],
+    ],
+    includes: "Everything in Solo, plus",
+    features: [
+      "WhatsApp, Slack & Linear intake",
+      "Ephemeral preview environments",
+      "Client-facing run status page",
+      "Priority queue",
+    ],
+  },
+  {
+    name: "Enterprise",
+    price: { monthly: "Custom", yearly: "Custom" },
+    unit: { monthly: "annual", yearly: "annual" },
+    perRun: { monthly: "Negotiated volume", yearly: "Negotiated volume" },
+    pitch: "Codebases with compliance attached to them.",
+    cta: "Talk to us",
+    variant: "outline" as const,
+    specs: [
+      ["Repositories", "Unlimited"],
+      ["Runs a month", "Custom"],
+      ["Models per run", "Any"],
+    ],
+    includes: "Everything in Studio, plus",
+    features: [
+      "Self-hosted or private cloud",
+      "Bring your own model keys",
+      "SSO / SAML & audit export",
+      "Custom gates and merge policies",
+      "SLA + shared Slack channel",
+    ],
+  },
+];
+
+/* the estimator only uses numbers already stated on the plans above */
+const tiers = [
+  { name: "Solo", upTo: 5, models: 2, price: { monthly: 0, yearly: 0 } },
+  { name: "Studio", upTo: 100, models: 4, price: { monthly: 399, yearly: 319 } },
+  { name: "Enterprise", upTo: null, models: null, price: null },
+];
+const MAX = 150;
+const START = 40;
+
+const receipt = [
+  { key: "specs", label: "Specs written" },
+  { key: "attempts", label: "Attempts, across 4 models" },
+  { key: "syntheses", label: "Syntheses by the judge" },
+  { key: "previews", label: "Preview deploys" },
+  { key: "prs", label: "Pull requests to review" },
+];
+const startValues: Record<string, number> = {
+  specs: START,
+  attempts: START * 4,
+  syntheses: START,
+  previews: START,
+  prs: START,
+};
+
+const ticks = [1, 50, 100, MAX];
+const at = (v: number) => ((v - 1) / (MAX - 1)) * 100;
+
+const promises = [
+  { icon: "layers" as const, text: "Unused runs roll over" },
+  { icon: "shield" as const, text: "Failed runs aren't billed" },
+  { icon: "lock" as const, text: "Your keys and repository stay yours" },
+  { icon: "check" as const, text: "Cancel whenever the work is done" },
+];
+
+const eyebrow =
+  "font-mono text-[10.5px] uppercase tracking-[0.16em] text-fg-faint";
+---
+
+<style>
+  /* the filled part of the track follows the thumb through --p */
+  .runs {
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(
+      to right,
+      var(--color-acc) var(--p),
+      var(--color-base-200) var(--p)
+    );
+    cursor: pointer;
+    outline: none;
+  }
+  .runs::-webkit-slider-thumb {
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    border: 6px solid var(--color-acc);
+    background: var(--color-bg-elev);
+  }
+  .runs::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 6px solid var(--color-acc);
+    background: var(--color-bg-elev);
+  }
+  .runs:focus-visible::-webkit-slider-thumb {
+    outline: 3px solid var(--color-border-glow);
+    outline-offset: 2px;
+  }
+  .runs:focus-visible::-moz-range-thumb {
+    outline: 3px solid var(--color-border-glow);
+    outline-offset: 2px;
+  }
+</style>
+
+<section id="pricing" class="section scroll-mt-24">
+  <div class="shell">
+    <SectionHead
+      title="Priced per run,"
+      accent="not per seat you'll never fill."
+      sub="A run is one request, start to finish: spec, every attempt, the synthesis, the preview and the PR."
+    />
+
+    <div data-reveal class="mt-8 flex justify-center">
+      <div
+        data-billing-switch
+        class="inline-flex rounded-full border border-border-soft bg-bg-elev p-1"
+        role="group"
+        aria-label="Billing period"
+      >
+        <button
+          type="button"
+          data-billing="monthly"
+          aria-pressed="true"
+          class="cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium text-fg-muted transition-colors duration-200 hover:text-fg aria-pressed:bg-fg aria-pressed:text-bg"
+        >
+          Monthly
+        </button>
+        <button
+          type="button"
+          data-billing="yearly"
+          aria-pressed="false"
+          class="flex cursor-pointer items-center gap-2 rounded-full py-1.5 pl-4 pr-1.5 text-[13px] font-medium text-fg-muted transition-colors duration-200 hover:text-fg aria-pressed:bg-fg aria-pressed:text-bg"
+        >
+          Yearly
+          <span
+            class="rounded-full bg-acc-wash px-2 py-0.5 font-mono text-[10.5px] text-acc"
+            >−20%</span
+          >
+        </button>
+      </div>
+    </div>
+
+    <div
+      data-reveal
+      class="relative mt-10 overflow-hidden rounded-frame border border-border-soft bg-bg-sunk p-3 sm:p-4"
+    >
+      <div
+        aria-hidden="true"
+        class="dotgrid pointer-events-none absolute inset-0 opacity-70"
+        style="mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%);-webkit-mask-image:radial-gradient(85% 85% at 50% 40%,#000,transparent 90%)"
+      >
+      </div>
+
+      <!-- plans share one surface, split by hairlines -->
+      <div
+        class="relative grid overflow-hidden rounded-card bg-bg-elev lg:grid-cols-3"
+      >
+        {
+          plans.map((plan, i) => (
+            <article
+              class:list={[
+                "relative flex flex-col p-6 sm:p-8",
+                i > 0 && "border-t border-border-soft lg:border-l lg:border-t-0",
+                plan.recommended && "bg-acc/15",
+              ]}
+            >
+              {plan.recommended && (
+                <span aria-hidden="true" class="absolute inset-x-0 top-0 h-0.5 bg-acc" />
+              )}
+
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="text-[16px] font-medium tracking-[-0.01em] text-fg">
+                  {plan.name}
+                </h3>
+                {plan.recommended && (
+                  <span class="rounded-full border border-acc-soft bg-bg-elev px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.14em] text-acc">
+                    Recommended
+                  </span>
+                )}
+              </div>
+
+              <p class="mt-2 min-h-11 text-[14px] leading-[1.55] text-fg-muted">
+                {plan.pitch}
+              </p>
+
+              <p class="mt-7 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span
+                  data-period={JSON.stringify(plan.price)}
+                  class="text-[clamp(2.5rem,4vw,3rem)] font-medium leading-none tracking-[-0.05em] text-fg"
+                >
+                  {plan.price.monthly}
+                </span>
+                <span
+                  data-period={JSON.stringify(plan.unit)}
+                  class="text-[13px] text-fg-faint"
+                >
+                  {plan.unit.monthly}
+                </span>
+              </p>
+
+              <p
+                data-period={JSON.stringify(plan.perRun)}
+                class:list={[
+                  "mt-3 font-mono text-[11.5px] tabular-nums",
+                  plan.recommended ? "text-acc" : "text-fg-faint",
+                ]}
+              >
+                {plan.perRun.monthly}
+              </p>
+
+              <Button variant={plan.variant} size="md" href="#" class="mt-7 w-full">
+                {plan.cta}
+              </Button>
+
+              <dl class="mt-7 border-t border-border-soft">
+                {plan.specs.map(([label, value]) => (
+                  <div class="flex items-center justify-between gap-4 border-b border-border-soft py-2.5">
+                    <dt class="text-[13px] text-fg-muted">{label}</dt>
+                    <dd class="font-mono text-[13px] tabular-nums text-fg">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <p class="mt-6 text-[12.5px] text-fg-faint">{plan.includes}</p>
+              <ul class="mt-3 space-y-2.5">
+                {plan.features.map((f) => (
+                  <li class="flex gap-2.5 text-[13.5px] leading-[1.45] text-fg-muted">
+                    <Icon
+                      name="check"
+                      class:list={[
+                        "mt-0.5 size-3.5 shrink-0",
+                        plan.recommended ? "text-acc" : "text-fg-faint",
+                      ]}
+                      stroke={2.4}
+                    />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+
+      <!-- estimator: pick a volume, see the plan and what the month produces -->
+      <div
+        data-estimator
+        data-tiers={JSON.stringify(tiers)}
+        class="relative mt-3 grid overflow-hidden rounded-card bg-bg-elev lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]"
+      >
+        <div class="flex flex-col p-6 sm:p-8">
+          <span class={eyebrow}>Estimate your month</span>
+          <h3
+            class="mt-3 text-[19px] font-medium leading-snug tracking-[-0.015em] text-fg"
+          >
+            How many requests do your clients send?
+          </h3>
+          <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+            Move the slider to see which plan fits and what each run ends up
+            costing.
+          </p>
+
+          <div class="mt-8 flex flex-wrap items-end justify-between gap-4">
+            <p class="flex items-baseline gap-2">
+              <span
+                data-est="runs"
+                class="text-[clamp(2.5rem,4vw,3rem)] font-medium leading-none tracking-[-0.05em] tabular-nums text-fg"
+                >{START}</span
+              >
+              <span class="text-[13px] text-fg-faint">runs a month</span>
+            </p>
+            <span
+              class="inline-flex rounded-full border border-border-soft bg-bg-sunk p-0.5"
+            >
+              {
+                tiers.map((t) => (
+                  <span
+                    data-tier={t.name}
+                    data-on={t.name === "Studio" ? "" : undefined}
+                    class="rounded-full px-2.5 py-1 text-[12px] text-fg-faint transition-colors duration-200 data-on:bg-fg data-on:text-bg"
+                  >
+                    {t.name}
+                  </span>
+                ))
+              }
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min="1"
+            max={MAX}
+            value={START}
+            data-runs
+            aria-label="Runs per month"
+            class="runs mt-7"
+            style={`--p:${at(START)}%`}
+          />
+          <div
+            aria-hidden="true"
+            class="relative mt-3 h-4 font-mono text-[10.5px] tabular-nums text-fg-faint"
+          >
+            {
+              ticks.map((v, i) => (
+                <span
+                  class:list={[
+                    "absolute top-0",
+                    i === 0
+                      ? "left-0"
+                      : i === ticks.length - 1
+                        ? "right-0"
+                        : "-translate-x-1/2",
+                  ]}
+                  style={i > 0 && i < ticks.length - 1 ? `left:${at(v)}%` : undefined}
+                >
+                  {v === MAX ? `${v}+` : v}
+                </span>
+              ))
+            }
+          </div>
+
+          <ul class="mt-auto grid gap-x-6 gap-y-3 pt-10 sm:grid-cols-2">
+            {
+              promises.map((p) => (
+                <li class="flex items-center gap-2.5 text-[13px] text-fg-muted">
+                  <span class="grid size-6 shrink-0 place-items-center rounded-chip border border-border-soft bg-bg-sunk text-fg-muted">
+                    <Icon name={p.icon} class="size-3.5" stroke={1.8} />
+                  </span>
+                  {p.text}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div
+          class="flex flex-col border-t border-border-soft bg-acc/15 p-6 sm:p-8 lg:border-l lg:border-t-0"
+        >
+          <div class="flex items-center justify-between gap-4">
+            <span class={eyebrow}>Your month</span>
+            <span class="text-[13px] text-fg-muted">
+              on <span data-est="plan" class="font-medium text-fg">Studio</span>
+            </span>
+          </div>
+
+          <dl class="mt-5 border-t border-border-soft">
+            {
+              receipt.map((r) => (
+                <div class="flex items-center justify-between gap-4 border-b border-dashed border-border-soft py-3">
+                  <dt data-est-label={r.key} class="text-[13.5px] text-fg-muted">
+                    {r.label}
+                  </dt>
+                  <dd
+                    data-est={r.key}
+                    class="font-mono text-[13.5px] tabular-nums text-fg"
+                  >
+                    {startValues[r.key]}
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          <div class="mt-auto flex flex-wrap items-end justify-between gap-4 pt-8">
+            <div>
+              <p class="text-[13px] text-fg-muted">Estimated total</p>
+              <p data-est="unit" class="mt-1 text-[12px] text-fg-faint">
+                per month
+              </p>
+            </div>
+            <div class="text-right">
+              <p
+                data-est="total"
+                class="text-[clamp(2.5rem,4vw,3rem)] font-medium leading-none tracking-[-0.05em] tabular-nums text-fg"
+              >
+                $399
+              </p>
+              <p data-est="perRun" class="mt-2 font-mono text-[11.5px] tabular-nums text-acc">
+                ≈ ${(399 / START).toFixed(2)} per run
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  type Period = "monthly" | "yearly";
+  type Tier = {
+    name: string;
+    upTo: number | null;
+    models: number | null;
+    price: Record<Period, number> | null;
+  };
+
+  const section = document.querySelector<HTMLElement>("#pricing");
+  const group = section?.querySelector<HTMLElement>("[data-billing-switch]");
+  const estimator = section?.querySelector<HTMLElement>("[data-estimator]");
+  const input = estimator?.querySelector<HTMLInputElement>("[data-runs]");
+
+  if (section && group && estimator && input) {
+    const tiers: Tier[] = JSON.parse(estimator.dataset.tiers!);
+    const max = Number(input.max);
+    let period: Period = "monthly";
+
+    const set = (key: string, text: string) => {
+      const el = estimator.querySelector<HTMLElement>(`[data-est="${key}"]`);
+      if (el) el.textContent = text;
+    };
+
+    const estimate = () => {
+      const runs = Number(input.value);
+      const tier = tiers.find((t) => t.upTo === null || runs <= t.upTo)!;
+      const price = tier.price?.[period] ?? null;
+
+      input.style.setProperty("--p", `${((runs - 1) / (max - 1)) * 100}%`);
+      estimator.querySelectorAll<HTMLElement>("[data-tier]").forEach((el) => {
+        el.toggleAttribute("data-on", el.dataset.tier === tier.name);
+      });
+
+      set("runs", runs >= max ? `${max}+` : String(runs));
+      set("plan", tier.name);
+      set("specs", String(runs));
+      set("attempts", tier.models ? String(runs * tier.models) : `${runs} × any`);
+      set("syntheses", String(runs));
+      set("previews", String(runs));
+      set("prs", String(runs));
+
+      const label = estimator.querySelector<HTMLElement>('[data-est-label="attempts"]');
+      if (label) {
+        label.textContent = tier.models
+          ? `Attempts, across ${tier.models} models`
+          : "Attempts, across any models";
+      }
+
+      set("total", price === null ? "Custom" : `$${price}`);
+      set(
+        "unit",
+        price === null
+          ? "annual contract"
+          : period === "yearly"
+            ? "per month, billed yearly"
+            : "per month",
+      );
+      set(
+        "perRun",
+        price === null
+          ? "Negotiated volume"
+          : price === 0
+            ? "Free"
+            : `≈ $${(price / runs).toFixed(2)} per run`,
+      );
+    };
+
+    input.addEventListener("input", estimate);
+
+    group.addEventListener("click", (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+        "[data-billing]",
+      );
+      if (!button) return;
+
+      period = button.dataset.billing as Period;
+
+      group
+        .querySelectorAll<HTMLButtonElement>("[data-billing]")
+        .forEach((b) =>
+          b.setAttribute("aria-pressed", String(b.dataset.billing === period)),
+        );
+
+      section.querySelectorAll<HTMLElement>("[data-period]").forEach((el) => {
+        el.textContent = JSON.parse(el.dataset.period!)[period];
+      });
+
+      estimate();
+    });
+  }
+</script>

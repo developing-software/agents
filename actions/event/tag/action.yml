@@ -6,7 +6,7 @@ inputs:
     description: "Tag file name (e.g. harness, model, gh-issue). Writing the same slug overwrites."
     required: true
   value:
-    description: "Full tag string (e.g. harness:claude-code, gh:pr:123)"
+    description: "Full tag string (e.g. harness:claude-code, git:pr:123)"
     required: true
 
 runs:

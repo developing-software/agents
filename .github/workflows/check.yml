@@ -43,6 +43,11 @@ jobs:
         with:
           install: "false"
 
+      - name: Run Trivy security scan
+        id: trivy
+        if: always()
+        uses: ./.github/actions/trivy
+
       - name: Write summary
         if: always()
         run: |
@@ -52,6 +57,8 @@ jobs:
           HEALTH="${{ steps.fallow.outputs.health-outcome }}"
           DEADCODE="${{ steps.fallow.outputs.dead-code-outcome }}"
           DUPES="${{ steps.fallow.outputs.dupes-outcome }}"
+          TRIVY_VULN="${{ steps.trivy.outputs.vuln-outcome }}"
+          TRIVY_SECRET="${{ steps.trivy.outputs.secret-outcome }}"
 
           icon() { [ "$1" = "success" ] && echo "+" || echo "x"; }
 
@@ -66,6 +73,8 @@ jobs:
             echo "| Fallow Health | $(icon "$HEALTH") $HEALTH |"
             echo "| Fallow Dead Code | $(icon "$DEADCODE") $DEADCODE |"
             echo "| Fallow Dupes | $(icon "$DUPES") $DUPES |"
+            echo "| Trivy Vulnerabilities | $(icon "$TRIVY_VULN") $TRIVY_VULN |"
+            echo "| Trivy Secrets | $(icon "$TRIVY_SECRET") $TRIVY_SECRET |"
 
             for file in lint-output.txt typecheck-output.txt test-output.txt; do
               if [ -f "$RUNNER_TEMP/$file" ]; then

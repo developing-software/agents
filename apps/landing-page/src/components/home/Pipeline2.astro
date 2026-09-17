@@ -1,0 +1,104 @@
+---
+import SectionHead from "@components/SectionHead.astro";
+import Thread from "@components/mock/Thread.astro";
+import Attempts from "@components/mock/Attempts.astro";
+import Checks from "@components/mock/Checks.astro";
+import Diff from "@components/mock/Diff.astro";
+import Preview from "@components/mock/Preview.astro";
+---
+
+<section
+  id="how"
+  class="scroll-mt-24 border-t border-border-soft py-28 sm:py-36"
+>
+  <div class="shell">
+    <SectionHead
+      index="01"
+      label="How a run works"
+      title="Five stages between a sentence and a mergeable PR."
+      sub="You describe the outcome. The pipeline does intake, implementation, judging, synthesis and a live preview."
+    />
+
+    <div class="mt-16 grid gap-4 lg:grid-cols-6">
+      <article
+        data-reveal
+        class="flex flex-col justify-between gap-8 rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8 lg:col-span-3"
+      >
+        <Thread />
+        <div>
+          <p class="font-mono text-[11px] text-fg-faint">1.0 Intake</p>
+          <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
+            Ask like a human
+          </h3>
+          <p class="mt-1.5 text-[14px] leading-[1.6] text-fg-muted">
+            It reads the repo first, so it asks two questions instead of twenty.
+          </p>
+        </div>
+      </article>
+
+      <article
+        data-reveal
+        class="flex flex-col justify-between gap-8 rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8 lg:col-span-3"
+      >
+        <Attempts class="pt-2" />
+        <div>
+          <p class="font-mono text-[11px] text-fg-faint">2.0 Arena</p>
+          <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
+            Four attempts, in parallel
+          </h3>
+          <p class="mt-1.5 text-[14px] leading-[1.6] text-fg-muted">
+            Same spec, isolated branches, no sight of each other. No groupthink.
+          </p>
+        </div>
+      </article>
+
+      <article
+        data-reveal
+        class="flex flex-col justify-between gap-8 rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8 lg:col-span-2"
+      >
+        <Checks />
+        <div>
+          <p class="font-mono text-[11px] text-fg-faint">3.0 Gate</p>
+          <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
+            Your CI votes first
+          </h3>
+          <p class="mt-1.5 text-[14px] leading-[1.6] text-fg-muted">
+            What breaks is eliminated before anyone reads it.
+          </p>
+        </div>
+      </article>
+
+      <article
+        data-reveal
+        class="flex flex-col justify-between gap-8 rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8 lg:col-span-2"
+      >
+        <Diff />
+        <div>
+          <p class="font-mono text-[11px] text-fg-faint">4.0 Synthesis</p>
+          <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
+            The best of all four, merged
+          </h3>
+          <p class="mt-1.5 text-[14px] leading-[1.6] text-fg-muted">
+            One coherent PR, not four competing ones.
+          </p>
+        </div>
+      </article>
+
+      <article
+        data-reveal
+        class="flex flex-col justify-between gap-8 rounded-xl border border-border-soft bg-bg-elev p-6 sm:p-8 lg:col-span-2"
+      >
+        <Preview />
+        <div>
+          <p class="font-mono text-[11px] text-fg-faint">5.0 Review</p>
+          <h3 class="mt-2 text-[17px] font-medium tracking-[-0.015em] text-fg">
+            Click it before you merge
+          </h3>
+          <p class="mt-1.5 text-[14px] leading-[1.6] text-fg-muted">
+            A live environment on the PR. The human still has the last word.
+          </p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

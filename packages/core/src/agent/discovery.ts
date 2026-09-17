@@ -1,11 +1,12 @@
-import { GithubContent } from "../github/repo/content";
 import { z } from "zod";
+import { getProvider } from "../git";
+import type { ProviderType } from "../git/provider/interface";
 
 export namespace AgentDiscovery {
   export interface RepoRef {
-    installationId: number;
-    owner: string;
-    repo: string;
+    source: ProviderType | string;
+    fullName: string;
+    defaultBranch?: string | null;
   }
 
   export const AgentFile = z.object({
@@ -20,11 +21,15 @@ export namespace AgentDiscovery {
   });
   export type AgentsFolderInfo = z.infer<typeof AgentsFolderInfo>;
 
+  function resolveRef(repo: RepoRef, ref?: string): string {
+    return ref ?? repo.defaultBranch ?? "HEAD";
+  }
+
   /**
    * Find all AGENTS.md files in a repo via recursive tree search.
    */
   export async function findAgentFiles(repo: RepoRef, ref?: string): Promise<AgentFile[]> {
-    const tree = await GithubContent.getTree(repo, ref);
+    const tree = await getProvider(repo.source).repos.getTree(repo.fullName, resolveRef(repo, ref));
     return tree
       .filter(
         (entry) =>
@@ -42,7 +47,8 @@ export namespace AgentDiscovery {
     path: string,
     ref?: string,
   ): Promise<string | null> {
-    return GithubContent.readFile(repo, path, ref);
+    const file = await getProvider(repo.source).content.readFile(repo.fullName, path, ref);
+    return file?.content ?? null;
   }
 
   /**
@@ -52,7 +58,7 @@ export namespace AgentDiscovery {
     repo: RepoRef,
     ref?: string,
   ): Promise<AgentsFolderInfo | null> {
-    const entries = await GithubContent.listDir(repo, ".agents", ref);
+    const entries = await getProvider(repo.source).content.listDir(repo.fullName, ".agents", ref);
     if (!entries) return null;
     return {
       exists: true,
@@ -64,7 +70,7 @@ export namespace AgentDiscovery {
    * Check if .claude/ folder exists and return its file paths.
    */
   export async function detectClaudeFolder(repo: RepoRef, ref?: string): Promise<string[]> {
-    const entries = await GithubContent.listDir(repo, ".claude", ref);
+    const entries = await getProvider(repo.source).content.listDir(repo.fullName, ".claude", ref);
     if (!entries) return [];
     return entries.map((e) => e.path);
   }

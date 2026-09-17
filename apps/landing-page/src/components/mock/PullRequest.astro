@@ -1,0 +1,143 @@
+---
+/** The synthesized pull request, in the window the engineer actually reviews it in. */
+import Diff from "@components/mock/Diff.astro";
+import Checks from "@components/mock/Checks.astro";
+
+interface Props {
+  class?: string;
+  repo?: string;
+  title?: string;
+  number?: string;
+  branch?: string;
+}
+const {
+  class: className = "",
+  repo = "acme/dashboard",
+  title = "Add invoice download to customer dashboard",
+  number = "#128",
+  branch = "agents/invoice-pdf",
+} = Astro.props;
+---
+
+<div
+  data-pr
+  class:list={[
+    "group/pr relative flex h-full flex-col overflow-hidden rounded-md border border-border-soft bg-bg/50",
+    className,
+  ]}
+>
+  <div class="border-b border-border-soft px-3 py-2.5 bg-bg-elev">
+    <div class="flex items-start gap-2">
+      <span class="min-w-0 flex-1 text-[12px] font-medium leading-snug text-fg"
+        >{title}</span
+      >
+      <div class="flex gap-1 items-center font-mono text-[9px] text-fg-faint">
+        <span class="rounded bg-base-100 px-1.5 py-0.5 text-fg-muted"
+          >{branch}</span
+        >
+        <svg
+          viewBox="0 0 12 12"
+          class="size-2.5 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M1.5 6h9M7.2 2.8 10.5 6l-3.3 3.2"></path>
+        </svg>
+        <span class="rounded bg-base-100 px-1.5 py-0.5 text-fg-muted">main</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <div class="grid flex-1 gap-3 p-3 sm:grid-cols-2">
+    <Diff />
+    <Checks />
+  </div>
+
+  <div
+    data-gate
+    class="flex items-center gap-2 border-t border-border-soft bg-bg-elev px-3 py-2 transition-colors duration-300"
+  >
+    <span data-gate-dot class="size-1.5 shrink-0 rounded-full bg-ok"></span>
+    <span
+      data-gate-label
+      class="min-w-0 flex-1 truncate text-[12px] text-fg-muted"
+      >Checks passed · awaiting your approval</span
+    >
+    <button
+      type="button"
+      data-merge
+      class="relative shrink-0 cursor-pointer overflow-hidden rounded bg-fg px-3 py-1 text-[10px] font-medium text-bg transition-transform duration-150 hover:-translate-y-px active:translate-y-0 active:scale-[0.97] disabled:cursor-default disabled:hover:translate-y-0"
+    >
+      <span
+        class="absolute inset-0 -translate-x-full bg-acc transition-transform duration-500 ease-out group-data-[state=busy]/pr:translate-x-0 group-data-[state=done]/pr:translate-x-0"
+      ></span>
+      <span data-merge-label class="relative">Merge</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  document.querySelectorAll<HTMLElement>("[data-pr]").forEach((pr) => {
+    const button = pr.querySelector<HTMLButtonElement>("[data-merge]");
+    const label = pr.querySelector<HTMLElement>("[data-merge-label]");
+    const status = pr.querySelector<HTMLElement>("[data-status]");
+    const dot = pr.querySelector<HTMLElement>("[data-gate-dot]");
+    const gateLabel = pr.querySelector<HTMLElement>("[data-gate-label]");
+    if (!button || !label || !status || !dot || !gateLabel) return;
+
+    const idle = {
+      button: label.textContent ?? "Merge",
+      status: status.textContent ?? "Open",
+      gate: gateLabel.textContent ?? "",
+    };
+    let timers: number[] = [];
+
+    const after = (ms: number, run: () => void) => {
+      timers.push(window.setTimeout(run, reduce ? 0 : ms));
+    };
+
+    const reset = () => {
+      timers.forEach(clearTimeout);
+      timers = [];
+      pr.dataset.state = "";
+      button.disabled = false;
+      label.textContent = idle.button;
+      status.textContent = idle.status;
+      status.className = status.className
+        .replace("bg-acc-wash", "bg-ok-wash")
+        .replace("text-acc", "text-ok");
+      dot.classList.replace("bg-acc", "bg-ok");
+      gateLabel.textContent = idle.gate;
+    };
+
+    button.addEventListener("click", () => {
+      timers.forEach(clearTimeout);
+      timers = [];
+
+      pr.dataset.state = "busy";
+      button.disabled = true;
+      label.textContent = "Merging…";
+      gateLabel.textContent = "Running your CI once more";
+
+      after(1000, () => {
+        pr.dataset.state = "done";
+        label.textContent = "Merged";
+        status.textContent = "Merged";
+        status.className = status.className
+          .replace("bg-ok-wash", "bg-acc-wash")
+          .replace("text-ok", "text-acc");
+        dot.classList.replace("bg-ok", "bg-acc");
+        gateLabel.textContent = "Merged into main by you";
+      });
+
+      after(3600, reset);
+    });
+  });
+</script>

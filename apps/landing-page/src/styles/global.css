@@ -1,0 +1,310 @@
+@import "tailwindcss";
+@import "./general-sans.css";
+@import "./pilat.css";
+
+@theme {
+  /* ——— surfaces ——————————————————————————————— */
+  --color-bg: #f3f0fb;
+  --color-bg-elev: #ffffff;
+  --color-bg-sunk: #f1f5f9;
+  --color-bg-card: rgba(12, 20, 30, 0.022);
+  --color-bg-card-strong: rgba(12, 20, 30, 0.04);
+
+  /* ——— hairlines ————————————————————————————— */
+  --color-border-soft: rgba(12, 22, 34, 0.1);
+  --color-border-strong: rgba(12, 22, 34, 0.17);
+  --color-border-stronger: rgba(152, 174, 189, 0.8);
+  --color-border-glow: rgba(145, 120, 211, 0.45);
+
+  /* ——— ink ——————————————————————————————————— */
+  --color-fg: #0c1218;
+  --color-fg-muted: rgba(12, 18, 24, 0.62);
+  --color-fg-faint: rgba(12, 18, 24, 0.45);
+
+  /* ——— accent ————————————————————————————————— */
+  --color-acc: #9178d3;
+  --color-acc-hot: #ac96e9;
+  --color-acc-soft: #ddd4f7;
+  --color-acc-wash: #f5f2fd;
+  --color-acc-deep: #0f9d63;
+
+  /* ——— status, for CI / diff artifacts ——————————— */
+  --color-ok: #0f9d63;
+  --color-ok-wash: rgba(15, 157, 99, 0.09);
+  --color-err: #d14343;
+  --color-err-wash: rgba(209, 67, 67, 0.08);
+  --color-acc-glow: rgba(145, 120, 211, 0.45);
+  --color-acc-glow-soft: rgba(145, 120, 211, 0.16);
+  --color-acc-foreground: #fff;
+
+  /* ——— night band (the section that runs while you sleep) ——— */
+  --color-night: #0b1117;
+  --color-night-elev: #121a22;
+  --color-night-card: rgba(255, 255, 255, 0.035);
+  --color-night-line: rgba(255, 255, 255, 0.1);
+  --color-night-line-strong: rgba(255, 255, 255, 0.18);
+  --color-night-fg: #eef4f9;
+  --color-night-muted: rgba(238, 244, 249, 0.62);
+  --color-night-faint: rgba(238, 244, 249, 0.4);
+
+  --color-ink-hl: rgba(12, 18, 24, 0.05);
+
+  --color-base-100: rgba(12, 18, 24, 0.06);
+  --color-base-200: rgba(12, 18, 24, 0.1);
+  --color-base-300: rgba(12, 18, 24, 0.16);
+
+  --font-sans: "General Sans", ui-sans-serif, system-ui, sans-serif;
+  /* General Sans gets muddy below ~13px — use this for dense UI text */
+  --font-ui: "Pilat", Arial, Helvetica, sans-serif;
+  /* no monospace face on the page — the `font-mono` labels use Pilat too */
+  --font-mono: "Pilat", Arial, Helvetica, sans-serif;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ——— rhythm: py-section, py-band, mt-head ——————————— */
+  --spacing-section: 5rem;
+  --spacing-section-lg: 7rem;
+  --spacing-band: 3rem;
+  --spacing-band-lg: 3.5rem;
+  --spacing-head: 3rem;
+
+  /* ——— radius: each nested layer rounds one step less than its parent ——— */
+  --radius-frame: 1.5rem;
+  --radius-card: 1rem;
+  --radius-panel: 0.75rem;
+  --radius-control: 0.5rem;
+  --radius-chip: 0.375rem;
+}
+
+[data-theme="dark"] {
+  --color-bg: #0c0b0a;
+  --color-bg-elev: #141210;
+  --color-bg-sunk: #100e0d;
+  --color-bg-card: rgba(255, 255, 255, 0.025);
+  --color-bg-card-strong: rgba(255, 255, 255, 0.04);
+
+  --color-border-soft: rgba(255, 255, 255, 0.09);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-fg: #f6f3ef;
+  --color-fg-muted: rgba(246, 243, 239, 0.62);
+  --color-fg-faint: rgba(246, 243, 239, 0.4);
+
+  --color-ink-hl: rgba(255, 255, 255, 0.06);
+
+  --color-base-100: rgba(255, 255, 255, 0.08);
+  --color-base-200: rgba(255, 255, 255, 0.14);
+  --color-base-300: rgba(255, 255, 255, 0.2);
+}
+
+html {
+  background: var(--color-bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-feature-settings:
+    "ss01" on,
+    "cv01" on;
+}
+
+body {
+  background: transparent;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-acc);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-acc);
+  outline-offset: 2px;
+}
+
+/* ————————————————————————————————————————————————
+   Layout shell — every section bleeds full width,
+   its contents stay on the same 1240px measure.
+   ———————————————————————————————————————————————— */
+@utility shell {
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: 2rem;
+  }
+}
+
+/* Every section after the hero is one of these, so the hairline
+   between sections and the space around it never drift. */
+@utility section {
+  border-top: 1px solid var(--color-border-soft);
+  padding-block: var(--spacing-section);
+}
+
+@utility band {
+  border-top: 1px solid var(--color-border-soft);
+  padding-block: var(--spacing-band);
+}
+
+@media (min-width: 640px) {
+  .section {
+    padding-block: var(--spacing-section-lg);
+  }
+  .band {
+    padding-block: var(--spacing-band-lg);
+  }
+}
+
+/* Hairline that bleeds the full viewport width */
+@utility rule-x {
+  position: relative;
+}
+.rule-x::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-border-soft);
+}
+
+/* ————————————————————————————————————————————————
+   Texture
+   ———————————————————————————————————————————————— */
+@utility grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+@utility dotgrid {
+  background-image: radial-gradient(var(--color-border-strong) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@utility hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-border-soft) 0 1px,
+    transparent 1px 7px
+  );
+}
+
+/* Crosshair tick used on section corners */
+@utility tick {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  color: var(--color-border-strong);
+}
+
+/* ————————————————————————————————————————————————
+   Motion
+   ———————————————————————————————————————————————— */
+/* Only hide reveal targets when JS is there to bring them back. */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.js [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.75s var(--ease-out-quint),
+    transform 0.75s var(--ease-out-quint);
+  transition-delay: var(--d, 0ms);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility rise {
+  opacity: 0;
+  animation: rise 0.9s var(--ease-out-quint) forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+/* transform composes with an element's own translate/rotate, so placement is untouched */
+@keyframes chip-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}

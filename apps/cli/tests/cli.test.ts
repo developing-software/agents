@@ -1,0 +1,166 @@
+import { afterAll, describe, expect, it, mock } from "bun:test";
+import { methods, output, sdk } from "../src/api";
+import { params, strip, value } from "../src/args";
+import { DEFAULT_URL } from "../src/config";
+import { probe } from "../src/health";
+
+describe("methods", () => {
+  it("reflects SDK methods off the prototype", () => {
+    const names = methods();
+    expect(names).toContain("getToken");
+    expect(names).toContain("postEvents");
+    expect(names).not.toContain("constructor");
+  });
+
+  it("returns sorted, non-empty names", () => {
+    const names = methods();
+    expect(names.length).toBeGreaterThan(0);
+    expect(names).toEqual([...names].sort());
+  });
+});
+
+describe("sdk", () => {
+  // `client` is protected on DevAgentSdk; reaching it is the only way to assert plumbing.
+  const cfg = (token?: string, url?: string) =>
+    (sdk(token, url) as any).client.getConfig() as { baseUrl?: string; headers?: unknown };
+
+  it("defaults to the production url with no auth header", () => {
+    const c = cfg();
+    expect(c.baseUrl).toBe(DEFAULT_URL);
+    expect(new Headers(c.headers as HeadersInit).get("authorization")).toBeNull();
+  });
+
+  it("sets the base url and bearer header", () => {
+    const c = cfg("tok_1", "http://api");
+    expect(c.baseUrl).toBe("http://api");
+    expect(new Headers(c.headers as HeadersInit).get("authorization")).toBe("Bearer tok_1");
+  });
+});
+
+describe("params", () => {
+  it("parses --key value flags with coercion", () => {
+    expect(params(["--title", "hi", "--page", "2", "--done"])).toEqual({
+      title: "hi",
+      page: 2,
+      done: true,
+    });
+  });
+
+  it("parses a JSON blob", () => {
+    expect(params(['{"title":"hi","page":3}'])).toEqual({ title: "hi", page: 3 });
+  });
+
+  it("only treats the first arg as a blob", () => {
+    expect(params(["--title", '{"a":1}'])).toEqual({ title: '{"a":1}' });
+  });
+
+  it("keeps numeric-looking strings that are not numbers as strings", () => {
+    expect(params(["--id", "tok_01ABC"])).toEqual({ id: "tok_01ABC" });
+  });
+
+  it("parses the --key=value form, splitting on the first = only", () => {
+    expect(params(["--title=a=b", "--page=2"])).toEqual({ title: "a=b", page: 2 });
+  });
+
+  it("keeps an empty --key= as a string", () => {
+    expect(params(["--title="])).toEqual({ title: "" });
+  });
+
+  it("coerces booleans and signed or fractional numbers", () => {
+    expect(params(["--a", "true", "--b", "false", "--c", "-1.5", "--d", "0"])).toEqual({
+      a: true,
+      b: false,
+      c: -1.5,
+      d: 0,
+    });
+  });
+
+  it("treats back-to-back and trailing flags as true", () => {
+    expect(params(["--a", "--b"])).toEqual({ a: true, b: true });
+  });
+
+  it("ignores args that are not flags and lets the last occurrence win", () => {
+    expect(params(["stray", "--title", "one", "--title", "two"])).toEqual({ title: "two" });
+  });
+
+  it("is empty for no args", () => {
+    expect(params([])).toEqual({});
+  });
+});
+
+describe("args", () => {
+  it("reads a flag value and strips the pair", () => {
+    const raw = ["--token", "abc", "--title", "hi"];
+    expect(value(raw, "--token")).toBe("abc");
+    expect(strip(raw, ["--token"])).toEqual(["--title", "hi"]);
+  });
+
+  it("returns undefined for a missing or trailing flag", () => {
+    expect(value(["--title", "hi"], "--token")).toBeUndefined();
+    expect(value(["--title", "hi", "--token"], "--token")).toBeUndefined();
+  });
+
+  it("strips several flags at once and keeps the rest", () => {
+    const raw = ["--token", "abc", "--title", "hi", "--url", "http://x", "--done"];
+    expect(strip(raw, ["--token", "--url"])).toEqual(["--title", "hi", "--done"]);
+  });
+});
+
+describe("output", () => {
+  it("prints data as indented JSON", () => {
+    const log = console.log;
+    const spy = mock();
+    console.log = spy;
+    output({ data: { id: "tok_1" } });
+    console.log = log;
+    expect(spy).toHaveBeenCalledWith(JSON.stringify({ id: "tok_1" }, null, 2));
+  });
+});
+
+describe("health", () => {
+  it("resolves a probe url from flags and env ports", () => {
+    process.env.API_PORT = "4000";
+    expect(probe(["api"])).toBe("http://localhost:4000/readyz");
+    expect(probe(["api", "--probe", "live"])).toBe("http://localhost:4000/healthz");
+    expect(probe(["--url", "http://x", "--probe", "start"])).toBe("http://x/startupz");
+    expect(probe(["nope"])).toBeUndefined();
+    expect(probe(["api", "--probe", "nope"])).toBeUndefined();
+    delete process.env.API_PORT;
+  });
+
+  // Spawned rather than called: the command's answer is its exit code, and it exits.
+  const cli = `${import.meta.dir}/../src/index.ts`;
+  const run = (args: string[], env: Record<string, string> = {}) =>
+    Bun.spawn(["bun", "run", cli, "health", ...args], {
+      env: { ...process.env, ...env },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+  const server = Bun.serve({
+    port: 0,
+    fetch: (req) =>
+      new URL(req.url).pathname === "/healthz"
+        ? Response.json({ status: "ok" })
+        : Response.json({ status: "degraded" }, { status: 503 }),
+  });
+  const url = `http://localhost:${server.port}`;
+
+  afterAll(() => server.stop(true));
+
+  it("exits 0 on a probe that answers ok", async () => {
+    expect(await run(["--url", url, "--probe", "live"]).exited).toBe(0);
+  });
+
+  it("exits 1 on a degraded, unreachable, or unknown probe", async () => {
+    expect(await run(["--url", url]).exited).toBe(1);
+    expect(await run(["--url", "http://127.0.0.1:1"]).exited).toBe(1);
+    expect(await run(["nope"]).exited).toBe(1);
+  });
+
+  it("resolves a target's port from the env var its server binds", async () => {
+    const proc = run(["api", "--probe", "live"], { API_PORT: String(server.port) });
+    expect(await proc.exited).toBe(0);
+    expect(await new Response(proc.stdout).text()).toContain('"status":"ok"');
+  });
+});

@@ -1,0 +1,298 @@
+---
+import SectionHead from "@components/SectionHead.astro";
+import Icon from "@components/Icon.astro";
+
+type IconName = Parameters<typeof Icon>[0]["name"];
+type Item = { label: string; icon?: IconName; logo?: string };
+type Feature = { icon: IconName; title: string; body: string; items: Item[] };
+
+const worksWith = [
+  { src: "/brands/GitHub_Invertocat_Black.svg", alt: "GitHub", img: "size-5" },
+  { src: "/brands/gitlab-logo-500-rgb.svg", alt: "GitLab", img: "size-6" },
+  { src: "/brands/whatsapp-svgrepo-com.svg", alt: "WhatsApp", img: "size-5 rounded-[5px]" },
+  { src: "/brands/SLA-Slack-icon-RGB.svg", alt: "Slack", img: "size-5" },
+  { src: "/brands/Discord-Symbol-Blurple.svg", alt: "Discord", img: "w-6" },
+  { src: "/brands/telegram.svg", alt: "Telegram", img: "size-5" },
+];
+
+const top: Feature[] = [
+  {
+    icon: "chat",
+    title: "Request from anywhere",
+    body: "Clients describe the change in the tools they already use, in plain language.",
+    items: [
+      { label: "WhatsApp", logo: "/brands/whatsapp-svgrepo-com.svg" },
+      { label: "Slack", logo: "/brands/SLA-Slack-icon-RGB.svg" },
+      { label: "GitHub issues", logo: "/brands/GitHub_Invertocat_Black.svg" },
+      { label: "Your own app", icon: "zap" },
+    ],
+  },
+  {
+    icon: "cpu",
+    title: "Parallel models",
+    body: "The same spec goes to several frontier models, each on its own isolated branch.",
+    items: [
+      { label: "Claude", logo: "/ai/claude.svg" },
+      { label: "GPT", logo: "/ai/openai.svg" },
+      { label: "Gemini", logo: "/ai/gemini.svg" },
+      { label: "Grok", logo: "/ai/grok.svg" },
+    ],
+  },
+  {
+    icon: "shield",
+    title: "Your CI decides",
+    body: "Attempts that fail your checks are dropped before anyone has to review them.",
+    items: [
+      { label: "Test suites", icon: "terminal" },
+      { label: "Type checks", icon: "check" },
+      { label: "Path allowlists", icon: "lock" },
+    ],
+  },
+];
+
+const bottom: Feature[] = [
+  {
+    icon: "pr",
+    title: "One pull request",
+    body: "A judge keeps the strongest parts of every surviving attempt and rewrites them into one diff.",
+    items: [
+      { label: "AI judge picks the best parts", icon: "scale" },
+      { label: "Rewritten into one diff", icon: "branch" },
+      { label: "Human approval to merge", icon: "users" },
+    ],
+  },
+  {
+    icon: "globe",
+    title: "Live previews",
+    body: "Every run deploys its branch, so the person who asked can click it before review.",
+    items: [
+      { label: "Ephemeral environments", icon: "server" },
+      { label: "Link back to the thread", icon: "chat" },
+      { label: "Client-facing status page", icon: "eye" },
+    ],
+  },
+  {
+    icon: "lock",
+    title: "Enterprise control",
+    body: "Run it where your compliance needs it to run, with the keys you already own.",
+    items: [
+      { label: "Self-hosted or private cloud", icon: "server" },
+      { label: "Bring your own model keys", icon: "lock" },
+      { label: "SSO / SAML & audit export", icon: "users" },
+    ],
+  },
+];
+
+/* isometric illustration: px positions on the 256px plate, z is height above it */
+const blocks = [
+  { src: "/brands/GitHub_Invertocat_Black.svg", img: "size-5", x: 14, y: 14, z: 46 },
+  { src: "/brands/SLA-Slack-icon-RGB.svg", img: "size-5", x: 150, y: 18, z: 62 },
+  { src: "/brands/whatsapp-svgrepo-com.svg", img: "size-6 rounded-[5px]", x: 60, y: 118, z: 104, beam: true },
+  { src: "/ai/claude.svg", img: "size-5", x: 168, y: 170, z: 84, beam: true },
+  { src: "/ai/gemini.svg", img: "size-5", x: 196, y: 76, z: 118 },
+];
+---
+
+<style>
+  /* translate composes with each block's own translateZ, so it bobs in place */
+  @keyframes block-bob {
+    0%,
+    100% {
+      translate: 0 0 0;
+    }
+    50% {
+      translate: 0 0 8px;
+    }
+  }
+  .block-bob {
+    animation: block-bob 6s ease-in-out infinite;
+  }
+</style>
+
+<section id="features" class="section scroll-mt-24">
+  <div class="shell">
+    <div
+      class="grid items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16"
+    >
+      <!-- runs drop from the channels onto the plate as pull requests -->
+      <div
+        aria-hidden="true"
+        class="relative order-last flex h-72 items-center justify-center sm:h-80 lg:order-first"
+        style="perspective:1600px"
+      >
+        <div
+          class="relative size-64 scale-[0.82] sm:scale-100"
+          style="transform:rotateX(56deg) rotateZ(-42deg);transform-style:preserve-3d"
+        >
+          <div
+            class="absolute inset-0 rounded-card bg-base-200"
+            style="transform:translateZ(-14px)"
+          >
+          </div>
+          <div
+            class="absolute inset-0 overflow-hidden rounded-card border border-border-soft bg-bg-elev"
+          >
+            <div class="dotgrid absolute inset-0 opacity-80"></div>
+          </div>
+
+          <div
+            class="absolute left-7 top-28 h-16 w-28 rounded-panel border border-border-soft bg-bg-sunk p-2.5"
+            style="transform:translateZ(2px)"
+          >
+            <span class="block h-1.5 w-10 rounded-full bg-acc/60"></span>
+            <span class="mt-2 block h-1 w-16 rounded-full bg-base-200"></span>
+            <span class="mt-1.5 block h-1 w-12 rounded-full bg-base-200"></span>
+          </div>
+          <div
+            class="absolute left-36 top-40 h-16 w-24 rounded-panel border border-border-soft bg-bg-sunk p-2.5"
+            style="transform:translateZ(2px)"
+          >
+            <span class="block h-1.5 w-8 rounded-full bg-ok/60"></span>
+            <span class="mt-2 block h-1 w-14 rounded-full bg-base-200"></span>
+            <span class="mt-1.5 block h-1 w-10 rounded-full bg-base-200"></span>
+          </div>
+
+          {
+            blocks.map((b, i) => (
+              <div
+                class="absolute size-12"
+                style={`left:${b.x}px;top:${b.y}px;transform-style:preserve-3d`}
+              >
+                {b.beam && (
+                  <span
+                    class="absolute left-1/2 top-1/2 w-px bg-acc/50"
+                    style={`height:${b.z}px;transform-origin:top;transform:translateZ(${b.z}px) rotateX(-90deg)`}
+                  />
+                )}
+                <div
+                  class="block-bob absolute inset-0"
+                  style={`transform-style:preserve-3d;animation-delay:-${(i * 1.1).toFixed(1)}s`}
+                >
+                  <span
+                    class="absolute inset-0 rounded-panel bg-base-300"
+                    style={`transform:translateZ(${b.z - 10}px)`}
+                  />
+                  <span
+                    class="absolute inset-0 grid place-items-center rounded-panel border border-border-soft bg-bg-elev"
+                    style={`transform:translateZ(${b.z}px)`}
+                  >
+                    <img src={b.src} alt="" class={b.img} />
+                  </span>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <div>
+        <SectionHead
+          title="Everything a run needs,"
+          accent="built in."
+          sub="Every client asks for something different, but the pipeline behind it is the same. These are the building blocks behind every run on DevAgents."
+          align="left"
+        />
+
+        <div data-reveal class="mt-7 flex flex-wrap items-center gap-x-4 gap-y-3">
+          <span class="flex items-center gap-2 text-[14px] text-fg-muted">
+            <Icon name="zap" class="size-4 text-fg-faint" stroke={1.8} />
+            Works with
+          </span>
+          <span class="flex items-center gap-3.5">
+            {
+              worksWith.map((w) => (
+                <img src={w.src} alt={w.alt} title={w.alt} class={w.img} />
+              ))
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {
+      [top, bottom].map((group, g) => (
+        <>
+          {g === 1 && (
+            <div
+              data-reveal
+              class="relative mt-3 overflow-hidden rounded-card border border-border-soft bg-acc/15 px-6 py-5 text-center"
+            >
+              {[false, true].map((mirror) => (
+                <svg
+                  aria-hidden="true"
+                  class:list={[
+                    "pointer-events-none absolute inset-y-0 hidden h-full w-44 text-border-strong md:block",
+                    mirror ? "right-0 -scale-x-100" : "left-0",
+                  ]}
+                  viewBox="0 0 176 64"
+                  fill="none"
+                  preserveAspectRatio="xMinYMid slice"
+                >
+                  <path d="M0 42 H176" stroke="currentColor" stroke-width="1.2" />
+                  <path
+                    d="M46 42 C70 42 72 20 96 20 H150"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                  />
+                  <circle cx="46" cy="42" r="3.5" fill="var(--color-bg-sunk)" stroke="currentColor" stroke-width="1.2" />
+                  <circle cx="96" cy="20" r="3.5" fill="var(--color-bg-sunk)" stroke="currentColor" stroke-width="1.2" />
+                  <circle cx="132" cy="42" r="3.5" fill="var(--color-bg-sunk)" stroke="currentColor" stroke-width="1.2" />
+                </svg>
+              ))}
+              <p class="relative text-[13.5px] text-fg-muted">
+                Every run ends as an ordinary branch and pull request in your
+                repository.
+                <a
+                  href="#journey"
+                  class="font-medium text-acc underline-offset-4 hover:underline"
+                >
+                  See how a run works
+                </a>
+              </p>
+            </div>
+          )}
+
+          <div class:list={["grid gap-3 lg:grid-cols-3", g === 0 ? "mt-head" : "mt-3"]}>
+            {group.map((f) => (
+              <article
+                data-reveal
+                class="flex flex-col rounded-card border border-border-soft bg-bg-elev p-6 sm:p-7"
+              >
+                {/* <span class="grid size-10 place-items-center rounded-control border border-acc-soft bg-acc-wash text-acc">
+                  <Icon name={f.icon} class="size-4.5" stroke={1.8} />
+                </span> */}
+                <h3 class="mt-5 text-[17px] font-medium tracking-[-0.01em] text-fg">
+                  {f.title}
+                </h3>
+                <p class="mt-2 text-[14px] leading-[1.6] text-fg-muted">
+                  {f.body}
+                </p>
+                <ul class="mt-6">
+                  {f.items.map((it, i) => (
+                    <li class="flex items-center gap-3 pl-1">
+                      <span class="grid size-5 shrink-0 place-items-center">
+                        {it.logo ? (
+                          <img src={it.logo} alt="" class="size-4 grayscale opacity-70" />
+                        ) : (
+                          <Icon name={it.icon!} class="size-4 text-fg-faint" stroke={1.7} />
+                        )}
+                      </span>
+                      <span
+                        class:list={[
+                          "flex-1 py-3 text-[13.5px] text-fg-muted",
+                          i < f.items.length - 1 && "border-b border-border-soft",
+                        ]}
+                      >
+                        {it.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </>
+      ))
+    }
+  </div>
+</section>

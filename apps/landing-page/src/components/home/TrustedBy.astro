@@ -1,0 +1,43 @@
+---
+// Placeholder marks until we have real customer logos to swap in — do not ship as-is.
+const logos = [
+  { src: "/brands/GitHub_Invertocat_Black.svg", name: "GitHub", class: "h-7 sm:h-8" },
+  { src: "/brands/whatsapp-svgrepo-com.svg", name: "WhatsApp", class: "h-8 rounded-[7px] sm:h-9" },
+  { src: "/brands/Discord-Symbol-Blurple.svg", name: "Discord", class: "h-6 sm:h-7" },
+  { src: "/brands/gitlab-logo-500-rgb.svg", name: "GitLab", class: "h-8 sm:h-9" },
+];
+/* translateX(-50%) only loops seamlessly if half the track is wider than the viewport */
+const set = [...logos, ...logos];
+const track = [...set, ...set];
+---
+
+<section class="band bg-bg-elev/60">
+  <p
+    class="shell text-center font-mono text-[11.5px] uppercase tracking-[0.18em] text-fg-faint sm:text-[12.5px]"
+  >
+    Trusted by teams shipping with DevAgents
+  </p>
+
+  <div
+    class="mt-8 overflow-hidden sm:mt-10"
+    style="mask-image:linear-gradient(to right,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(to right,transparent,#000 12%,#000 88%,transparent)"
+  >
+    <ul
+      class="flex w-max items-center animate-[marquee_50s_linear_infinite] hover:[animation-play-state:paused]"
+    >
+      {
+        track.map((l, i) => (
+          <li
+            aria-hidden={i >= logos.length ? "true" : undefined}
+            class="flex shrink-0 items-center gap-3 pr-16 opacity-70 grayscale transition-[filter,opacity] duration-300 hover:opacity-100 hover:grayscale-0 sm:pr-24"
+          >
+            <img src={l.src} alt="" class={l.class} />
+            <span class="text-[24px] font-semibold tracking-[-0.025em] text-fg sm:text-[30px]">
+              {l.name}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

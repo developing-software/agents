@@ -1,0 +1,27 @@
+---
+const stats = [
+  { n: "38%", l: "fewer merge conflicts" },
+  { n: "2.3×", l: "more PRs merged on first review" },
+  { n: "6 min", l: "median issue → PR time" },
+  { n: "100%", l: "passing CI before submit" },
+];
+---
+
+<div class="border-y border-base-100">
+  <div class="grid grid-cols-4 gap-8 container mx-auto py-16">
+    {
+      stats.map((s, i) => (
+        <div
+          class={`text-center ${i > 0 ? "border-l pl-6 border-base-100" : ""}`}
+        >
+          <div
+            class="text-3xl font-bold spacing-tight"
+          >
+            {s.n}
+          </div>
+          <div class="t-small text-fg-muted mt-2">{s.l}</div>
+        </div>
+      ))
+    }
+  </div>
+</div>

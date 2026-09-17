@@ -12,7 +12,7 @@ describe("token", () => {
   });
 
   test("GET /token/:id", async () => {
-    const newToken = await Api.Personal.create();
+    const newToken = await Api.Personal.create({});
     const tokenID = newToken.id;
     const response = await validateOpenAPIRoute("get", "/token/:id", {
       id: tokenID,
@@ -36,7 +36,7 @@ describe("token", () => {
   });
 
   test("DELETE /token/:id", async () => {
-    const newToken = await Api.Personal.create();
+    const newToken = await Api.Personal.create({});
     const tokenID = newToken.id;
 
     await validateOpenAPIRoute("delete", "/token/:id", {

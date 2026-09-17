@@ -1,0 +1,97 @@
+---
+import Button from "@components/Button2.astro";
+import Icon from "@components/Icon.astro";
+---
+
+<section class="relative overflow-hidden">
+  <div class="shell py-14 sm:py-16">
+    <div
+      class="grain relative overflow-hidden rounded-3xl px-6 py-20 text-center sm:px-12 sm:py-24"
+      style="background:linear-gradient(172deg,#5bb8fa 0%,#2f9bea 38%,#1c8ce4 62%,#0d6fbd 100%)"
+    >
+      <!-- rising sun -->
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div
+          class="absolute bottom-[-9rem] left-1/2 size-[20rem] -translate-x-1/2 rounded-full opacity-95 blur-[36px]"
+          style="background:radial-gradient(closest-side,rgba(255,255,255,0.95),rgba(214,238,255,0.5) 55%,rgba(180,222,255,0.15) 78%,transparent)"
+        >
+        </div>
+        <div
+          class="absolute bottom-[-16rem] left-1/2 h-[34rem] w-[54rem] -translate-x-1/2 rounded-[50%] opacity-60 blur-[80px]"
+          style="background:radial-gradient(closest-side,rgba(190,228,255,0.75),transparent)"
+        >
+        </div>
+        <div
+          class="absolute inset-x-10 bottom-[3.5rem] h-px opacity-60"
+          style="background:linear-gradient(to right,transparent,rgba(255,255,255,0.6),transparent)"
+        >
+        </div>
+        <div
+          class="absolute inset-0 opacity-[0.18]"
+          style="background-image:radial-gradient(rgba(255,255,255,0.7) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(to bottom,#000,transparent 45%);-webkit-mask-image:linear-gradient(to bottom,#000,transparent 45%)"
+        >
+        </div>
+      </div>
+
+      <div class="relative">
+        <span
+          data-reveal
+          class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[0.18em] text-white/85 backdrop-blur"
+        >
+          <Icon name="sun" class="size-3" stroke={2} /> Tomorrow, 07:58
+        </span>
+
+        <h2
+          data-reveal
+          class="mx-auto mt-7 max-w-4xl text-balance text-[clamp(2.2rem,5.2vw,4.2rem)] font-medium leading-[1.02] tracking-[-0.04em] text-white"
+        >
+          Go to sleep with a backlog.<br />
+          <span class="italic font-normal text-white/80"
+            >Wake up with a pull request.</span
+          >
+        </h2>
+
+        <p
+          data-reveal
+          class="mx-auto mt-6 max-w-lg text-pretty text-[16.5px] leading-[1.6] text-white/75"
+        >
+          Connect a repository in two minutes, send one request tonight, and read
+          the diff over coffee. The first five runs are on us.
+        </p>
+
+        <div
+          data-reveal
+          class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+        >
+          <Button
+            text="Connect your repo"
+            size="lg"
+            href="#"
+            class="w-full border-transparent bg-white text-[#0b5e9f] hover:bg-white/90 sm:w-auto"
+          />
+          <Button
+            text="Book a walkthrough"
+            size="lg"
+            href="#"
+            class="w-full border-white/35 bg-white/5 text-white backdrop-blur hover:bg-white/15 sm:w-auto"
+          />
+        </div>
+
+        <div data-reveal class="mt-8 flex justify-center">
+          <p
+            class="inline-flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-full border border-white/25 bg-black/15 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-white backdrop-blur-sm"
+          >
+            <span>No card required</span>
+            <span class="text-white/50">/</span>
+            <span>GitHub &amp; GitLab</span>
+            <span class="text-white/50">/</span>
+            <span>Self-host available</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,74 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  accent?: string;
+  sub?: string;
+  align?: "left" | "center";
+  tone?: "light" | "night";
+  class?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  accent,
+  sub,
+  align = "center",
+  tone = "light",
+  class: className = "",
+} = Astro.props;
+
+const centered = align === "center";
+const night = tone === "night";
+---
+
+<div
+  class:list={[
+    "flex flex-col",
+    centered ? "items-center text-center" : "items-start text-left",
+    className,
+  ]}
+>
+  {
+    eyebrow && (
+      <span
+        data-reveal
+        class:list={[
+          "inline-flex items-center gap-2 font-mono text-[10.5px] font-medium uppercase tracking-[0.18em]",
+          night ? "text-night-faint" : "text-fg-faint",
+        ]}
+      >
+        <span class="inline-block h-px w-5 bg-acc" />
+        {eyebrow}
+      </span>
+    )
+  }
+
+  <h2
+    data-reveal
+    class:list={[
+      "text-balance text-[clamp(2rem,4.2vw,3.35rem)] font-medium leading-[1.02] tracking-[-0.035em]",
+      eyebrow && "mt-4",
+      night ? "text-night-fg" : "text-fg",
+    ]}
+  >
+    {title}
+    {accent && <span class="italic font-normal text-acc"> {accent}</span>}
+  </h2>
+
+  {
+    sub && (
+      <p
+        data-reveal
+        class:list={[
+          "mt-5 max-w-xl text-pretty text-[16.5px] leading-[1.6]",
+          night ? "text-night-muted" : "text-fg-muted",
+          centered && "mx-auto",
+        ]}
+      >
+        {sub}
+      </p>
+    )
+  }
+</div>

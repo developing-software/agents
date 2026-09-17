@@ -1,44 +1,62 @@
 import type { Handle, HandleServerError } from "@sveltejs/kit";
-import { verifyUser } from "$lib/auth";
 import { Log } from "@agents/core/util/log";
 import { VisibleError } from "@agents/core/error";
 import { dev } from "$app/environment";
 import { Actor } from "@agents/core/actor";
 import { sequence } from "@sveltejs/kit/hooks";
-import { withDatabase } from "@agents/core/drizzle";
+import { Database } from "@agents/core/drizzle";
 import { withCacheContext, CacheApiAdapter } from "@agents/core/cache";
+import { Email } from "@agents/core/email";
+import { createCloudflareSender } from "@agents/core/email/cloudflare";
+import { readSession } from "$lib/server/session";
 
 const log = Log.create({ namespace: "console.hooks.server" });
 
 const handleAuth: Handle = async ({ event, resolve }) => {
   if (event.isSubRequest) return resolve(event);
-  try {
-    const user = await verifyUser(event);
-    if (user) {
-      event.locals.userID = user.userID;
-    }
-  } catch (err) {
-    log.warn("auth verification failed", { error: String(err) });
+  event.locals.workspaceActors = new Map();
+
+  const session = await readSession(event).catch(() => null);
+  const current = session?.current;
+  const account = current ? session!.accounts[current] : undefined;
+
+  if (account && current) {
+    event.locals.actor = {
+      type: "account",
+      properties: { accountID: current, email: account.email },
+    };
+  } else {
+    event.locals.actor = { type: "public", properties: {} };
   }
 
-  if (event.locals.userID) {
-    return await Actor.provide(
-      "user",
-      {
-        userID: event.locals.userID,
-        clientID: "console",
-      },
-      () => resolve(event),
-    );
-  }
-
-  return await Actor.provide("public", {}, () => resolve(event));
+  return await Actor.provide(event.locals.actor.type, event.locals.actor.properties, () =>
+    resolve(event),
+  );
 };
 
+let shared: Database.Client | undefined;
+
+/**
+ * Workers forbid reusing a socket across requests, so they get a pool per request. A
+ * long-lived server shares one, unless PG_RELEASE=true cycles it so pglite's single
+ * connection can pass between the dev processes.
+ */
 const handleDb: Handle = async ({ event, resolve }) => {
-  const url = event.platform?.env?.HYPERDRIVE?.connectionString ?? process.env.DATABASE_URL;
+  const hyperdrive = event.platform?.env?.HYPERDRIVE?.connectionString;
+  if (hyperdrive) return Database.provide(Database.connect(hyperdrive), () => resolve(event));
+
+  const url = process.env.DATABASE_URL;
   if (!url) return resolve(event);
-  return await withDatabase(url, async () => await resolve(event));
+  if (process.env.PG_RELEASE !== "true") {
+    shared ??= Database.connect(url);
+    return Database.provide(shared, () => resolve(event));
+  }
+  const db = Database.connect(url);
+  try {
+    return await Database.provide(db, () => resolve(event));
+  } finally {
+    await Database.release(db);
+  }
 };
 const handleCache: Handle = async ({ event, resolve }) => {
   if (!event.platform?.caches) return resolve(event);
@@ -46,8 +64,13 @@ const handleCache: Handle = async ({ event, resolve }) => {
   const adapter = new CacheApiAdapter(cache);
   return withCacheContext(adapter, { prefix: "console" }, () => resolve(event));
 };
+const handleEmail: Handle = async ({ event, resolve }) => {
+  const binding = event.platform?.env?.SEND_EMAIL;
+  if (!binding) return resolve(event);
+  return Email.provide(createCloudflareSender(binding), () => resolve(event));
+};
 
-export const handle = sequence(handleDb, handleCache, handleAuth);
+export const handle = sequence(handleDb, handleCache, handleEmail, handleAuth);
 
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
   if (status === 404) {

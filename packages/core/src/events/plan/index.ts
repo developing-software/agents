@@ -5,19 +5,29 @@ import { Common } from "../../common";
 import { Examples } from "../../examples";
 import { Event } from "../index";
 import { render as renderContext } from "./context";
+import { CAVEMAN_LEVELS } from "./extensions/caveman";
 import { PlanStatus, AuthorType } from "./plan.sql";
 import type { PlanEventData } from "./plan.sql";
 
 const log = Log.create({ service: "plan" });
 
 export namespace Plan {
-  export const ToPromptOptions = z
-    .object({
-      includeIssueDetails: z.boolean().optional(),
-    })
-    .default({});
+  export const ToPromptOptions = z.object({
+    includeIssueDetails: z.boolean().optional(),
+    includeSkillSummary: z.boolean().optional(),
+    includeFileScope: z.boolean().optional(),
+    caveman: z.enum(CAVEMAN_LEVELS).optional(),
+    karpathy: z.boolean().optional(),
+  });
 
   export type ToPromptOptions = z.input<typeof ToPromptOptions>;
+
+  export function extensionTags(opts: ToPromptOptions = {}): string[] {
+    const tags: string[] = [];
+    if (opts.caveman) tags.push(`plan:ext:caveman:${opts.caveman}`);
+    if (opts.karpathy) tags.push("plan:ext:karpathy");
+    return tags;
+  }
 
   export const Info = z
     .object({
@@ -42,7 +52,7 @@ export namespace Plan {
         example: Examples.Plan.authorType,
       }),
       tags: z.array(z.string()).meta({
-        description: "Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.",
+        description: "Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.",
         example: Examples.Plan.tags,
       }),
       data: z.record(z.string(), z.unknown()).meta({
@@ -166,7 +176,7 @@ export namespace Plan {
   }
 
   export async function toPrompt(plan: Info, opts: ToPromptOptions = {}): Promise<string> {
-    const options = ToPromptOptions.parse(opts);
+    const options = ToPromptOptions.parse(opts ?? {});
     return renderContext(plan, options);
   }
 

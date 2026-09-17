@@ -1,90 +1,60 @@
 import { AgentSkill } from "../../agent/skill";
-import { Context } from "../../context";
-import { GithubContent } from "../../github/repo/content";
-import { GithubIssue } from "../../github/repo/issue";
+import { getProvider } from "../../git";
+import type { NormalizedIssue } from "../../git/provider/interface";
 import { Repository } from "../../repository/index";
 import { lazy } from "../../util/lazy";
+import { Tags } from "../tag";
+import { renderCaveman } from "./extensions/caveman";
+import { renderKarpathy } from "./extensions/karpathy";
 import type { Plan } from "./index";
 
-export type SectionRenderer = () => Promise<string | null>;
-
-interface PlanContextState {
+export interface PlanCtx {
   plan: Plan.Info;
   repo: () => Promise<Repository.Info | null>;
-  rootListing: () => Promise<GithubContent.DirEntry[] | null>;
-  issue: (n: number) => Promise<GithubIssue.Info | null>;
+  issue: (n: number) => Promise<NormalizedIssue | null>;
 }
 
-const PlanContextStorage = Context.create<PlanContextState>();
+export type SectionRenderer = (ctx: PlanCtx) => Promise<string | null>;
 
-function makeState(plan: Plan.Info): PlanContextState {
+function makeCtx(plan: Plan.Info): PlanCtx {
   const repo = lazy(() =>
-    plan.sourceId ? Repository.findByID(plan.sourceId) : Promise.resolve(null),
+    plan.sourceId ? Repository.fromID(plan.sourceId) : Promise.resolve(null),
   );
-  const rootListing = lazy(async () => {
-    const r = await repo();
-    return r ? GithubContent.listDir(r, "") : null;
-  });
-  const issueCache = new Map<number, Promise<GithubIssue.Info | null>>();
+  const issueCache = new Map<number, Promise<NormalizedIssue | null>>();
   const issue = (n: number) => {
     let p = issueCache.get(n);
     if (!p) {
       p = (async () => {
         const r = await repo();
-        return r ? GithubIssue.get(r, n).catch(() => null) : null;
+        return r
+          ? getProvider(r.source)
+              .issues.get(r.fullName, n)
+              .catch(() => null)
+          : null;
       })();
       issueCache.set(n, p);
     }
     return p;
   };
-  return { plan, repo, rootListing, issue };
-}
-
-export function withPlanContext<R>(plan: Plan.Info, fn: () => R): R {
-  return PlanContextStorage.provide(makeState(plan), fn);
-}
-
-export function usePlan(): Plan.Info {
-  return PlanContextStorage.use().plan;
-}
-
-export function useRepo(): Promise<Repository.Info | null> {
-  return PlanContextStorage.use().repo();
-}
-
-export function useRepoRoot(): Promise<GithubContent.DirEntry[] | null> {
-  return PlanContextStorage.use().rootListing();
-}
-
-export function useIssue(n: number): Promise<GithubIssue.Info | null> {
-  return PlanContextStorage.use().issue(n);
+  return { plan, repo, issue };
 }
 
 // --- Section renderers ---
 
-async function renderTitle(): Promise<string | null> {
-  const plan = usePlan();
-  return `# Plan: ${plan.title}`;
+async function renderTitle(ctx: PlanCtx): Promise<string | null> {
+  return `# Plan: ${ctx.plan.title}`;
 }
 
-async function renderBody(): Promise<string | null> {
-  const plan = usePlan();
-  return plan.body || null;
+async function renderBody(ctx: PlanCtx): Promise<string | null> {
+  return ctx.plan.body || null;
 }
 
-async function renderLinkedIssues(): Promise<string | null> {
-  const plan = usePlan();
-  const issueNumbers = plan.tags
-    .filter((t) => t.startsWith("gh:issue:"))
-    .map((t) => {
-      const text = t.split(":")[2];
-      return text ? parseInt(text, 10) : NaN;
-    })
-    .filter((n) => !isNaN(n));
+async function renderLinkedIssues(ctx: PlanCtx): Promise<string | null> {
+  const issueNumbers = Tags.Git.collect(ctx.plan.tags, "issue").map((tag) => tag.number);
   if (issueNumbers.length === 0) return null;
 
-  const issues = (await Promise.all(issueNumbers.map(useIssue))).filter(
-    (i): i is GithubIssue.Info => i !== null,
+  const issues = (await Promise.all(issueNumbers.map(ctx.issue))).filter(
+    (i): i is NormalizedIssue => i !== null,
   );
   if (issues.length === 0) return null;
 
@@ -96,57 +66,31 @@ async function renderLinkedIssues(): Promise<string | null> {
   return sections.join("\n\n");
 }
 
-async function renderSkills(): Promise<string | null> {
-  const repo = await useRepo();
-  if (!repo) return null;
-
-  const all = await AgentSkill.listAgentsSkills(repo);
-  if (all.length === 0) return null;
-
-  // If the plan has any `skill:*` tags, filter to those; otherwise include all.
-  const plan = usePlan();
+async function renderSkills(ctx: PlanCtx): Promise<string | null> {
   const wanted = new Set(
-    plan.tags
+    ctx.plan.tags
       .filter((t) => t.startsWith("skill:"))
       .map((t) => t.slice("skill:".length))
       .filter(Boolean),
   );
+
+  const repo = await ctx.repo();
+  if (!repo) return null;
+
+  const all = await AgentSkill.listAgentsSkills({ source: repo.source, fullName: repo.fullName });
   const skills = wanted.size > 0 ? all.filter((s) => wanted.has(s.id)) : all;
   if (skills.length === 0) return null;
 
-  return ["## Skills", ...skills.map((s) => `### ${s.name}\n\n${s.body}`)].join("\n\n");
+  const sections = ["## Skills"];
+  for (const s of skills) {
+    sections.push(`### \`${s.id}\`${s.description ? ` — ${s.description}` : ""}`);
+    if (s.body.trim()) sections.push(s.body.trim());
+  }
+  return sections.join("\n\n");
 }
 
-// AGENTS.md and CLAUDE.md are almost always symlinks to one another. Reading
-// both would either duplicate the same content or — for the symlink side —
-// depend on the GitHub raw endpoint resolving the link. We use the parent
-// directory listing (cached via useRepoRoot) to detect the source file and
-// read only that one. If both are real files (intentional divergence), we
-// merge them in listing order.
-async function renderInstructions(): Promise<string | null> {
-  const repo = await useRepo();
-  if (!repo) return null;
-
-  const root = await useRepoRoot();
-  if (!root) return null;
-
-  const candidates = root.filter((e) => e.name === "AGENTS.md" || e.name === "CLAUDE.md");
-  if (candidates.length === 0) return null;
-
-  const realFiles = candidates.filter((e) => e.type === "file");
-  const toRead = realFiles.length > 0 ? realFiles : candidates.slice(0, 1);
-
-  const contents = (
-    await Promise.all(toRead.map((e) => GithubContent.readFile(repo, e.path).catch(() => null)))
-  ).filter((c): c is string => Boolean(c));
-
-  if (contents.length === 0) return null;
-  return `## Instructions\n\n${contents.join("\n\n")}`;
-}
-
-async function renderFileScope(): Promise<string | null> {
-  const plan = usePlan();
-  const files = plan.tags
+async function renderFileScope(ctx: PlanCtx): Promise<string | null> {
+  const files = ctx.plan.tags
     .filter((t) => t.startsWith("file:"))
     .map((t) => t.slice("file:".length))
     .filter(Boolean);
@@ -156,26 +100,22 @@ async function renderFileScope(): Promise<string | null> {
 
 // --- Pipeline ---
 
-export interface RenderOptions {
-  includeIssueDetails?: boolean;
-}
-
-function renderers(opts: RenderOptions): SectionRenderer[] {
+function renderers(opts: Plan.ToPromptOptions): SectionRenderer[] {
   return [
+    ...(opts.caveman ? [renderCaveman(opts.caveman)] : []),
+    ...(opts.karpathy ? [renderKarpathy()] : []),
     renderTitle,
     renderBody,
-    ...(opts.includeIssueDetails !== false ? [renderLinkedIssues] : []),
-    renderSkills,
-    renderInstructions,
-    renderFileScope,
+    ...(opts.includeIssueDetails ? [renderLinkedIssues] : []),
+    ...(opts.includeSkillSummary ? [renderSkills] : []),
+    ...(opts.includeFileScope ? [renderFileScope] : []),
   ];
 }
 
-export async function render(plan: Plan.Info, opts: RenderOptions = {}): Promise<string> {
-  return withPlanContext(plan, async () => {
-    const sections = await Promise.all(renderers(opts).map((r) => r()));
-    return sections.filter((s): s is string => Boolean(s)).join("\n\n");
-  });
+export async function render(plan: Plan.Info, opts: Plan.ToPromptOptions = {}): Promise<string> {
+  const ctx = makeCtx(plan);
+  const sections = await Promise.all(renderers(opts).map((r) => r(ctx)));
+  return sections.filter((s): s is string => Boolean(s)).join("\n\n");
 }
 
 // Token estimation lives next to context — same module, same input.

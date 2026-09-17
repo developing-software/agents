@@ -1,8 +1,8 @@
-import { describe, it, expect } from "bun:test";
-import { registerHandlers } from "../src/github/webhook/handlers";
+import { describe, expect, it } from "bun:test";
 import { Event } from "../src/events";
 import { Tags } from "../src/events/tag";
-import { GithubInstallation } from "../src/github/installation";
+import { Installation } from "../src/git/installation";
+import { registerGithubWebhookHandlers } from "../src/git/provider/github/webhook";
 import { Repository } from "../src/repository";
 
 type AnyHandler = (event: { payload: any }) => Promise<void>;
@@ -22,7 +22,7 @@ function createTestWebhook() {
     },
   };
 
-  registerHandlers(webhook as any);
+  registerGithubWebhookHandlers(webhook as any);
   return webhook;
 }
 
@@ -30,14 +30,18 @@ let _installationSeq = 900000;
 
 async function createTestRepo(sourceId: string, fullName: string) {
   const [owner, repo] = fullName.split("/") as [string, string];
-  const connectionId = await GithubInstallation.upsert({
-    installationId: _installationSeq++,
-    owner,
+  const installationRef = String(_installationSeq++);
+  const installationId = await Installation.upsert({
+    provider: "github",
+    providerAccountId: installationRef,
+    providerAccountLogin: owner,
+    installationRef,
+    accountType: "Organization",
   });
   return Repository.upsert({
     source: "github",
     sourceId,
-    connectionId,
+    installationId,
     owner,
     repo,
     fullName,
@@ -99,8 +103,9 @@ describe("push webhook handler", () => {
 
     const events = await Event.list({ source: "repository", sourceId: repoId });
     const event = events[0]!;
-    expect(event.tags).toContain(Tags.ghRepo("octocat/push-test-2"));
-    expect(event.tags).toContain(Tags.ghBranch("feature/my-feature"));
+    expect(event.tags).toContain(Tags.Git.provider("github"));
+    expect(event.tags).toContain(Tags.Git.repo("github", "octocat/push-test-2"));
+    expect(event.tags).toContain(Tags.Git.branch("feature/my-feature"));
     expect(event.data).toMatchObject({ commitCount: 1, lastCommit: "feat: add new thing" });
   });
 
@@ -118,7 +123,7 @@ describe("push webhook handler", () => {
 
     const events = await Event.list({ source: "repository", sourceId: repoId });
     expect(events[0]!.data.branch).toBe("dev");
-    expect(events[0]!.tags).toContain(Tags.ghBranch("dev"));
+    expect(events[0]!.tags).toContain(Tags.Git.branch("dev"));
   });
 
   it("truncates last commit message to 72 characters", async () => {
@@ -182,7 +187,7 @@ describe("push webhook handler", () => {
       }),
     );
 
-    const events = await Event.list({ tags: [Tags.ghRepo("unknown/no-such-repo")] });
+    const events = await Event.list({ tags: [Tags.Git.repo("github", "unknown/no-such-repo")] });
     expect(events.length).toBe(0);
   });
 
@@ -195,7 +200,7 @@ describe("push webhook handler", () => {
       origin: "webhook",
       source: "repository",
       sourceId: repoId,
-      tags: [Tags.ghRepo("octocat/push-test-8"), Tags.ghBranch("main")],
+      tags: [Tags.Git.repo("github", "octocat/push-test-8"), Tags.Git.branch("main")],
     });
 
     await webhook.trigger(

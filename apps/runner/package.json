@@ -1,0 +1,21 @@
+{
+  "name": "runner",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "build": "bun run build.ts",
+    "image": "bun run build.ts && docker build -t agents-runner:dev ."
+  },
+  "dependencies": {
+    "@agents/core": "workspace:*",
+    "@agents/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "catalog:"
+  }
+}

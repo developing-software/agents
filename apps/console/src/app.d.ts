@@ -1,20 +1,25 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
-// for information about these interfaces
+import type { Actor } from "@agents/core/actor";
+
 declare global {
   namespace App {
     interface Platform {
-      env: Env & { ANTHROPIC_API_KEY?: string };
+      env: Env & {
+        LLM_API_KEY?: string;
+        LLM_BASE_URL?: string;
+        SANDBOXD_URL?: string;
+        SANDBOXD_TOKEN?: string;
+        SANDBOXD_AGENT_IMAGE?: string;
+        SEND_EMAIL?: { send(message: Record<string, unknown>): Promise<unknown> };
+      };
       ctx: ExecutionContext;
       caches: CacheStorage;
       cf?: IncomingRequestCfProperties;
     }
 
-    // interface Error {}
     interface Locals {
-      userID: string | null;
+      actor: Actor.Account | Actor.User | Actor.Public;
+      workspaceActors: Map<string, Actor.User>;
     }
-    // interface PageData {}
-    // interface PageState {}
   }
 }
 

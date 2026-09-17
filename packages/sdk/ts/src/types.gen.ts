@@ -8,37 +8,26 @@ export type ClientOptions = {
 };
 
 /**
- * A user.
+ * App.
  */
-export type User = {
+export type App = {
   /**
    * Unique object identifier.
    * The format and length of IDs may change over time.
    */
   id: string;
   /**
-   * Name of the user.
+   * Name of the app.
    */
-  name: string | null;
+  name: string;
   /**
-   * Email address of the user.
+   * Redirect URI of the app.
    */
-  email: string | null;
+  redirectURI: string;
   /**
-   * GitHub username of the user.
+   * OAuth 2.0 client secret of the app (obfuscated).
    */
-  username: string | null;
-  /**
-   * Avatar URL of the user.
-   */
-  avatarUrl: string | null;
-};
-
-/**
- * Updated user profile information.
- */
-export type Profile = {
-  user: User;
+  secret: string;
 };
 
 /**
@@ -68,29 +57,6 @@ export type ErrorResponse = {
 };
 
 /**
- * App.
- */
-export type App = {
-  /**
-   * Unique object identifier.
-   * The format and length of IDs may change over time.
-   */
-  id: string;
-  /**
-   * Name of the app.
-   */
-  name: string;
-  /**
-   * Redirect URI of the app.
-   */
-  redirectURI: string;
-  /**
-   * OAuth 2.0 client secret of the app (obfuscated).
-   */
-  secret: string;
-};
-
-/**
  * Personal access token.
  */
 export type Token = {
@@ -100,6 +66,10 @@ export type Token = {
    */
   id: string;
   /**
+   * The display name for the token.
+   */
+  name: string;
+  /**
    * The created time for the token.
    */
   created: string;
@@ -107,6 +77,8 @@ export type Token = {
    * Personal access token (obfuscated).
    */
   token: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
 };
 
 /**
@@ -139,7 +111,7 @@ export type Event = {
    */
   origin: "api" | "webhook" | "action" | "console" | "cli" | "cron";
   /**
-   * Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.
+   * Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.
    */
   tags: Array<string>;
   /**
@@ -189,7 +161,7 @@ export type EventIngestInput = (
    */
   type: string;
   /**
-   * Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.
+   * Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.
    */
   tags?: Array<string>;
   /**
@@ -222,81 +194,48 @@ export type EventArtifact = {
   uploaded: string;
 };
 
-export type GetProfileData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/profile";
+export type AgentDispatchResult = {
+  eventId: string;
+  sandboxId: string;
+  branch: string;
 };
 
-export type GetProfileErrors = {
-  /**
-   * Unauthorized
-   */
-  401: ErrorResponse;
-  /**
-   * Too Many Requests
-   */
-  429: ErrorResponse;
-  /**
-   * Internal Server Error
-   */
-  500: ErrorResponse;
+/**
+ * What the runner reports when the agent exits.
+ */
+export type AgentRunFinishInput = {
+  status: "success" | "failure" | "cancelled";
+  sessionId?: string | null;
+  finalMessage?: string | null;
+  metrics?: {
+    tokens: {
+      input: number | null;
+      output: number | null;
+      reasoning: number | null;
+      cache_read: number | null;
+      cache_creation: number | null;
+    };
+    turns: number | null;
+    cost_usd: number | null;
+    model: string | null;
+  } | null;
+  pricing?: {
+    heuristic: string;
+    model: string;
+    provider: string;
+    cost: {
+      [key: string]: unknown;
+    };
+    cost_usd: number | null;
+  } | null;
+  durationMs?: number;
+  diff?: {
+    linesAdded: number;
+    linesRemoved: number;
+  } | null;
+  pushed?: boolean;
+  title?: string;
 };
-
-export type GetProfileError = GetProfileErrors[keyof GetProfileErrors];
-
-export type GetProfileResponses = {
-  /**
-   * User profile information.
-   */
-  200: Profile;
-};
-
-export type GetProfileResponse = GetProfileResponses[keyof GetProfileResponses];
-
-export type PutProfileData = {
-  /**
-   * The user's updated profile information.
-   */
-  body: {
-    name: string;
-    email: string;
-  };
-  path?: never;
-  query?: never;
-  url: "/profile";
-};
-
-export type PutProfileErrors = {
-  /**
-   * Bad Request
-   */
-  400: ErrorResponse;
-  /**
-   * Unauthorized
-   */
-  401: ErrorResponse;
-  /**
-   * Too Many Requests
-   */
-  429: ErrorResponse;
-  /**
-   * Internal Server Error
-   */
-  500: ErrorResponse;
-};
-
-export type PutProfileError = PutProfileErrors[keyof PutProfileErrors];
-
-export type PutProfileResponses = {
-  /**
-   * Updated user profile information.
-   */
-  200: Profile;
-};
-
-export type PutProfileResponse = PutProfileResponses[keyof PutProfileResponses];
 
 export type GetAppData = {
   body?: never;
@@ -684,7 +623,7 @@ export type PatchEventsByIdData = {
       [key: string]: unknown;
     };
     /**
-     * Searchable tags, e.g. 'gh:repo:owner/name', 'gh:issue:42'.
+     * Searchable tags, e.g. 'git:repo:github:owner/name', 'git:issue:42'.
      */
     tags?: Array<string>;
   };
@@ -782,7 +721,7 @@ export type PostEventsByIdArtifactsResponses = {
 export type PostEventsByIdArtifactsResponse =
   PostEventsByIdArtifactsResponses[keyof PostEventsByIdArtifactsResponses];
 
-export type PostGithubDispatchData = {
+export type PostAgentsDispatchData = {
   body: {
     /**
      * Repository owner
@@ -801,28 +740,32 @@ export type PostGithubDispatchData = {
      */
     prompt?: string;
     /**
-     * Issue number to implement. Auto-fetches title/body to build prompt and adds gh:issue tag.
+     * Issue number to implement. Auto-fetches title/body to build prompt and adds git:issue tag.
      */
     issue_number?: number;
     /**
-     * Additional tags for event linking (e.g. gh:issue:42)
+     * Additional tags for event linking (e.g. plan:pln_...)
      */
     tags?: Array<string>;
     /**
-     * Model override
+     * Model override (LiteLLM model name)
      */
     model?: string;
     /**
-     * Git ref to dispatch on
+     * Branch to clone from (default: repository default branch)
      */
-    ref?: string;
+    base_branch?: string;
+    /**
+     * Existing branch to work on, e.g. an open PR's head branch
+     */
+    branch?: string;
   };
   path?: never;
   query?: never;
-  url: "/github/dispatch";
+  url: "/agents/dispatch";
 };
 
-export type PostGithubDispatchErrors = {
+export type PostAgentsDispatchErrors = {
   /**
    * Bad Request
    */
@@ -841,19 +784,103 @@ export type PostGithubDispatchErrors = {
   500: ErrorResponse;
 };
 
-export type PostGithubDispatchError = PostGithubDispatchErrors[keyof PostGithubDispatchErrors];
+export type PostAgentsDispatchError = PostAgentsDispatchErrors[keyof PostAgentsDispatchErrors];
 
-export type PostGithubDispatchResponses = {
+export type PostAgentsDispatchResponses = {
   /**
-   * Workflow dispatched successfully.
+   * Agent run started.
+   */
+  200: AgentDispatchResult;
+};
+
+export type PostAgentsDispatchResponse =
+  PostAgentsDispatchResponses[keyof PostAgentsDispatchResponses];
+
+export type PostAgentsRunsByIdFinishData = {
+  body: AgentRunFinishInput;
+  path: {
+    /**
+     * Agent run event ID
+     */
+    id: string;
+  };
+  query?: never;
+  url: "/agents/runs/{id}/finish";
+};
+
+export type PostAgentsRunsByIdFinishErrors = {
+  /**
+   * Bad Request
+   */
+  400: ErrorResponse;
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Not Found
+   */
+  404: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type PostAgentsRunsByIdFinishError =
+  PostAgentsRunsByIdFinishErrors[keyof PostAgentsRunsByIdFinishErrors];
+
+export type PostAgentsRunsByIdFinishResponses = {
+  /**
+   * The completed agent event.
+   */
+  200: Event;
+};
+
+export type PostAgentsRunsByIdFinishResponse =
+  PostAgentsRunsByIdFinishResponses[keyof PostAgentsRunsByIdFinishResponses];
+
+export type PostAgentsRunsByIdEndData = {
+  body?: never;
+  path: {
+    /**
+     * Agent run event ID
+     */
+    id: string;
+  };
+  query?: never;
+  url: "/agents/runs/{id}/end";
+};
+
+export type PostAgentsRunsByIdEndErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse;
+  /**
+   * Not Found
+   */
+  404: ErrorResponse;
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse;
+};
+
+export type PostAgentsRunsByIdEndError =
+  PostAgentsRunsByIdEndErrors[keyof PostAgentsRunsByIdEndErrors];
+
+export type PostAgentsRunsByIdEndResponses = {
+  /**
+   * Sandbox told to stop.
    */
   200: {
     ok: boolean;
   };
 };
 
-export type PostGithubDispatchResponse =
-  PostGithubDispatchResponses[keyof PostGithubDispatchResponses];
+export type PostAgentsRunsByIdEndResponse =
+  PostAgentsRunsByIdEndResponses[keyof PostAgentsRunsByIdEndResponses];
 
 export type GetModelsPricingData = {
   body?: never;

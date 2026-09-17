@@ -12,13 +12,16 @@ export namespace Examples {
     defaultBranch: "main",
     source: "github" as const,
     sourceId: "987654321",
-    installationId: 123456789,
+    installationRef: "123456789",
   };
 
-  export const GithubInstallation = {
-    id: Id("githubInstallation"),
-    installationId: 123456789,
-    owner: "octocat",
+  export const Installation = {
+    id: Id("installation"),
+    provider: "github" as const,
+    providerAccountId: "42",
+    providerAccountLogin: "octocat",
+    installationRef: "123456789",
+    accountType: "Organization" as const,
   };
 
   export const Event = {
@@ -28,7 +31,7 @@ export namespace Examples {
     sourceId: Id("repository"),
     origin: "webhook" as const,
     type: "github.issues.opened",
-    tags: ["gh:repo:octocat/hello-world", "gh:issue:42"],
+    tags: ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
     data: { action: "opened" },
     timeCreated: "2024-01-01T00:00:00.000Z",
   };
@@ -65,7 +68,7 @@ export namespace Examples {
     body: "## Scope\nRefactor the event API to support batch ingestion.\n\n## Acceptance Criteria\n- [ ] Batch endpoint accepts array of events",
     status: "draft" as const,
     authorType: "human" as const,
-    tags: ["gh:repo:octocat/hello-world", "gh:issue:42"],
+    tags: ["git:provider:github", "git:repo:github:octocat/hello-world", "git:issue:42"],
     data: {},
     source: "repository",
     sourceId: Id("repository"),
@@ -86,8 +89,11 @@ export namespace Examples {
 
   export const Token = {
     id: Id("apiPersonal"),
-    token: "pat_test_******XXXX",
+    name: "CI token",
+    token: "tok_test_******XXXX",
     created: "2024-06-29T00:00:00.000Z",
+    lastUsedAt: "2024-06-29T00:10:00.000Z",
+    expiresAt: null,
   };
 
   export const App = {

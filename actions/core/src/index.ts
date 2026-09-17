@@ -6,6 +6,30 @@ import { createClient, createConfig } from "@agents/sdk/client";
 import { DevAgentSdk } from "@agents/sdk";
 import { createFetchWithRetry } from "@agents/sdk/fetch";
 
+export type GitProvider = "github" | "gitlab" | "bitbucket" | "gitea" | "forjero";
+
+function extractTag(tags: string[], prefix: string): string | undefined {
+  const tag = tags.find((value) => value.startsWith(prefix));
+  return tag ? tag.slice(prefix.length) : undefined;
+}
+
+function extractNumericTag(tags: string[], prefix: string): number | undefined {
+  const value = extractTag(tags, prefix);
+  if (!value) return undefined;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+export const GitTags = {
+  provider: (provider: GitProvider) => `git:provider:${provider}`,
+  repo: (provider: GitProvider, fullName: string) => `git:repo:${provider}:${fullName}`,
+  issue: (n: number) => `git:issue:${n}`,
+  pr: (n: number) => `git:pr:${n}`,
+  workflow: (id: string | number) => `git:workflow:${id}`,
+  branch: (name: string) => `git:branch:${name}`,
+  trigger: (name: string) => `git:trigger:${name}`,
+} as const;
+
 export interface GitHubContext {
   token: string;
   repository: string;
@@ -32,27 +56,19 @@ export function readEventPayload(): {
 }
 
 /**
- * Extract issue number from tags like "gh:issue:42".
+ * Extract issue number from tags like "git:issue:42".
  * Returns undefined if no issue tag found.
  */
 export function extractIssueFromTags(tags: string[]): number | undefined {
-  for (const tag of tags) {
-    const match = tag.match(/^gh:issue:(\d+)$/);
-    if (match) return parseInt(match[1]!, 10);
-  }
-  return undefined;
+  return extractNumericTag(tags, "git:issue:");
 }
 
 /**
- * Extract PR number from tags like "gh:pr:99".
+ * Extract PR number from tags like "git:pr:99".
  * Returns undefined if no PR tag found.
  */
 export function extractPrFromTags(tags: string[]): number | undefined {
-  for (const tag of tags) {
-    const match = tag.match(/^gh:pr:(\d+)$/);
-    if (match) return parseInt(match[1]!, 10);
-  }
-  return undefined;
+  return extractNumericTag(tags, "git:pr:");
 }
 
 export function getContext(): GitHubContext {

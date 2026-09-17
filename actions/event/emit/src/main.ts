@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { createApiClient, readContextTags } from "@agents/actions-core";
+import { GitTags, createApiClient, readContextTags } from "@agents/actions-core";
 import { Identifier } from "@agents/core/identifier";
 
 function readTags(raw: string) {
@@ -13,21 +13,23 @@ function readTags(raw: string) {
   ];
 }
 
-function githubTags(): string[] {
+function gitTags(): string[] {
   const tags: string[] = [];
   const repo = process.env.GITHUB_REPOSITORY;
   const runId = process.env.GITHUB_RUN_ID;
   const ref = process.env.GITHUB_REF; // refs/heads/main or refs/pull/123/merge
   const refName = process.env.GITHUB_REF_NAME; // main or 123/merge
 
-  if (repo) tags.push(`gh:repo:${repo}`);
-  if (runId) tags.push(`gh:workflow:${runId}`);
+  if (repo) {
+    tags.push(GitTags.provider("github"), GitTags.repo("github", repo));
+  }
+  if (runId) tags.push(GitTags.workflow(runId));
 
   const prMatch = ref?.match(/^refs\/pull\/(\d+)\//);
   if (prMatch) {
-    tags.push(`gh:pr:${prMatch[1]}`);
+    tags.push(GitTags.pr(Number.parseInt(prMatch[1]!, 10)));
   } else if (refName && ref?.startsWith("refs/heads/")) {
-    tags.push(`gh:branch:${refName}`);
+    tags.push(GitTags.branch(refName));
   }
 
   return tags;
@@ -70,7 +72,7 @@ async function run() {
   const type = core.getInput("type", { required: true });
   const explicitTags = readTags(core.getInput("tags"));
   const contextTags = inheritContext ? readContextTags() : [];
-  const tags = [...new Set([...githubTags(), ...contextTags, ...explicitTags])];
+  const tags = [...new Set([...gitTags(), ...contextTags, ...explicitTags])];
   const data = readData(core.getInput("data"));
   const repoFullName = process.env.GITHUB_REPOSITORY;
 

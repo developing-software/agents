@@ -1,13 +1,10 @@
 <script lang="ts">
   import type { PageProps } from './$types';
-  import { getDashboardSummary } from '$lib/events/agent-completed/agent-completed.remote';
+  import { getDashboardSummary } from '$lib/features/events/api/metrics.remote';
 
   let { data }: PageProps = $props();
 
-  const dashboardPromise = $derived.by(() => {
-    if (!data.userID) return null;
-    return getDashboardSummary({});
-  });
+  const dashboardQuery = $derived(data.accountID ? getDashboardSummary({}) : null);
 
   function formatDuration(ms: number): string {
     if (ms < 1000) return `${Math.round(ms)}ms`;
@@ -39,6 +36,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Dev Agents</title>
+</svelte:head>
+
 {#if data.installation}
   <div class="flex flex-1 items-center justify-center px-6 py-16">
     <div
@@ -68,7 +69,7 @@
       </a>
     </div>
   </div>
-{:else if !data.userID}
+{:else if !data.accountID}
   <div class="login">
     <h1 class="login-title">agents</h1>
     <a href="/login" class="login-btn">
@@ -78,8 +79,8 @@
       Sign in with GitHub
     </a>
   </div>
-{:else if dashboardPromise}
-  {#await dashboardPromise}
+{:else if dashboardQuery}
+  {#if dashboardQuery.loading && !dashboardQuery.current}
     <div class="dashboard">
       <div class="stat-row">
         {#each [1, 2, 3, 4, 5, 6] as i (i)}
@@ -99,8 +100,12 @@
         {/each}
       </div>
     </div>
-  {:then result}
-    {#if result && result.global && result.global.total > 0}
+  {:else if dashboardQuery.error}
+    <div class="empty">
+      <p class="empty-title">Unable to load dashboard</p>
+    </div>
+  {:else if dashboardQuery.current && dashboardQuery.current.global && dashboardQuery.current.global.total > 0}
+    {@const result = dashboardQuery.current}
       <div class="dashboard">
         <div class="stat-row">
           <div class="stat-card">
@@ -140,7 +145,7 @@
           <div class="repo-grid">
             {#each result.repos as repo (`${repo.owner}/${repo.repo}`)}
               {@const hasChecks = repo.passRate > 0 || repo.total > 0}
-              <a href="/gh/{repo.owner}/{repo.repo}" class="repo-card">
+              <a href="/{repo.source}/{repo.owner}/{repo.repo}" class="repo-card">
                 <div class="repo-card-header">
                   <span class="repo-card-name">{repo.owner}/{repo.repo}</span>
                   {#if repo.lastActivity}
@@ -172,17 +177,12 @@
           </div>
         {/if}
       </div>
-    {:else}
-      <div class="empty">
-        <p class="empty-title">No agent runs recorded yet</p>
-        <p class="empty-desc">Runs will appear here once agents start processing issues.</p>
-      </div>
-    {/if}
-  {:catch}
+  {:else}
     <div class="empty">
-      <p class="empty-title">Unable to load dashboard</p>
+      <p class="empty-title">No agent runs recorded yet</p>
+      <p class="empty-desc">Runs will appear here once agents start processing issues.</p>
     </div>
-  {/await}
+  {/if}
 {/if}
 
 <style>

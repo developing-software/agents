@@ -6,7 +6,10 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "cloudflare",
-      providers: { railway: "0.4.4", planetscale: "1.0.0" },
+      providers: {
+        planetscale: "1.0.0",
+        command: { package: "@pulumi/command", version: "1.2.1" },
+      },
     };
   },
   console: {
@@ -24,12 +27,12 @@ export default $config({
       },
     },
   },
-
   async run() {
     const outputs = {};
     const { readdirSync } = await import("fs");
-    for (const value of readdirSync("./infra/")) {
-      const result = await import("./infra/" + value);
+    // Only the top-level modules: infra/docker holds compose files, not SST resources.
+    for (const value of readdirSync("./infra/sst/cloudflare").filter((file) => file.endsWith(".ts"))) {
+      const result = await import("./infra/sst/cloudflare/" + value);
       if (result.outputs) Object.assign(outputs, result.outputs);
     }
     return outputs;

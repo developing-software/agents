@@ -1,0 +1,238 @@
+---
+import Icon from "@components/Icon.astro";
+import SectionHead from "@components/SectionHead.astro";
+
+const timeline = [
+  {
+    time: "23:14",
+    label: "WhatsApp",
+    icon: "chat" as const,
+    title: "Marina asks for a feature",
+    body: "“can customers export their invoices as a PDF from the billing page? two asked today”",
+    meta: "Acknowledged in 40 seconds",
+    quote: true,
+  },
+  {
+    time: "23:19",
+    label: "Intake",
+    icon: "issue" as const,
+    title: "Spec locked",
+    body: "Three questions asked, three answered from the codebase itself. Scope, files to touch, and rate limits written down where everyone can read them.",
+    meta: "SPEC-4821 · 2 files flagged as risky",
+  },
+  {
+    time: "23:22",
+    label: "Fan-out",
+    icon: "branch" as const,
+    title: "Four branches open at once",
+    body: "The same spec goes to four frontier models. None of them can see the others' work.",
+    meta: "Claude · GPT-5 · Gemini · Grok",
+    models: true,
+  },
+  {
+    time: "01:07",
+    label: "CI",
+    icon: "scale" as const,
+    title: "Two attempts eliminated",
+    body: "One broke 14 tests in the billing module. One never streamed the file. Your pipeline threw them out before a human ever saw them.",
+    meta: "872 checks run · 2 survivors",
+  },
+  {
+    time: "02:05",
+    label: "Synthesis",
+    icon: "merge" as const,
+    title: "The best parts become one PR",
+    body: "The stronger renderer from one attempt, the safer rate limiter from the other, and the better test file of the two — rewritten into a single coherent diff.",
+    meta: "+412 −58 across 12 files",
+  },
+  {
+    time: "02:31",
+    label: "Preview",
+    icon: "globe" as const,
+    title: "A link the client can click",
+    body: "An ephemeral environment goes up with the feature live in it. Marina tries the export herself and replies with a thumbs up.",
+    meta: "preview-4821.devagents.app",
+  },
+  {
+    time: "07:58",
+    label: "Review",
+    icon: "check" as const,
+    title: "Your engineer opens a laptop",
+    body: "One pull request. Green checks. A summary in plain language, and a diff worth reading. Approved and merged at 08:04.",
+    meta: "Total human time: 6 minutes",
+    dawn: true,
+  },
+];
+
+const stats = [
+  { k: "0", v: "engineers awake" },
+  { k: "1", v: "pull request to review" },
+  { k: "8h 50m", v: "from message to merge" },
+];
+---
+
+<section class="relative overflow-hidden bg-night text-night-fg">
+  <!-- night sky -->
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <div
+      class="absolute inset-0 opacity-[0.5]"
+      style="background-image:radial-gradient(rgba(255,255,255,0.18) 1px,transparent 1px);background-size:26px 26px;mask-image:linear-gradient(to bottom,#000,transparent 55%);-webkit-mask-image:linear-gradient(to bottom,#000,transparent 55%)"
+    >
+    </div>
+    <div
+      class="absolute -left-40 top-10 h-[30rem] w-[30rem] rounded-full opacity-40 blur-[100px]"
+      style="background:radial-gradient(closest-side,rgba(120,140,255,0.22),transparent)"
+    >
+    </div>
+    <!-- dawn -->
+    <div
+      class="absolute inset-x-0 bottom-0 h-[26rem]"
+      style="background:linear-gradient(to top,rgba(238,82,34,0.28),rgba(238,82,34,0.08) 40%,transparent 80%)"
+    >
+    </div>
+    <div
+      class="absolute -bottom-56 left-1/2 h-[32rem] w-[70rem] -translate-x-1/2 rounded-[50%] opacity-60 blur-[90px]"
+      style="background:radial-gradient(closest-side,rgba(255,150,80,0.4),transparent)"
+    >
+    </div>
+  </div>
+
+  <div class="shell relative py-24 sm:py-28">
+    <div class="flex flex-col items-start gap-8 lg:flex-row lg:items-end lg:justify-between">
+      <SectionHead
+        eyebrow="One night · one feature"
+        title="Nobody was at the keyboard."
+        accent="It shipped anyway."
+        align="left"
+        tone="night"
+        class="max-w-2xl"
+      />
+
+      <p
+        data-reveal
+        class="max-w-sm text-[15px] leading-[1.6] text-night-muted lg:text-right"
+      >
+        This is a real shape of a run: a client message after dinner, a reviewed
+        pull request before the first coffee.
+      </p>
+    </div>
+
+    <ol class="mt-16 sm:mt-20">
+      {
+        timeline.map((t, i) => (
+          <li
+            data-reveal
+            class="grid grid-cols-[3.4rem_1fr] gap-x-4 sm:grid-cols-[7.5rem_1fr] sm:gap-x-8"
+          >
+            <div class="pt-0.5 text-right">
+              <span
+                class:list={[
+                  "block font-mono text-[13px] font-medium tabular-nums tracking-tight sm:text-[15px]",
+                  t.dawn ? "text-acc-hot" : "text-night-fg",
+                ]}
+              >
+                {t.time}
+              </span>
+              <span class="mt-1 hidden font-mono text-[9.5px] uppercase tracking-[0.14em] text-night-faint sm:block">
+                {t.label}
+              </span>
+            </div>
+
+            <div
+              class:list={[
+                "relative border-l pb-10 pl-6 sm:pl-8",
+                i === timeline.length - 1
+                  ? "border-transparent pb-0"
+                  : "border-night-line",
+              ]}
+            >
+              <span
+                class:list={[
+                  "absolute -left-[6px] top-1 grid size-3 place-items-center rounded-full border",
+                  t.dawn
+                    ? "border-acc-hot bg-acc-hot"
+                    : "border-night-line-strong bg-night",
+                ]}
+              >
+                {t.dawn && (
+                  <span class="absolute inline-flex size-3 rounded-full bg-acc-hot [animation:pulse-ring_2.4s_ease-out_infinite]" />
+                )}
+              </span>
+
+              <div
+                class:list={[
+                  "rounded-xl border p-5 backdrop-blur-[2px] transition-colors sm:p-6",
+                  t.dawn
+                    ? "border-acc-hot/35 bg-acc-hot/[0.07]"
+                    : "border-night-line bg-night-card hover:border-night-line-strong",
+                ]}
+              >
+                <div class="flex items-center gap-2.5">
+                  <Icon
+                    name={t.icon}
+                    class={`size-4 ${t.dawn ? "text-acc-hot" : "text-night-faint"}`}
+                    stroke={1.6}
+                  />
+                  <h3 class="text-[17px] font-medium leading-snug tracking-[-0.01em] text-night-fg sm:text-[18.5px]">
+                    {t.title}
+                  </h3>
+                </div>
+
+                <p
+                  class:list={[
+                    "mt-2.5 text-[14.5px] leading-[1.6] text-night-muted",
+                    t.quote && "italic text-night-fg/85",
+                  ]}
+                >
+                  {t.body}
+                </p>
+
+                {t.models && (
+                  <div class="mt-4 flex flex-wrap gap-1.5">
+                    {[
+                      "/ai/claude.svg",
+                      "/ai/openai.svg",
+                      "/ai/gemini.svg",
+                      "/ai/grok.svg",
+                    ].map((logo) => (
+                      <span class="grid size-7 place-items-center rounded-md border border-night-line bg-night-elev">
+                        <img src={logo} alt="" class="size-3.5 brightness-0 invert opacity-80" />
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <p
+                  class:list={[
+                    "mt-4 font-mono text-[9.5px] uppercase tracking-[0.14em]",
+                    t.dawn ? "text-acc-hot" : "text-night-faint",
+                  ]}
+                >
+                  {t.meta}
+                </p>
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <!-- morning ledger -->
+    <div
+      class="mt-16 grid gap-px overflow-hidden rounded-xl border border-night-line bg-night-line sm:grid-cols-3"
+    >
+      {
+        stats.map((s) => (
+          <div data-reveal class="bg-night px-6 py-8 text-center">
+            <p class="text-[clamp(2rem,4vw,2.75rem)] font-medium leading-none tracking-[-0.03em] text-night-fg">
+              {s.k}
+            </p>
+            <p class="mt-2.5 font-mono text-[10px] uppercase tracking-[0.16em] text-night-faint">
+              {s.v}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,416 @@
+---
+import Icon from "@components/Icon.astro";
+import SectionHead from "@components/SectionHead.astro";
+
+const items = [
+  {
+    kicker: "Intake",
+    title: "Talk to it like a teammate",
+    body: "No tickets, no acceptance criteria, no Jira grammar. It reads the repo before it asks anything, so the questions are short and specific.",
+  },
+  {
+    kicker: "Arena",
+    title: "Four attempts, one survives",
+    body: "Every model gets the same spec and a clean branch. Your tests decide who stays in before any scoring happens.",
+  },
+  {
+    kicker: "Synthesis",
+    title: "A diff written to be read",
+    body: "One pull request, assembled from the best parts of the survivors, with a summary your client understands and a diff your senior engineer respects.",
+  },
+  {
+    kicker: "Preview",
+    title: "Try it before it merges",
+    body: "Every run deploys the branch to a disposable environment. The person who asked for the feature can use it — before a single line lands on main.",
+  },
+];
+
+const INTERVAL_MS = 6000;
+---
+
+<section
+  class="relative scroll-mt-24 border-t border-border-soft py-24 sm:py-28"
+  id="product-panels"
+>
+  <div class="shell">
+    <SectionHead
+      eyebrow="Inside a run"
+      title="Everything that usually needs a human,"
+      accent="handled in the open."
+      sub="Nothing about this pipeline is a black box — every stage leaves an artifact you can read, click, or reject."
+      class="mx-auto max-w-2xl"
+    />
+
+    <div
+      class="mt-14 overflow-hidden rounded-2xl border border-border-strong bg-bg-elev shadow-[0_24px_60px_-30px_rgba(16,14,12,0.25)]"
+      data-interactive-panels
+      data-interval={INTERVAL_MS}
+    >
+      <div class="grid lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
+        <!-- tabs -->
+        <div class="order-last lg:order-first">
+          {
+            items.map((item, i) => (
+              <button
+                type="button"
+                data-index={i}
+                data-active={i === 0}
+                class:list={[
+                  "group/tab relative block w-full cursor-pointer p-5 text-left transition-colors sm:p-7",
+                  i < items.length - 1 && "border-b border-border-soft",
+                  "data-[active=true]:bg-bg-card hover:bg-bg-card/60",
+                ]}
+              >
+                <span class="flex items-center gap-2 font-mono text-[9.5px] uppercase tracking-[0.16em] text-fg-faint group-data-[active=true]/tab:text-acc">
+                  <span class="tabular-nums">0{i + 1}</span>
+                  <span class="inline-block h-px w-4 bg-current opacity-40" />
+                  {item.kicker}
+                </span>
+
+                <p class="mt-3 text-[18px] font-medium leading-snug tracking-[-0.015em] text-fg sm:text-[19.5px]">
+                  {item.title}
+                </p>
+                <p class="mt-2 max-w-md text-[14px] leading-[1.6] text-fg-muted">
+                  {item.body}
+                </p>
+
+                <span class="absolute inset-x-0 bottom-0 block h-0.5 bg-transparent">
+                  <span data-bar class="block h-full w-0 origin-left bg-acc" />
+                </span>
+              </button>
+            ))
+          }
+        </div>
+
+        <!-- panels -->
+        <div
+          class="relative min-h-[26rem] border-b border-border-soft bg-bg-sunk p-5 sm:p-8 lg:border-b-0 lg:border-l"
+        >
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0 opacity-70"
+            style="background:radial-gradient(120% 80% at 50% 0%,rgba(238,82,34,0.1),transparent 60%)"
+          >
+          </div>
+          <div class="hatch pointer-events-none absolute inset-0 opacity-[0.18]"></div>
+
+          <!-- 01 · intake -->
+          <div data-panel="0" data-active="true" class="panel relative">
+            <div
+              class="mx-auto w-full max-w-lg rounded-xl border border-border-soft bg-bg-elev p-4 shadow-sm"
+            >
+              <div
+                class="flex items-center justify-between border-b border-border-soft pb-3 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+              >
+                <span class="inline-flex items-center gap-1.5">
+                  <Icon name="chat" class="size-3.5 text-acc" stroke={1.8} /> WhatsApp
+                  · Marina
+                </span>
+                <span>online</span>
+              </div>
+
+              <div class="space-y-2.5 pt-4">
+                <p
+                  class="max-w-[88%] rounded-lg rounded-tl-sm border border-border-soft bg-bg-sunk px-3 py-2 text-[12.5px] leading-[1.5]"
+                >
+                  the invoice page needs a download button, pdf like the receipts
+                </p>
+                <p
+                  class="ml-auto max-w-[88%] rounded-lg rounded-tr-sm border border-acc/20 bg-acc-wash px-3 py-2 text-[12.5px] leading-[1.5]"
+                >
+                  Found <span class="font-mono text-[11.5px] text-acc">ReceiptDocument</span> —
+                  should invoices reuse that layout, or get their own?
+                </p>
+                <p
+                  class="max-w-[70%] rounded-lg rounded-tl-sm border border-border-soft bg-bg-sunk px-3 py-2 text-[12.5px] leading-[1.5]"
+                >
+                  reuse it, same look
+                </p>
+                <p
+                  class="ml-auto max-w-[88%] rounded-lg rounded-tr-sm border border-acc/20 bg-acc-wash px-3 py-2 text-[12.5px] leading-[1.5]"
+                >
+                  Locked. I'll ping you with a link you can click in about two
+                  hours. 🌙
+                </p>
+              </div>
+
+              <div
+                class="mt-4 flex items-center gap-2.5 rounded-lg border border-border-soft bg-bg-sunk px-3 py-2.5"
+              >
+                <Icon name="issue" class="size-3.5 shrink-0 text-acc" stroke={1.8} />
+                <span class="text-[12px] leading-[1.45] text-fg-muted">
+                  Spec <span class="font-mono text-[11px] text-fg">SPEC-4821</span>
+                  written, 2 risky files flagged, 4 branches queued
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 02 · arena -->
+          <div data-panel="1" data-active="false" class="panel relative">
+            <div
+              class="mx-auto w-full max-w-lg space-y-2 rounded-xl border border-border-soft bg-bg-elev p-4 shadow-sm"
+            >
+              <p
+                class="flex items-center justify-between border-b border-border-soft pb-3 font-mono text-[9.5px] uppercase tracking-[0.14em] text-fg-faint"
+              >
+                <span>Attempt</span><span>Checks · Score</span>
+              </p>
+              {
+                [
+                  { n: "Claude", l: "/ai/claude.svg", c: "218/218", s: "0.94", ok: true, win: true },
+                  { n: "GPT-5", l: "/ai/openai.svg", c: "218/218", s: "0.88", ok: true, win: true },
+                  { n: "Gemini", l: "/ai/gemini.svg", c: "timeout", s: "—", ok: false, win: false },
+                  { n: "Grok", l: "/ai/grok.svg", c: "204/218", s: "0.61", ok: false, win: false },
+                ].map((m) => (
+                  <div
+                    class:list={[
+                      "flex items-center gap-3 rounded-lg border px-3 py-2.5",
+                      m.win
+                        ? "border-acc-deep/30 bg-acc-deep/[0.05]"
+                        : "border-border-soft opacity-60",
+                    ]}
+                  >
+                    <img src={m.l} alt="" class="size-4" />
+                    <span class="flex-1 text-[13px] font-medium">{m.n}</span>
+                    <span
+                      class:list={[
+                        "font-mono text-[10px]",
+                        m.ok ? "text-acc-deep" : "text-fg-faint line-through",
+                      ]}
+                    >
+                      {m.c}
+                    </span>
+                    <span class="w-9 text-right font-mono text-[11px] font-medium">
+                      {m.s}
+                    </span>
+                  </div>
+                ))
+              }
+              <p
+                class="!mt-4 flex items-center gap-2 rounded-lg bg-bg-sunk px-3 py-2.5 text-[12px] text-fg-muted"
+              >
+                <Icon name="merge" class="size-3.5 text-acc" stroke={1.8} />
+                Two survivors merged into one diff
+              </p>
+            </div>
+          </div>
+
+          <!-- 03 · synthesis -->
+          <div data-panel="2" data-active="false" class="panel relative">
+            <div
+              class="mx-auto w-full max-w-lg overflow-hidden rounded-xl border border-border-soft bg-bg-elev shadow-sm"
+            >
+              <div class="border-b border-border-soft px-4 py-3">
+                <p class="flex items-center gap-2 text-[13.5px] font-medium">
+                  <Icon name="pr" class="size-3.5 text-acc-deep" stroke={1.8} />
+                  feat: invoice PDF export
+                  <span class="font-mono text-[11px] text-fg-faint">#4821</span>
+                </p>
+                <p class="mt-1.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-fg-faint">
+                  12 files · +412 −58 · 218 checks passed
+                </p>
+              </div>
+
+              <div class="border-b border-border-soft bg-acc-wash/50 px-4 py-3">
+                <p class="font-mono text-[9px] uppercase tracking-[0.14em] text-acc">
+                  In plain language
+                </p>
+                <p class="mt-1.5 text-[12.5px] leading-[1.55] text-fg-muted">
+                  Customers can now download any invoice as a PDF from the billing
+                  page. It reuses the receipt layout, streams the file instead of
+                  buffering it, and is capped at 20 downloads per hour.
+                </p>
+              </div>
+
+              <pre class="overflow-x-auto px-4 py-3 font-mono text-[11px] leading-[1.7]"><code><span class="text-fg-faint">app/api/invoices/[id].pdf.ts</span>
+<span class="text-acc-deep">+ export async function GET(req, ctx) {'{'}</span>
+<span class="text-acc-deep">+   const invoice = await Invoices.byId(ctx.params.id)</span>
+<span class="text-acc-deep">+   return renderPdf(ReceiptDocument, {'{'} invoice {'}'})</span>
+<span class="text-red-600">- return new Response("todo", {'{'} status: 501 {'}'})</span></code></pre>
+            </div>
+          </div>
+
+          <!-- 04 · preview -->
+          <div data-panel="3" data-active="false" class="panel relative">
+            <div
+              class="mx-auto w-full max-w-lg overflow-hidden rounded-xl border border-border-soft bg-bg-elev shadow-sm"
+            >
+              <div
+                class="flex items-center gap-2 border-b border-border-soft bg-bg-sunk px-3 py-2"
+              >
+                <span class="flex gap-1">
+                  <span class="size-2 rounded-full bg-base-300"></span>
+                  <span class="size-2 rounded-full bg-base-300"></span>
+                  <span class="size-2 rounded-full bg-base-300"></span>
+                </span>
+                <span
+                  class="ml-1 flex-1 truncate rounded border border-border-soft bg-bg-elev px-2 py-1 font-mono text-[9.5px] text-fg-faint"
+                >
+                  preview-4821.devagents.app/billing
+                </span>
+              </div>
+
+              <div class="p-4">
+                <p class="text-[13px] font-medium">Invoices</p>
+                <div class="mt-3 divide-y divide-border-soft">
+                  {
+                    [
+                      ["INV-2291", "Mar 2026", "R$ 4.200,00"],
+                      ["INV-2264", "Feb 2026", "R$ 4.200,00"],
+                      ["INV-2238", "Jan 2026", "R$ 3.850,00"],
+                    ].map(([id, date, amount], idx) => (
+                      <div class="flex items-center gap-3 py-2.5">
+                        <span class="font-mono text-[10.5px] text-fg-faint">{id}</span>
+                        <span class="text-[11.5px] text-fg-muted">{date}</span>
+                        <span class="ml-auto font-mono text-[11px]">{amount}</span>
+                        <span
+                          class:list={[
+                            "relative inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em]",
+                            idx === 0
+                              ? "border-acc bg-acc text-white"
+                              : "border-border-soft text-fg-muted",
+                          ]}
+                        >
+                          {idx === 0 && (
+                            <span class="absolute -inset-1 rounded-md ring-2 ring-acc/25" />
+                          )}
+                          PDF
+                        </span>
+                      </div>
+                    ))
+                  }
+                </div>
+
+                <p
+                  class="mt-4 flex items-center gap-2 rounded-lg border border-border-soft bg-bg-sunk px-3 py-2 text-[11.5px] text-fg-muted"
+                >
+                  <Icon name="users" class="size-3.5 text-acc" stroke={1.8} />
+                  Shared with Marina · 23 min before anyone reviewed the code
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .panel {
+    position: absolute;
+    inset: 1.25rem;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.985);
+    transition:
+      opacity 0.5s var(--ease-out-quint),
+      transform 0.5s var(--ease-out-quint),
+      visibility 0.5s;
+  }
+
+  @media (min-width: 640px) {
+    .panel {
+      inset: 2rem;
+    }
+  }
+
+  .panel[data-active="true"] {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+</style>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>("[data-interactive-panels]")
+    .forEach((section) => {
+      const buttons = Array.from(
+        section.querySelectorAll<HTMLButtonElement>("[data-index]"),
+      );
+      const panels = Array.from(
+        section.querySelectorAll<HTMLElement>("[data-panel]"),
+      );
+      const bars = buttons.map((btn) =>
+        btn.querySelector<HTMLElement>("[data-bar]"),
+      );
+      const interval = Number(section.dataset.interval) || 5000;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      let current = 0;
+      let paused = reduce;
+
+      const startBar = (duration: number) => {
+        const bar = bars[current];
+        if (!bar || reduce) return;
+        void bar.offsetWidth;
+        bar.style.transition = `width ${duration}ms linear`;
+        bar.style.width = "100%";
+      };
+
+      const freezeBar = () => {
+        const bar = bars[current];
+        if (!bar) return;
+        bar.style.width = getComputedStyle(bar).width;
+        bar.style.transition = "none";
+      };
+
+      const remainingMs = () => {
+        const bar = bars[current];
+        if (!bar) return interval;
+        const track = bar.parentElement?.getBoundingClientRect();
+        const progress =
+          track && track.width
+            ? bar.getBoundingClientRect().width / track.width
+            : 0;
+        return Math.max(0, interval * (1 - progress));
+      };
+
+      const select = (index: number) => {
+        current = index;
+
+        buttons.forEach((btn, i) => {
+          btn.dataset.active = String(i === index);
+        });
+        panels.forEach((panel, i) => {
+          panel.dataset.active = String(i === index);
+        });
+
+        bars.forEach((bar) => {
+          if (!bar) return;
+          bar.style.transition = "none";
+          bar.style.width = "0%";
+        });
+
+        if (!paused) startBar(interval);
+      };
+
+      buttons.forEach((btn, i) => {
+        btn.addEventListener("click", () => select(i));
+        btn.addEventListener("focus", () => select(i));
+      });
+
+      const setPaused = (value: boolean) => {
+        if (reduce || value === paused) return;
+        paused = value;
+        if (value) freezeBar();
+        else startBar(remainingMs());
+      };
+
+      section.addEventListener("mouseenter", () => setPaused(true));
+      section.addEventListener("mouseleave", () => setPaused(false));
+
+      bars.forEach((bar, i) => {
+        bar?.addEventListener("transitionend", () => {
+          if (paused || i !== current) return;
+          select((current + 1) % buttons.length);
+        });
+      });
+
+      select(0);
+    });
+</script>

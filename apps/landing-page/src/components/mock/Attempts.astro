@@ -1,0 +1,56 @@
+---
+/** Four models racing on isolated branches. */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const rows = [
+  { model: "claude", branch: "run/4821-a", files: 14, pct: 100, ok: true },
+  { model: "gpt-5", branch: "run/4821-b", files: 9, pct: 100, ok: true },
+  { model: "gemini", branch: "run/4821-c", files: 11, pct: 62, ok: false },
+  { model: "grok", branch: "run/4821-d", files: 21, pct: 44, ok: false },
+];
+---
+
+<div class:list={["flex flex-col", className]}>
+  <div
+    class="flex items-baseline justify-between border-b border-border-soft pb-2.5 font-mono text-[10.5px] text-fg-faint"
+  >
+    <span>4 attempts</span>
+    <span>2 survived</span>
+  </div>
+
+  {
+    rows.map((r) => (
+      <div class="border-b border-border-soft py-3 last:border-b-0">
+        <div class="flex items-baseline justify-between gap-3">
+          <span class="font-mono text-[11.5px] text-fg">{r.model}</span>
+          <span
+            class:list={[
+              "font-mono text-[10.5px]",
+              r.ok ? "text-ok" : "text-fg-faint",
+            ]}
+          >
+            {r.ok ? "passed" : "eliminated"}
+          </span>
+        </div>
+
+        <div class="mt-2 flex items-center gap-3">
+          <span class="h-1 flex-1 overflow-hidden rounded-full bg-base-100">
+            <span
+              class:list={[
+                "block h-full rounded-full",
+                r.ok ? "bg-ok" : "bg-base-300",
+              ]}
+              style={`width:${r.pct}%`}
+            />
+          </span>
+          <span class="font-mono text-[10px] text-fg-faint">
+            {r.branch} · {r.files} files
+          </span>
+        </div>
+      </div>
+    ))
+  }
+</div>

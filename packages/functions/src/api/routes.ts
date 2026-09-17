@@ -3,12 +3,12 @@ import { logger } from "hono/logger";
 import { HTTPException } from "hono/http-exception";
 import { VisibleError, ErrorCodes, type ErrorResponseType } from "@agents/core/error";
 import { Log } from "@agents/core/util/log";
-import { ProfileApi } from "./handler/profile";
-import { getRuntimeKey } from "hono/adapter";
+import { AgentApi } from "./handler/agent";
 import { AppApi } from "./handler/app";
 import { TokenApi } from "./handler/token";
 import { AuthApi } from "./handler/auth";
 import { EventApi } from "./handler/event";
+import { ForjeroApi } from "./handler/forjero";
 import { GitHubApi } from "./handler/github";
 import { ModelsApi } from "./handler/models";
 import { BranchArtifactApi } from "./handler/branch-artifact";
@@ -28,11 +28,12 @@ app
 
 export const routes = app
   .route("/", AuthApi.route)
-  .route("/profile", ProfileApi.route)
   .route("/app", AppApi.route)
   .route("/token", TokenApi.route)
   .route("/events", EventApi.route)
+  .route("/agents", AgentApi.route)
   .route("/github", GitHubApi.route)
+  .route("/forjero", ForjeroApi.route)
   .route("/models", ModelsApi.route)
   .route("/branch-artifacts", BranchArtifactApi.route)
   .onError((error, c) => {
@@ -62,13 +63,3 @@ export const routes = app
       500,
     );
   });
-
-app.get("/healthz", async (c) => {
-  const runtime = getRuntimeKey();
-  const { healthcheck } = await import("@agents/core/drizzle");
-  const dbCheck = await healthcheck();
-  return c.json(
-    { status: dbCheck.status, runtime, db: dbCheck.message },
-    dbCheck.status === "ok" ? 200 : 503,
-  );
-});

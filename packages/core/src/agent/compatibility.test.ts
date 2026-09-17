@@ -26,11 +26,10 @@ describe("AgentCompat", () => {
       expect(fmt("claude-sonnet-4-6", "anthropic")).toBe("claude-sonnet-4-6");
     });
 
-    test("opencode uses provider/model format", () => {
+    test("opencode uses plain gateway model ID", () => {
       const fmt = AgentCompat.config.opencode.formatModelId;
-      expect(fmt("gpt-5.4-pro", "openai")).toBe("openai/gpt-5.4-pro");
-      expect(fmt("claude-sonnet-4-6", "anthropic")).toBe("anthropic/claude-sonnet-4-6");
-      expect(fmt("gemini-2.5-pro", "google")).toBe("google/gemini-2.5-pro");
+      expect(fmt("gpt-5.4-pro", "openai")).toBe("gpt-5.4-pro");
+      expect(fmt("claude-sonnet-4-6", "anthropic")).toBe("claude-sonnet-4-6");
     });
 
     test("codex uses plain model ID", () => {
@@ -111,11 +110,10 @@ describe("AgentCompat", () => {
       expect(providers.has("google")).toBe(true);
     });
 
-    test("opencode models use provider/model format", async () => {
+    test("opencode models use plain gateway IDs", async () => {
       const models = await AgentCompat.allModels("opencode");
       for (const m of models.slice(0, 5)) {
-        expect(m.id).toInclude("/");
-        expect(m.id.split("/")[0]).toBe(m.providerId);
+        expect(m.id).toBe(m.modelId);
       }
     });
 

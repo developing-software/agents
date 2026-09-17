@@ -1,0 +1,20 @@
+/**
+ * Font Family: Pilat
+ *
+ * Two static cuts, self-hosted: Book for body copy, Demi for anything
+ * emphasised. Demi covers 500–700 so `font-medium` picks it up.
+ */
+@font-face {
+  font-family: "Pilat";
+  src: url("/fonts/Pilat-Book.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pilat";
+  src: url("/fonts/Pilat-Demi.woff2") format("woff2");
+  font-weight: 500 700;
+  font-display: swap;
+  font-style: normal;
+}

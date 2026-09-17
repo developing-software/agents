@@ -1,0 +1,207 @@
+---
+interface Props {
+  class?: string;
+  url?: string;
+  file?: string;
+}
+const {
+  class: className = "",
+  url = "preview-4821.devagents.app",
+  file = "Customer-invoices.pdf",
+} = Astro.props;
+
+const rows = [
+  ["#2033", "Acme Corp", "Mar 2026", "$1,240", "Due"],
+  ["#2034", "Globex Inc", "Feb 2026", "$980", "Paid"],
+  ["#2035", "Initech Ltd", "Jan 2026", "$1,110", "Paid"],
+] as const;
+---
+
+<div
+  data-preview
+  class:list={[
+    "group/preview relative overflow-hidden rounded-md border border-border-soft bg-bg/50 h-full",
+    className,
+  ]}
+>
+  <div class="flex items-center gap-2 border-b border-border-soft bg-bg-elev px-3 py-2">
+    <span class="size-1.5 rounded-full bg-base-300"></span>
+    <span class="size-1.5 rounded-full bg-base-300"></span>
+    <span class="size-1.5 rounded-full bg-base-300"></span>
+    <span
+      class="ml-1 flex-1 w-full truncate rounded bg-base-100 px-2 py-1 font-mono text-[9.5px] text-fg-faint"
+      >{url.replaceAll("vi", "v‌i") /* the mono face turns "vi" into an arrow */}</span
+    >
+    <!-- <span class="flex items-center gap-1 font-mono text-[8.5px] text-ok">
+      <span class="size-1.5 animate-pulse rounded-full bg-ok"></span>live
+    </span> -->
+  </div>
+
+  <div class="flex">
+    <!-- <div
+      class="flex w-7 shrink-0 flex-col items-center gap-2 border-r border-border-soft bg-bg-sunk py-2.5"
+    >
+      <span class="size-3 rounded bg-fg"></span>
+      <span class="mt-1 h-1 w-3 rounded-full bg-base-200"></span>
+      <span class="h-1 w-3 rounded-full bg-acc"></span>
+      <span class="h-1 w-3 rounded-full bg-base-200"></span>
+      <span class="h-1 w-3 rounded-full bg-base-200"></span>
+    </div> -->
+
+    <div class="min-w-0 flex-1">
+      <!-- <div class="flex items-center gap-2 border-b border-border-soft px-2.5 py-1.5">
+        <span class="truncate text-[10px] font-medium text-fg">Billing</span>
+        <span class="truncate font-mono text-[8px] text-fg-faint">/ customer</span>
+        <span class="ml-auto grid size-3.5 shrink-0 place-items-center rounded-full bg-acc-wash">
+          <span class="text-[6.5px] font-medium text-acc">M</span>
+        </span>
+      </div> -->
+
+      <div class="p-2.5">
+        <div class="grid grid-cols-2 gap-1.5">
+          <div class="rounded bg-bg-elev border border-border-soft px-2 py-1.5">
+            <!-- <span class="block text-[7px] uppercase tracking-wide text-fg-faint">Outstanding</span> -->
+            <span class="mt-0.5 block font-mono text-[12px] text-fg">$1,240</span>
+          </div>
+          <div class="rounded bg-bg-elev border border-border-soft px-2 py-1.5">
+            <!-- <span class="block text-[7px] uppercase tracking-wide text-fg-faint">Paid ytd</span> -->
+            <span class="mt-0.5 block font-mono text-[12px] text-fg">$2,090</span>
+          </div>
+        </div>
+
+        <div class="mt-2.5 flex items-center justify-between gap-2">
+          <span class="text-[12px] font-medium text-fg">Customers Invoices</span>
+          <button
+            type="button"
+            data-download
+            class="relative flex shrink-0 items-center cursor-pointer gap-1 overflow-hidden rounded bg-fg px-4 py-1 text-[12px] font-medium text-bg transition-transform"
+          >
+            <span
+              class="absolute inset-0 -translate-x-full bg-acc transition-transform duration-500 ease-out group-data-[state=busy]/preview:translate-x-0"
+            ></span>
+            <span data-icon class="relative grid size-2.5 place-items-center">
+              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4">
+                <path d="M5 1v5.5M2.6 4.4 5 6.8l2.4-2.4M1.6 8.6h6.8" stroke-linecap="round"></path>
+              </svg>
+            </span>
+            <span data-label class="relative">Download</span>
+          </button>
+        </div>
+
+        <div class="mt-1.5 overflow-hidden rounded border border-border-soft bg-bg-elev">
+          <div
+            class="flex items-center gap-2 border-b border-border-soft  px-2 py-1 text-[8px] uppercase tracking-wide text-fg-faint"
+          >
+            <span>Invoice</span>
+            <span>Customer</span>
+            <span class="ml-auto">Date</span>
+            <span class="w-9 text-right">Total</span>
+            <span class="w-6 text-right">Status</span>
+          </div>
+          {
+            rows.map(([id,customer, when, total, status]) => (
+              <div class="flex items-center gap-2 border-b border-border-soft px-2 py-1.5 text-[10px] last:border-b-0">
+                <span class="font-mono text-fg-muted">{id}</span>
+                <span class="min-w-0 flex-1 truncate font-mono text-fg">{customer}</span>
+                <span class="ml-auto truncate font-mono text-fg-faint">{when}</span>
+                <span class="w-9 shrink-0 text-right font-mono text-fg">{total}</span>
+                <span class="flex w-6 shrink-0 justify-end">
+                  <span
+                    class:list={[
+                      "rounded-xs px-1 py-px text-[8.5px] font-medium",
+                      status === "Paid" ? "bg-ok-wash text-ok" : "bg-base-100 text-fg-muted",
+                    ]}
+                  >
+                    {status}
+                  </span>
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    data-toast
+    class="pointer-events-none absolute inset-x-2 bottom-2 flex translate-y-[130%] items-center gap-1.5 rounded border border-border-soft bg-bg-elev px-2 py-1.5 opacity-0 shadow-[0_6px_20px_-10px_rgba(12,22,34,0.5)] transition-all duration-300 ease-out"
+  >
+    <!-- <span class="grid size-3.5 shrink-0 place-items-center rounded-sm bg-ok-wash text-[7px] text-ok"
+      >✓</span
+    > -->
+    <span class="truncate font-mono text-[10.5px] text-fg">{file}</span>
+    <span class="ml-auto shrink-0 font-mono text-[10px] text-fg-faint">Saved</span>
+  </div>
+</div>
+
+<style>
+  @keyframes dl-bob {
+    0%,
+    100% {
+      transform: translateY(-1px);
+    }
+    50% {
+      transform: translateY(1px);
+    }
+  }
+  .dl-busy {
+    animation: dl-bob 0.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dl-busy {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  document.querySelectorAll<HTMLElement>("[data-preview]").forEach((preview) => {
+    const button = preview.querySelector<HTMLButtonElement>("[data-download]");
+    const label = preview.querySelector<HTMLElement>("[data-label]");
+    const icon = preview.querySelector<HTMLElement>("[data-icon]");
+    const toast = preview.querySelector<HTMLElement>("[data-toast]");
+    if (!button || !label || !icon || !toast) return;
+
+    const idle = label.textContent ?? "Download PDF";
+    let timers: number[] = [];
+
+    const after = (ms: number, run: () => void) => {
+      timers.push(window.setTimeout(run, reduce ? 0 : ms));
+    };
+
+    const showToast = (on: boolean) => {
+      toast.classList.toggle("translate-y-[130%]", !on);
+      toast.classList.toggle("opacity-0", !on);
+    };
+
+    const reset = () => {
+      timers.forEach(clearTimeout);
+      timers = [];
+      preview.dataset.state = "";
+      label.textContent = idle;
+      icon.classList.remove("dl-busy");
+      showToast(false);
+    };
+
+    button.addEventListener("click", () => {
+      timers.forEach(clearTimeout);
+      timers = [];
+
+      preview.dataset.state = "busy";
+      label.textContent = "Preparing…";
+      icon.classList.add("dl-busy");
+      showToast(false);
+
+      after(900, () => {
+        icon.classList.remove("dl-busy");
+        label.textContent = "Saved";
+        showToast(true);
+      });
+
+      after(3200, reset);
+    });
+  });
+</script>

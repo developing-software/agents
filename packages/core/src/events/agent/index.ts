@@ -1,31 +1,10 @@
 import { z } from "zod";
 import { EventRegistry } from "../registry";
+import * as Resolve from "./resolve";
 
 export namespace AgentEvent {
-  // Agent name aliases → canonical ID
-  const ALIASES: Record<string, string> = {
-    claude: "claude-code",
-    "claude-code": "claude-code",
-    claudecode: "claude-code",
-    codex: "codex",
-    opencode: "opencode",
-  };
-
-  /** Resolve an agent name to its canonical ID. Returns input lowercased if no alias found. */
-  export function resolveAgent(name: string): string {
-    return ALIASES[name.toLowerCase()] ?? name.toLowerCase();
-  }
-
-  /** Split a model string into base model and provider.
-   *  Handles `provider/model` format (e.g. opencode's `anthropic/claude-sonnet-4-20250514`)
-   *  and plain model names (e.g. `claude-sonnet-4-20250514`). */
-  export function resolveModel(model: string): { model: string; provider: string | null } {
-    const slash = model.indexOf("/");
-    if (slash > 0 && slash < model.length - 1) {
-      return { provider: model.slice(0, slash), model: model.slice(slash + 1) };
-    }
-    return { model, provider: null };
-  }
+  export const resolveAgent = Resolve.resolveAgent;
+  export const resolveModel = Resolve.resolveModel;
 
   export namespace Completed {
     export const Metrics = z.object({
@@ -59,6 +38,15 @@ export namespace AgentEvent {
 
     export const Status = z.enum(["success", "failure", "cancelled"]).nullable().catch(null);
 
+    /** Where the agent runs. `state` mirrors the runtime (sandboxd) status. */
+    export const Run = z.object({
+      provider: z.string().catch("sandboxd"),
+      id: z.string().nullable().catch(null),
+      state: z.enum(["queued", "creating", "running", "ended"]).nullable().catch(null),
+      endedReason: z.string().nullable().catch(null),
+      baseBranch: z.string().nullable().catch(null),
+    });
+
     export const Data = z.object({
       agent: z
         .object({
@@ -85,6 +73,7 @@ export namespace AgentEvent {
           conclusion: Status,
         })
         .catch({ durationMs: 0, runUrl: "", trigger: "", conclusion: null }),
+      run: Run.optional().catch(undefined),
       diff: z
         .object({
           linesAdded: z.number().catch(0),
@@ -116,13 +105,14 @@ export namespace AgentEvent {
     export type Data = z.infer<typeof Data>;
     export type Metrics = z.infer<typeof Metrics>;
     export type Pricing = z.infer<typeof Pricing>;
+    export type Run = z.infer<typeof Run>;
 
     /** Parse untyped event data — never throws, returns defaults for missing/invalid fields.
      *  Normalizes agent name via aliases and applies pricing→metrics cost fallback. */
     export function parse(raw: unknown): Data {
       const data = Data.parse(raw);
       // Normalize agent name
-      data.agent.name = resolveAgent(data.agent.name);
+      data.agent.name = Resolve.resolveAgent(data.agent.name);
       // Backfill cost from pricing
       if (
         data.agent.metrics &&

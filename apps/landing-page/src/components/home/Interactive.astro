@@ -1,0 +1,221 @@
+---
+import SectionHead from "@components/SectionHead.astro";
+
+const items = [
+  {
+    kicker: "Intake",
+    title: "Talk to it like a teammate",
+    body: "No tickets, no acceptance criteria, no Jira grammar. It reads the repo before it asks anything, so the questions are short and specific.",
+    lines: [
+      ["in", "“invoice page needs a download button, pdf like the receipts”"],
+      ["read", "src/routes/invoices/+page.svelte, lib/pdf/receipt.ts"],
+      ["ask", "same filename convention as receipts? (y/n)"],
+      ["spec", "locked · 4 acceptance criteria · 2 files in scope"],
+    ],
+  },
+  {
+    kicker: "Arena",
+    title: "Four attempts, one survives",
+    body: "Every model gets the same spec and a clean branch. Your tests decide who stays in before any scoring happens.",
+    lines: [
+      ["claude", "run/4821-a · 14 files · gate passed"],
+      ["gpt-5", "run/4821-b · 9 files · gate passed"],
+      ["gemini", "run/4821-c · 11 files · gate failed (2 tests)"],
+      ["grok", "run/4821-d · 21 files · gate failed (typecheck)"],
+    ],
+  },
+  {
+    kicker: "Synthesis",
+    title: "A diff written to be read",
+    body: "One pull request, assembled from the best parts of the survivors, with a summary your client understands and a diff your senior engineer respects.",
+    lines: [
+      ["take", "4821-a · lib/pdf/invoice.ts"],
+      ["take", "4821-b · routes/invoices/+page.svelte (smaller diff)"],
+      ["drop", "4821-a · package.json (unneeded dependency)"],
+      ["pr", "#1204 · +148 −12 · 1 commit"],
+    ],
+  },
+  {
+    kicker: "Preview",
+    title: "Try it before it merges",
+    body: "Every run deploys the branch to a disposable environment. The person who asked for the feature can use it — before a single line lands on main.",
+    lines: [
+      ["build", "succeeded in 41s"],
+      ["deploy", "preview-4821.devagents.app"],
+      ["notify", "whatsapp · “ready to try — same link expires in 7d”"],
+      ["await", "human approval"],
+    ],
+  },
+];
+
+const INTERVAL_MS = 6000;
+---
+
+<section
+  id="product"
+  class="scroll-mt-24 border-t border-border-soft py-28 sm:py-36"
+>
+  <div class="shell">
+    <SectionHead
+      index="03"
+      label="Inside a run"
+      title="Everything that usually needs a human, handled in the open."
+      sub="Nothing about this pipeline is a black box — every stage leaves an artifact you can read, click, or reject."
+    />
+
+    <div
+      class="mt-20 grid border-t border-border-soft lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]"
+      data-interactive
+      data-interval={INTERVAL_MS}
+    >
+      <!-- tabs -->
+      <div class="lg:border-r lg:border-border-soft">
+        {
+          items.map((item, i) => (
+            <button
+              type="button"
+              data-index={i}
+              data-active={i === 0}
+              class="group/tab relative block w-full cursor-pointer border-b border-border-soft py-6 pr-8 text-left transition-opacity duration-300 data-[active=false]:opacity-45 hover:opacity-100"
+            >
+              <span class="flex items-baseline gap-2.5 font-mono text-[11px] text-fg-faint">
+                <span class="tabular-nums">{i + 1}.0</span>
+                <span class="text-fg-muted">{item.kicker}</span>
+              </span>
+
+              <p class="mt-4 text-[17px] font-medium leading-snug tracking-[-0.015em] text-fg">
+                {item.title}
+              </p>
+              <p class="mt-2 max-w-md text-[14px] leading-[1.6] text-fg-muted">
+                {item.body}
+              </p>
+
+              <span
+                aria-hidden="true"
+                class="absolute inset-x-0 -bottom-px block h-px"
+              >
+                <span data-bar class="block h-full w-0 origin-left bg-fg" />
+              </span>
+            </button>
+          ))
+        }
+      </div>
+
+      <!-- artifact panel: a log, not a gradient -->
+      <div class="border-b border-border-soft bg-bg-sunk lg:border-b-0">
+        {
+          items.map((item, i) => (
+            <div data-panel={i} hidden={i !== 0} class="p-6 sm:p-8 lg:p-10">
+              <p class="font-mono text-[11px] text-fg-faint">
+                run #4821 — {item.kicker.toLowerCase()}
+              </p>
+
+              <dl class="mt-6 border-t border-border-soft font-mono text-[12px]">
+                {item.lines.map(([key, value]) => (
+                  <div class="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 border-b border-border-soft py-3">
+                    <dt class="text-fg-faint">{key}</dt>
+                    <dd class="leading-[1.6] wrap-break-word text-fg-muted">
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>("[data-interactive]")
+    .forEach((section) => {
+      const buttons = Array.from(
+        section.querySelectorAll<HTMLButtonElement>("[data-index]"),
+      );
+      const panels = Array.from(
+        section.querySelectorAll<HTMLElement>("[data-panel]"),
+      );
+      const bars = buttons.map((btn) =>
+        btn.querySelector<HTMLElement>("[data-bar]"),
+      );
+      const interval = Number(section.dataset.interval) || 5000;
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      let current = 0;
+      let paused = reduce;
+
+      const startBar = (duration: number) => {
+        const bar = bars[current];
+        if (!bar || reduce) return;
+        void bar.offsetWidth;
+        bar.style.transition = `width ${duration}ms linear`;
+        bar.style.width = "100%";
+      };
+
+      const freezeBar = () => {
+        const bar = bars[current];
+        if (!bar) return;
+        bar.style.width = getComputedStyle(bar).width;
+        bar.style.transition = "none";
+      };
+
+      const remainingMs = () => {
+        const bar = bars[current];
+        if (!bar) return interval;
+        const track = bar.parentElement?.getBoundingClientRect();
+        const progress =
+          track && track.width
+            ? bar.getBoundingClientRect().width / track.width
+            : 0;
+        return Math.max(0, interval * (1 - progress));
+      };
+
+      const select = (index: number) => {
+        current = index;
+
+        buttons.forEach((btn, i) => {
+          btn.dataset.active = String(i === index);
+        });
+        panels.forEach((panel, i) => {
+          panel.hidden = i !== index;
+        });
+
+        bars.forEach((bar) => {
+          if (!bar) return;
+          bar.style.transition = "none";
+          bar.style.width = "0%";
+        });
+
+        if (!paused) startBar(interval);
+      };
+
+      buttons.forEach((btn, i) => {
+        btn.addEventListener("click", () => select(i));
+        btn.addEventListener("focus", () => select(i));
+      });
+
+      const setPaused = (value: boolean) => {
+        if (reduce || value === paused) return;
+        paused = value;
+        if (value) freezeBar();
+        else startBar(remainingMs());
+      };
+
+      section.addEventListener("mouseenter", () => setPaused(true));
+      section.addEventListener("mouseleave", () => setPaused(false));
+
+      bars.forEach((bar, i) => {
+        bar?.addEventListener("transitionend", () => {
+          if (paused || i !== current) return;
+          select((current + 1) % buttons.length);
+        });
+      });
+
+      select(0);
+    });
+</script>

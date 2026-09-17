@@ -1,0 +1,352 @@
+---
+import Button from "./Button2.astro";
+import GithubMark from "@components/GithubMark.astro";
+import Icon from "@components/Icon.astro";
+
+type Child = { name: string; href: string; desc?: string };
+type Column = { title: string; items: Child[] };
+type Link = { name: string; href: string; id?: string; columns?: Column[] };
+
+const links: Link[] = [
+  {
+    name: "Product",
+    href: "#product",
+    id: "product",
+    columns: [
+      {
+        title: "The pipeline",
+        items: [
+          {
+            name: "Intake & spec",
+            href: "#how",
+            desc: "Plain language in, scope out",
+          },
+          {
+            name: "Parallel attempts",
+            href: "#how",
+            desc: "Frontier models, isolated branches",
+          },
+          {
+            name: "Judge & synthesis",
+            href: "#how",
+            desc: "One diff from the best parts",
+          },
+          {
+            name: "Preview deploys",
+            href: "#product",
+            desc: "Click it before it merges",
+          },
+        ],
+      },
+      {
+        title: "For your team",
+        items: [
+          { name: "For clients", href: "#product" },
+          { name: "For engineers", href: "#product" },
+          { name: "Guardrails", href: "#guardrails" },
+          { name: "Audit trail", href: "#guardrails" },
+        ],
+      },
+      {
+        title: "Platform",
+        items: [
+          { name: "Integrations", href: "#" },
+          { name: "Model routing", href: "#" },
+          { name: "Self-hosting", href: "#" },
+          { name: "API & webhooks", href: "#" },
+        ],
+      },
+    ],
+  },
+  {
+    name: "Docs",
+    href: "#",
+    id: "docs",
+    columns: [
+      {
+        title: "Get started",
+        items: [
+          {
+            name: "Quickstart",
+            href: "#",
+            desc: "Connect a repo in two minutes",
+          },
+          { name: "Connect GitHub", href: "#" },
+          { name: "WhatsApp intake", href: "#" },
+          { name: "CLI", href: "#" },
+        ],
+      },
+      {
+        title: "Guides",
+        items: [
+          { name: "Writing a good request", href: "#" },
+          { name: "Custom gates", href: "#" },
+          { name: "Preview environments", href: "#" },
+          { name: "Rollbacks", href: "#" },
+        ],
+      },
+      {
+        title: "Reference",
+        items: [
+          { name: "devagents.yml", href: "#" },
+          { name: "API reference", href: "#" },
+          { name: "Webhooks", href: "#" },
+          { name: "Changelog", href: "#" },
+        ],
+      },
+    ],
+  },
+  { name: "Pricing", href: "#pricing" },
+];
+
+const menus = links.filter((l) => l.columns);
+---
+
+<div
+  id="navbar-wrapper"
+  data-at-top="true"
+  data-open=""
+  class="group fixed inset-x-0 top-0 z-60 flex justify-center transition-all duration-500 data-[scrolling=down]:translate-y-[-150%] data-[at-top=false]:pt-3 data-[at-top=true]:pt-5"
+>
+  <nav
+    class="nav-bar flex max-w-330 w-full container mx-auto items-center justify-between gap-6 rounded-md px-5 py-2 transition-all duration-500 md:px-8 group-data-[at-top=false]:max-w-7xl group-data-[at-top=false]:bg-bg/30 group-data-[at-top=false]:backdrop-blur-md group-data-[at-top=true]:bg-transparent"
+  >
+    <a href="/" class="flex items-center gap-2 shrink-0">
+      <span class="text-[17px] font-medium tracking-[-0.02em] text-fg"
+        >DevAgents</span
+      >
+    </a>
+
+    <ul class="hidden items-center gap-1 md:flex">
+      {
+        links.map((link) => (
+          <li data-menu-item={link.id}>
+            <a
+              href={link.href}
+              aria-haspopup={link.columns ? "true" : undefined}
+              class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13.5px] font-medium text-fg-muted transition-colors hover:bg-base-100 hover:text-fg"
+            >
+              {link.name}
+              {link.columns && (
+                <svg
+                  class="chev size-3 text-fg-faint transition-transform duration-300"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              )}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="flex items-center gap-1.5">
+      <a
+        href="#"
+        class="hidden rounded-full px-3 py-1.5 text-[13.5px] font-medium text-fg-muted transition-colors hover:text-fg sm:inline-flex"
+      >
+        Log in
+      </a>
+      <Button variant="primary" size="xs" href="#pricing">
+        <GithubMark class="size-3.5" /> Connect repository
+      </Button>
+    </div>
+  </nav>
+
+  <!-- hover navigation -->
+  <div class="absolute inset-x-0 top-full hidden px-5 md:block md:px-8">
+    {
+      menus.map((menu) => (
+        <div
+          class="mega container absolute inset-x-0 top-2 mx-auto w-full max-w-330 overflow-hidden rounded-md  bg-bg-elev/80 backdrop-blur-xl group-data-[at-top=false]:max-w-7xl"
+          data-panel={menu.id}
+        >
+          <div class="grid gap-10 px-5 py-7 md:px-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,2fr)]">
+            <div class="flex flex-col border-t border-border-soft">
+              <a
+                href="#how"
+                class="group/card border-b border-border-soft py-4 transition-opacity hover:opacity-65"
+              >
+                <span class="mt-2 block text-[13.5px] font-medium text-fg">
+                  See a run end to end
+                </span>
+                <span class="mt-1 block text-[12.5px] leading-[1.45] text-fg-muted">
+                  Message, attempts, synthesis, preview, approval.
+                </span>
+              </a>
+
+              <a
+                href="#pricing"
+                class="border-b border-border-soft py-4 transition-opacity hover:opacity-65"
+              >
+                <span class="flex items-center gap-1.5 text-[13.5px] font-medium text-fg">
+                  Connect your repo
+                  <Icon name="arrow-right" class="size-3.5" stroke={2} />
+                </span>
+                <span class="mt-1 block text-[12.5px] text-fg-muted">
+                  Free for the first five runs
+                </span>
+              </a>
+            </div>
+
+            <div class="grid gap-8 sm:grid-cols-3">
+              {menu.columns?.map((col) => (
+                <div>
+                  <p class="font-mono text-[11px] text-fg-faint">{col.title}</p>
+                  <ul class="mt-4 space-y-3">
+                    {col.items.map((item) => (
+                      <li>
+                        <a
+                          href={item.href}
+                          class="group/link block rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-base-100"
+                        >
+                          <span class="flex items-center gap-1.5 text-[14px] font-medium text-fg">
+                            {item.name}
+                            <span class="h-px w-0 bg-acc transition-all duration-300 group-hover/link:w-3" />
+                          </span>
+                          {item.desc && (
+                            <span class="mt-0.5 block text-[12.5px] leading-[1.45] text-fg-muted">
+                              {item.desc}
+                            </span>
+                          )}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .mega {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition:
+      opacity 0.28s var(--ease-out-quint),
+      transform 0.28s var(--ease-out-quint),
+      visibility 0.28s;
+  }
+
+  #navbar-wrapper[data-open="product"] [data-panel="product"],
+  #navbar-wrapper[data-open="docs"] [data-panel="docs"] {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  #navbar-wrapper:not([data-open=""]) .nav-bar {
+    background: color-mix(in srgb, var(--color-bg-elev) 95%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  [data-menu-item][data-active="true"] .chev {
+    transform: rotate(180deg);
+  }
+</style>
+
+<script>
+  function initNavbar() {
+    const navbar = document.getElementById("navbar-wrapper");
+    if (!navbar) return;
+
+    let lastScrollY = window.scrollY;
+
+    const updateScrollState = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 20) {
+        navbar.setAttribute("data-at-top", "true");
+      } else {
+        navbar.setAttribute("data-at-top", "false");
+      }
+
+      if (currentScrollY > lastScrollY && currentScrollY > 500) {
+        navbar.setAttribute("data-scrolling", "down");
+        closeMenu();
+      } else {
+        navbar.setAttribute("data-scrolling", "up");
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    // ——— hover navigation ———
+    const items = Array.from(
+      navbar.querySelectorAll<HTMLElement>("[data-menu-item]"),
+    );
+    let closeTimer: number | undefined;
+
+    const setActive = (id: string) => {
+      navbar.setAttribute("data-open", id);
+      items.forEach((item) => {
+        item.dataset.active = String(item.dataset.menuItem === id);
+      });
+    };
+
+    function closeMenu() {
+      navbar?.setAttribute("data-open", "");
+      items.forEach((item) => (item.dataset.active = "false"));
+    }
+
+    const openMenu = (id: string) => {
+      window.clearTimeout(closeTimer);
+      setActive(id);
+    };
+
+    const scheduleClose = () => {
+      window.clearTimeout(closeTimer);
+      closeTimer = window.setTimeout(closeMenu, 140);
+    };
+
+    items.forEach((item) => {
+      const id = item.dataset.menuItem;
+      const trigger = item.querySelector("a");
+
+      if (!id) {
+        // plain link: hovering it dismisses any open panel
+        item.addEventListener("mouseenter", scheduleClose);
+        return;
+      }
+
+      item.addEventListener("mouseenter", () => openMenu(id));
+      item.addEventListener("mouseleave", scheduleClose);
+      trigger?.addEventListener("focus", () => openMenu(id));
+    });
+
+    navbar.querySelectorAll<HTMLElement>("[data-panel]").forEach((panel) => {
+      panel.addEventListener("mouseenter", () => {
+        window.clearTimeout(closeTimer);
+      });
+      panel.addEventListener("mouseleave", scheduleClose);
+      panel.addEventListener("click", closeMenu);
+    });
+
+    navbar.addEventListener("focusout", (event) => {
+      if (!navbar.contains(event.relatedTarget as Node)) closeMenu();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeMenu();
+    });
+
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+  }
+
+  initNavbar();
+  document.addEventListener("astro:page-load", initNavbar);
+</script>
