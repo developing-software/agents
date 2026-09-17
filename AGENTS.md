@@ -19,7 +19,7 @@ Repo-specific instructions for AI coding agents working in this monorepo.
 ## Repo Map
 
 - `packages/core` — domain logic, event model, git-provider integration
-- `packages/functions` — API routes and webhook ingestion
+- `packages/functions` — API routes, webhook ingestion, and runtime targets
 - `packages/sdk/ts` — generated TypeScript SDK from OpenAPI
 - `apps/console` — SvelteKit operator UI
 - `apps/cli` — CLI tool
@@ -45,6 +45,8 @@ Repo-specific instructions for AI coding agents working in this monorepo.
 ## Commands
 
 ```sh
+bun dev                        # local stack (DB=docker|pglite) — see scripts/AGENTS.md
+bun run gen                    # openapi spec → SDK (and the CLI's `api` command)
 bun run fmt
 bun run lint
 bun run typecheck              # all packages — avoid in agents
@@ -63,7 +65,6 @@ Use `bun --filter` with the package name from its `package.json`:
 bun --filter '@agents/core' typecheck
 bun --filter 'console' typecheck
 bun --filter '@agents/functions' typecheck
-bun --filter 'workers' typecheck
 bun --filter 'cli' typecheck
 
 bun --filter '@agents/core' test

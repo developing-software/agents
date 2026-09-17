@@ -1,58 +1,49 @@
 # cli/
 
-`dev-agents` — CLI tool for interacting with the Agents API: auth, token management, event and artifact viewing.
+`dev-agents` — runs and talks to the Agents stack. Bun-only; `src/index.ts` is the bin.
 
-## Structure
+## Layout
 
-```
-src/
-  cli.ts              — entry point, registers all commands
-  commands/
-    login.ts          — OAuth login flow
-    logout.ts         — clear local credentials
-    token.ts          — create / list personal tokens
-    events.ts         — list and stream events
-    artifacts.ts      — list and download artifacts
-  lib/
-    sdk.ts            — initialises @agents/sdk/ts client with stored credentials
-    config.ts         — read/write ~/.config/dev-agents config file
-    command.ts        — command base class / helpers
-    args.ts           — argument parsing
-    prompt.ts         — interactive prompts
-    colors.ts         — terminal color utilities
-    spinner.ts        — loading spinner
-    progress.ts       — progress bar
-build.ts              — cross-platform Bun build → dist/
-dist/                 — compiled binaries (Linux, macOS, Windows)
-```
+| File               | Owns                                                                 |
+| ------------------ | -------------------------------------------------------------------- |
+| `src/index.ts`     | Command table + help text. Every command is one entry in `commands`. |
+| `src/api.ts`       | `api` — SDK reflection, client resolution, `output()`                |
+| `src/events.ts`    | `events emit` — ergonomic wrapper over `postEvents`                  |
+| `src/artifacts.ts` | `artifacts upload` — multipart upload (the SDK has no file support)  |
+| `src/auth.ts`      | `login` (browser PKCE), `logout`                                     |
+| `src/serve.ts`     | `serve api\|auth\|console`                                           |
+| `src/health.ts`    | `health <target>` — probe a surface, exit code as the answer         |
+| `src/config.ts`    | `~/.config/dev-agents/config.json` + token/url/issuer resolution     |
+| `src/args.ts`      | `--flag` helpers (`value`, `strip`, `params`)                        |
+| `build.ts`         | cross-platform `bun build --compile` → `dist/`                       |
 
-## Runtime — Bun
+## Rules
 
-Use Bun exclusively. Never use Node.js APIs, `express`, `dotenv`, `jest`, `webpack`, or `esbuild`.
+- **Never hardcode API method names.** `api.ts` reflects `DevAgentSdk.prototype`, so new
+  endpoints appear after `bun run gen` with zero edits here. Hand-written commands
+  (`events`, `artifacts`) exist only where the raw call is unergonomic.
+- **Adding a command** = one function + one entry in `commands` in `index.ts`, and update
+  `help` there and `README.md`.
+- **Adding a serve target** = one entry in `targets` in `serve.ts`, plus its port in
+  `ports` in `health.ts`. `api`/`auth` import the functions' bun targets, so they serve
+  exactly what `bun dev` runs — don't re-wire providers here.
+- Resolution order lives in `config.ts` only: token `--token` › `AGENTS_TOKEN` › saved
+  token › saved OAuth access (auto-refreshed); url `--url` › `API_URL` › saved › prod.
+- Output goes through `output()`: JSON on stdout, errors on stderr with non-zero exit.
 
-| Instead of                   | Use                                |
-| ---------------------------- | ---------------------------------- |
-| `node <file>` / `ts-node`    | `bun <file>`                       |
-| `npm` / `yarn` / `pnpm`      | `bun install` / `bun run` / `bunx` |
-| `jest` / `vitest`            | `bun test`                         |
-| `dotenv`                     | `.env` loads automatically         |
-| `node:fs` readFile/writeFile | `Bun.file`                         |
-| `execa` / child_process      | `Bun.$\`cmd\``                     |
-| `better-sqlite3`             | `bun:sqlite`                       |
-| `pg` / `postgres.js`         | `Bun.sql`                          |
+## Tests
 
-## Key Patterns
-
-- Initialise the SDK client via `src/lib/sdk.ts` — reads stored token from `src/lib/config.ts`
-- All terminal output goes through `src/lib/colors.ts` helpers — no raw ANSI escape codes
-- Use `src/lib/spinner.ts` for async operations, `src/lib/prompt.ts` for interactive input
-- Commands are thin: validate args, call SDK, format output
+- `tests/cli.test.ts` — args, SDK reflection, client plumbing, `output()`, `health`.
+- `tests/config.test.ts` — resolution order against a real scratch config file.
+- `tests/setup.ts` (preloaded) points `XDG_CONFIG_HOME` at a scratch dir; `config.ts`
+  freezes its path at import, so it must be a preload.
+- `tests/sdk.test.ts` — SDK against the in-process API on pglite.
 
 ## Commands
 
 ```sh
-bun run src/cli.ts <command>   # run locally
-bun run build.ts               # build cross-platform binaries into dist/
-bun typecheck                  # type check
-bun test                       # run tests
+bun run src/index.ts <command>   # or `bun cli <command>` from the repo root
+bun run build                    # compile dist/dev-agents
+bun typecheck
+bun test
 ```

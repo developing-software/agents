@@ -1,0 +1,107 @@
+name: agents
+
+# Shared config for the app services that run off the one app image.
+x-app: &app
+  build:
+    context: ../..
+    dockerfile: infra/docker/Dockerfile
+    target: runtime
+  image: agents-app
+  env_file: .env
+  restart: unless-stopped
+
+# Docker runs one probe per container, so it gets readiness — the question
+# `depends_on: service_healthy` asks. `dev-agents health <target>` defaults to it and
+# resolves the port from the same env var the server binds. `start_period` is the startup
+# probe — a failure inside it costs no retry, and the first success ends it.
+x-probe: &probe
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  start_period: 60s
+  start_interval: 2s
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "${PGPORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 1s
+
+  # One-shot: runs `drizzle-kit migrate`, then exits.
+  migrate:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: migrate
+    image: agents-migrate
+    env_file: .env
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    command: ["serve", "api"]
+    environment:
+      API_PORT: 3000
+    ports:
+      - "8080:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "dev-agents", "health", "api"]
+
+  auth:
+    <<: *app
+    command: ["serve", "auth"]
+    environment:
+      AUTH_PORT: 3002
+      # File-backed MemoryStorage so a single-node restart keeps sessions.
+      AUTH_PERSIST: /data/auth.json
+    ports:
+      - "3002:3002"
+    volumes:
+      - authdata:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "dev-agents", "health", "auth"]
+
+  console:
+    <<: *app
+    command: ["serve", "console"]
+    environment:
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      auth:
+        condition: service_healthy
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "dev-agents", "health", "console"]
+
+volumes:
+  pgdata:
+  authdata:

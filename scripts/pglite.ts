@@ -42,7 +42,10 @@ await server.start();
 
 console.log(`Running migrations...`);
 
-await $`bun run db:push`.cwd(root).env({ ...process.env }).quiet();
+await $`bun run db:push`
+  .cwd(root)
+  .env({ ...process.env })
+  .quiet();
 
 console.log(`Migrations completed.`);
 
