@@ -1,13 +1,14 @@
 import { Database } from "./drizzle";
+import { Permission } from "./permission";
 
 /**
  * Which schema tenant tables resolve to. `Database` sets the transaction's search_path from it;
  * `central` tables are schema-qualified, so they read the same from every workspace.
  */
 export namespace Workspace {
-  // Plain text in SQL, no PG enum; the union only guards writes and narrows reads.
-  export const roles = ["owner", "admin", "member"] as const;
-  export type Role = (typeof roles)[number];
+  // A workspace user's role is the permission role: one vocabulary.
+  export const roles = Permission.roles;
+  export type Role = Permission.Role;
 
   export type Info = { schema: string; role?: Role };
 
@@ -26,6 +27,11 @@ export namespace Workspace {
 
   export function peek() {
     return Database.Tenant.peek();
+  }
+
+  /** The workspace tenant tables read from: the provided one, else single mode's. Multi mode without one has none. */
+  export function here() {
+    return peek() ?? (mode() === "single" ? single() : undefined);
   }
 
   /** `WORKSPACES=multi` gives each workspace its own schema; `single` (default) shares one. */

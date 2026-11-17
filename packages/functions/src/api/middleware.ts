@@ -2,7 +2,6 @@ import { type MiddlewareHandler } from "hono";
 import { VisibleError, ErrorCodes } from "@agents/core/error";
 import { Identity } from "@agents/core/identity";
 import { Auth } from "@agents/core/auth";
-import { Workspaces } from "@agents/core/workspaces";
 import { verifier } from "../auth/subject";
 import { client } from "./auth";
 
@@ -30,7 +29,10 @@ export function auth(audience: "api" | "mcp" = "api"): MiddlewareHandler {
   };
 }
 
-/** The workspace the request runs in, by `x-workspace` slug in multi mode. Mount after `auth`. */
+/**
+ * The workspace the request runs in, by `x-workspace` slug in multi mode, with the caller
+ * re-read as they hold it there. Mount after `auth`.
+ */
 export function tenancy(): MiddlewareHandler {
-  return (c, next) => Workspaces.enter(c.req.header("x-workspace"), next);
+  return (c, next) => Auth.enter(c.req.header("x-workspace"), next);
 }

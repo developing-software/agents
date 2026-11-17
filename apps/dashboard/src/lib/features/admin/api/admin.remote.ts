@@ -30,7 +30,7 @@ export const getStats = remote.query(z.void(), async () => {
 // losing the grant mid-session — lands in `fields.allIssues()` instead of a bare rejection.
 // Callers refresh the list themselves, since it is parameterised by search and page.
 export const assignRole = remote.form(
-  z.object({ id: User.Info.shape.id, role: User.Info.shape.role }),
+  z.object({ id: User.Info.shape.id, role: User.Role }),
   (input) => User.assign(input),
 );
 

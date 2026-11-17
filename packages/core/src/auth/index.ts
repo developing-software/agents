@@ -14,9 +14,12 @@ import { Template } from "../lib/email/template";
 import { Limit, Limits } from "../lib/limit";
 import { Key } from "../platform/key";
 import { KeyTable } from "../platform/key/key.central";
+import { Workspaces } from "../platform/workspace";
 import { User } from "../user";
+import { Account } from "../user/account";
+import { AccountTable } from "../user/account.central";
 import { zone } from "../user/prefs";
-import { UserTable } from "../user/user.central";
+import { Workspace } from "../workspace";
 import { Delegation } from "./delegation";
 import { ProviderIds, ProviderTable } from "./provider.central";
 
@@ -53,9 +56,9 @@ export namespace Auth {
   const AGENT = "mcp:";
 
   /**
-   * Resolves a login to a `userID`. Idempotent; a new provider for a known email links onto
-   * that user. Apps are never linked — nobody logs in as one. Runs as the `internal` `auth`,
-   * holding `user:create` and nothing else, so every signup is on record as the app's doing.
+   * Resolves a login to an account id, which is also its `userID` in every workspace.
+   * Idempotent; a new provider for a known email links onto that account. Apps have no account,
+   * so nobody logs in as one. Runs as the `internal` `auth`, so signup is on record as the app's.
    */
   export const link = fn(
     z.object({
@@ -69,13 +72,9 @@ export namespace Auth {
       Identity.internal("auth", { user: ["create"] }, () =>
         Central.transaction(async (tx) => {
           const linked = await tx
-            .select({
-              userID: ProviderTable.userID,
-              timeDeleted: UserTable.timeDeleted,
-              kind: UserTable.kind,
-            })
+            .select({ userID: ProviderTable.userID, timeDeleted: AccountTable.timeDeleted })
             .from(ProviderTable)
-            .innerJoin(UserTable, eq(UserTable.id, ProviderTable.userID))
+            .innerJoin(AccountTable, eq(AccountTable.id, ProviderTable.userID))
             .where(
               and(
                 eq(ProviderTable.providerId, input.provider),
@@ -88,15 +87,13 @@ export namespace Auth {
 
           // Linking a new provider onto a disabled account would hand it back — same guard.
           const known = await tx
-            .select({ id: UserTable.id, timeDeleted: UserTable.timeDeleted, kind: UserTable.kind })
-            .from(UserTable)
-            .where(eq(UserTable.email, input.email))
+            .select({ id: AccountTable.id, timeDeleted: AccountTable.timeDeleted })
+            .from(AccountTable)
+            .where(eq(AccountTable.email, input.email))
             .then((rows) => rows.at(0));
           alive(known);
 
-          const userID =
-            known?.id ??
-            (await User.create({ name: input.name ?? input.email, email: input.email })).id;
+          const userID = known?.id ?? (await signup(input.name ?? input.email, input.email));
 
           await tx.insert(ProviderTable).values({
             id: Identifier.create("provider"),
@@ -128,6 +125,9 @@ export namespace Auth {
     if (token.startsWith("sk-")) {
       const key = await Key.verify(token);
       if (!key) invalid("Invalid or expired API key");
+      // An App's key names its workspace, since the App exists nowhere else.
+      if (key.workspace)
+        return Workspaces.open(key.workspace, () => identify(key.userID, { credential: key.id }));
       return identify(key.userID, { credential: key.id });
     }
 
@@ -145,32 +145,61 @@ export namespace Auth {
   }
 
   /**
-   * The identity a `userID` acts as. The role always comes from the row, so no credential can
-   * outlive the permissions of the user behind it. A `name` makes it an agent acting for them;
-   * an App carries its owner, and stops resolving once they are disabled.
+   * The identity a `userID` acts as in the current workspace, or as a bare account (a member's
+   * reach) when multi mode has none picked. The role always comes from the row, so no credential
+   * can outlive the permissions behind it. A `name` makes it an agent acting for them; an App
+   * carries its owner, and stops resolving once they are removed.
    */
   export async function identify(
     userID: string,
     opts: { name?: string; scope?: Permission.Grants; credential?: string } = {},
   ): Promise<Identity.Info> {
-    const row = await User.fromID(userID);
+    // An App has no account, so it is never a superadmin.
+    const [row, account] = await Promise.all([User.fromID(userID), Account.fromID(userID)]);
     if (!row) invalid("Token belongs to a user that no longer exists");
-    const base = { userID, role: row.role, credential: opts.credential };
+    const base = { userID, role: row.role ?? undefined, credential: opts.credential };
+    const here = Workspace.here();
     if (row.kind === "system") {
       const owner = row.ownerID ? await User.fromID(row.ownerID) : null;
-      if (!owner) invalid("This App's owner is no longer active");
+      // Both rows are read inside the App's workspace, so both carry a role there.
+      if (!owner?.role || !row.role || !here) invalid("This App's owner is no longer active");
       return {
         type: "system",
-        properties: { ...base, owner: { userID: owner.id, role: owner.role } },
+        properties: {
+          ...base,
+          role: row.role,
+          owner: { userID: owner.id, role: owner.role },
+          workspace: here.schema,
+        },
       };
     }
     const timezone = zone(row.prefs);
+    const superadmin = account?.role === "superadmin";
     if (opts.name)
       return {
         type: "agent",
-        properties: { ...base, name: opts.name, scope: opts.scope, timezone },
+        properties: { ...base, superadmin, name: opts.name, scope: opts.scope, timezone },
       };
-    return { type: "user", properties: { ...base, timezone } };
+    return { type: "user", properties: { ...base, superadmin, timezone } };
+  }
+
+  /**
+   * Runs `fn` in the request's workspace as the caller holds it there: the identity made at the
+   * door is re-read against that workspace's user. What surfaces mount after `auth`.
+   */
+  export function enter<R>(slug: string | undefined, fn: () => Promise<R>) {
+    return Workspaces.enter(slug, async () => {
+      const info = Identity.peek();
+      // An App's identity was read inside its workspace already; public and internal have no row.
+      if (!info || (info.type !== "user" && info.type !== "agent") || !Workspace.peek())
+        return fn();
+      const opts =
+        info.type === "agent" ? { name: info.properties.name, scope: info.properties.scope } : {};
+      return Identity.enter(
+        await identify(info.properties.userID, { ...opts, credential: info.properties.credential }),
+        fn,
+      );
+    });
   }
 
   /**
@@ -193,7 +222,7 @@ export namespace Auth {
         password: z.string().min(8).meta({ description: "At least 8 characters." }),
       }),
       async (input) => {
-        Identity.check({ user: ["update"] }, Identity.userID());
+        Identity.self({ user: ["update"] });
         if (Identity.use().type !== "user")
           throw new VisibleError(
             "forbidden",
@@ -320,20 +349,22 @@ export namespace Auth {
 
   // === UTILS ===
 
-  /** Turn disabled accounts and Apps away at login, not at the first query after. */
-  function alive(row?: { timeDeleted: Date | null; kind?: "human" | "system" }) {
-    if (row?.kind === "system")
-      throw new VisibleError(
-        "forbidden",
-        ErrorCodes.Permission.ACCOUNT_RESTRICTED,
-        "App accounts can't log in",
-      );
+  /** Turn disabled accounts away at login, not at the first query after. */
+  function alive(row?: { timeDeleted: Date | null }) {
     if (!row?.timeDeleted) return;
     throw new VisibleError(
       "forbidden",
       ErrorCodes.Permission.ACCOUNT_RESTRICTED,
       "This account has been disabled",
     );
+  }
+
+  // An account only: a workspace seats it on first entry (single mode) or by its setup job.
+  async function signup(name: string, email: string) {
+    Identity.check({ user: ["create"] });
+    const account = await Account.create({ name, email });
+    await User.Event.Created.publish({ email, kind: "human" }, { subject: account.id });
+    return account.id;
   }
 
   function invalid(message: string): never {
@@ -347,11 +378,10 @@ export namespace Auth {
         .select({
           userID: ProviderTable.userID,
           hash: ProviderTable.secret,
-          timeDeleted: UserTable.timeDeleted,
-          kind: UserTable.kind,
+          timeDeleted: AccountTable.timeDeleted,
         })
         .from(ProviderTable)
-        .innerJoin(UserTable, eq(UserTable.id, ProviderTable.userID))
+        .innerJoin(AccountTable, eq(AccountTable.id, ProviderTable.userID))
         .where(and(eq(ProviderTable.providerId, "password"), eq(ProviderTable.accountId, email)))
         .then((rows) => rows.at(0)),
     );

@@ -191,6 +191,7 @@ describe("auth resolve", () => {
         userID: bot.id,
         role: "member",
         owner: { userID: human.id, role: "member" },
+        workspace: "public",
         credential: two.id,
       },
     });

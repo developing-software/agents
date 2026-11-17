@@ -23,9 +23,14 @@ export async function run(job: Queue.Job) {
   const stamp = Identity.Stamp.nullable().catch(null).parse(job.identity);
   if (!stamp) return Identity.provide("public", {}, () => Queue.run(job));
   const ws = stamp.workspace;
-  const exec = () => (ws ? Workspace.provide(ws, () => Queue.run(job)) : Queue.run(job));
+  const within = <R>(fn: () => R) => (ws ? Workspace.provide(ws, fn) : fn());
   // The app's own code: nobody to re-read, so its name and grants are all it is.
   if (stamp.type === "internal")
-    return Identity.internal(stamp.name ?? "app", stamp.scope ?? {}, exec);
-  return Identity.enter(await Auth.identify(stamp.userID!, stamp), exec);
+    return Identity.internal(stamp.name ?? "app", stamp.scope ?? {}, () =>
+      within(() => Queue.run(job)),
+    );
+  // Re-read inside the workspace, where the role (and an App itself) lives.
+  return within(async () =>
+    Identity.enter(await Auth.identify(stamp.userID!, stamp), () => Queue.run(job)),
+  );
 }

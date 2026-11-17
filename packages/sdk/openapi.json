@@ -132,14 +132,22 @@
             "type": ["string", "null"]
           },
           "role": {
-            "type": "string",
-            "enum": ["admin", "member"],
-            "description": "Decides everything the account may do. Only `user:assign` can change it."
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["owner", "admin", "member"],
+                "description": "A workspace role."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Decides everything the user may do in this workspace; null outside one. Only `user:assign` can change it."
           },
           "kind": {
             "type": "string",
             "enum": ["human", "system"],
-            "description": "A `system` account is an App: nobody logs in as it — an external system or CI acting through API keys."
+            "description": "A `system` user is an App: nobody logs in as it — an external system or CI acting through API keys."
           },
           "ownerID": {
             "description": "For an App, the person answerable for it. Null for people.",
@@ -196,13 +204,13 @@
                 "type": "null"
               }
             ],
-            "description": "When the account was disabled. Null while it is active."
+            "description": "When the user was removed. Null while they are active."
           },
           "timeCreated": {
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-            "description": "When the account was created."
+            "description": "When the user joined."
           }
         },
         "required": [
@@ -218,7 +226,7 @@
           "timeCreated"
         ],
         "additionalProperties": false,
-        "description": "A user account.",
+        "description": "A workspace's person or App. A person's id is their account id.",
         "example": {
           "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "name": "John Doe",
@@ -259,18 +267,26 @@
           "kind": {
             "type": "string",
             "enum": ["human", "system"],
-            "description": "A `system` account is an App: nobody logs in as it — an external system or CI acting through API keys."
+            "description": "A `system` user is an App: nobody logs in as it — an external system or CI acting through API keys."
           },
           "role": {
-            "type": "string",
-            "enum": ["admin", "member"],
-            "description": "Decides everything the account may do. Only `user:assign` can change it."
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["owner", "admin", "member"],
+                "description": "A workspace role."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Decides everything the user may do in this workspace; null outside one. Only `user:assign` can change it."
           },
           "timeCreated": {
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-            "description": "When the account was created."
+            "description": "When the user joined."
           },
           "email": {
             "anyOf": [
@@ -344,8 +360,12 @@
                   },
                   "role": {
                     "type": "string",
-                    "enum": ["admin", "member"],
-                    "description": "The role held at the time."
+                    "enum": ["owner", "admin", "member"],
+                    "description": "The workspace role held at the time."
+                  },
+                  "superadmin": {
+                    "description": "Whether the account behind it runs the whole app.",
+                    "type": "boolean"
                   },
                   "timezone": {
                     "description": "IANA zone, when known.",
@@ -356,7 +376,7 @@
                     "type": "string"
                   }
                 },
-                "required": ["userID", "role"],
+                "required": ["userID"],
                 "additionalProperties": false
               }
             },
@@ -383,8 +403,12 @@
                   },
                   "role": {
                     "type": "string",
-                    "enum": ["admin", "member"],
-                    "description": "The role held at the time."
+                    "enum": ["owner", "admin", "member"],
+                    "description": "The workspace role held at the time."
+                  },
+                  "superadmin": {
+                    "description": "Whether the account behind it runs the whole app.",
+                    "type": "boolean"
                   },
                   "scope": {
                     "description": "Exactly what it may do."
@@ -398,7 +422,7 @@
                     "type": "string"
                   }
                 },
-                "required": ["name", "userID", "role"],
+                "required": ["name", "userID"],
                 "additionalProperties": false
               }
             },
@@ -421,8 +445,8 @@
                   },
                   "role": {
                     "type": "string",
-                    "enum": ["admin", "member"],
-                    "description": "The role held at the time."
+                    "enum": ["owner", "admin", "member"],
+                    "description": "The workspace role held at the time."
                   },
                   "owner": {
                     "type": "object",
@@ -433,20 +457,24 @@
                       },
                       "role": {
                         "type": "string",
-                        "enum": ["admin", "member"],
-                        "description": "The role held at the time."
+                        "enum": ["owner", "admin", "member"],
+                        "description": "The workspace role held at the time."
                       }
                     },
                     "required": ["userID", "role"],
                     "additionalProperties": false,
                     "description": "The person answerable for the App."
                   },
+                  "workspace": {
+                    "type": "string",
+                    "description": "The schema of the workspace it lives in."
+                  },
                   "credential": {
                     "description": "The key or delegation that acted, so an audit can name it.",
                     "type": "string"
                   }
                 },
-                "required": ["userID", "role", "owner"],
+                "required": ["userID", "role", "owner", "workspace"],
                 "additionalProperties": false
               }
             },
@@ -1562,7 +1590,7 @@
                 }
               }
             },
-            "description": "A user account."
+            "description": "A workspace's person or App. A person's id is their account id."
           },
           "401": {
             "content": {

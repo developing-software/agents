@@ -10,12 +10,15 @@ import { ProjectTable } from "../../project/project.sql";
 import { JobTable } from "../../lib/queue/queue.central";
 import { IssueTable } from "../../issue/issue.sql";
 import { User } from "../../user";
-import { UserTable } from "../../user/user.central";
+import { UserTable } from "../../user/user.sql";
 import { Workspace } from "../../workspace";
 
-/** The back office: the account directory, plus read-only stats queried live. */
+/**
+ * The back office. The user directory and counts are the workspace admin's; the database and
+ * queue span the whole deploy, so they are a superadmin's.
+ */
 export namespace Admin {
-  /** Every account, paginated. Carries the role, and can surface disabled ones. */
+  /** Every user of the workspace, paginated. Carries the role, and can surface removed ones. */
   export const users = fn(
     Common.Query({
       sort: User.SortableColumns.schema,
@@ -35,7 +38,7 @@ export namespace Admin {
             )
           : undefined,
       );
-      return Central.use(async (tx) => {
+      return Database.use(async (tx) => {
         const [rows, totalRows] = await Promise.all([
           tx
             .select()
@@ -47,7 +50,7 @@ export namespace Admin {
           tx.select({ total: count() }).from(UserTable).where(where),
         ] as const);
         return {
-          data: rows.map(User.serialize),
+          data: rows.map((row) => User.serialize(row)),
           page,
           pageSize,
           total: totalRows[0]?.total ?? 0,
@@ -68,7 +71,7 @@ export namespace Admin {
 
   /** Per-table size and row estimate (planner's `n_live_tup` — cheap), plus the db total. */
   export const tables = fn(z.void(), async () => {
-    Identity.check({ admin: ["read"] });
+    Identity.assert.superadmin("Only a superadmin can read table sizes");
     const [rows, size] = await Promise.all([
       raw(sql`
         SELECT relname AS name,
@@ -93,7 +96,7 @@ export namespace Admin {
 
   /** Queue depth and the age of the oldest thing still waiting — the "is it stuck" number. */
   export const queue = fn(z.void(), () => {
-    Identity.check({ admin: ["read"] });
+    Identity.assert.superadmin("Only a superadmin can read the job queue");
     return Central.use(async (tx) => {
       const [pending, running, failed, oldest] = await Promise.all([
         tx
@@ -129,29 +132,31 @@ export namespace Admin {
   /** Product tallies rather than storage ones — what the instance actually holds. */
   export const counts = fn(z.void(), async () => {
     Identity.check({ admin: ["read"] });
-    // Accounts are central, the rest per workspace: each half reads through its own runner.
-    const one =
-      (table: typeof UserTable | typeof ProjectTable | typeof IssueTable, where?: any) =>
-      (tx: Database.TxOrDb) =>
+    return Database.use(async (tx) => {
+      const one = (
+        table: typeof UserTable | typeof ProjectTable | typeof IssueTable,
+        where?: any,
+      ) =>
         tx
           .select({ n: count() })
           .from(table as any)
           .where(where)
           .then((r) => r[0]?.n ?? 0);
 
-    const [users, disabled, projects, issues, done] = await Promise.all([
-      Central.use(one(UserTable, isNull(UserTable.timeDeleted))),
-      Central.use(one(UserTable, isNotNull(UserTable.timeDeleted))),
-      Database.use(one(ProjectTable, isNull(ProjectTable.timeDeleted))),
-      Database.use(one(IssueTable, isNull(IssueTable.timeDeleted))),
-      Database.use(one(IssueTable, isNotNull(IssueTable.timeDone))),
-    ] as const);
-    return { users, disabled, projects, issues, done };
+      const [users, disabled, projects, issues, done] = await Promise.all([
+        one(UserTable, isNull(UserTable.timeDeleted)),
+        one(UserTable, isNotNull(UserTable.timeDeleted)),
+        one(ProjectTable, isNull(ProjectTable.timeDeleted)),
+        one(IssueTable, isNull(IssueTable.timeDeleted)),
+        one(IssueTable, isNotNull(IssueTable.timeDone)),
+      ] as const);
+      return { users, disabled, projects, issues, done };
+    });
   });
 
   /** Version, connection headroom and uptime — what you want when the pool misbehaves. */
   export const server = fn(z.void(), async () => {
-    Identity.check({ admin: ["read"] });
+    Identity.assert.superadmin("Only a superadmin can read the database server");
     const rows = await raw(sql`
       -- server_version carries the packager's whole string; keep the leading number.
       SELECT split_part(current_setting('server_version'), ' ', 1) AS version,

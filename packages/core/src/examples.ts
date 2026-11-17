@@ -64,7 +64,7 @@ export namespace Examples {
   export const Session = {
     userID: Id("user"),
     email: "john@example.com",
-    role: "member",
+    appRole: "user",
     timezone: "America/Sao_Paulo",
   } as const;
 

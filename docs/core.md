@@ -45,19 +45,29 @@ and `./src/**/*.sql.ts`, so nesting never affects migrations.
 
 ## Workspaces
 
-`*.central.ts` tables live in the `central` schema, shared by everyone (users, keys, auth,
+`*.central.ts` tables live in the `central` schema, shared by everyone (accounts, keys, auth,
 queue, kv, the `platform/workspace` registry). `*.sql.ts` tables are unqualified tenant tables:
 `Workspace.provide` sets the transaction's search_path to `public` (single mode, the default)
-or a `ws_*` schema (`WORKSPACES=multi`). Surfaces call `Workspaces.enter(slug, fn)` once,
-after auth. Migrations split the same way: `migrations/central` and `migrations/tenant`,
+or a `ws_*` schema (`WORKSPACES=multi`). Surfaces call `Auth.enter(slug, fn)` once, after
+auth: it enters the workspace through `Workspaces.enter` and re-reads the caller there. Migrations split the same way: `migrations/central` and `migrations/tenant`,
 each bundled to an `index.ts` by `db:generate`, so `Migrations` runs in a Worker too.
 
 Central modules read through `Central.use`/`transaction` (`drizzle/central`), tenant ones through
-`Database`. `central.access` says who can see a workspace; its tenant `member` table holds the
-role and is what tenant rows join. `Workspaces.create` writes a `pending` row and queues
-`workspace.setup` (migrate, seat the owner, mark `ready`); `resolve` 409s until then.
-Single mode refuses `create` and `resolve` (no switching); `current` seats its one `default`
-row and the caller (first one in owns it) on first read, so `update`, `members` and `role` work.
+`Database`. `Workspaces.create` writes a `pending` row and queues `workspace.setup` (migrate,
+seat the owner, mark `ready`); `resolve` 409s until then. Single mode refuses `create` and
+`resolve` (no switching), and `enter` seats a newcomer on first request (the first one in owns it).
+
+People are split the same way:
+
+- `central.account` is the login, with an app-wide `role` of `user` or `superadmin`. A
+  superadmin runs the platform and the deploy (the registry, the instance); that is
+  `Identity.superadmin()` / `Identity.assert.superadmin(message)`, never a grant.
+- Each workspace's `user` table holds its people and Apps. A person's row shares their account
+  id; an App has no account, and its keys carry the schema it lives in. Its `role` (owner, admin,
+  member) is `Identity.role`, so every permission is inside a workspace.
+- Outside one (multi mode before a pick) an identity holds no role; the account's own things
+  (keys, prefs, password) check `Identity.self(grants)` instead.
+- `central.access` lists who can see a workspace, so listing one's workspaces never opens each.
 
 Database per workspace, when an app needs it: add a `database` column to `WorkspaceTable`
 naming an env binding; `Workspaces.connect.provide((row) => clients[row.database], fn)` in the
@@ -76,7 +86,7 @@ Slices declare and publish typed events through `platform/bus`. See [events.md](
   bundle; Bun targets import it as `@agents/core/kv/adapter/redis`.
 - `lib/limit` has a `port.ts` (the algorithm contract) but no `adapter/`: it counts in
   `lib/kv`, so its backend is whichever Kv the process provides.
-- `platform/event` joins `user/user.central` to name the actor on a log row. Platform may reach
+- `platform/event` joins `user/user.sql` to name the actor on a log row. Platform may reach
   `user`, the identity anchor; nothing else in the product.
 - `platform/admin` reads `project` and `issue` tables for its counts — the one arrow that
   points up. A fork rewrites the tallies in `counts`; the rest of the back office is generic.

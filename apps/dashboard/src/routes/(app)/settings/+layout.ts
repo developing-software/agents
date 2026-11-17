@@ -17,11 +17,9 @@ import type { LayoutLoad } from "./$types";
 export const load: LayoutLoad = ({ data }) => {
   const workspace = [
     { href: "/settings/workspace", label: "Workspace", icon: Building },
-    ...(data.admin
-      ? [
-          { href: "/settings/members", label: "Members", icon: UsersRound },
-          { href: "/settings/workspaces", label: "Workspaces", icon: Building },
-        ]
+    ...(data.admin ? [{ href: "/settings/members", label: "Members", icon: UsersRound }] : []),
+    ...(data.superadmin
+      ? [{ href: "/settings/workspaces", label: "Workspaces", icon: Building }]
       : []),
     ...(data.apps
       ? [
@@ -34,9 +32,9 @@ export const load: LayoutLoad = ({ data }) => {
           { href: "/settings/panels", label: "Panels", icon: LayoutDashboard },
           { href: "/settings/feedback", label: "Feedback", icon: MessageSquare },
           { href: "/settings/logs", label: "Logs", icon: ScrollText },
-          { href: "/settings/instance", label: "Instance", icon: Gauge },
         ]
       : []),
+    ...(data.superadmin ? [{ href: "/settings/instance", label: "Instance", icon: Gauge }] : []),
   ];
   return {
     ...data,

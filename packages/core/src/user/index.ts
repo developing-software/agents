@@ -3,6 +3,7 @@ import { and, asc, eq, ilike, isNull, sql, type SQLWrapper } from "drizzle-orm";
 import { Assert } from "../util/assert";
 import { fn } from "../util/fn";
 import { iso } from "../util/fmt";
+import { Database } from "../drizzle";
 import { Central } from "../drizzle/central";
 import { Identity } from "../identity";
 import { Common } from "../common";
@@ -12,12 +13,17 @@ import { Examples } from "../examples";
 import { Identifier } from "../identifier";
 import { Permission } from "../permission";
 import { sortable } from "../drizzle/order";
-import { UserTable } from "./user.central";
-import { Patch, Prefs } from "./prefs";
+import { Workspace } from "../workspace";
+import { UserTable } from "./user.sql";
+import { AccountTable } from "./account.central";
+import { Account } from "./account";
+import { DEFAULTS, Patch, Prefs } from "./prefs";
 import { ProviderIds, ProviderTable } from "../auth/provider.central";
 
 export namespace User {
   export const assert = Assert.create("User");
+
+  export const Role = z.enum(Permission.roles).meta({ description: "A workspace role." });
 
   export const Info = z
     .object({
@@ -31,12 +37,13 @@ export namespace User {
       image: z.string().nullable().meta({ description: "Avatar URL, or null for none." }),
       // Read-only through `update`, which picks its fields explicitly. `assign` is the
       // only way to change one, and it wants `user: ["assign"]`.
-      role: z.enum(Permission.roles).meta({
-        description: "Decides everything the account may do. Only `user:assign` can change it.",
+      role: Role.nullable().meta({
+        description:
+          "Decides everything the user may do in this workspace; null outside one. Only `user:assign` can change it.",
       }),
       kind: z.enum(["human", "system"]).meta({
         description:
-          "A `system` account is an App: nobody logs in as it — an external system or CI acting through API keys.",
+          "A `system` user is an App: nobody logs in as it — an external system or CI acting through API keys.",
       }),
       ownerID: z
         .string()
@@ -48,18 +55,18 @@ export namespace User {
       timeDeleted: z.iso
         .datetime()
         .nullable()
-        .meta({ description: "When the account was disabled. Null while it is active." }),
-      timeCreated: z.iso.datetime().meta({ description: "When the account was created." }),
+        .meta({ description: "When the user was removed. Null while they are active." }),
+      timeCreated: z.iso.datetime().meta({ description: "When the user joined." }),
     })
     .meta({
       ref: "User",
-      description: "A user account.",
+      description: "A workspace's person or App. A person's id is their account id.",
       example: Examples.User,
     });
   export type Info = z.infer<typeof Info>;
 
   export const Event = {
-    Assigned: Bus.define("user.assigned", z.object({ from: Info.shape.role, to: Info.shape.role })),
+    Assigned: Bus.define("user.assigned", z.object({ from: Role, to: Role })),
     // Recorded as whoever made the account: the `auth` agent on signup, an admin for an App.
     Created: Bus.define("user.created", Info.pick({ email: true, kind: true })),
     // A new way into an existing account — Google added to one made by emailed code.
@@ -122,24 +129,28 @@ export namespace User {
       image: Info.shape.image.optional(),
       kind: Info.shape.kind.optional(),
       ownerID: z.string().optional(),
+      role: Info.shape.role.optional(),
     }),
-    // A grant, not an open door: signup holds it through the `auth` agent, an App through its admin.
+    // A grant, not an open door: setup holds it as `internal`, an App through its admin.
+    // A person gets an account too, whose id their user row shares; an App gets none.
     async (input) => {
       Identity.check({ user: ["create"] });
-      const user = await Central.use((tx) =>
+      const kind = input.kind ?? "human";
+      const account = kind === "human" ? await Account.create(input) : undefined;
+      const user = await Database.use((tx) =>
         tx
           .insert(UserTable)
           .values({
-            id: Identifier.create("user"),
+            id: account?.id ?? Identifier.create("user"),
             name: input.name,
             email: input.email,
-            emailVerified: input.emailVerified ?? false,
             image: input.image ?? null,
-            kind: input.kind ?? "human",
+            role: input.role ?? "member",
+            kind,
             ownerID: input.ownerID ?? null,
           })
           .returning()
-          .then((rows) => serialize(rows[0]!)),
+          .then((rows) => serialize(rows[0]!, account)),
       );
       await Event.Created.publish({ email: user.email, kind: user.kind }, { subject: user.id });
       return user;
@@ -147,18 +158,26 @@ export namespace User {
   );
 
   /**
-   * Disabled accounts are invisible here, which is what locks them out — every auth path
-   * resolves its actor through this. Admin screens query directly to restore them.
+   * The user in the current workspace, or the bare account when multi mode has none picked.
+   * Removed users and disabled accounts are invisible here, which is what locks them out.
    */
-  export const fromID = fn(Info.shape.id, (id) =>
-    Central.use((tx) =>
+  export const fromID = fn(Info.shape.id, async (id) => {
+    if (!Workspace.here()) {
+      const account = await Account.fromID(id);
+      return account ? bare(account) : null;
+    }
+    const row = await Database.use((tx) =>
       tx
         .select()
         .from(UserTable)
         .where(and(eq(UserTable.id, id), isNull(UserTable.timeDeleted)))
-        .then((rows) => (rows[0] ? serialize(rows[0]) : null)),
-    ),
-  );
+        .then((rows) => rows.at(0)),
+    );
+    if (!row) return null;
+    if (row.kind === "system") return serialize(row);
+    const account = await Account.fromID(id);
+    return account ? serialize(row, account) : null;
+  });
 
   export const Summary = Info.pick({ id: true, name: true, email: true, image: true }).meta({
     ref: "UserSummary",
@@ -170,7 +189,7 @@ export namespace User {
     z.object({ search: z.string().optional().meta({ description: "Part of a name." }) }),
     (input) => {
       Identity.check({ user: ["read"] });
-      return Central.use((tx) =>
+      return Database.use((tx) =>
         tx
           .select({
             id: UserTable.id,
@@ -235,35 +254,33 @@ export namespace User {
 
   export const update = fn(
     z.object({ name: Info.shape.name.optional(), image: Info.shape.image.optional() }),
-    (input) => {
-      const id = Identity.userID();
-      Identity.check({ user: ["update"] }, id);
-      return Central.use((tx) =>
-        tx
-          .update(UserTable)
-          .set({ ...input, timeUpdated: new Date() })
-          .where(eq(UserTable.id, id)),
-      );
+    async (input) => {
+      const id = Identity.self({ user: ["update"] });
+      const set = { ...input, timeUpdated: new Date() };
+      // The account is the default every new workspace copies; this one changes alongside it.
+      await Central.use((tx) => tx.update(AccountTable).set(set).where(eq(AccountTable.id, id)));
+      if (Workspace.here())
+        await Database.use((tx) => tx.update(UserTable).set(set).where(eq(UserTable.id, id)));
     },
   );
 
   /** Patch-merges prefs with a jsonb `||` in one statement — no read-modify-write race. */
   export const prefs = fn(Patch, (input) => {
-    Identity.check({ user: ["update"] }, Identity.userID());
+    const id = Identity.self({ user: ["update"] });
     return Central.use((tx) =>
       tx
-        .update(UserTable)
+        .update(AccountTable)
         .set({
-          prefs: sql`${UserTable.prefs} || ${JSON.stringify(input)}::jsonb`,
+          prefs: sql`${AccountTable.prefs} || ${JSON.stringify(input)}::jsonb`,
           timeUpdated: new Date(),
         })
-        .where(eq(UserTable.id, Identity.userID())),
+        .where(eq(AccountTable.id, id)),
     );
   });
 
   /** Reads past the disabled filter `fromID` applies — the admin screens act on those rows. */
   const target = (id: string) =>
-    Central.use((tx) =>
+    Database.use((tx) =>
       tx
         .select()
         .from(UserTable)
@@ -281,32 +298,39 @@ export namespace User {
       );
   }
 
-  export const assign = fn(
-    z.object({ id: Info.shape.id, role: Info.shape.role }),
-    async (input) => {
-      Identity.check({ user: ["assign"] });
-      other(input.id);
-      const before = await assert.exists(target(input.id));
-      if (before.role === input.role) return;
+  export const assign = fn(z.object({ id: Info.shape.id, role: Role }), async (input) => {
+    Identity.check({ user: ["assign"] });
+    other(input.id);
+    const before = await assert.exists(target(input.id));
+    if (before.role === input.role) return;
 
-      return Central.transaction(async (tx) => {
-        await tx
-          .update(UserTable)
-          .set({ role: input.role, timeUpdated: new Date() })
-          .where(eq(UserTable.id, input.id));
-        await Event.Assigned.publish({ from: before.role, to: input.role }, { subject: input.id });
-      });
-    },
-  );
+    return Database.transaction(async (tx) => {
+      const owners = await tx
+        .select({ id: UserTable.id })
+        .from(UserTable)
+        .where(and(eq(UserTable.role, "owner"), isNull(UserTable.timeDeleted)));
+      if (before.role === "owner" && owners.length === 1)
+        throw new VisibleError(
+          "conflict",
+          ErrorCodes.Conflict.LAST_OWNER,
+          "A workspace needs at least one owner",
+        );
+      await tx
+        .update(UserTable)
+        .set({ role: input.role, timeUpdated: new Date() })
+        .where(eq(UserTable.id, input.id));
+      await Event.Assigned.publish({ from: before.role, to: input.role }, { subject: input.id });
+    });
+  });
 
-  /** Disables an account. Their rows stay put — one `restore` away, nothing orphaned. */
+  /** Removes a user from the workspace. Their rows stay put — one `restore` away, nothing orphaned. */
   export const remove = fn(Info.shape.id, async (id) => {
     Identity.check({ user: ["delete"] });
     other(id);
     const before = await assert.exists(target(id));
     if (before.timeDeleted) return;
 
-    return Central.transaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       await tx.update(UserTable).set({ timeDeleted: new Date() }).where(eq(UserTable.id, id));
       await Event.Removed.publish({ email: before.email }, { subject: id });
     });
@@ -317,7 +341,7 @@ export namespace User {
     const before = await assert.exists(target(id));
     if (!before.timeDeleted) return;
 
-    return Central.transaction(async (tx) => {
+    return Database.transaction(async (tx) => {
       await tx
         .update(UserTable)
         .set({ timeDeleted: null, timeUpdated: new Date() })
@@ -326,21 +350,41 @@ export namespace User {
     });
   });
 
-  export function serialize(row: typeof UserTable.$inferSelect): Info {
+  /** A workspace row; `account` supplies the login-wide fields, which an App has none of. */
+  export function serialize(row: typeof UserTable.$inferSelect, account?: Account.Row): Info {
     return {
       id: row.id,
       name: row.name,
       email: row.email,
-      emailVerified: row.emailVerified,
+      emailVerified: account?.emailVerified ?? false,
       image: row.image,
       role: row.role,
       kind: row.kind,
       ownerID: row.ownerID,
       // Parsed, not passed through: a row written before a preference existed is missing
       // that key, and the column's `$type` would claim otherwise.
-      prefs: Prefs.parse(row.prefs),
+      prefs: account ? Prefs.parse(account.prefs) : DEFAULTS,
       timeDeleted: iso(row.timeDeleted),
       timeCreated: row.timeCreated.toISOString(),
+    };
+  }
+
+  // === UTILS ===
+
+  // No workspace picked yet: the account alone, which holds no role.
+  function bare(account: Account.Row): Info {
+    return {
+      id: account.id,
+      name: account.name,
+      email: account.email,
+      emailVerified: account.emailVerified,
+      image: account.image,
+      role: null,
+      kind: "human",
+      ownerID: null,
+      prefs: Prefs.parse(account.prefs),
+      timeDeleted: null,
+      timeCreated: account.timeCreated.toISOString(),
     };
   }
 }

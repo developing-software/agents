@@ -58,6 +58,8 @@ export namespace Key {
       userID: Identifier.schema("user"),
       name: Info.shape.name,
       expiresAt: z.date().nullable().optional(),
+      // Set for an App's key: the workspace schema it acts in. A person's key follows the request.
+      workspace: z.string().optional(),
     }),
     async (input) => {
       const secret = token("sk-");
@@ -68,6 +70,7 @@ export namespace Key {
           .values({
             id: Identifier.create("key"),
             userID: input.userID,
+            workspace: input.workspace ?? null,
             name: input.name,
             key: hash,
             meta: { display: mask(secret) },
@@ -81,17 +84,21 @@ export namespace Key {
   );
 
   /** Mints a key for the caller. The only moment the secret exists: the row keeps a hash. */
-  export const create = fn(mint.schema.omit({ userID: true }), (input) => {
-    Identity.check({ key: ["create"] });
-    return mint({ ...input, userID: Identity.userID() });
-  });
+  export const create = fn(mint.schema.omit({ userID: true, workspace: true }), (input) =>
+    mint({ ...input, userID: Identity.self({ key: ["create"] }) }),
+  );
 
   /** Resolves a secret to its user, `api` keys only. The hash is indexed: a single lookup. */
   export const verify = fn(z.string(), async (secret) => {
     const hash = encode(await digest(secret));
     const row = await Central.use((tx) =>
       tx
-        .select({ id: KeyTable.id, userID: KeyTable.userID, used: KeyTable.timeUsed })
+        .select({
+          id: KeyTable.id,
+          userID: KeyTable.userID,
+          workspace: KeyTable.workspace,
+          used: KeyTable.timeUsed,
+        })
         .from(KeyTable)
         .where(
           and(
@@ -111,15 +118,14 @@ export namespace Key {
         tx.update(KeyTable).set({ timeUsed: new Date() }).where(eq(KeyTable.id, row.id)),
       );
 
-    return row.userID ? { id: row.id, userID: row.userID } : null;
+    return row.userID ? { id: row.id, userID: row.userID, workspace: row.workspace } : null;
   });
 
   /** The caller's live keys; the one authenticating this request is flagged `current`. */
   export const list = fn(
     z.void(),
     async () => {
-      const user = Identity.userID();
-      Identity.check({ key: ["read"] }, user);
+      const user = Identity.self({ key: ["read"] });
       const info = Identity.use();
       const current = "credential" in info.properties ? info.properties.credential : undefined;
       return (await rows(user)).map((row) => serialize(row, current));
@@ -142,19 +148,11 @@ export namespace Key {
   );
 
   /** Revokes a personal access token — the secret stops authenticating immediately. */
-  export const remove = fn(
-    Info.shape.id,
-    (id) => {
-      const user = Identity.userID();
-      Identity.check({ key: ["delete"] }, user);
-      return drop(id, user);
-    },
-    {
-      title: "Revoke personal access token",
-      description:
-        "Revoke one of your personal access tokens. The secret stops authenticating immediately.",
-    },
-  );
+  export const remove = fn(Info.shape.id, (id) => drop(id, Identity.self({ key: ["delete"] })), {
+    title: "Revoke personal access token",
+    description:
+      "Revoke one of your personal access tokens. The secret stops authenticating immediately.",
+  });
 
   function serialize(row: typeof KeyTable.$inferSelect, current?: string): Info {
     return {

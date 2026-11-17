@@ -33,7 +33,8 @@ describe("delegate", () => {
       ),
     );
     const owner = { userID: "usr_2", role: "admin" } as const;
-    Identity.enter({ type: "system", properties: { userID: "usr_3", role: "member", owner } }, () =>
+    const props = { userID: "usr_3", role: "member", owner, workspace: "public" } as const;
+    Identity.enter({ type: "system", properties: props }, () =>
       expect(() => Identity.delegate("x", undefined, () => {})).toThrow(/App can.t delegate/),
     );
   });

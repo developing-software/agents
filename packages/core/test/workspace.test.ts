@@ -7,7 +7,7 @@ import { memory } from "../src/lib/queue/adapter/memory";
 import { Project } from "../src/project";
 import { Workspace } from "../src/workspace";
 import { Workspaces } from "../src/platform/workspace";
-import { MemberTable } from "../src/platform/workspace/member.sql";
+import { UserTable } from "../src/user/user.sql";
 import { AccessTable } from "../src/platform/workspace/workspace.central";
 import { createUser, testEmail } from "./util";
 
@@ -143,7 +143,7 @@ describe("single mode", () => {
     const id = (await boss).id;
     // Earlier tests may have seated someone first; make this caller an owner outright.
     await Database.use((tx) =>
-      tx.update(MemberTable).set({ role: "owner" }).where(eq(MemberTable.userID, id)),
+      tx.update(UserTable).set({ role: "owner" }).where(eq(UserTable.id, id)),
     );
     const row = await as(id, () => Workspaces.current());
     if (!row) throw new Error("no default workspace");
@@ -174,9 +174,7 @@ describe("workspace roles", () => {
     );
     await Workspace.provide({ schema: `ws_${slugs.a}` }, () =>
       Database.use((tx) =>
-        tx
-          .insert(MemberTable)
-          .values({ userID: stranger.id, name: "Stranger", email: "s@example.com" }),
+        tx.insert(UserTable).values({ id: stranger.id, name: "Stranger", email: "s@example.com" }),
       ),
     );
   });

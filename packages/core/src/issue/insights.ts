@@ -4,7 +4,7 @@ import { fn } from "../util/fn";
 import { Identity } from "../identity";
 import { Database } from "../drizzle";
 import { iso } from "../util/fmt";
-import { UserTable } from "../user/user.central";
+import { UserTable } from "../user/user.sql";
 import { StatusValues, IssueTable } from "./issue.sql";
 
 export namespace Insights {

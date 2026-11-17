@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 
 import { Identity } from "@agents/core/identity";
-import { Permission } from "@agents/core/permission";
 import { Database, sql } from "@agents/core/drizzle";
 import { Project } from "@agents/core/project";
 import { Queue } from "@agents/core/queue";
 import { Issue } from "@agents/core/issue";
 import { Auth } from "@agents/core/auth";
-import { User } from "@agents/core/user";
+import { AccountTable } from "@agents/core/user/account.central";
+import { UserTable } from "@agents/core/user/user.sql";
 import { Key } from "@agents/core/key";
 import { boxed } from "./utils/box";
 
@@ -124,12 +124,29 @@ function status(due: number) {
   return roll([[0.6, "backlog"]], "planned");
 }
 
+/** Seats an account in the workspace the way its first request would. */
+function join(userID: string) {
+  return Identity.provide("user", { userID }, () => Auth.enter(undefined, async () => {}));
+}
+
 /** Writes the fixtures and returns the dev account's API key. Assumes its providers are set. */
 async function seed() {
   const userID = await Auth.link({ provider: "email", accountId: email, email, name });
-  // The dev account owns the instance: admin settings are otherwise unreachable without hand-writing
-  // the promotion SQL. The team below stay members, so both roles are represented locally.
-  await Identity.internal("seed", Permission.all, () => User.assign({ id: userID, role: "admin" }));
+  // The dev account runs the instance and owns its workspace: both are otherwise unreachable
+  // without hand-writing the promotion SQL. The team below stay members, so roles vary locally.
+  await Database.use((tx) =>
+    tx
+      .update(AccountTable)
+      .set({ role: "superadmin" })
+      .where(sql`${AccountTable.id} = ${userID}`),
+  );
+  await join(userID);
+  await Database.use((tx) =>
+    tx
+      .update(UserTable)
+      .set({ role: "owner" })
+      .where(sql`${UserTable.id} = ${userID}`),
+  );
   // The login screen prefills these credentials in dev, so the dev account needs a real
   // password row for them to match — an account gains one, it never signs up with one.
   await Identity.provide("user", { userID, role: "admin" }, () => Auth.Pass.set({ password: pw }));
@@ -139,6 +156,7 @@ async function seed() {
       Auth.link({ provider: "email", accountId: one.email, email: one.email, name: one.name }),
     ),
   );
+  for (const mate of mates) await join(mate);
   // Unassigned shows up as its own lane in the board and the load chart.
   const assignees = [userID, ...mates, null, ...mates];
 

@@ -92,16 +92,6 @@ CREATE TABLE "webhook" (
 	"time_delivered" timestamp(3) with time zone
 );
 --> statement-breakpoint
-CREATE TABLE "member" (
-	"user_id" char(30) PRIMARY KEY,
-	"role" text DEFAULT 'member' NOT NULL,
-	"name" text NOT NULL,
-	"email" text NOT NULL,
-	"time_created" timestamp(3) with time zone DEFAULT now() NOT NULL,
-	"time_updated" timestamp(3) with time zone DEFAULT now() NOT NULL,
-	"time_deleted" timestamp(3) with time zone
-);
---> statement-breakpoint
 CREATE TABLE "project" (
 	"id" char(30) NOT NULL,
 	"time_created" timestamp(3) with time zone DEFAULT now() NOT NULL,
@@ -112,6 +102,19 @@ CREATE TABLE "project" (
 	"description" text,
 	"image" text,
 	"metadata" jsonb DEFAULT '{"annotations":{},"links":[]}' NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "user" (
+	"id" char(30) NOT NULL,
+	"time_created" timestamp(3) with time zone DEFAULT now() NOT NULL,
+	"time_updated" timestamp(3) with time zone DEFAULT now() NOT NULL,
+	"time_deleted" timestamp(3) with time zone,
+	"name" text NOT NULL,
+	"email" text NOT NULL,
+	"image" text,
+	"role" text DEFAULT 'member' NOT NULL,
+	"kind" text DEFAULT 'human' NOT NULL,
+	"owner_id" char(30)
 );
 --> statement-breakpoint
 CREATE INDEX "issue_source" ON "issue" ("source","source_id","status");--> statement-breakpoint
@@ -132,4 +135,5 @@ CREATE INDEX "event_tags" ON "event" USING gin ("tags");--> statement-breakpoint
 CREATE INDEX "webhook_enabled" ON "webhook" ("enabled");--> statement-breakpoint
 CREATE INDEX "webhook_user" ON "webhook" ("user_id");--> statement-breakpoint
 CREATE INDEX "project_created_by" ON "project" ("created_by");--> statement-breakpoint
-CREATE INDEX "project_metadata" ON "project" USING gin ("metadata");
+CREATE INDEX "project_metadata" ON "project" USING gin ("metadata");--> statement-breakpoint
+CREATE UNIQUE INDEX "user_email" ON "user" ("email");

@@ -37,7 +37,7 @@ import {
   unlink as detach,
 } from "../util/meta";
 import { Bus } from "../platform/bus";
-import { UserTable } from "../user/user.central";
+import { UserTable } from "../user/user.sql";
 import { ProjectTable } from "../project/project.sql";
 import { rank, StatusValues, IssueTable } from "./issue.sql";
 

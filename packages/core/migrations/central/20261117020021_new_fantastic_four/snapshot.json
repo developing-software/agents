@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "c1fa1b64-1d1a-4e81-863d-f95262a379ae",
+  "id": "39a6ce56-03fb-479b-b6dd-4135885c2efb",
   "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
@@ -46,7 +46,7 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "user",
+      "name": "account",
       "entityType": "tables",
       "schema": "central"
     },
@@ -454,6 +454,19 @@
       "table": "key"
     },
     {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "workspace",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "key"
+    },
+    {
       "type": "varchar(255)",
       "typeSchema": null,
       "notNull": true,
@@ -711,7 +724,7 @@
       "name": "id",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "timestamp(3) with time zone",
@@ -724,7 +737,7 @@
       "name": "time_created",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "timestamp(3) with time zone",
@@ -737,7 +750,7 @@
       "name": "time_updated",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "timestamp(3) with time zone",
@@ -750,7 +763,7 @@
       "name": "time_deleted",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "text",
@@ -763,7 +776,7 @@
       "name": "name",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "text",
@@ -776,7 +789,7 @@
       "name": "email",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "boolean",
@@ -789,7 +802,7 @@
       "name": "email_verified",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "text",
@@ -802,46 +815,20 @@
       "name": "image",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": "'member'",
+      "default": "'user'",
       "generated": null,
       "identity": null,
       "name": "role",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "'human'",
-      "generated": null,
-      "identity": null,
-      "name": "kind",
-      "entityType": "columns",
-      "schema": "central",
-      "table": "user"
-    },
-    {
-      "type": "char(30)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "owner_id",
-      "entityType": "columns",
-      "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "type": "jsonb",
@@ -854,7 +841,7 @@
       "name": "prefs",
       "entityType": "columns",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "nameExplicit": true,
@@ -1082,10 +1069,10 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "user_email",
+      "name": "account_email",
       "entityType": "indexes",
       "schema": "central",
-      "table": "user"
+      "table": "account"
     },
     {
       "columns": ["key"],

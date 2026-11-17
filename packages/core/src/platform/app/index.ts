@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { fn } from "../../util/fn";
 import { Assert } from "../../util/assert";
@@ -9,24 +9,27 @@ import { token } from "../../util/token";
 import { Auth } from "../../auth";
 import { Bus } from "../bus";
 import { Common } from "../../common";
+import { Database } from "../../drizzle";
 import { Central } from "../../drizzle/central";
 import { ErrorCodes, VisibleError } from "../../error";
 import { Examples } from "../../examples";
 import { Identity } from "../../identity";
 import { Identifier } from "../../identifier";
 import { User } from "../../user";
-import { UserTable } from "../../user/user.central";
+import { UserTable } from "../../user/user.sql";
+import { Workspace } from "../../workspace";
 import { Key } from "../key";
 import { KeyTable } from "../key/key.central";
 import { Webhook } from "../webhook";
+import { Workspaces } from "../workspace";
 
 /** Five minutes either side of now: long enough for clock skew, short enough to stop replays. */
 const SKEW = 5 * 60;
 
 /**
- * External systems, registered in Developers. An App is a system account (`kind: "system"`) owned
- * by the admin who made it: its API keys act as that account, its webhooks are filed under it, and
- * its inbound secret lets it post events in. Admin-only — `app:*` is not a member grant.
+ * External systems, registered in Developers. An App is a workspace's `kind: "system"` user, with
+ * no account, owned by the admin who made it: its API keys act as it inside that workspace, its
+ * webhooks are filed under it, and its inbound secret lets it post events in. Admin-only.
  */
 export namespace App {
   export const assert = Assert.create("App");
@@ -108,7 +111,7 @@ export namespace App {
     async (input) => {
       Identity.check({ app: ["update"] });
       await assert.exists(fromID(input.id));
-      await Central.use((tx) =>
+      await Database.use((tx) =>
         tx
           .update(UserTable)
           .set({ name: input.name, image: input.image, timeUpdated: new Date() })
@@ -124,7 +127,7 @@ export namespace App {
     async (id) => {
       Identity.check({ app: ["delete"] });
       await assert.exists(fromID(id));
-      await Central.transaction(async (tx) => {
+      await Database.transaction(async (tx) => {
         await tx.update(UserTable).set({ timeDeleted: new Date() }).where(eq(UserTable.id, id));
         for (const hook of await Webhook.list(id)) await Webhook.remove(hook.id);
       });
@@ -160,7 +163,12 @@ export namespace App {
     async (input) => {
       Identity.check({ app: ["update"] });
       await assert.exists(fromID(input.app));
-      return Key.mint({ userID: input.app, name: input.name, expiresAt: input.expiresAt });
+      return Key.mint({
+        userID: input.app,
+        name: input.name,
+        expiresAt: input.expiresAt,
+        workspace: home(),
+      });
     },
   );
 
@@ -191,6 +199,7 @@ export namespace App {
         await tx.insert(KeyTable).values({
           id: Identifier.create("key"),
           userID: id,
+          workspace: home(),
           name: "inbound",
           key: value,
           type: "hook",
@@ -219,18 +228,12 @@ export namespace App {
     }),
     async (input) => {
       const time = Number(input.timestamp);
+      // The App itself is checked once inside its workspace: `Auth.identify` refuses a removed one.
       const held = await Central.use((tx) =>
         tx
-          .select({ secret: KeyTable.key })
+          .select({ secret: KeyTable.key, workspace: KeyTable.workspace })
           .from(KeyTable)
-          .innerJoin(UserTable, eq(UserTable.id, KeyTable.userID))
-          .where(
-            and(
-              eq(KeyTable.userID, input.app),
-              eq(KeyTable.type, "hook"),
-              isNull(UserTable.timeDeleted),
-            ),
-          )
+          .where(and(eq(KeyTable.userID, input.app), eq(KeyTable.type, "hook")))
           .then((rows) => rows.at(0)),
       );
       const fresh = Number.isFinite(time) && Math.abs(Date.now() / 1000 - time) <= SKEW;
@@ -255,10 +258,13 @@ export namespace App {
           "Body must be JSON with a `type` and optional `data`",
         );
 
-      return Identity.enter(await Auth.identify(input.app), () =>
-        Received.publish(
-          { app: input.app, type: parsed.data.type, data: parsed.data.data },
-          { subject: input.app, tags: [`app:${input.app}`] },
+      const data = parsed.data;
+      return Workspaces.open(held!.workspace ?? Workspace.single().schema, async () =>
+        Identity.enter(await Auth.identify(input.app), () =>
+          Received.publish(
+            { app: input.app, type: data.type, data: data.data },
+            { subject: input.app, tags: [`app:${input.app}`] },
+          ),
         ),
       );
     },
@@ -276,9 +282,10 @@ export namespace App {
 
   // === UTILS ===
 
-  function query(id?: string) {
+  // Keys are central, so whether an App holds an inbound secret is a second read, not a join.
+  async function query(id?: string) {
     const owner = alias(UserTable, "owner");
-    return Central.use((tx) =>
+    const rows = await Database.use((tx) =>
       tx
         .select({
           id: UserTable.id,
@@ -286,11 +293,9 @@ export namespace App {
           timeCreated: UserTable.timeCreated,
           ownerId: owner.id,
           ownerName: owner.name,
-          inbound: KeyTable.id,
         })
         .from(UserTable)
         .leftJoin(owner, and(eq(owner.id, UserTable.ownerID), isNull(owner.timeDeleted)))
-        .leftJoin(KeyTable, and(eq(KeyTable.userID, UserTable.id), eq(KeyTable.type, "hook")))
         .where(
           and(
             eq(UserTable.kind, "system"),
@@ -300,5 +305,29 @@ export namespace App {
         )
         .orderBy(asc(UserTable.name)),
     );
+    if (!rows.length) return [];
+    const hooks = await Central.use((tx) =>
+      tx
+        .select({ userID: KeyTable.userID })
+        .from(KeyTable)
+        .where(
+          and(
+            eq(KeyTable.type, "hook"),
+            inArray(
+              KeyTable.userID,
+              rows.map((row) => row.id),
+            ),
+          ),
+        ),
+    );
+    const inbound = new Set(hooks.map((hook) => hook.userID));
+    return rows.map((row) => ({ ...row, inbound: inbound.has(row.id) }));
+  }
+
+  // The schema an App lives in, which its keys carry so they can find it again.
+  function home() {
+    const here = Workspace.here();
+    if (!here) throw new Error("An App needs a workspace");
+    return here.schema;
   }
 }

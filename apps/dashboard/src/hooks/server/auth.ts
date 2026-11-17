@@ -14,7 +14,10 @@ export const auth: Handle = async ({ event, resolve }) => {
   event.locals.session = me;
   if (!me) return Identity.provide("public", {}, () => resolve(event));
 
-  return Identity.provide("user", { userID: me.userID, role: me.role, timezone: me.timezone }, () =>
-    resolve(event),
+  // No role yet: `tenancy` reads the one this account holds in the workspace.
+  return Identity.provide(
+    "user",
+    { userID: me.userID, superadmin: me.appRole === "superadmin", timezone: me.timezone },
+    () => resolve(event),
   );
 };

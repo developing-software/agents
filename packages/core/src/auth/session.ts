@@ -5,11 +5,10 @@ import { Common } from "../common";
 import { Central } from "../drizzle/central";
 import { Examples } from "../examples";
 import { Identifier } from "../identifier";
-import { Permission } from "../permission";
 import { decode, digest, encode, equal } from "../util/hash";
 import { token } from "../util/token";
 import { Prefs, zone } from "../user/prefs";
-import { UserTable } from "../user/user.central";
+import { AccountRoles, AccountTable } from "../user/account.central";
 import { KeyTable, TOUCH, live } from "../platform/key/key.central";
 
 /**
@@ -26,8 +25,9 @@ export namespace Session {
         description: "Login address on the account.",
         example: Examples.User.email,
       }),
-      role: z.enum(Permission.roles).meta({
-        description: "Read off the user row on every request, so a change takes effect at once.",
+      appRole: z.enum(AccountRoles).meta({
+        description:
+          "The app-wide role, read off the account on every request. Workspace roles come later, per workspace.",
       }),
       timezone: z.string().meta({
         description: "The zone the session's times belong in, resolved from the user's prefs.",
@@ -77,19 +77,19 @@ export namespace Session {
         .select({
           hash: KeyTable.key,
           used: KeyTable.timeUsed,
-          userID: UserTable.id,
-          email: UserTable.email,
-          role: UserTable.role,
-          prefs: UserTable.prefs,
+          userID: AccountTable.id,
+          email: AccountTable.email,
+          appRole: AccountTable.role,
+          prefs: AccountTable.prefs,
         })
         .from(KeyTable)
-        .innerJoin(UserTable, eq(UserTable.id, KeyTable.userID))
+        .innerJoin(AccountTable, eq(AccountTable.id, KeyTable.userID))
         .where(
           and(
             eq(KeyTable.id, id),
             eq(KeyTable.type, "session"),
             isNull(KeyTable.timeDeleted),
-            isNull(UserTable.timeDeleted),
+            isNull(AccountTable.timeDeleted),
             live(),
           ),
         )
@@ -105,7 +105,7 @@ export namespace Session {
     return {
       userID: row.userID,
       email: row.email,
-      role: row.role,
+      appRole: row.appRole,
       // Parsed: a row written before a preference existed is missing that key.
       timezone: zone(Prefs.parse(row.prefs)),
     };

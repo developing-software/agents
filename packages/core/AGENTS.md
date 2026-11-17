@@ -40,7 +40,7 @@
 - No top-level shim files at `src/<module>.ts` alongside `src/<module>/`.
   Consumers import through the directory via `@agents/core/<module>`.
 - SQL schemas live next to the module they belong to. Shared tables are
-  `*.central.ts` on `central.table` (`user/user.central.ts`, `auth/provider.central.ts`);
+  `*.central.ts` on `central.table` (`user/account.central.ts`, `auth/provider.central.ts`);
   per-workspace tables are `*.sql.ts` on `snakeCase.table` (`issue/issue.sql.ts`). See
   `docs/core.md#workspaces`.
 - Inside a file, order for a reader asking what the module does, not how:

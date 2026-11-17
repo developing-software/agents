@@ -41,6 +41,7 @@ CREATE TABLE "central"."key" (
 	"time_updated" timestamp(3) with time zone DEFAULT now() NOT NULL,
 	"time_deleted" timestamp(3) with time zone,
 	"user_id" char(30),
+	"workspace" text,
 	"name" varchar(255) NOT NULL,
 	"key" varchar(128) NOT NULL,
 	"type" text DEFAULT 'api' NOT NULL,
@@ -68,7 +69,7 @@ CREATE TABLE "central"."workspace" (
 	"status" text DEFAULT 'pending' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "central"."user" (
+CREATE TABLE "central"."account" (
 	"id" char(30) NOT NULL,
 	"time_created" timestamp(3) with time zone DEFAULT now() NOT NULL,
 	"time_updated" timestamp(3) with time zone DEFAULT now() NOT NULL,
@@ -77,9 +78,7 @@ CREATE TABLE "central"."user" (
 	"email" text NOT NULL,
 	"email_verified" boolean DEFAULT false NOT NULL,
 	"image" text,
-	"role" text DEFAULT 'member' NOT NULL,
-	"kind" text DEFAULT 'human' NOT NULL,
-	"owner_id" char(30),
+	"role" text DEFAULT 'user' NOT NULL,
 	"prefs" jsonb DEFAULT '{"theme":"system","locale":"en","zone":null,"date":"system","time":"system"}' NOT NULL
 );
 --> statement-breakpoint
@@ -92,4 +91,4 @@ CREATE INDEX "key_type" ON "central"."key" ("type");--> statement-breakpoint
 CREATE UNIQUE INDEX "access_user_workspace" ON "central"."access" ("user_id","workspace_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "workspace_slug" ON "central"."workspace" ("slug");--> statement-breakpoint
 CREATE UNIQUE INDEX "workspace_schema" ON "central"."workspace" ("schema");--> statement-breakpoint
-CREATE UNIQUE INDEX "user_email" ON "central"."user" ("email");
+CREATE UNIQUE INDEX "account_email" ON "central"."account" ("email");

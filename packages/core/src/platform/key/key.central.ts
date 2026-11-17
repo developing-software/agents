@@ -15,6 +15,8 @@ export const KeyTable = central.table(
     id: id(),
     ...timestamps,
     userID: ulid(),
+    // An App's key is pinned to the workspace schema the App lives in; a person's keys are not.
+    workspace: text(),
     name: varchar({ length: 255 }).notNull(),
     key: varchar({ length: 128 }).notNull(),
     type: text().$type<(typeof types)[number]>().notNull().default("api"),

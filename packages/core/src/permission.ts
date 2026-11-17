@@ -35,9 +35,15 @@ export namespace Permission {
   /** What a role holds. `delete:own` narrows the action to rows the actor created. */
   type Held = { [R in Res]?: readonly (Act<R> | `${Act<R>}:own`)[] };
 
-  /** `member` stays permissive on projects/issues (shared workspace); tighten to `:own` here. */
+  const admin = { ...Statement, panel: ["read", "create", "update:own", "delete:own"] } as const;
+
+  /**
+   * A workspace user's roles. `owner` holds what `admin` does; it differs only in who may change
+   * it. `member` stays permissive on projects/issues (shared workspace); tighten to `:own` here.
+   */
   export const Roles = {
-    admin: { ...Statement, panel: ["read", "create", "update:own", "delete:own"] },
+    owner: admin,
+    admin,
     member: {
       user: ["read", "update:own"],
       project: ["read", "create", "update", "delete"],
@@ -62,7 +68,7 @@ export namespace Permission {
   }
 
   /** True when `role` holds every listed action. `owned` unlocks the `:own` variants. */
-  export function can(role: Role | undefined, grants: Grants, owned = false) {
+  export function can(role: Role | null | undefined, grants: Grants, owned = false) {
     if (!role) return false;
     const held: any = Roles[role];
     return Object.entries(grants).every(([res, acts]: [string, any]) =>

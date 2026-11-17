@@ -23,7 +23,12 @@ describe("Session", () => {
     async ({ userID, email }) => {
       const raw = await Session.create(userID);
       // Nothing stored yet, so the zone is the UTC fallback.
-      expect(await Session.verify(raw)).toEqual({ userID, email, role: "member", timezone: "UTC" });
+      expect(await Session.verify(raw)).toEqual({
+        userID,
+        email,
+        appRole: "user",
+        timezone: "UTC",
+      });
 
       await Identity.provide("user", { userID, role: "member" }, () =>
         User.prefs({ zone: "America/Sao_Paulo" }),

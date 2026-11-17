@@ -75,7 +75,7 @@ export type ErrorResponse = {
 };
 
 /**
- * A user account.
+ * A workspace's person or App. A person's id is their account id.
  */
 export type User = {
   /**
@@ -100,11 +100,11 @@ export type User = {
    */
   image: string | null;
   /**
-   * Decides everything the account may do. Only `user:assign` can change it.
+   * Decides everything the user may do in this workspace; null outside one. Only `user:assign` can change it.
    */
-  role: "admin" | "member";
+  role: "owner" | "admin" | "member" | null;
   /**
-   * A `system` account is an App: nobody logs in as it — an external system or CI acting through API keys.
+   * A `system` user is an App: nobody logs in as it — an external system or CI acting through API keys.
    */
   kind: "human" | "system";
   /**
@@ -122,11 +122,11 @@ export type User = {
     time: "system" | "h12" | "h24";
   };
   /**
-   * When the account was disabled. Null while it is active.
+   * When the user was removed. Null while they are active.
    */
   timeDeleted: string | null;
   /**
-   * When the account was created.
+   * When the user joined.
    */
   timeCreated: string;
 };
@@ -149,15 +149,15 @@ export type Profile = {
    */
   image: string | null;
   /**
-   * A `system` account is an App: nobody logs in as it — an external system or CI acting through API keys.
+   * A `system` user is an App: nobody logs in as it — an external system or CI acting through API keys.
    */
   kind: "human" | "system";
   /**
-   * Decides everything the account may do. Only `user:assign` can change it.
+   * Decides everything the user may do in this workspace; null outside one. Only `user:assign` can change it.
    */
-  role: "admin" | "member";
+  role: "owner" | "admin" | "member" | null;
   /**
-   * When the account was created.
+   * When the user joined.
    */
   timeCreated: string;
   email: string | null;
@@ -185,9 +185,13 @@ export type Identity =
          */
         userID: string;
         /**
-         * The role held at the time.
+         * The workspace role held at the time.
          */
-        role: "admin" | "member";
+        role?: "owner" | "admin" | "member";
+        /**
+         * Whether the account behind it runs the whole app.
+         */
+        superadmin?: boolean;
         /**
          * IANA zone, when known.
          */
@@ -210,9 +214,13 @@ export type Identity =
          */
         userID: string;
         /**
-         * The role held at the time.
+         * The workspace role held at the time.
          */
-        role: "admin" | "member";
+        role?: "owner" | "admin" | "member";
+        /**
+         * Whether the account behind it runs the whole app.
+         */
+        superadmin?: boolean;
         /**
          * Exactly what it may do.
          */
@@ -235,9 +243,9 @@ export type Identity =
          */
         userID: string;
         /**
-         * The role held at the time.
+         * The workspace role held at the time.
          */
-        role: "admin" | "member";
+        role: "owner" | "admin" | "member";
         /**
          * The person answerable for the App.
          */
@@ -247,10 +255,14 @@ export type Identity =
            */
           userID: string;
           /**
-           * The role held at the time.
+           * The workspace role held at the time.
            */
-          role: "admin" | "member";
+          role: "owner" | "admin" | "member";
         };
+        /**
+         * The schema of the workspace it lives in.
+         */
+        workspace: string;
         /**
          * The key or delegation that acted, so an audit can name it.
          */
@@ -738,7 +750,7 @@ export type GetMeError = GetMeErrors[keyof GetMeErrors];
 
 export type GetMeResponses = {
   /**
-   * A user account.
+   * A workspace's person or App. A person's id is their account id.
    */
   200: User;
 };

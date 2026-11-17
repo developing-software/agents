@@ -9,9 +9,11 @@ import { ErrorCodes, VisibleError } from "../../error";
 import { Identifier } from "../../identifier";
 import { Identity } from "../../identity";
 import { Queue } from "../../lib/queue";
-import { UserTable } from "../../user/user.central";
+import { User } from "../../user";
+import { Account } from "../../user/account";
+import { AccountTable } from "../../user/account.central";
+import { UserTable } from "../../user/user.sql";
 import { Workspace } from "../../workspace";
-import { MemberTable } from "./member.sql";
 import { AccessTable, WorkspaceTable } from "./workspace.central";
 
 /**
@@ -57,25 +59,10 @@ export namespace Workspaces {
           .then((rows) => rows.at(0)),
       );
       if (!row) throw new Error(`No workspace ${input.id}`);
-      const user = input.owner;
-      const owner = user
-        ? await Central.use((tx) =>
-            tx
-              .select({ userID: UserTable.id, name: UserTable.name, email: UserTable.email })
-              .from(UserTable)
-              .where(eq(UserTable.id, user))
-              .then((rows) => rows.at(0)),
-          )
-        : undefined;
+      const owner = input.owner ? await Account.fromID(input.owner) : undefined;
       await inside(row, { schema: row.schema }, async () => {
         await Migrations.tenant(row.schema);
-        if (owner)
-          await Database.use((tx) =>
-            tx
-              .insert(MemberTable)
-              .values({ ...owner, role: "owner" })
-              .onConflictDoNothing(),
-          );
+        if (owner) await seat(owner, "owner");
       });
       await Central.use((tx) =>
         tx.update(WorkspaceTable).set({ status: "ready" }).where(eq(WorkspaceTable.id, row.id)),
@@ -125,15 +112,11 @@ export namespace Workspaces {
     ),
   );
 
-  /**
-   * The request's workspace with the caller's role, or `undefined` in multi mode before one is
-   * picked. Single mode has no setup job, so the first read seats its row and the caller.
-   */
+  /** The request's workspace with the caller's role, or `undefined` in multi mode before one is picked. */
   export const current = fn(z.void(), async () => {
     const row = await here();
     if (!row) return;
-    const role = Workspace.mode() === "single" ? await join(row) : Workspace.peek()?.role;
-    return { ...serialize(row), role };
+    return { ...serialize(row), role: Workspace.peek()?.role };
   });
 
   /** Renames a workspace; the slug moves only in multi mode, the schema never does. */
@@ -186,13 +169,13 @@ export namespace Workspaces {
     },
   );
 
-  /** The request workspace's people, from its own `member` table. */
+  /** The request workspace's people, from its own `user` table. */
   export const members = fn(z.void(), async () => {
     if (!(await current())) throw forbidden();
     return roster();
   });
 
-  /** Changes a member's role. Owners and admins only, and the last owner stays one. */
+  /** Changes a member's role: `User.assign`, which holds the last owner and self-change rules. */
   export const role = fn(
     z.object({
       userID: z
@@ -201,44 +184,14 @@ export namespace Workspaces {
       role: z.enum(Workspace.roles).meta({ description: "Their new role.", example: "admin" }),
     }),
     async (input) => {
-      const row = await here();
-      if (!row) throw forbidden();
-      await manage(row);
-      if (input.userID === Identity.userID())
-        throw new VisibleError(
-          "forbidden",
-          ErrorCodes.Permission.FORBIDDEN,
-          "You can't change your own role",
-        );
-      await Database.transaction(async (tx) => {
-        const owners = await tx
-          .select({ userID: MemberTable.userID })
-          .from(MemberTable)
-          .where(and(eq(MemberTable.role, "owner"), isNull(MemberTable.timeDeleted)));
-        if (input.role !== "owner" && owners.length === 1 && owners[0]?.userID === input.userID)
-          throw new VisibleError(
-            "conflict",
-            ErrorCodes.Conflict.LAST_OWNER,
-            "A workspace needs at least one owner",
-          );
-        const done = await tx
-          .update(MemberTable)
-          .set({ role: input.role, timeUpdated: new Date() })
-          .where(and(eq(MemberTable.userID, input.userID), isNull(MemberTable.timeDeleted)))
-          .returning({ userID: MemberTable.userID });
-        if (!done.length)
-          throw new VisibleError(
-            "not_found",
-            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
-            "Not a member of this workspace",
-          );
-      });
+      if (!(await here())) throw forbidden();
+      await User.assign({ id: input.userID, role: input.role });
     },
   );
 
   /** Every workspace for the back office, member counts read off central access in one query. */
   export const registry = fn(z.void(), async () => {
-    Identity.check({ admin: ["read"] });
+    Identity.assert.superadmin("Only a superadmin can list every workspace");
     if (Workspace.mode() === "single") await fallback();
     return Central.use((tx) =>
       tx
@@ -261,18 +214,18 @@ export namespace Workspaces {
 
   /** One workspace opened up for an operator: who can see it and its members. */
   export const inspect = fn(z.object({ slug: Info.shape.slug }), async (input) => {
-    Identity.check({ admin: ["read"] });
+    Identity.assert.superadmin("Only a superadmin can inspect a workspace");
     const row = await find(input.slug);
     const access = await Central.use((tx) =>
       tx
         .select({
           userID: AccessTable.userID,
-          name: UserTable.name,
-          email: UserTable.email,
+          name: AccountTable.name,
+          email: AccountTable.email,
           timeCreated: AccessTable.timeCreated,
         })
         .from(AccessTable)
-        .innerJoin(UserTable, eq(UserTable.id, AccessTable.userID))
+        .innerJoin(AccountTable, eq(AccountTable.id, AccessTable.userID))
         .where(eq(AccessTable.workspaceID, row.id))
         .orderBy(AccessTable.timeCreated)
         .then((rows) =>
@@ -291,7 +244,7 @@ export namespace Workspaces {
 
   /** Queues the setup job again for a workspace stuck `pending`; the job is idempotent. */
   export const retry = fn(z.object({ slug: Info.shape.slug }), async (input) => {
-    Identity.check({ admin: ["read"] });
+    Identity.assert.superadmin("Only a superadmin can retry a workspace's setup");
     const row = await find(input.slug);
     if (row.status !== "pending")
       throw new VisibleError(
@@ -318,7 +271,7 @@ export namespace Workspaces {
    * once per client `connect` picks; here every schema shares the one pool.
    */
   export const usage = fn(z.object({ slug: Info.shape.slug.optional() }), async (input) => {
-    Identity.check({ admin: ["read"] });
+    Identity.assert.superadmin("Only a superadmin can read workspace usage");
     const only = input.slug ? (await find(input.slug)).schema : undefined;
     const rows = await Central.use((tx) =>
       tx.execute<{
@@ -397,14 +350,34 @@ export namespace Workspaces {
   }
 
   /**
-   * Runs `fn` in the request's workspace — the one surfaces call. Single mode ignores `slug`;
-   * multi mode needs a slug and a known caller, else `fn` runs with none.
+   * Runs `fn` in the request's workspace; surfaces reach it through `Auth.enter`. An App runs in
+   * its own. Single mode ignores `slug` and seats a newcomer; multi mode needs a slug and a
+   * known caller, else `fn` runs with none.
    */
   export async function enter<R>(slug: string | undefined, fn: () => Promise<R>) {
-    if (Workspace.mode() === "single") return Workspace.provide(Workspace.single(), fn);
-    if (!slug || !Identity.peek() || !Identity.known()) return fn();
+    const info = Identity.peek();
+    if (info?.type === "system") return open(info.properties.workspace, fn);
+    if (Workspace.mode() === "single") {
+      const schema = Workspace.single().schema;
+      const role = info && Identity.known() ? await join(schema) : undefined;
+      return Workspace.provide({ schema, role }, fn);
+    }
+    if (!slug || !info || !Identity.known()) return fn();
     const found = await locate(slug);
     return inside(found.row, found.info, fn);
+  }
+
+  /** Runs `fn` in the ready workspace on `schema`, unchecked: for an App's own key or replay. */
+  export async function open<R>(schema: string, fn: () => Promise<R>) {
+    const row = await Central.use((tx) =>
+      tx
+        .select()
+        .from(WorkspaceTable)
+        .where(and(eq(WorkspaceTable.schema, schema), isNull(WorkspaceTable.timeDeleted)))
+        .then((rows) => rows.at(0)),
+    );
+    if (!row || row.status !== "ready") throw forbidden();
+    return inside(row, { schema: row.schema }, fn);
   }
 
   export function serialize(row: Row): Info {
@@ -440,15 +413,7 @@ export namespace Workspaces {
         ErrorCodes.Conflict.NOT_READY,
         "Workspace is still being set up",
       );
-    const member = await inside(row, { schema: row.schema }, () =>
-      Database.use((tx) =>
-        tx
-          .select({ role: MemberTable.role })
-          .from(MemberTable)
-          .where(and(eq(MemberTable.userID, user), isNull(MemberTable.timeDeleted)))
-          .then((rows) => rows.at(0)),
-      ),
-    );
+    const member = await inside(row, { schema: row.schema }, () => held(user));
     if (!member) throw forbidden();
     return { row, info: { schema: row.schema, role: member.role } satisfies Workspace.Info };
   }
@@ -476,19 +441,11 @@ export namespace Workspaces {
     );
   }
 
-  /** Throws unless the caller is the workspace's owner or admin, or a platform admin. */
+  /** Throws unless the caller is the workspace's owner or admin, or a superadmin. */
   async function manage(row: Row) {
-    if (Identity.can({ admin: ["read"] })) return;
+    if (Identity.superadmin()) return;
     const user = Identity.userID();
-    const member = await inside(row, { schema: row.schema }, () =>
-      Database.use((tx) =>
-        tx
-          .select({ role: MemberTable.role })
-          .from(MemberTable)
-          .where(and(eq(MemberTable.userID, user), isNull(MemberTable.timeDeleted)))
-          .then((rows) => rows.at(0)),
-      ),
-    );
+    const member = await inside(row, { schema: row.schema }, () => held(user));
     if (member?.role === "owner" || member?.role === "admin") return;
     throw new VisibleError(
       "forbidden",
@@ -537,58 +494,81 @@ export namespace Workspaces {
     return row;
   }
 
-  // Single mode has no setup job to seat anyone: the first to arrive owns it, the rest join
-  // as members. Returns the caller's role, or nothing for a caller with no account.
-  async function join(row: Row) {
-    if (!Identity.peek() || !Identity.known()) return;
-    const user = Identity.userID();
-    const person = await Central.use((tx) =>
+  /** The caller's live row in whichever schema is provided. */
+  function held(user: string) {
+    return Database.use((tx) =>
       tx
-        .select({ userID: UserTable.id, name: UserTable.name, email: UserTable.email })
+        .select({ role: UserTable.role })
         .from(UserTable)
-        .where(eq(UserTable.id, user))
+        .where(and(eq(UserTable.id, user), isNull(UserTable.timeDeleted)))
         .then((rows) => rows.at(0)),
     );
-    if (!person) return;
+  }
+
+  /** Adds `account` as a user of whichever schema is provided; a returning one keeps their row. */
+  function seat(account: Account.Row, role: Workspace.Role) {
+    return Database.use((tx) =>
+      tx
+        .insert(UserTable)
+        .values({
+          id: account.id,
+          name: account.name,
+          email: account.email,
+          image: account.image,
+          role,
+        })
+        .onConflictDoNothing(),
+    );
+  }
+
+  // Single mode has no setup job to seat anyone: the first to arrive owns it, the rest join
+  // as members. Returns the caller's role; nothing for an App, a removed user or no account.
+  async function join(schema: string) {
+    const user = Identity.userID();
+    const found = await Workspace.provide({ schema }, () =>
+      Database.use((tx) =>
+        tx
+          .select({ role: UserTable.role, timeDeleted: UserTable.timeDeleted })
+          .from(UserTable)
+          .where(eq(UserTable.id, user))
+          .then((rows) => rows.at(0)),
+      ),
+    );
+    if (found) return found.timeDeleted ? undefined : found.role;
+    const account = await Account.fromID(user);
+    if (!account) return;
+    const row = await fallback();
     await Central.use((tx) =>
       tx.insert(AccessTable).values({ userID: user, workspaceID: row.id }).onConflictDoNothing(),
     );
-    return inside(row, { schema: row.schema }, () =>
+    return Workspace.provide({ schema }, () =>
       Database.transaction(async (tx) => {
-        const found = await tx
-          .select({ role: MemberTable.role })
-          .from(MemberTable)
-          .where(eq(MemberTable.userID, user))
-          .then((rows) => rows.at(0));
-        if (found) return found.role;
         const empty = await tx
           .select({ n: count() })
-          .from(MemberTable)
+          .from(UserTable)
+          .where(eq(UserTable.kind, "human"))
           .then((rows) => (rows[0]?.n ?? 0) === 0);
         const role: Workspace.Role = empty ? "owner" : "member";
-        await tx
-          .insert(MemberTable)
-          .values({ ...person, role })
-          .onConflictDoNothing();
+        await seat(account, role);
         return role;
       }),
     );
   }
 
-  /** The members of whichever schema is provided. */
+  /** The people of whichever schema is provided; Apps are listed under Developers. */
   function roster() {
     return Database.use((tx) =>
       tx
         .select({
-          userID: MemberTable.userID,
-          name: MemberTable.name,
-          email: MemberTable.email,
-          role: MemberTable.role,
-          timeCreated: MemberTable.timeCreated,
+          userID: UserTable.id,
+          name: UserTable.name,
+          email: UserTable.email,
+          role: UserTable.role,
+          timeCreated: UserTable.timeCreated,
         })
-        .from(MemberTable)
-        .where(isNull(MemberTable.timeDeleted))
-        .orderBy(MemberTable.timeCreated)
+        .from(UserTable)
+        .where(and(eq(UserTable.kind, "human"), isNull(UserTable.timeDeleted)))
+        .orderBy(UserTable.timeCreated)
         .then((rows) =>
           rows.map((one) => ({ ...one, timeCreated: one.timeCreated.toISOString() })),
         ),

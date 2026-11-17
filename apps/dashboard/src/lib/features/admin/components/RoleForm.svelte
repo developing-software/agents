@@ -23,7 +23,7 @@
 			body: change
 		});
 		if (ok) return el.form?.requestSubmit();
-		el.value = row.role;
+		el.value = row.role ?? '';
 	}
 </script>
 
@@ -50,7 +50,7 @@
 			<span class="pick">
 				<Select
 					options={roles}
-					{...assign.fields.role.as('select', row.role)}
+					{...assign.fields.role.as('select', row.role ?? undefined)}
 					disabled={!!assign.pending}
 					onchange={pick}
 					aria-label="Role for {row.name}"
