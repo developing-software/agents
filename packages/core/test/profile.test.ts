@@ -2,7 +2,7 @@ import { describe, expect } from "bun:test";
 import { App } from "../src/platform/app";
 import { Event } from "../src/platform/event";
 import { Identity } from "../src/identity";
-import { Todo } from "../src/todo";
+import { Issue } from "../src/issue";
 import { User } from "../src/user";
 import { createUser, testEmail, withTestUser } from "./util";
 
@@ -30,7 +30,7 @@ describe("profile", () => {
   withTestUser(
     "a member sees only public activity; an admin sees all of it",
     async ({ userID }) => {
-      await Todo.create({ title: "Mine" });
+      await Issue.create({ title: "Mine" });
       const mate = await createUser({ name: "Mate", email: testEmail() });
       // `user.assigned` is internal, so it stays off a member's view of the admin's profile.
       await Identity.provide("user", { userID, role: "admin" }, () =>
@@ -38,7 +38,7 @@ describe("profile", () => {
       );
 
       const member = (await Event.by({ userID })).map((e) => e.type);
-      expect(member).toContain("todo.created");
+      expect(member).toContain("issue.created");
       expect(member).not.toContain("user.assigned");
 
       const admin = await Identity.provide("user", { userID, role: "admin" }, () =>

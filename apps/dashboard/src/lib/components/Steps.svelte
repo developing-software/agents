@@ -12,7 +12,7 @@
 		steps: number;
 		/** Zero-based; past the last step reads as all done. */
 		current: number;
-		/** The current step is stuck, like a blocked todo. */
+		/** The current step is stuck, like a blocked issue. */
 		danger?: boolean;
 		/** The current step's name or picker, drawn between the bars and the count. */
 		children?: Snippet;

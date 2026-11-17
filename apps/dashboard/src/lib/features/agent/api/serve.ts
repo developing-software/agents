@@ -28,7 +28,7 @@ export function forwarded(raw: unknown, models: string[]) {
     prompts: page
       ? [
           `The user is on the page "${page.title}" (${page.url}), trail: ${page.crumbs.join(" › ")}.
-"Here", "this project", "this todo" and the like refer to it; ids in the URL identify the record.`,
+"Here", "this project", "this issue" and the like refer to it; ids in the URL identify the record.`,
         ]
       : [],
   };

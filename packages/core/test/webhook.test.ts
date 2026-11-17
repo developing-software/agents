@@ -7,7 +7,7 @@ import { Identifier } from "../src/identifier";
 import { Queue } from "../src/lib/queue";
 import { memory } from "../src/lib/queue/adapter/memory";
 import { Project } from "../src/project";
-import { Todo } from "../src/todo";
+import { Issue } from "../src/issue";
 import { User } from "../src/user";
 import { sign } from "../src/util/sign";
 import { Webhook } from "../src/platform/webhook";
@@ -37,12 +37,12 @@ describe("webhook", () => {
     "delivers a published event as a signed CloudEvent",
     async ({ userID }) => {
       const to = receiver();
-      const hook = await Webhook.create({ url: to.url, types: ["todo.created"] });
+      const hook = await Webhook.create({ url: to.url, types: ["issue.created"] });
 
-      const todo = await Queue.provide(memory(), async () => {
-        const todo = await Todo.create({ title: "Write the report" });
+      const issue = await Queue.provide(memory(), async () => {
+        const issue = await Issue.create({ title: "Write the report" });
         await Queue.drain();
-        return todo;
+        return issue;
       });
 
       expect(to.hits).toHaveLength(1);
@@ -51,9 +51,9 @@ describe("webhook", () => {
       expect(hit.headers.get("content-type")).toStartWith("application/cloudevents+json");
       expect(body).toMatchObject({
         specversion: "1.0",
-        type: "todo.created",
-        source: `${Bus.app}/todo`,
-        subject: todo.id,
+        type: "issue.created",
+        source: `${Bus.app}/issue`,
+        subject: issue.id,
         authtype: "user",
         authid: userID,
       });
@@ -64,7 +64,7 @@ describe("webhook", () => {
       expect(hit.headers.get("x-webhook-id")).toBe(body.id);
 
       // The log stores exactly what the subscriber got.
-      const row = (await Event.list({ source: "todo", sourceID: todo.id })).data[0]!;
+      const row = (await Event.list({ source: "issue", sourceID: issue.id })).data[0]!;
       expect(row.id).toBe(body.id);
       expect(row.data).toEqual(body.data);
       to.stop();
@@ -94,20 +94,20 @@ describe("webhook", () => {
   );
 
   withTestUser(
-    "a status change still reaches subscribers, through todo.updated",
+    "a status change still reaches subscribers, through issue.updated",
     async () => {
       const to = receiver();
-      await Webhook.create({ url: to.url, types: ["todo.updated"] });
-      const { id } = await Todo.create({ title: "Ship it" });
+      await Webhook.create({ url: to.url, types: ["issue.updated"] });
+      const { id } = await Issue.create({ title: "Ship it" });
 
       await Queue.provide(memory(), async () => {
-        await Todo.update({ id, status: "active" });
+        await Issue.update({ id, status: "active" });
         await Queue.drain();
       });
 
       expect(to.hits).toHaveLength(1);
       const body = JSON.parse(to.hits[0]!.body);
-      expect(body.data.todo.status).toBe("active");
+      expect(body.data.issue.status).toBe("active");
       expect(body.data.changes.status).toEqual({ before: "backlog", after: "active" });
       to.stop();
     },
@@ -118,7 +118,7 @@ describe("webhook", () => {
     "a type it did not subscribe to is skipped",
     async () => {
       const to = receiver();
-      await Webhook.create({ url: to.url, types: ["todo.updated"] });
+      await Webhook.create({ url: to.url, types: ["issue.updated"] });
 
       await Queue.provide(memory(), async () => {
         await Project.create({ name: "Elsewhere" });
@@ -136,13 +136,13 @@ describe("webhook", () => {
     async () => {
       const good = receiver();
       const bad = receiver(500);
-      await Webhook.create({ url: good.url, types: ["todo.updated"] });
-      const broken = await Webhook.create({ url: bad.url, types: ["todo.updated"] });
-      const { id } = await Todo.create({ title: "Ship it" });
+      await Webhook.create({ url: good.url, types: ["issue.updated"] });
+      const broken = await Webhook.create({ url: bad.url, types: ["issue.updated"] });
+      const { id } = await Issue.create({ title: "Ship it" });
 
       const queue = memory();
       await Queue.provide(queue, async () => {
-        await Todo.update({ id, title: "Ship it now" });
+        await Issue.update({ id, title: "Ship it now" });
         await Queue.drain();
       });
 
@@ -165,15 +165,15 @@ describe("webhook", () => {
     "a subscription that keeps failing turns itself off",
     async () => {
       const bad = receiver(500);
-      const hook = await Webhook.create({ url: bad.url, types: ["todo.removed"] });
+      const hook = await Webhook.create({ url: bad.url, types: ["issue.removed"] });
       // One short of the limit, so the next failure is the one that trips it.
       await Database.use((tx) =>
         tx.update(WebhookTable).set({ failures: 19 }).where(eq(WebhookTable.id, hook.id)),
       );
-      const { id } = await Todo.create({ title: "Doomed" });
+      const { id } = await Issue.create({ title: "Doomed" });
 
       await Queue.provide(memory(), async () => {
-        await Todo.remove(id);
+        await Issue.remove(id);
         await Queue.drain();
       });
 
@@ -189,11 +189,11 @@ describe("webhook", () => {
     "removing a subscription cancels the delivery already queued",
     async () => {
       const to = receiver();
-      const hook = await Webhook.create({ url: to.url, types: ["todo.removed"] });
-      const { id } = await Todo.create({ title: "Doomed" });
+      const hook = await Webhook.create({ url: to.url, types: ["issue.removed"] });
+      const { id } = await Issue.create({ title: "Doomed" });
 
       await Queue.provide(memory(), async () => {
-        await Todo.remove(id);
+        await Issue.remove(id);
         await Webhook.remove(hook.id);
         await Queue.drain();
       });

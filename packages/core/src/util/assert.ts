@@ -4,7 +4,7 @@ export namespace Assert {
   /**
    * Assertions about one resource, so its name is written once per module.
    *
-   * @param resource The noun a miss is reported under — `Todo not found`.
+   * @param resource The noun a miss is reported under — `Issue not found`.
    */
   export function create(resource = "Resource") {
     return {

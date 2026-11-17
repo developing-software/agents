@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { validator, authRequired } from "../common";
 import { describe } from "../doc";
-import { Insights } from "@agents/core/todo";
+import { Insights } from "@agents/core/issue";
 
 export namespace InsightsApi {
   const doc = describe("Insights");

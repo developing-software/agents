@@ -50,9 +50,9 @@ describe("actor", () => {
   });
 
   test("internal with a narrow scope can't exceed it", () => {
-    Identity.internal("sync", { todo: ["read"] }, () => {
-      expect(Identity.can({ todo: ["read"] })).toBe(true);
-      expect(Identity.can({ todo: ["update"] })).toBe(false);
+    Identity.internal("sync", { issue: ["read"] }, () => {
+      expect(Identity.can({ issue: ["read"] })).toBe(true);
+      expect(Identity.can({ issue: ["update"] })).toBe(false);
       expect(() => Identity.check({ user: ["create"] })).toThrow(VisibleError);
     });
   });
@@ -71,14 +71,14 @@ describe("actor", () => {
   });
 
   test("an agent holds its user's role, narrowed to its scope", () => {
-    const scope = { todo: ["read"] } as const;
+    const scope = { issue: ["read"] } as const;
     Identity.provide("agent", { name: "claude", userID: "usr_1", role: "admin", scope }, () => {
-      expect(Identity.can({ todo: ["read"] })).toBe(true);
-      expect(Identity.can({ todo: ["delete"] })).toBe(false);
+      expect(Identity.can({ issue: ["read"] })).toBe(true);
+      expect(Identity.can({ issue: ["delete"] })).toBe(false);
       expect(Identity.userID()).toBe("usr_1");
     });
     Identity.provide("agent", { name: "copilot", userID: "usr_1", role: "member" }, () => {
-      expect(Identity.can({ todo: ["delete"] })).toBe(true);
+      expect(Identity.can({ issue: ["delete"] })).toBe(true);
       expect(Identity.can({ user: ["delete"] })).toBe(false);
       expect(new VisibleError("forbidden", "x", "y").statusCode()).toBe(403);
     });

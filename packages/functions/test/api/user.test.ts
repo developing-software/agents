@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test";
-import { Todo } from "@agents/core/todo";
+import { Issue } from "@agents/core/issue";
 import { createUser, setupApiTest } from "./util";
 
 const { test, validateOpenAPIRoute, userID } = setupApiTest();
@@ -28,8 +28,8 @@ describe("user", () => {
   });
 
   test("GET /user/:id/history", async () => {
-    await Todo.create({ title: "Mine" });
+    await Issue.create({ title: "Mine" });
     const response = await validateOpenAPIRoute("get", "/user/:id/history", { id: userID() });
-    expect(response.map((e: { type: string }) => e.type)).toContain("todo.created");
+    expect(response.map((e: { type: string }) => e.type)).toContain("issue.created");
   });
 });

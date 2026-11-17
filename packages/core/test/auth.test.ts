@@ -210,7 +210,7 @@ describe("auth resolve", () => {
     const key = await Key.mint({ userID: bot.id, name: "k" });
 
     await Identity.enter(await Auth.resolve(key.key!), async () => {
-      expect(Identity.can({ todo: ["read"] })).toBe(true);
+      expect(Identity.can({ issue: ["read"] })).toBe(true);
       expect(Identity.can({ admin: ["read"] })).toBe(false);
     });
 
@@ -221,29 +221,29 @@ describe("auth resolve", () => {
   it("a delegation resolves to an agent acting for its user, narrowed to its scope", async () => {
     const user = await createUser({ name: "Ada", email: testEmail() });
     const token = await as(user.id, () =>
-      Delegation.create({ name: "copilot", scope: { todo: ["read"] } }),
+      Delegation.create({ name: "copilot", scope: { issue: ["read"] } }),
     );
     const info = await Auth.resolve(token);
     expect(info.type).toBe("agent");
     await Identity.enter(info, async () => {
       expect(Identity.userID()).toBe(user.id);
-      expect(Identity.can({ todo: ["read"] })).toBe(true);
-      expect(Identity.can({ todo: ["create"] })).toBe(false);
+      expect(Identity.can({ issue: ["read"] })).toBe(true);
+      expect(Identity.can({ issue: ["create"] })).toBe(false);
     });
   });
 
   it("a scoped agent can only mint a delegation as narrow as itself", async () => {
     const user = await createUser({ name: "Ada", email: testEmail() });
     const token = await as(user.id, () =>
-      Delegation.create({ name: "copilot", scope: { todo: ["read"] } }),
+      Delegation.create({ name: "copilot", scope: { issue: ["read"] } }),
     );
     await Identity.enter(await Auth.resolve(token), async () => {
       await expect(
-        Delegation.create({ name: "sub", scope: { todo: ["read", "delete"] } }),
+        Delegation.create({ name: "sub", scope: { issue: ["read", "delete"] } }),
       ).rejects.toThrow(/can't hold more/);
       // No scope inherits the lender's, never the whole role.
       const sub = await Auth.resolve(await Delegation.create({ name: "sub" }));
-      expect(sub.type === "agent" && sub.properties.scope).toEqual({ todo: ["read"] });
+      expect(sub.type === "agent" && sub.properties.scope).toEqual({ issue: ["read"] });
     });
   });
 

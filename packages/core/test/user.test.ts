@@ -55,7 +55,7 @@ describe("user", () => {
   });
 
   withTestUser("a scoped agent can't change the account or set a password", async ({ userID }) => {
-    await Identity.delegate("copilot", { todo: ["read"] }, async () => {
+    await Identity.delegate("copilot", { issue: ["read"] }, async () => {
       expect(() => User.update({ name: "Taken" })).toThrow(/user:update/);
       expect(() => User.prefs({ theme: "dark" })).toThrow(/user:update/);
       await expect(Auth.Pass.set({ password: "password123" })).rejects.toThrow(/user:update/);

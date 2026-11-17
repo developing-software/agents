@@ -37,7 +37,7 @@ export namespace Project {
     })
     .meta({
       ref: "Project",
-      description: "A container for todos. Todos point at it through source/sourceID.",
+      description: "A container for issues. Issues point at it through source/sourceID.",
       example: Examples.Project,
     });
   export type Info = z.infer<typeof Info>;
@@ -79,7 +79,7 @@ export namespace Project {
         return project;
       });
     },
-    { title: "Create project", description: "Create a project to hang todos off." },
+    { title: "Create project", description: "Create a project to hang issues off." },
   );
 
   export const list = fn(
@@ -107,7 +107,7 @@ export namespace Project {
     {
       title: "List projects",
       description:
-        'List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on a todo, with source "project".',
+        'List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on an issue, with source "project".',
     },
   );
 
@@ -119,7 +119,7 @@ export namespace Project {
         tx
           .select()
           .from(ProjectTable)
-          // Overlap with todo/index.ts is the shared CRUD order, not shared logic: it spans
+          // Overlap with issue/index.ts is the shared CRUD order, not shared logic: it spans
           // the fromID/update boundary and extracts to nothing.
           // fallow-ignore-next-line code-duplication
           .where(and(eq(ProjectTable.id, id), isNull(ProjectTable.timeDeleted)))
@@ -230,7 +230,7 @@ export namespace Project {
   );
 
   /**
-   * Soft-deletes the project. Its todos keep pointing at it and stay reachable from the
+   * Soft-deletes the project. Its issues keep pointing at it and stay reachable from the
    * unscoped views — nothing is orphaned, and undoing is one `timeDeleted` away.
    */
   export const remove = fn(
@@ -249,7 +249,7 @@ export namespace Project {
     },
     {
       title: "Delete project",
-      description: "Soft-delete a project. Its todos stay reachable from the unscoped views.",
+      description: "Soft-delete a project. Its issues stay reachable from the unscoped views.",
     },
   );
 

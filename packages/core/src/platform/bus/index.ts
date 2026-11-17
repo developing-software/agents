@@ -9,13 +9,13 @@ import { Webhook } from "../webhook";
 import { EventTable } from "../event/event.sql";
 
 /**
- * Declared, typed events. A slice defines its events (`Todo.Event.Created`) and publishes
+ * Declared, typed events. A slice defines its events (`Issue.Event.Created`) and publishes
  * them; a handler elsewhere subscribes. One subscriber per type — fan-out is a broker's job.
  */
 export namespace Bus {
   export type CloudEvent<T = unknown> = Envelope<T>;
 
-  /** Names this app in every event's `source` (`template/todo`). A fork renames it. */
+  /** Names this app in every event's `source` (`template/issue`). A fork renames it. */
   export const app = "template";
 
   /**

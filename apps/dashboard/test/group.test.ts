@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import type { Todo } from "@agents/core/todo";
-import { group } from "../src/lib/features/todos/group";
-import { STATUSES } from "../src/lib/features/todos/status";
+import type { Issue } from "@agents/core/issue";
+import { group } from "../src/lib/features/issues/group";
+import { STATUSES } from "../src/lib/features/issues/status";
 
-const BASE: Todo.Info = {
+const BASE: Issue.Info = {
   id: "t0",
   createdBy: "u0",
   assignee: null,
@@ -25,7 +25,7 @@ const BASE: Todo.Info = {
   timeCreated: "2026-06-07T00:00:00.000Z",
 };
 
-const make = (over: Partial<Todo.Info>) => ({ ...BASE, ...over });
+const make = (over: Partial<Issue.Info>) => ({ ...BASE, ...over });
 
 describe("group by status", () => {
   it("returns every status column in canonical order, even when empty", () => {
@@ -42,7 +42,7 @@ describe("group by status", () => {
 });
 
 describe("group by stage", () => {
-  it("buckets by stage and folds stageless todos into one group", () => {
+  it("buckets by stage and folds stageless issues into one group", () => {
     const out = group(
       [make({ id: "a", stage: "build" }), make({ id: "b", stage: "build" }), make({ id: "c" })],
       "stage",
@@ -89,8 +89,8 @@ describe("group by stage", () => {
 });
 
 describe("group by assignee", () => {
-  const ana: Todo.Assignee = { id: "u1", name: "Ana", image: null };
-  const bea: Todo.Assignee = { id: "u2", name: "Bea", image: null };
+  const ana: Issue.Assignee = { id: "u1", name: "Ana", image: null };
+  const bea: Issue.Assignee = { id: "u2", name: "Bea", image: null };
 
   it("keys by user id and labels with the name", () => {
     const out = group([make({ id: "a", assignee: ana }), make({ id: "b" })], "assignee");

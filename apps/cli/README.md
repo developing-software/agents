@@ -54,11 +54,11 @@ new ones show up automatically after `bun run gen`.
 
 ```sh
 template-cli api                              # list callable methods
-template-cli api getTodo                      # GET /todo
-template-cli api postTodo --body.title "Ship it"   # POST /todo
-template-cli api postTodo '{"body":{"title":"Ship"}}'  # same, via a JSON blob
-template-cli api getTodoById --path.id tod_123
-template-cli api getTodo --query.search ship --query.pageSize 10
+template-cli api getIssue                      # GET /issue
+template-cli api postIssue --body.title "Ship it"   # POST /issue
+template-cli api postIssue '{"body":{"title":"Ship"}}'  # same, via a JSON blob
+template-cli api getIssueById --path.id iss_123
+template-cli api getIssue --query.search ship --query.pageSize 10
 ```
 
 Flags map to call params, grouped the way the SDK takes them: `--path.<key>`, `--query.<key>`,

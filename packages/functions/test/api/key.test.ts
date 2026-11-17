@@ -7,9 +7,9 @@ import { Delegation } from "@agents/core/auth/delegation";
 const { test, validateOpenAPIRoute, noAuth, get, userID } = setupApiTest();
 
 describe("key", () => {
-  // A delegation scoped to reading todos must not trade itself for a full-power `sk-` key.
+  // A delegation scoped to reading issues must not trade itself for a full-power `sk-` key.
   test("a scoped agent gets 403 on POST /key", async () => {
-    const token = await Delegation.create({ name: "copilot", scope: { todo: ["read"] } });
+    const token = await Delegation.create({ name: "copilot", scope: { issue: ["read"] } });
     const response = await app.request("/key", {
       method: "post",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -68,7 +68,7 @@ describe("key", () => {
     expect(me.status).toBe(200);
     expect(await me.json()).toMatchObject({ id: userID() });
 
-    expect((await app.request("/todo", { headers: auth })).status).toBe(200);
+    expect((await app.request("/issue", { headers: auth })).status).toBe(200);
 
     await Key.remove(key.id);
 

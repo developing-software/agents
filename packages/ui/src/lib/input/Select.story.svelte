@@ -3,7 +3,7 @@
 	import Select from './Select.svelte';
 
 	const options = [
-		{ value: 'todo', label: 'Todo' },
+		{ value: 'issue', label: 'Issue' },
 		{ value: 'doing', label: 'Doing', hint: 'in progress' },
 		{ value: 'done', label: 'Done' }
 	];
@@ -14,7 +14,7 @@
 		of: Select,
 		base: { options },
 		props: {
-			value: { type: 'select', value: 'todo', options: ['todo', 'doing', 'done'] },
+			value: { type: 'select', value: 'issue', options: ['issue', 'doing', 'done'] },
 			disabled: { type: 'bool', value: false }
 		},
 		variants: [

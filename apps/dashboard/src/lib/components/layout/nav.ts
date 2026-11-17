@@ -3,7 +3,7 @@ import type { LucideIcon } from "@lucide/svelte";
 import ChartLine from "@lucide/svelte/icons/chart-line";
 import Files from "@lucide/svelte/icons/files";
 import FolderKanban from "@lucide/svelte/icons/folder-kanban";
-import ListTodo from "@lucide/svelte/icons/list-todo";
+import ListIssue from "@lucide/svelte/icons/list-todo";
 import type { Permission } from "@agents/core/permission";
 import type { Component } from "svelte";
 
@@ -38,7 +38,7 @@ export const home: Section[] = [
   {
     items: [
       { href: "/projects", label: "Projects", icon: FolderKanban },
-      { href: "/todos", label: "Todos", icon: ListTodo },
+      { href: "/issues", label: "Issues", icon: ListIssue },
       { href: "/files", label: "Files", icon: Files },
       { href: "/insights", label: "Insights", icon: ChartLine },
     ],

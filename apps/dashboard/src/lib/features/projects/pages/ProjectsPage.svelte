@@ -27,7 +27,7 @@
 	createHotkey(hotkeys.search, () => search?.focus());
 </script>
 
-<Header.Root title="Projects" lead="Each project files its own todos, stages and insights.">
+<Header.Root title="Projects" lead="Each project files its own issues, stages and insights.">
 	{#snippet actions()}
 		{@render extra?.()}
 		<Button variant="primary" onclick={add}>New project <Kbd keys="C" /></Button>
@@ -71,7 +71,7 @@
 			{/snippet}
 		</Empty>
 	{:else}
-		<Empty>No projects yet. Press <Kbd keys="C" /> to create one and start filing todos.</Empty>
+		<Empty>No projects yet. Press <Kbd keys="C" /> to create one and start filing issues.</Empty>
 	{/if}
 {:else}
 	<List.Root label="Projects">

@@ -13,7 +13,7 @@ export const spec = memo(() =>
     documentation: {
       info: {
         title: "Template API",
-        description: "Projects, todos, insights, users, keys, files and webhooks.",
+        description: "Projects, issues, insights, users, keys, files and webhooks.",
         version: pkg.version ?? "1.0.0",
       },
       components: {

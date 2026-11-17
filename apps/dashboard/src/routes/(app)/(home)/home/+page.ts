@@ -1,6 +1,6 @@
 import { zone } from "@agents/core/user/prefs";
 import { last, today } from "@agents/ui/day";
-import { list, statuses } from "#lib/features/todos/api/todos.query.ts";
+import { list, statuses } from "#lib/features/issues/api/issues.query.ts";
 import { warm } from "#lib/query.ts";
 import type { PageLoad } from "./$types";
 

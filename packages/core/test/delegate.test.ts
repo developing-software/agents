@@ -10,26 +10,26 @@ const user = { userID: "usr_1", role: "member" } as const;
 describe("delegate", () => {
   test("for a user: their role, narrowed to the grants, still answerable as them", () =>
     Identity.provide("user", user, () =>
-      Identity.delegate("copilot", { todo: ["read"] }, () => {
+      Identity.delegate("copilot", { issue: ["read"] }, () => {
         expect(Identity.use()).toMatchObject({ type: "agent", properties: { name: "copilot" } });
         expect(Identity.userID()).toBe("usr_1");
-        expect(Identity.can({ todo: ["read"] })).toBe(true);
-        expect(Identity.can({ todo: ["delete"] })).toBe(false);
+        expect(Identity.can({ issue: ["read"] })).toBe(true);
+        expect(Identity.can({ issue: ["delete"] })).toBe(false);
       }),
     ));
 
   test("without grants the agent copies the user's role whole", () =>
     Identity.provide("user", user, () =>
       Identity.delegate("copilot", undefined, () => {
-        expect(Identity.can({ todo: ["delete"] })).toBe(true);
+        expect(Identity.can({ issue: ["delete"] })).toBe(true);
         expect(Identity.can({ user: ["delete"] })).toBe(false);
       }),
     ));
 
   test("an agent can only narrow, and an App's account can't delegate at all", () => {
     Identity.provide("user", user, () =>
-      Identity.delegate("copilot", { todo: ["read"] }, () =>
-        expect(() => Identity.delegate("sub", { todo: ["delete"] }, () => {})).toThrow(),
+      Identity.delegate("copilot", { issue: ["read"] }, () =>
+        expect(() => Identity.delegate("sub", { issue: ["delete"] }, () => {})).toThrow(),
       ),
     );
     const owner = { userID: "usr_2", role: "admin" } as const;
@@ -39,17 +39,17 @@ describe("delegate", () => {
   });
 
   test("internal narrows to another internal holding exactly its grants", () =>
-    Identity.internal("sync", { user: ["create"], todo: ["read"] }, () =>
+    Identity.internal("sync", { user: ["create"], issue: ["read"] }, () =>
       Identity.delegate("auth", { user: ["create"] }, () => {
         expect(Identity.use()).toEqual({
           type: "internal",
           properties: { name: "auth", scope: { user: ["create"] } },
         });
         expect(Identity.can({ user: ["create"] })).toBe(true);
-        expect(Identity.can({ todo: ["read"] })).toBe(false);
+        expect(Identity.can({ issue: ["read"] })).toBe(false);
         expect(Identity.known()).toBe(false);
         expect(() => Identity.userID()).toThrow();
-        expect(() => Identity.delegate("x", { todo: ["delete"] }, () => {})).toThrow();
+        expect(() => Identity.delegate("x", { issue: ["delete"] }, () => {})).toThrow();
       }),
     ));
 

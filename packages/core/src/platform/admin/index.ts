@@ -7,7 +7,7 @@ import { Common } from "../../common";
 import { Database } from "../../drizzle";
 import { ProjectTable } from "../../project/project.sql";
 import { JobTable } from "../../lib/queue/queue.sql";
-import { TodoTable } from "../../todo/todo.sql";
+import { IssueTable } from "../../issue/issue.sql";
 import { User } from "../../user";
 import { UserTable } from "../../user/user.sql";
 
@@ -127,21 +127,21 @@ export namespace Admin {
   export const counts = fn(z.void(), () => {
     Identity.check({ admin: ["read"] });
     return Database.use(async (tx) => {
-      const one = (table: typeof UserTable | typeof ProjectTable | typeof TodoTable, where?: any) =>
+      const one = (table: typeof UserTable | typeof ProjectTable | typeof IssueTable, where?: any) =>
         tx
           .select({ n: count() })
           .from(table as any)
           .where(where)
           .then((r) => r[0]?.n ?? 0);
 
-      const [users, disabled, projects, todos, done] = await Promise.all([
+      const [users, disabled, projects, issues, done] = await Promise.all([
         one(UserTable, isNull(UserTable.timeDeleted)),
         one(UserTable, isNotNull(UserTable.timeDeleted)),
         one(ProjectTable, isNull(ProjectTable.timeDeleted)),
-        one(TodoTable, isNull(TodoTable.timeDeleted)),
-        one(TodoTable, isNotNull(TodoTable.timeDone)),
+        one(IssueTable, isNull(IssueTable.timeDeleted)),
+        one(IssueTable, isNotNull(IssueTable.timeDone)),
       ] as const);
-      return { users, disabled, projects, todos, done };
+      return { users, disabled, projects, issues, done };
     });
   });
 

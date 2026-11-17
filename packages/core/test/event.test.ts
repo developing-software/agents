@@ -4,7 +4,7 @@ import { Identity } from "../src/identity";
 import { Bus } from "../src/platform/bus";
 import { Event } from "../src/platform/event";
 import { Identifier } from "../src/identifier";
-import { Todo } from "../src/todo";
+import { Issue } from "../src/issue";
 import { createUser, testEmail, withTestUser } from "./util";
 
 const Thing = Bus.define("test.thing", z.object({}));
@@ -38,8 +38,8 @@ describe("event", () => {
       /admin:read/,
     );
     await Identity.delegate("copilot", { project: ["read"] }, () =>
-      expect(() => Event.list({ source: "todo", sourceID: Identifier.create("todo") })).toThrow(
-        /todo:read/,
+      expect(() => Event.list({ source: "issue", sourceID: Identifier.create("issue") })).toThrow(
+        /issue:read/,
       ),
     );
   });
@@ -64,44 +64,44 @@ describe("event", () => {
   });
 
   withTestUser("a pinned read shows every actor, not just the caller", async ({ userID }) => {
-    const { id } = await Todo.create({ title: "Shared", source: "test", sourceID: "shared" });
+    const { id } = await Issue.create({ title: "Shared", source: "test", sourceID: "shared" });
     const mate = await createUser({ name: "Mate", email: testEmail() });
     await Identity.provide("user", { userID: mate.id, role: "member" }, () =>
-      Todo.update({ id, status: "active" }),
+      Issue.update({ id, status: "active" }),
     );
 
-    const events = (await Event.list({ source: "todo", sourceID: id })).data;
+    const events = (await Event.list({ source: "issue", sourceID: id })).data;
     expect(events.map((e) => e.userID)).toContain(mate.id);
     expect(events.map((e) => e.userID)).toContain(userID);
     // A teammate sees who, not their role, zone or credential.
     expect(events.every((e) => e.identity === null)).toBe(true);
   });
 
-  withTestUser("todo mutations emit the expected event trail", async ({ userID }) => {
-    const { id } = await Todo.create({ title: "Ship it", tags: ["work"] });
-    await Todo.update({ id, status: "active" });
-    await Todo.update({ id, assignee: userID });
-    await Todo.update({ id, status: "done" });
-    await Todo.remove(id);
+  withTestUser("issue mutations emit the expected event trail", async ({ userID }) => {
+    const { id } = await Issue.create({ title: "Ship it", tags: ["work"] });
+    await Issue.update({ id, status: "active" });
+    await Issue.update({ id, assignee: userID });
+    await Issue.update({ id, status: "done" });
+    await Issue.remove(id);
 
-    const events = (await Event.list({ source: "todo", sourceID: id })).data;
+    const events = (await Event.list({ source: "issue", sourceID: id })).data;
     const types = events.map((e) => e.type).sort();
-    // Each move also emits the public `todo.updated`, which is the only type webhooks see.
+    // Each move also emits the public `issue.updated`, which is the only type webhooks see.
     expect(types).toEqual(
       [
-        "todo.assigned",
-        "todo.created",
-        "todo.removed",
-        "todo.status",
-        "todo.status",
-        "todo.updated",
-        "todo.updated",
-        "todo.updated",
+        "issue.assigned",
+        "issue.created",
+        "issue.removed",
+        "issue.status",
+        "issue.status",
+        "issue.updated",
+        "issue.updated",
+        "issue.updated",
       ].sort(),
     );
     expect(events.every((e) => e.tags.includes("work"))).toBe(true);
     // The stored data is the declared payload, the same thing a webhook receives.
-    const removed = events.find((e) => e.type === "todo.removed")!;
+    const removed = events.find((e) => e.type === "issue.removed")!;
     expect(removed.data).toMatchObject({ id, title: "Ship it", status: "done" });
   });
 });

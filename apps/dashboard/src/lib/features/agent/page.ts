@@ -9,7 +9,7 @@ export function builtins() {
     toolDefinition({
       name: "navigate",
       description:
-        "Opens a page of the app in the user's browser, by path (e.g. /todos, /projects/<id>).",
+        "Opens a page of the app in the user's browser, by path (e.g. /issues, /projects/<id>).",
       inputSchema: z.object({ path: z.string().startsWith("/") }),
     }).client(async ({ path }) => {
       await goto(path);

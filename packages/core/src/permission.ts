@@ -10,7 +10,7 @@ export namespace Permission {
     admin: ["read"],
     user: ["read", "create", "update", "delete", "assign"],
     project: ["read", "create", "update", "delete"],
-    todo: ["read", "create", "update", "delete"],
+    issue: ["read", "create", "update", "delete"],
     key: ["read", "create", "update", "delete"],
     webhook: ["read", "create", "update", "delete"],
     // External systems registered in Developers: a system account, its keys and its inbound secret.
@@ -35,13 +35,13 @@ export namespace Permission {
   /** What a role holds. `delete:own` narrows the action to rows the actor created. */
   type Held = { [R in Res]?: readonly (Act<R> | `${Act<R>}:own`)[] };
 
-  /** `member` stays permissive on projects/todos (shared workspace); tighten to `:own` here. */
+  /** `member` stays permissive on projects/issues (shared workspace); tighten to `:own` here. */
   export const Roles = {
     admin: { ...Statement, panel: ["read", "create", "update:own", "delete:own"] },
     member: {
       user: ["read", "update:own"],
       project: ["read", "create", "update", "delete"],
-      todo: ["read", "create", "update", "delete"],
+      issue: ["read", "create", "update", "delete"],
       key: ["read:own", "create", "delete:own"],
       file: ["read", "create", "update", "delete"],
       feedback: ["read:own", "create"],

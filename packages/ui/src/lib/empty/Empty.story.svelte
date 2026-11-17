@@ -25,7 +25,7 @@
 	<figure>
 		<figcaption>nothing yet</figcaption>
 		<Empty>
-			No projects yet. Create one to start filing todos.
+			No projects yet. Create one to start filing issues.
 			{#snippet action()}
 				<Button>New project</Button>
 			{/snippet}

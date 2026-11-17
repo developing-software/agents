@@ -7,9 +7,9 @@ describe("methods", () => {
   it("reflects the SDK's operation functions, not the TanStack helpers", () => {
     const names = methods();
     expect(names).toContain("getMe");
-    expect(names).toContain("getTodo");
-    expect(names).toContain("postTodo");
-    expect(names).not.toContain("getTodoOptions");
+    expect(names).toContain("getIssue");
+    expect(names).toContain("postIssue");
+    expect(names).not.toContain("getIssueOptions");
   });
 
   it("returns sorted, non-empty names", () => {
@@ -45,8 +45,8 @@ describe("params", () => {
   });
 
   it("nests dotted keys into the SDK's groups", () => {
-    expect(params(["--path.id", "tod_1", "--body.title=hi", "--body.done"])).toEqual({
-      path: { id: "tod_1" },
+    expect(params(["--path.id", "iss_1", "--body.title=hi", "--body.done"])).toEqual({
+      path: { id: "iss_1" },
       body: { title: "hi", done: true },
     });
   });
@@ -60,7 +60,7 @@ describe("params", () => {
   });
 
   it("keeps numeric-looking strings that are not numbers as strings", () => {
-    expect(params(["--id", "todo_01ABC"])).toEqual({ id: "todo_01ABC" });
+    expect(params(["--id", "issue_01ABC"])).toEqual({ id: "issue_01ABC" });
   });
 
   it("parses the --key=value form", () => {
@@ -136,9 +136,9 @@ describe("output", () => {
     const log = console.log;
     const spy = mock();
     console.log = spy;
-    output({ data: { id: "todo_1", done: false } });
+    output({ data: { id: "issue_1", done: false } });
     console.log = log;
-    expect(spy).toHaveBeenCalledWith(JSON.stringify({ id: "todo_1", done: false }, null, 2));
+    expect(spy).toHaveBeenCalledWith(JSON.stringify({ id: "issue_1", done: false }, null, 2));
   });
 });
 

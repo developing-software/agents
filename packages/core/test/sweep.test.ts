@@ -3,7 +3,7 @@ import { Identity } from "../src/identity";
 import { Permission } from "../src/permission";
 import { VisibleError } from "../src/error";
 import { Project } from "../src/project";
-import { Insights, Todo } from "../src/todo";
+import { Insights, Issue } from "../src/issue";
 import { User } from "../src/user";
 import { Key } from "../src/platform/key";
 import { Webhook } from "../src/platform/webhook";
@@ -21,7 +21,7 @@ type Act<R extends Res> = (typeof Permission.Statement)[R][number];
 type Op = ((input: any) => unknown) & { schema: unknown };
 
 /** Rows owned by someone else, so a member's `:own` grants never unlock them. */
-const fx = { me: "", other: "", project: "", todo: "", webhook: "", app: "" };
+const fx = { me: "", other: "", project: "", issue: "", webhook: "", app: "" };
 
 /**
  * One real call per op, under the grant it must be denied without. `own` marks an op that only
@@ -72,24 +72,24 @@ const ops = [
   entry("project", "update", Project.annotate, () => ({ id: fx.project, unset: ["x.dev/x"] })),
   entry("project", "delete", Project.remove, () => fx.project),
 
-  entry("todo", "read", Todo.list, () => ({})),
-  entry("todo", "read", Todo.fromID, () => fx.todo),
-  entry("todo", "read", Todo.stages, () => ({})),
-  entry("todo", "read", Todo.labels, () => ({})),
-  entry("todo", "read", Insights.stats, () => range),
-  entry("todo", "read", Insights.status, () => range),
-  entry("todo", "read", Insights.load, () => range),
-  entry("todo", "read", Insights.due, () => ({})),
-  entry("todo", "read", Insights.calendar, () => range),
-  entry("todo", "read", Insights.activity, () => range),
-  entry("todo", "create", Todo.create, () => ({ title: "Sweep" })),
-  entry("todo", "update", Todo.update, () => ({ id: fx.todo, title: "Renamed" })),
-  entry("todo", "update", Todo.rename, () => ({ from: "a", to: "b" })),
-  entry("todo", "update", Todo.move, () => ({ id: fx.todo, parentID: null })),
-  entry("todo", "update", Todo.link, () => ({ id: fx.todo, url: "https://x.dev" })),
-  entry("todo", "update", Todo.unlink, () => ({ id: fx.todo, url: "https://x.dev" })),
-  entry("todo", "update", Todo.annotate, () => ({ id: fx.todo, unset: ["x.dev/x"] })),
-  entry("todo", "delete", Todo.remove, () => fx.todo),
+  entry("issue", "read", Issue.list, () => ({})),
+  entry("issue", "read", Issue.fromID, () => fx.issue),
+  entry("issue", "read", Issue.stages, () => ({})),
+  entry("issue", "read", Issue.labels, () => ({})),
+  entry("issue", "read", Insights.stats, () => range),
+  entry("issue", "read", Insights.status, () => range),
+  entry("issue", "read", Insights.load, () => range),
+  entry("issue", "read", Insights.due, () => ({})),
+  entry("issue", "read", Insights.calendar, () => range),
+  entry("issue", "read", Insights.activity, () => range),
+  entry("issue", "create", Issue.create, () => ({ title: "Sweep" })),
+  entry("issue", "update", Issue.update, () => ({ id: fx.issue, title: "Renamed" })),
+  entry("issue", "update", Issue.rename, () => ({ from: "a", to: "b" })),
+  entry("issue", "update", Issue.move, () => ({ id: fx.issue, parentID: null })),
+  entry("issue", "update", Issue.link, () => ({ id: fx.issue, url: "https://x.dev" })),
+  entry("issue", "update", Issue.unlink, () => ({ id: fx.issue, url: "https://x.dev" })),
+  entry("issue", "update", Issue.annotate, () => ({ id: fx.issue, unset: ["x.dev/x"] })),
+  entry("issue", "delete", Issue.remove, () => fx.issue),
 
   entry("key", "read", Key.list, () => undefined, true),
   entry("key", "create", Key.create, () => ({ name: "sweep" })),
@@ -165,7 +165,7 @@ const gaps = ["key:update"];
 /** Every `fn()` op a namespace exports — what a new, unchecked op would be. */
 const exported = [
   Project,
-  Todo,
+  Issue,
   Insights,
   User,
   Key,
@@ -214,7 +214,7 @@ beforeAll(async () => {
   fx.other = (await createUser({ name: "Other", email: testEmail() })).id;
   await Identity.provide("user", { userID: fx.other, role: "admin" }, async () => {
     fx.project = (await Project.create({ name: "Theirs" })).id;
-    fx.todo = (await Todo.create({ title: "Theirs" })).id;
+    fx.issue = (await Issue.create({ title: "Theirs" })).id;
     fx.webhook = (await Webhook.create({ url: "https://x.dev/theirs" })).id;
     fx.app = (await App.create({ name: "Theirs" })).id;
   });

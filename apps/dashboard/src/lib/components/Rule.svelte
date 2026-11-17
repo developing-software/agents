@@ -21,7 +21,7 @@
 
 	let { parts, tail }: { parts: Part[]; tail?: string } = $props();
 
-	// Nothing measured yet — an empty instance, a range with no todos — so the bar divides
+	// Nothing measured yet — an empty instance, a range with no issues — so the bar divides
 	// evenly instead of collapsing to a row of ticks.
 	const even = $derived(parts.every((part) => part.pct <= 0));
 	const track = (min: string) =>

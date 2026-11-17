@@ -123,7 +123,7 @@ describe("admin logs", () => {
       const bySource = await Event.list({ source: "user", search: one.id });
       expect(bySource.data.map((e) => e.type)).toContain("user.removed");
 
-      const wrong = await Event.list({ type: "todo.created", search: one.id });
+      const wrong = await Event.list({ type: "issue.created", search: one.id });
       expect(wrong.total).toBe(0);
 
       const facets = await Event.facets();

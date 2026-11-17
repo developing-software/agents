@@ -4,9 +4,9 @@
  * in the database.
  */
 export const Types = [
-  "todo.created",
-  "todo.updated",
-  "todo.removed",
+  "issue.created",
+  "issue.updated",
+  "issue.removed",
   "project.created",
   "project.updated",
   "project.removed",

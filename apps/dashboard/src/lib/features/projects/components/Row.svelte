@@ -26,7 +26,7 @@
 		const ok = await ask({
 			title: 'Delete project',
 			name: project.name,
-			warn: 'This removes {name} with its stages and insights. Its todos are kept.',
+			warn: 'This removes {name} with its stages and insights. Its issues are kept.',
 			verify: true
 		});
 		if (ok) drop.mutate({ path: { id: project.id } });

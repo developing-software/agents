@@ -1,9 +1,9 @@
 <script lang="ts">
 	import ProjectPage from '#lib/features/projects/pages/ProjectPage.svelte';
-	import MonthWidget from '#lib/features/todos/components/MonthWidget.svelte';
-	import Stages from '#lib/features/todos/components/Stages.svelte';
-	import Recent from '#lib/features/todos/components/Recent.svelte';
-	import Summary from '#lib/features/todos/components/Summary.svelte';
+	import MonthWidget from '#lib/features/issues/components/MonthWidget.svelte';
+	import Stages from '#lib/features/issues/components/Stages.svelte';
+	import Recent from '#lib/features/issues/components/Recent.svelte';
+	import Summary from '#lib/features/issues/components/Summary.svelte';
 
 	let { params } = $props();
 </script>
@@ -15,22 +15,22 @@
 		<Summary {scope} />
 	{/snippet}
 	{#snippet stages()}
-		<Stages {scope} base="/projects/{params.id}/todos" />
+		<Stages {scope} base="/projects/{params.id}/issues" />
 	{/snippet}
-	{#snippet todos()}
+	{#snippet issues()}
 		<Recent {scope} />
 	{/snippet}
 	{#snippet calendar()}
-		<MonthWidget {scope} href="/projects/{params.id}/todos?view=calendar" />
+		<MonthWidget {scope} href="/projects/{params.id}/issues?view=calendar" />
 	{/snippet}
 	<ProjectPage
 		id={params.id}
 		{facts}
 		widgets={{
-			main: { title: 'Todos this month', body: calendar },
+			main: { title: 'Issues this month', body: calendar },
 			side: [
 				{ title: 'Stages', body: stages },
-				{ title: 'Recent todos', body: todos }
+				{ title: 'Recent issues', body: issues }
 			]
 		}}
 	/>

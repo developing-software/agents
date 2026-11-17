@@ -5,7 +5,7 @@ visible as directories.
 
 ```mermaid
 graph TD
-  domain["<b>the product</b><br/>project · todo · user"]
+  domain["<b>the product</b><br/>project · issue · user"]
   platform["<b>platform/</b><br/>admin · app · bus · connection · conversation · event<br/>feedback · file · health · key · panel · webhook"]
   lib["<b>lib/</b><br/>queue · storage · email · kv · limit"]
   kernel["<b>kernel</b><br/>identity · context · error · permission · drizzle · util"]
@@ -31,7 +31,7 @@ Arrows are the only legal import direction. A cycle, or an arrow pointing up, is
 
 **When you fork this template into a real product, does the module get rewritten?**
 
-- Yes → top level, next to `todo/`.
+- Yes → top level, next to `issue/`.
 - No, but it has a table and an identity check → `platform/`.
 - Never touched, only reconfigured → `lib/`, behind a port.
 
@@ -57,7 +57,7 @@ Slices declare and publish typed events through `platform/bus`. See [events.md](
   `lib/kv`, so its backend is whichever Kv the process provides.
 - `platform/event` joins `user/user.sql` to name the actor on a log row. Platform may reach
   `user`, the identity anchor; nothing else in the product.
-- `platform/admin` reads `project` and `todo` tables for its counts — the one arrow that
+- `platform/admin` reads `project` and `issue` tables for its counts — the one arrow that
   points up. A fork rewrites the tallies in `counts`; the rest of the back office is generic.
 - `platform/app` reaches `auth` to identify an App's account when it posts an event in.
 - `platform/panel` has no table: each panel is one JSON file in `lib/storage` at

@@ -45,13 +45,13 @@ cookie, same as `e2e/util/mint.ts`) and drives headless system chromium:
 
 ```bash
 BASE=http://localhost:4174 bun .claude/skills/run-template/driver.ts shot / home.png
-BASE=http://localhost:4174 bun .claude/skills/run-template/driver.ts todo "My title" todo.png
+BASE=http://localhost:4174 bun .claude/skills/run-template/driver.ts issue "My title" issue.png
 ```
 
 | command                  | what it does                                                                |
 | ------------------------ | --------------------------------------------------------------------------- |
 | `shot <route> [out.png]` | authenticated full-page screenshot of a route                               |
-| `todo <title> [out.png]` | creates a todo through the `/todos` form, waits for it to list, screenshots |
+| `issue <title> [out.png]` | creates an issue through the `/issues` form, waits for it to list, screenshots |
 
 It prints page console errors at the end. Env: `BASE`, `DATABASE_URL`, `ROLE` (admin|member, default admin),
 `CHROME_PATH`.
@@ -59,7 +59,7 @@ It prints page console errors at the end. Env: `BASE`, `DATABASE_URL`, `ROLE` (a
 ### API / MCP / CLI
 
 ```bash
-curl -s http://localhost:4000/todo -H "Authorization: Bearer sk-..."   # JSON todo list
+curl -s http://localhost:4000/issue -H "Authorization: Bearer sk-..."   # JSON issue list
 ```
 
 MCP is bearer-authenticated with the same key (unauthenticated → `{"type":"authentication",...}`):

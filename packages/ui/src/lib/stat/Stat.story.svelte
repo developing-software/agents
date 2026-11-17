@@ -15,7 +15,7 @@
 		},
 		variants: [
 			{ label: 'plain', props: { label: 'Projects', value: '38' } },
-			{ label: 'with note', props: { label: 'Todos', value: '912', note: '640 done' } },
+			{ label: 'with note', props: { label: 'Issues', value: '912', note: '640 done' } },
 			{ label: 'link', props: { label: 'Logs', value: '20,511', href: '/dev/story/stat' } }
 		]
 	};

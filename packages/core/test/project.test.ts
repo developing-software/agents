@@ -2,7 +2,7 @@ import { describe, expect } from "bun:test";
 import { Identity } from "../src/identity";
 import { Permission } from "../src/permission";
 import { Project } from "../src/project";
-import { Todo } from "../src/todo";
+import { Issue } from "../src/issue";
 import { withTestUser } from "./util";
 
 describe("project", () => {
@@ -21,11 +21,11 @@ describe("project", () => {
     expect(page.data.map((project) => project.name)).toEqual([name]);
   });
 
-  withTestUser("todos hang off a project through source", async () => {
+  withTestUser("issues hang off a project through source", async () => {
     const { id: sourceID } = await Project.create({ name: "Apollo" });
-    await Todo.create({ title: "Build the rocket", source: "project", sourceID });
-    const page = await Todo.list({ source: "project", sourceID });
-    expect(page.data.map((todo) => todo.title)).toEqual(["Build the rocket"]);
+    await Issue.create({ title: "Build the rocket", source: "project", sourceID });
+    const page = await Issue.list({ source: "project", sourceID });
+    expect(page.data.map((issue) => issue.title)).toEqual(["Build the rocket"]);
   });
 
   withTestUser("update renames the project", async () => {
@@ -35,13 +35,13 @@ describe("project", () => {
     expect((await Project.fromID(id))?.description).toBe("now with a blurb");
   });
 
-  withTestUser("remove soft-deletes the project but keeps its todos", async () => {
+  withTestUser("remove soft-deletes the project but keeps its issues", async () => {
     const { id: sourceID } = await Project.create({ name: "Doomed" });
-    await Todo.create({ title: "Survivor", source: "project", sourceID });
+    await Issue.create({ title: "Survivor", source: "project", sourceID });
     await Project.remove(sourceID);
 
     expect(await Project.fromID(sourceID)).toBeNull();
-    expect((await Todo.list({ source: "project", sourceID })).data).toHaveLength(1);
+    expect((await Issue.list({ source: "project", sourceID })).data).toHaveLength(1);
   });
 
   withTestUser("a signed-out caller is denied", async () => {

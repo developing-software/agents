@@ -1,4 +1,4 @@
-<!-- The signed-out home: the pitch, the arc every todo travels, and the way in. -->
+<!-- The signed-out home: the pitch, the arc every issue travels, and the way in. -->
 <script lang="ts">
 	import { Button } from '@agents/ui';
 	import { brand } from '#lib/brand.ts';

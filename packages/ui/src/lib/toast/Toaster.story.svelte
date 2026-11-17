@@ -24,7 +24,7 @@
 
 <div class="row">
 	<Button variant="ghost" onclick={() => toast('Saved as draft')}>info</Button>
-	<Button onclick={() => toast.success('Todo created')}>success</Button>
+	<Button onclick={() => toast.success('Issue created')}>success</Button>
 	<Button variant="danger" onclick={() => toast.error('Could not reach the server')}>error</Button>
 	<Button variant="secondary" onclick={() => toast.loading('Working…')}>loading (sticky)</Button>
 </div>

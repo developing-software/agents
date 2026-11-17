@@ -14,18 +14,18 @@ handler elsewhere subscribes, and every event travels as a [CloudEvents 1.0][ce]
 ## Declare, publish, subscribe
 
 ```ts
-// todo/index.ts: the slice owns its events
+// issue/index.ts: the slice owns its events
 export const Event = {
-  Created: Bus.define("todo.created", Info),
-  Updated: Bus.define("todo.updated", z.object({ todo: Info, changes: Changes })),
+  Created: Bus.define("issue.created", Info),
+  Updated: Bus.define("issue.updated", z.object({ issue: Info, changes: Changes })),
 };
 
 // inside the domain transaction
-await Todo.Event.Updated.publish({ todo, changes }, { subject: id, tags });
+await Issue.Event.Updated.publish({ issue, changes }, { subject: id, tags });
 
 // elsewhere, never imported by the producer
-export const sync = Bus.subscribe(Todo.Event.Updated, async (event) => {
-  event.data.todo.status; // typed
+export const sync = Bus.subscribe(Issue.Event.Updated, async (event) => {
+  event.data.issue.status; // typed
 });
 ```
 
@@ -41,7 +41,7 @@ sequenceDiagram
   participant S as Subscriber
   participant H as Webhook endpoint
 
-  D->>DB: BEGIN, UPDATE todo
+  D->>DB: BEGIN, UPDATE issue
   D->>B: Event.Updated.publish(data)
   B->>B: validate data, build CloudEvent
   B->>DB: INSERT event row (same tx)
@@ -102,13 +102,13 @@ Use `db` or `cloudflare` anywhere a subscriber must run. `sync` and `memory` are
 {
   "specversion": "1.0",
   "id": "evt_01M3WGVZ7M95F7SW373TG6TX7G",
-  "type": "todo.updated",
-  "source": "template/todo",
-  "subject": "tod_01M3WGVYWQ4X2G025DY07XDB9R",
+  "type": "issue.updated",
+  "source": "template/issue",
+  "subject": "iss_01M3WGVYWQ4X2G025DY07XDB9R",
   "time": "2026-10-01T20:00:38.649Z",
   "datacontenttype": "application/json",
   "data": {
-    "todo": { "id": "tod_…", "title": "Write the report", "status": "active", "…": "…" },
+    "issue": { "id": "iss_…", "title": "Write the report", "status": "active", "…": "…" },
     "changes": { "status": { "before": "backlog", "after": "active" } }
   },
   "authtype": "user",
@@ -141,11 +141,11 @@ graph LR
 
 |                  | `data` | tags | actor                          | `source`        |
 | ---------------- | ------ | ---- | ------------------------------ | --------------- |
-| Event row        | ✓      | ✓    | `user_id` + `actor:*` tag      | `todo`          |
-| Subscriber       | ✓      | ✗    | `authtype`/`authid` + Identity | `template/todo` |
-| Webhook receiver | ✓      | ✗    | `authtype`/`authid`            | `template/todo` |
+| Event row        | ✓      | ✓    | `user_id` + `actor:*` tag      | `issue`          |
+| Subscriber       | ✓      | ✗    | `authtype`/`authid` + Identity | `template/issue` |
+| Webhook receiver | ✓      | ✗    | `authtype`/`authid`            | `template/issue` |
 
-Tags are for filtering the log only. A subscriber that needs a todo's tags reads them from
+Tags are for filtering the log only. A subscriber that needs an issue's tags reads them from
 `data`.
 
 ## Webhooks

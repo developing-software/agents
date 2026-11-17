@@ -1,6 +1,6 @@
 import { describe, expect } from "bun:test";
 import { setupApiTest } from "./util";
-import { Todo } from "@agents/core/todo";
+import { Issue } from "@agents/core/issue";
 import { Identifier } from "@agents/core/identifier";
 
 const { test, validateOpenAPIRoute, get } = setupApiTest();
@@ -9,12 +9,12 @@ const day = (offset: number) =>
   new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
 
 describe("insights", () => {
-  // Scoped to a project of their own, so other tests' todos don't shift the counts.
+  // Scoped to a project of their own, so other tests' issues don't shift the counts.
   const scope = { source: "project", sourceID: Identifier.create("project") };
   const range = { start: day(-30), end: day(1), ...scope };
 
   test("GET /insights/stats", async () => {
-    await Todo.create({ title: "Counted", status: "active", ...scope });
+    await Issue.create({ title: "Counted", status: "active", ...scope });
     const response = await validateOpenAPIRoute("get", "/insights/stats", range);
     expect(response.active).toBe(1);
     // No body to break, so the declared 400 is driven by a backwards range.
@@ -33,13 +33,13 @@ describe("insights", () => {
   });
 
   test("GET /insights/due", async () => {
-    const { id } = await Todo.create({
+    const { id } = await Issue.create({
       title: "Due soon",
       dueDate: new Date(Date.now() + 86_400_000).toISOString(),
       ...scope,
     });
     const response = await validateOpenAPIRoute("get", "/insights/due", scope);
-    expect(response.map((todo: { id: string }) => todo.id)).toContain(id);
+    expect(response.map((issue: { id: string }) => issue.id)).toContain(id);
   });
 
   test("GET /insights/calendar", async () => {

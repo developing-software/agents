@@ -50,7 +50,7 @@
 		if (current && current.href !== page.url.pathname) crumbs.push({ label: 'Details' });
 		return crumbs;
 	});
-	// The page and its parent, nearest first: "Todos · Internal tools · App".
+	// The page and its parent, nearest first: "Issues · Internal tools · App".
 	const title = $derived(
 		[
 			...trail

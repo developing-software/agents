@@ -10,8 +10,8 @@
 	import Links from '#lib/components/Links.svelte';
 	import Annotations from '#lib/components/Annotations.svelte';
 
-	// The route composes the todo widgets and header facts, so this slice never imports the
-	// todos feature; the page appends its own Links and History.
+	// The route composes the issue widgets and header facts, so this slice never imports the
+	// issues feature; the page appends its own Links and History.
 	let {
 		id,
 		widgets,

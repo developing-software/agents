@@ -2,8 +2,8 @@ import { describe, expect } from "bun:test";
 import { eq } from "drizzle-orm";
 import { Identity } from "../src/identity";
 import { Database } from "../src/drizzle";
-import { Insights, Todo } from "../src/todo";
-import { TodoTable } from "../src/todo/todo.sql";
+import { Insights, Issue } from "../src/issue";
+import { IssueTable } from "../src/issue/issue.sql";
 import { Identifier } from "../src/identifier";
 import { withTestUser } from "./util";
 
@@ -24,10 +24,10 @@ const scoped = (r: ReturnType<typeof range>) => ({ source: r.source, sourceID: r
 describe("insights", () => {
   withTestUser("stats aggregates totals, rate and in-flight counts", async () => {
     const r = range();
-    const { id: done } = await Todo.create({ title: "One", ...scoped(r) });
-    const { id: active } = await Todo.create({ title: "Two", ...scoped(r) });
-    await Todo.update({ id: done, status: "done" });
-    await Todo.update({ id: active, status: "active" });
+    const { id: done } = await Issue.create({ title: "One", ...scoped(r) });
+    const { id: active } = await Issue.create({ title: "Two", ...scoped(r) });
+    await Issue.update({ id: done, status: "done" });
+    await Issue.update({ id: active, status: "active" });
 
     const stats = await Insights.stats(r);
     expect(stats.total).toBe(2);
@@ -38,9 +38,9 @@ describe("insights", () => {
     expect(stats.overdue).toBe(0);
   });
 
-  withTestUser("stats counts unfinished todos past their due date", async () => {
+  withTestUser("stats counts unfinished issues past their due date", async () => {
     const r = range();
-    await Todo.create({
+    await Issue.create({
       title: "Late",
       dueDate: new Date(Date.now() - DAY).toISOString(),
       ...scoped(r),
@@ -50,7 +50,7 @@ describe("insights", () => {
 
   withTestUser("status returns totals and bar widths", async () => {
     const r = range();
-    await Todo.create({ title: "One", ...scoped(r) });
+    await Issue.create({ title: "One", ...scoped(r) });
     const status = await Insights.status(r);
     expect(status.total).toBe(1);
     expect(status.rows.find((row) => row.status === "backlog")?.pct).toBe(100);
@@ -59,9 +59,9 @@ describe("insights", () => {
 
   withTestUser("load breaks work down per assignee", async ({ userID }) => {
     const r = range();
-    const { id } = await Todo.create({ title: "Mine", assignee: userID, ...scoped(r) });
-    await Todo.create({ title: "Nobody's", ...scoped(r) });
-    await Todo.update({ id, status: "active" });
+    const { id } = await Issue.create({ title: "Mine", assignee: userID, ...scoped(r) });
+    await Issue.create({ title: "Nobody's", ...scoped(r) });
+    await Issue.update({ id, status: "active" });
 
     const load = await Insights.load(r);
     expect(load.rows).toHaveLength(2);
@@ -74,8 +74,8 @@ describe("insights", () => {
 
   withTestUser("activity flags active ranges and buckets creations", async () => {
     const r = range();
-    const { id } = await Todo.create({ title: "One", ...scoped(r) });
-    await Todo.update({ id, status: "done" });
+    const { id } = await Issue.create({ title: "One", ...scoped(r) });
+    await Issue.update({ id, status: "done" });
     const activity = await Insights.activity(r);
     expect(activity.active).toBe(true);
     expect(activity.series.reduce((sum, point) => sum + point.created, 0)).toBe(1);
@@ -84,13 +84,13 @@ describe("insights", () => {
 
   withTestUser("buckets a day in the reader's zone, not UTC", async ({ userID }) => {
     const r = { ...range(), start: "2026-06-01", end: "2026-06-30" };
-    const { id } = await Todo.create({ title: "Late one", ...scoped(r) });
+    const { id } = await Issue.create({ title: "Late one", ...scoped(r) });
     // 01:00 UTC on the 8th is still the evening of the 7th anywhere west of Greenwich.
     await Database.use((tx) =>
       tx
-        .update(TodoTable)
+        .update(IssueTable)
         .set({ timeCreated: new Date("2026-06-08T01:00:00.000Z") })
-        .where(eq(TodoTable.id, id)),
+        .where(eq(IssueTable.id, id)),
     );
 
     const as = (timezone?: string) =>
@@ -102,12 +102,12 @@ describe("insights", () => {
 
   withTestUser("the range edges move with the zone too", async ({ userID }) => {
     const r = { ...range(), start: "2026-06-08", end: "2026-06-30" };
-    const { id } = await Todo.create({ title: "Edge", ...scoped(r) });
+    const { id } = await Issue.create({ title: "Edge", ...scoped(r) });
     await Database.use((tx) =>
       tx
-        .update(TodoTable)
+        .update(IssueTable)
         .set({ timeCreated: new Date("2026-06-08T01:00:00.000Z") })
-        .where(eq(TodoTable.id, id)),
+        .where(eq(IssueTable.id, id)),
     );
 
     const as = (timezone?: string) =>

@@ -54,7 +54,7 @@ describe("mcp as a delegated agent", () => {
   it("acts as the agent, and the event it causes says so", async () => {
     const client = await connect();
     const made = read(
-      await client.callTool({ name: "todo_create", arguments: { title: "From the agent" } }),
+      await client.callTool({ name: "issue_create", arguments: { title: "From the agent" } }),
     );
     expect(made.title).toBe("From the agent");
     await client.close();
@@ -62,7 +62,7 @@ describe("mcp as a delegated agent", () => {
     const log = await Identity.internal("test", Permission.all, () =>
       Event.list({ sourceID: made.id, page: 1, pageSize: 10 }),
     );
-    const created = log.data.find((e) => e.type === "todo.created");
+    const created = log.data.find((e) => e.type === "issue.created");
     expect(created?.identity).toMatchObject({
       type: "agent",
       properties: { name: "copilot", userID },
@@ -90,21 +90,21 @@ describe("mcp as a delegated agent", () => {
     const { tools } = await client.listTools();
     const hint = (name: string) =>
       tools.find((tool) => tool.name === name)?.annotations?.readOnlyHint;
-    expect(hint("todo_list")).toBe(true);
-    expect(hint("todo_get")).toBe(true);
+    expect(hint("issue_list")).toBe(true);
+    expect(hint("issue_get")).toBe(true);
     expect(hint("project_list")).toBe(true);
-    expect(hint("todo_create")).toBeUndefined();
-    expect(hint("todo_annotate")).toBeUndefined();
+    expect(hint("issue_create")).toBeUndefined();
+    expect(hint("issue_annotate")).toBeUndefined();
     await client.close();
   });
 
-  it("annotates todos and projects", async () => {
+  it("annotates issues and projects", async () => {
     const client = await connect();
-    const todo = read(await client.callTool({ name: "todo_create", arguments: { title: "Tag" } }));
+    const issue = read(await client.callTool({ name: "issue_create", arguments: { title: "Tag" } }));
     const after = read(
       await client.callTool({
-        name: "todo_annotate",
-        arguments: { id: todo.id, set: { "example.com/ref": "42" } },
+        name: "issue_annotate",
+        arguments: { id: issue.id, set: { "example.com/ref": "42" } },
       }),
     );
     expect(after.metadata.annotations["example.com/ref"]).toBe("42");

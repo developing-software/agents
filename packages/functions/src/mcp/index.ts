@@ -7,7 +7,7 @@ import { fail } from "../api/error";
 import { auth } from "../api/middleware";
 import { authRequired } from "../api/common";
 import { feedback } from "./tool/feedback";
-import { todo } from "./tool/todo";
+import { issue } from "./tool/issue";
 import { project } from "./tool/project";
 import { health } from "../health";
 import pkg from "../../package.json";
@@ -27,7 +27,7 @@ function metadata(c: Context) {
 /** One server per request — the streamable HTTP transport is stateless. */
 function server() {
   const s = new McpServer({ name: "template", version: pkg.version });
-  todo(s);
+  issue(s);
   project(s);
   feedback(s);
   return s;

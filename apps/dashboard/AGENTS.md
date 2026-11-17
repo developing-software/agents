@@ -24,7 +24,7 @@ src/hooks/server/          sequence(providers, auth, api, theme), plus handleErr
 src/env.ts                 the env vars kit reads (`defineEnvVars`)
 src/routes/
   (app)/ (auth)/           route groups, each owning its own layout + nav links
-  (app)/(home)/            home, projects, todos, files, insights under the home rail
+  (app)/(home)/            home, projects, issues, files, insights under the home rail
   (app)/projects/[id]/ (app)/u/[id]/   record pages with their own layout
   (app)/settings/          every account, developer and admin page, one grouped rail
     account experience keys      You: anyone signed in
@@ -61,10 +61,10 @@ plus one rail item; both groups list under Workspace.
 auth and `VisibleError` conversion come for free.
 
 ```ts
-export const getTodos = remote.core(Todo.list); // schema + call, both from core
-export const removeTodo = remote.can({ todo: ["delete"] }).command(schema, handler);
+export const getIssues = remote.core(Issue.list); // schema + call, both from core
+export const removeIssue = remote.can({ issue: ["delete"] }).command(schema, handler);
 export const health = remote.public.query(schema, handler); // drops the auth gate
-export const saveTodo = remote.form(schema, handler); // errors land as form issues
+export const saveIssue = remote.form(schema, handler); // errors land as form issues
 ```
 
 - `remote.core(fn)` is the default — it reuses core's schema, so there is no second
@@ -101,7 +101,7 @@ from the Hono router in-process.
 
 ## Record pages
 
-A record page (`ProjectPage`, `TodoEditor`) is `Header.Root` plus `Widgets`. Header facts edit
+A record page (`ProjectPage`, `IssueEditor`) is `Header.Root` plus `Widgets`. Header facts edit
 in place (`Inline`, pickers) and `Steps` draws a status flow inside a `Header.Item`. `Widgets`
 takes `main`, `side` and `rest` stacks of `{ title, body, fill? }`; the route passes in widgets
 from other slices as snippets. Header and filter-row rules: `components/header/README.md`.

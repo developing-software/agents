@@ -2,7 +2,7 @@ type Input = {
   method: string;
   /** Composed path and query string, exactly what the console would send. */
   url: string;
-  /** The route template, `/todo/{id}`: its slots say which values are path params. */
+  /** The route template, `/issue/{id}`: its slots say which values are path params. */
   path: string;
   base: string;
   /** Operation id, which is also the generated SDK method name. */

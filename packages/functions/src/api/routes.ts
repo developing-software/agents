@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { KeyApi } from "./handler/key";
 import { UserApi } from "./handler/user";
-import { TodoApi } from "./handler/todo";
+import { IssueApi } from "./handler/issue";
 import { InsightsApi } from "./handler/insights";
 import { ProjectApi } from "./handler/project";
 import { FileApi } from "./handler/file";
@@ -18,7 +18,7 @@ import { fail } from "./error";
 export const routes = new Hono()
   .route("/", UserApi.route)
   .route("/key", KeyApi.route)
-  .route("/todo", TodoApi.route)
+  .route("/issue", IssueApi.route)
   .route("/insights", InsightsApi.route)
   .route("/project", ProjectApi.route)
   .route("/file", FileApi.route)

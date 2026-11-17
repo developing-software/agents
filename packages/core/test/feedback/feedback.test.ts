@@ -14,10 +14,10 @@ const png = (name = "shot.png") =>
   new File([new Uint8Array([1, 2, 3])], name, { type: "image/png" });
 
 const input = {
-  body: "The save button does nothing\nClicked it twice on the todo page.",
+  body: "The save button does nothing\nClicked it twice on the issue page.",
   tag: "bug" as const,
   urgency: "high" as const,
-  page: "/todos",
+  page: "/issues",
   agent: "Mozilla/5.0 Test",
   viewport: "1280x720",
   locale: "en-US",

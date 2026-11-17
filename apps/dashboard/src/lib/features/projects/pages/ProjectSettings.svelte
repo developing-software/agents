@@ -18,7 +18,7 @@
 		const ok = await ask({
 			title: 'Delete project',
 			name,
-			warn: 'This removes {name} with its stages and insights. Its todos are kept.',
+			warn: 'This removes {name} with its stages and insights. Its issues are kept.',
 			verify: true
 		});
 		if (ok) drop.mutate({ path: { id } });
@@ -70,7 +70,7 @@
 			danger
 			divider
 			title="Delete project"
-			description="Takes its stages and insights with it. Its todos are kept."
+			description="Takes its stages and insights with it. Its issues are kept."
 		>
 			<div class="danger">
 				<Button variant="danger" pending={drop.isPending} onclick={() => del(name)}>

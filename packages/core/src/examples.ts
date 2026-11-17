@@ -29,8 +29,8 @@ export namespace Examples {
     timeCreated: "2026-06-07T00:00:00.000Z",
   } as const;
 
-  export const Todo = {
-    id: Id("todo"),
+  export const Issue = {
+    id: Id("issue"),
     createdBy: Id("user"),
     assignee: { id: Id("user"), name: "John Doe", image: null },
     source: "project",
@@ -80,7 +80,7 @@ export namespace Examples {
     userID: Id("user"),
     secret: "whsec_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     display: "whsec_XXXX...XXXX",
-    types: ["todo.created"],
+    types: ["issue.created"],
     enabled: true,
     failures: 0,
     lastStatus: 200,
@@ -96,9 +96,9 @@ export namespace Examples {
       type: "agent",
       properties: { name: "orchestrator", userID: Id("user"), role: "member", timezone: "UTC" },
     },
-    type: "todo.created",
-    source: "todo",
-    sourceID: Id("todo"),
+    type: "issue.created",
+    source: "issue",
+    sourceID: Id("issue"),
     tags: ["actor:user"],
     data: { title: "Write the quarterly report" },
     timeCreated: "2026-06-07T00:00:00.000Z",

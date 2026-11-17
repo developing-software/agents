@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** One label. `todo` and `event` both store tags, so both validate them the same way. */
+/** One label. `issue` and `event` both store tags, so both validate them the same way. */
 export const Tag = z.string().trim().min(1).max(64);
 
 export const Tags = Tag.array().max(20);

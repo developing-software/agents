@@ -123,7 +123,7 @@ describe("file", () => {
 
   test("a scoped agent without the file grant gets 403", async () => {
     await upload(pngFile("kept.png"));
-    const token = await Delegation.create({ name: "copilot", scope: { todo: ["read"] } });
+    const token = await Delegation.create({ name: "copilot", scope: { issue: ["read"] } });
     const headers = { authorization: `Bearer ${token}` };
 
     await expectError(await app.request("/file", { headers }), 403);

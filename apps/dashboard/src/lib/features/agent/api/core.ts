@@ -18,7 +18,7 @@ export namespace Agent {
   >;
 
   /** Shared by every agent, ahead of its own prompt. */
-  export const prompt = `This app tracks projects and their todos. Use the tools to read its data instead of guessing; if a tool denies access, say the user lacks permission.`;
+  export const prompt = `This app tracks projects and their issues. Use the tools to read its data instead of guessing; if a tool denies access, say the user lacks permission.`;
 
   /** For a run whose MCP didn't come up. */
   export const offline = `The data tools are unavailable right now. If the question depends on the app's data, say so instead of answering from memory.`;

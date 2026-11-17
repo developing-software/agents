@@ -20,7 +20,7 @@ src/
     middleware.ts       — identity resolution from the bearer token
     auth.ts             — the issuer URL and its OpenAuth client
     spec.ts             — the OpenAPI document, read by gen:spec and the dev api inspector
-    handler/            — one file per domain (file, hook, insights, key, project, todo, user)
+    handler/            — one file per domain (file, hook, insights, key, project, issue, user)
     target/             — bun.ts | lambda.ts | worker.ts, the entry points
   auth/ mcp/            — same shape: the service, plus its target/ (mcp/tool/ per domain)
   queue/target/         — the worker alone (bun, worker), draining core's Queue
@@ -41,7 +41,7 @@ import { Identity } from "@agents/core/identity";
 
 Identity.use(); // the current identity ({ type, properties })
 Identity.userID(); // who answers for the act — the user, the agent's user, or the App
-Identity.check({ todo: ["read"] }); // 403 unless held (an agent also needs it in scope)
+Identity.check({ issue: ["read"] }); // 403 unless held (an agent also needs it in scope)
 ```
 
 Handlers never call `provide` — the middleware does, with whatever `Auth.resolve` returned. To act
@@ -73,17 +73,17 @@ annotations, and its `fn()` ops carry a `meta` of their own (`{ title, descripti
 operation. A handler restates neither:
 
 ```ts
-const doc = describe("Todo"); // binds the tag once for the file
+const doc = describe("Issue"); // binds the tag once for the file
 
 .get(
   "/:id",
-  doc(Todo.fromID.meta, {
-    200: doc.json(Todo.Info),
+  doc(Issue.fromID.meta, {
+    200: doc.json(Issue.Info),
     ...doc.errors(400, 401, 403, 404, 500),
   }),
   authRequired,
   validator("param", id),
-  async (c) => c.json(await Todo.assert.exists(Todo.fromID(c.req.valid("param").id)), 200),
+  async (c) => c.json(await Issue.assert.exists(Issue.fromID(c.req.valid("param").id)), 200),
 )
 ```
 

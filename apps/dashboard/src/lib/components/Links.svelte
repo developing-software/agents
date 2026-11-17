@@ -7,7 +7,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Plus from '@lucide/svelte/icons/plus';
 
-	// The writes differ per slice (todo vs project), so they come in; the fields don't.
+	// The writes differ per slice (issue vs project), so they come in; the fields don't.
 	let {
 		links,
 		add,

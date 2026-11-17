@@ -44,17 +44,17 @@ describe("Agent.entry", () => {
         { type: "text", content: "Two " },
         { type: "text", content: "projects." },
       ],
-      toolCalls: [call("project_list"), call("todo_list")],
+      toolCalls: [call("project_list"), call("issue_list")],
     };
     const entry = Agent.entry(message);
     expect(entry.text).toBe("Two projects.");
-    expect(entry.tools).toEqual(["project_list", "todo_list"]);
+    expect(entry.tools).toEqual(["project_list", "issue_list"]);
     expect(entry.content).toBe(message);
   });
 
   it("has no text for a bare tool call", () => {
     expect(
-      Agent.entry({ role: "assistant", content: null, toolCalls: [call("todo_list")] }).text,
+      Agent.entry({ role: "assistant", content: null, toolCalls: [call("issue_list")] }).text,
     ).toBeNull();
   });
 });
@@ -84,14 +84,14 @@ describe("Sql.relations", () => {
         Plan: {
           "Node Type": "Hash Join",
           Plans: [
-            { "Relation Name": "todo", Schema: "public" },
+            { "Relation Name": "issue", Schema: "public" },
             { Plans: [{ "Relation Name": "key", Schema: "public" }] },
           ],
         },
       },
     ];
     expect(Sql.relations(plan)).toEqual([
-      { schema: "public", name: "todo" },
+      { schema: "public", name: "issue" },
       { schema: "public", name: "key" },
     ]);
   });
@@ -177,11 +177,11 @@ describe("ask", () => {
 describe("forwarded", () => {
   it("keeps a known model and the page as a prompt", () => {
     const opts = forwarded(
-      { model: "b", page: { url: "/todos", title: "Todos", crumbs: ["Home", "Todos"] } },
+      { model: "b", page: { url: "/issues", title: "Issues", crumbs: ["Home", "Issues"] } },
       ["a", "b"],
     );
     expect(opts.model).toBe("b");
-    expect(opts.prompts[0]).toContain('"Todos" (/todos), trail: Home › Todos');
+    expect(opts.prompts[0]).toContain('"Issues" (/issues), trail: Home › Issues');
   });
 
   it("falls back on anything malformed", () => {

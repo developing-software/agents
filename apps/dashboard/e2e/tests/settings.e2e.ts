@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { Database } from "@agents/core/drizzle";
 import { Queue } from "@agents/core/queue";
 import { Identity } from "@agents/core/identity";
-import { Todo } from "@agents/core/todo";
+import { Issue } from "@agents/core/issue";
 import { test, expect } from "../util/fixtures";
 import { db } from "../util/db";
 
@@ -73,15 +73,15 @@ test("picking a theme applies instantly and survives a reload", async ({ page, a
 
 test("the date format preference reaches the rest of the app", async ({ page, as }) => {
   const session = await as();
-  // Unique per attempt: todos are workspace-wide and the database lives for the
+  // Unique per attempt: issues are workspace-wide and the database lives for the
   // whole run, so a fixed title accumulates rows across projects and retries.
   const title = `Ship the settings page ${Date.now()}`;
-  // `Todo.create` publishes, and publishing pushes a delivery job — the app under test has
+  // `Issue.create` publishes, and publishing pushes a delivery job — the app under test has
   // its own queue port, this direct call needs one too.
   await Database.provide(db, () =>
     Queue.provide(Queue.Providers.memory(), () =>
       Identity.provide("user", { userID: session.userID, role: "member" }, () =>
-        Todo.create({ title, dueDate: "2024-03-12T12:00:00.000Z" }),
+        Issue.create({ title, dueDate: "2024-03-12T12:00:00.000Z" }),
       ),
     ),
   );
@@ -106,7 +106,7 @@ test("the date format preference reaches the rest of the app", async ({ page, as
 
   // Retry once: even settled, WebKit sometimes lets the revalidation interrupt the
   // hard navigation ("interrupted by another navigation"); by the retry it's done.
-  await page.goto("/todos").catch(() => page.goto("/todos"));
+  await page.goto("/issues").catch(() => page.goto("/issues"));
   // The table's Due column carries the bare date; "Due" itself is the column header.
   const row = page.getByRole("row", { name: title });
   await expect(row.getByText("Mar 12, 2024", { exact: true })).toBeVisible();
@@ -118,6 +118,6 @@ test("the date format preference reaches the rest of the app", async ({ page, as
   await ymd;
   await page.waitForLoadState("networkidle");
 
-  await page.goto("/todos").catch(() => page.goto("/todos"));
+  await page.goto("/issues").catch(() => page.goto("/issues"));
   await expect(row.getByText("2024 Mar 12", { exact: true })).toBeVisible();
 });

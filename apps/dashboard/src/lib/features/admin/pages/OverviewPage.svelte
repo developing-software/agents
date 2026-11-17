@@ -96,8 +96,8 @@
 	{#if all.isSuccess}
 		<Stat label="Projects" value={f.number(all.data.counts.projects)} />
 		<Stat
-			label="Todos"
-			value={f.number(all.data.counts.todos)}
+			label="Issues"
+			value={f.number(all.data.counts.issues)}
 			note="{all.data.counts.done} done"
 		/>
 	{:else}

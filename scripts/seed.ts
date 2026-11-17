@@ -5,7 +5,7 @@ import { Permission } from "@agents/core/permission";
 import { Database, sql } from "@agents/core/drizzle";
 import { Project } from "@agents/core/project";
 import { Queue } from "@agents/core/queue";
-import { Todo } from "@agents/core/todo";
+import { Issue } from "@agents/core/issue";
 import { Auth } from "@agents/core/auth";
 import { User } from "@agents/core/user";
 import { Key } from "@agents/core/key";
@@ -18,7 +18,7 @@ const email = process.env.SEED_EMAIL ?? "dev@example.com";
 const name = process.env.SEED_NAME ?? "Dev User";
 const pw = process.env.SEED_PASSWORD ?? "password123";
 
-const count = Number(process.env.SEED_TODO_COUNT ?? 260);
+const count = Number(process.env.SEED_ISSUE_COUNT ?? 260);
 const days = Number(process.env.SEED_DAYS ?? 365);
 const DAY = 86_400_000;
 const now = Date.now();
@@ -50,7 +50,7 @@ const verbs = [
 const nouns = [
   "dashboard",
   "auth flow",
-  "todo list",
+  "issue list",
   "insights",
   "settings",
   "forms",
@@ -144,7 +144,7 @@ async function seed() {
 
   // Matches the row the seed just wrote, so a check that would fail for real fails here too.
   await Identity.provide("user", { userID, role: "admin" }, async () => {
-    const list = await Todo.list({ page: 1, pageSize: 100 });
+    const list = await Issue.list({ page: 1, pageSize: 100 });
     if (list.total > 0) return;
 
     const ids = await Promise.all(
@@ -163,7 +163,7 @@ async function seed() {
         const started = state === "backlog" || state === "planned" ? null : new Date(start);
         const done = state === "done" ? new Date(rand(start, Math.min(due, now))) : null;
 
-        const { id } = await Todo.create({
+        const { id } = await Issue.create({
           title: title(),
           status: state,
           source: "project",
@@ -174,11 +174,11 @@ async function seed() {
           dueDate: new Date(due).toISOString(),
         });
 
-        // Todo.create stamps the clock to now; backdate the whole trail here.
+        // Issue.create stamps the clock to now; backdate the whole trail here.
         await Database.use((tx) =>
           tx.execute(
             sql`
-            update todo
+            update issue
             set time_created = ${at.toISOString()}::timestamptz,
                 time_updated = ${(done ?? at).toISOString()}::timestamptz,
                 time_started = ${started?.toISOString() ?? null}::timestamptz,
@@ -196,7 +196,7 @@ async function seed() {
 }
 
 // Fixtures publish events like any other write, so a queue port has to exist. Memory
-// discards the jobs: nobody wants 260 seeded todos POSTed at the target's webhooks.
+// discards the jobs: nobody wants 260 seeded issues POSTed at the target's webhooks.
 // Released at once: `bun dev` waits on this exit, and an idle pool holds it open for 20s.
 const db = Database.connect();
 const result = await Database.provide(db, () =>

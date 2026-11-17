@@ -20,7 +20,7 @@
 	import ProjectForm from '#lib/features/projects/components/ProjectForm.svelte';
 	import { update } from '#lib/features/settings/api/prefs.query.ts';
 	import { swap } from '#lib/features/settings/theme.ts';
-	import TodoForm from '#lib/features/todos/components/form/TodoForm.svelte';
+	import IssueForm from '#lib/features/issues/components/form/IssueForm.svelte';
 	import { hotkeys } from '#lib/hotkeys.ts';
 	import { user } from '#lib/utils/context.ts';
 
@@ -68,8 +68,8 @@
 		...(me.can({ project: ['create'] })
 			? [{ group: 'Actions', label: 'New project', run: () => modal(ProjectForm) }]
 			: []),
-		...(me.can({ todo: ['create'] })
-			? [{ group: 'Actions', label: 'New todo', run: () => modal(TodoForm) }]
+		...(me.can({ issue: ['create'] })
+			? [{ group: 'Actions', label: 'New issue', run: () => modal(IssueForm) }]
 			: []),
 		...(me.can({ file: ['create'] })
 			? [{ group: 'Actions', label: 'Upload files', run: pick }]

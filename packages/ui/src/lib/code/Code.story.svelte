@@ -9,8 +9,8 @@
 }`;
 
 	const json = `{
-  "type": "todo.created",
-  "data": { "id": "tod_01", "done": false }
+  "type": "issue.created",
+  "data": { "id": "iss_01", "done": false }
 }`;
 
 	export const story: Story = {

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, mock } from "bun:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { Key } from "@agents/core/key";
-import { Todo } from "@agents/core/todo";
+import { Issue } from "@agents/core/issue";
 import { app } from "../src/mcp";
 import { createUser } from "./api/util";
 
@@ -32,12 +32,12 @@ describe("mcp", () => {
     token = (await Key.mint({ userID, name: "test" })).key;
   });
 
-  it("lists todo tools", async () => {
+  it("lists issue tools", async () => {
     const client = await connect();
     const tools = await client.listTools();
     const names = tools.tools.map((tool) => tool.name);
-    expect(names).toContain("todo_list");
-    expect(names).toContain("todo_create");
+    expect(names).toContain("issue_list");
+    expect(names).toContain("issue_create");
     expect(names).toContain("feedback_create");
     await client.close();
   });
@@ -52,10 +52,10 @@ describe("mcp", () => {
     await client.close();
   });
 
-  it("creates and lists todos through tools", async () => {
+  it("creates and lists issues through tools", async () => {
     const client = await connect();
-    await client.callTool({ name: "todo_create", arguments: { title: "From MCP" } });
-    const result = await client.callTool({ name: "todo_list", arguments: {} });
+    await client.callTool({ name: "issue_create", arguments: { title: "From MCP" } });
+    const result = await client.callTool({ name: "issue_list", arguments: {} });
     const content = result.content as { type: string; text: string }[];
     expect(content[0]?.text).toContain("From MCP");
     await client.close();
@@ -72,22 +72,22 @@ describe("mcp", () => {
       expect(tool.description, `${tool.name} has no description`).toBeTruthy();
     }
 
-    const list = tools.find((tool) => tool.name === "todo_list")!;
-    expect(list.title).toBe(Todo.list.meta.title);
-    expect(list.description).toBe(Todo.list.meta.description);
+    const list = tools.find((tool) => tool.name === "issue_list")!;
+    expect(list.title).toBe(Issue.list.meta.title);
+    expect(list.description).toBe(Issue.list.meta.description);
 
-    const stages = tools.find((tool) => tool.name === "todo_stages")!;
-    expect(stages.title).toBe(Todo.stages.meta.title);
-    expect(stages.description).toBe(Todo.stages.meta.description);
+    const stages = tools.find((tool) => tool.name === "issue_stages")!;
+    expect(stages.title).toBe(Issue.stages.meta.title);
+    expect(stages.description).toBe(Issue.stages.meta.description);
     await client.close();
   });
 
   it("takes its input schema from the core op", async () => {
     const client = await connect();
     const { tools } = await client.listTools();
-    const list = tools.find((tool) => tool.name === "todo_list")!;
+    const list = tools.find((tool) => tool.name === "issue_list")!;
 
-    // Reached only by deriving from `Todo.list.schema` — the old hand-written shape had neither.
+    // Reached only by deriving from `Issue.list.schema` — the old hand-written shape had neither.
     expect(Object.keys(list.inputSchema.properties ?? {})).toEqual(
       expect.arrayContaining(["sort", "createdBy"]),
     );
@@ -100,30 +100,30 @@ describe("mcp", () => {
   it("fetches and removes by bare id", async () => {
     const client = await connect();
     const made = read(
-      await client.callTool({ name: "todo_create", arguments: { title: "By id" } }),
+      await client.callTool({ name: "issue_create", arguments: { title: "By id" } }),
     );
 
-    const got = read(await client.callTool({ name: "todo_get", arguments: { id: made.id } }));
+    const got = read(await client.callTool({ name: "issue_get", arguments: { id: made.id } }));
     expect(got.title).toBe("By id");
 
-    expect(read(await client.callTool({ name: "todo_remove", arguments: { id: made.id } }))).toBe(
+    expect(read(await client.callTool({ name: "issue_remove", arguments: { id: made.id } }))).toBe(
       "ok",
     );
     expect(
-      read(await client.callTool({ name: "todo_get", arguments: { id: made.id } })),
+      read(await client.callTool({ name: "issue_get", arguments: { id: made.id } })),
     ).toBeNull();
     await client.close();
   });
 
-  it("reports the updated todo rather than the update's own return", async () => {
+  it("reports the updated issue rather than the update's own return", async () => {
     const client = await connect();
     const made = read(
-      await client.callTool({ name: "todo_create", arguments: { title: "Before" } }),
+      await client.callTool({ name: "issue_create", arguments: { title: "Before" } }),
     );
 
     const after = read(
       await client.callTool({
-        name: "todo_update",
+        name: "issue_update",
         arguments: { id: made.id, title: "After", status: "active" },
       }),
     );
@@ -135,13 +135,13 @@ describe("mcp", () => {
   it("reports the stages a rename left behind", async () => {
     const client = await connect();
     await client.callTool({
-      name: "todo_create",
+      name: "issue_create",
       arguments: { title: "Staged", stage: "alpha", source: "test", sourceID: "rename" },
     });
 
     const stages = read(
       await client.callTool({
-        name: "todo_rename_stage",
+        name: "issue_rename_stage",
         arguments: { from: "alpha", to: "beta", source: "test", sourceID: "rename" },
       }),
     );

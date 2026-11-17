@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import ChartLine from "@lucide/svelte/icons/chart-line";
 import LayoutDashboard from "@lucide/svelte/icons/layout-dashboard";
-import ListTodo from "@lucide/svelte/icons/list-todo";
+import ListIssue from "@lucide/svelte/icons/list-todo";
 import Settings from "@lucide/svelte/icons/settings";
 import { getProjectByIdOptions, getProjectQueryKey, type Project } from "@agents/sdk/query";
 import Head from "./Head.svelte";
@@ -45,7 +45,7 @@ export const load: LayoutLoad = async (event) => {
           {
             items: [
               { href: base, label: "Overview", exact: true, icon: LayoutDashboard },
-              { href: `${base}/todos`, label: "Todos", icon: ListTodo },
+              { href: `${base}/issues`, label: "Issues", icon: ListIssue },
               { href: `${base}/insights`, label: "Insights", icon: ChartLine },
             ],
           },

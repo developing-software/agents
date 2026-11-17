@@ -72,7 +72,7 @@ describe("key", () => {
 
   withTestUser("a scoped agent can't mint, list or revoke keys", async ({ userID }) => {
     const key = await Key.create({ name: "laptop" });
-    await Identity.delegate("copilot", { todo: ["read"] }, async () => {
+    await Identity.delegate("copilot", { issue: ["read"] }, async () => {
       expect(() => Key.create({ name: "escape" })).toThrow(/key:create/);
       await expect(Key.list()).rejects.toThrow(/key:read/);
       expect(() => Key.remove(key.id)).toThrow(/key:delete/);

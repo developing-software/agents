@@ -5,9 +5,9 @@
 	import { layouts } from '#lib/features/home/layouts.ts';
 	import type { Props } from '#lib/features/home/modules.ts';
 	import Experiment from '#lib/features/experiments/components/Experiment.svelte';
-	import Glance from '#lib/features/todos/components/Glance.svelte';
-	import MonthWidget from '#lib/features/todos/components/MonthWidget.svelte';
-	import Recent from '#lib/features/todos/components/Recent.svelte';
+	import Glance from '#lib/features/issues/components/Glance.svelte';
+	import MonthWidget from '#lib/features/issues/components/MonthWidget.svelte';
+	import Recent from '#lib/features/issues/components/Recent.svelte';
 	import Shortcuts from '#lib/components/Shortcuts.svelte';
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import Kanban from '@lucide/svelte/icons/kanban';
@@ -22,8 +22,8 @@
 		{ href: '/settings/account', label: 'Account', icon: UserRound },
 		{ href: '/settings/keys', label: 'API keys', icon: KeyRound },
 		{ href: '/settings/experience', label: 'Experience', icon: Palette },
-		{ href: '/todos?view=board', label: 'Board', icon: Kanban },
-		{ href: '/todos?view=timeline', label: 'Timeline', icon: CalendarRange }
+		{ href: '/issues?view=board', label: 'Board', icon: Kanban },
+		{ href: '/issues?view=timeline', label: 'Timeline', icon: CalendarRange }
 	];
 </script>
 
@@ -49,8 +49,8 @@
 				hint: 'Everything opened, by where it stands now.',
 				body: status
 			},
-			calendar: { title: 'Todos this month', body: calendar, wide: true },
-			recent: { title: 'Recent todos', body: recent },
+			calendar: { title: 'Issues this month', body: calendar, wide: true },
+			recent: { title: 'Recent issues', body: recent },
 			shortcuts: { title: 'Shortcuts', body: shortcuts }
 		}}
 	/>

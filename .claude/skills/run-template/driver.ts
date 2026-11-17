@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Drives the running dev stack's dashboard as an authenticated user (stack must be running).
-//   bun .claude/skills/run-template/driver.ts shot <route> [out.png] | todo <title> [out.png]
+//   bun .claude/skills/run-template/driver.ts shot <route> [out.png] | issue <title> [out.png]
 // Env: BASE, DATABASE_URL, EMAIL, CHROME_PATH — see SKILL.md.
 
 import { spawnSync } from "node:child_process";
@@ -55,19 +55,19 @@ if (cmd === "shot") {
   await shot(out ?? "shot.png");
 }
 
-if (cmd === "todo") {
-  const title = arg ?? `Driver todo ${Date.now()}`;
-  await page.goto(`${base}/todos`, { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "New todo" }).click();
+if (cmd === "issue") {
+  const title = arg ?? `Driver issue ${Date.now()}`;
+  await page.goto(`${base}/issues`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "New issue" }).click();
   await page.getByPlaceholder("What needs doing?").fill(title);
-  await page.getByRole("button", { name: "Add todo" }).click();
+  await page.getByRole("button", { name: "Add issue" }).click();
   await page.getByRole("link", { name: title }).waitFor({ state: "visible" });
   console.log(`created and visible: ${title}`);
-  await shot(out ?? "todo.png");
+  await shot(out ?? "issue.png");
 }
 
-if (!cmd || !["shot", "todo"].includes(cmd)) {
-  console.log("usage: bun driver.ts shot <route> [out.png] | todo <title> [out.png]");
+if (!cmd || !["shot", "issue"].includes(cmd)) {
+  console.log("usage: bun driver.ts shot <route> [out.png] | issue <title> [out.png]");
 }
 
 if (errors.length) console.log(`console errors:\n${errors.join("\n")}`);

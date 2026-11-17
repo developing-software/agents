@@ -1,27 +1,27 @@
 import { describe, expect } from "bun:test";
 import { Admin } from "../src/platform/admin";
-import { Todo } from "../src/todo";
+import { Issue } from "../src/issue";
 import { Event } from "../src/platform/event";
 import { Identifier } from "../src/identifier";
 import { createUser, testEmail, withTestUser } from "./util";
 
 const project = () => ({ source: "project", sourceID: Identifier.create("project") });
 
-const titles = (page: { data: Todo.Info[] }) => page.data.map((todo) => todo.title);
+const titles = (page: { data: Issue.Info[] }) => page.data.map((issue) => issue.title);
 
 const mint = async (name: string) => (await createUser({ name, email: testEmail() })).id;
 
 describe("order", () => {
   withTestUser("sorts ascending and descending on one key", async () => {
     const src = project();
-    for (const title of ["Beta", "Alpha", "Gamma"]) await Todo.create({ title, ...src });
+    for (const title of ["Beta", "Alpha", "Gamma"]) await Issue.create({ title, ...src });
 
-    expect(titles(await Todo.list({ ...src, sort: ["title"] }))).toEqual([
+    expect(titles(await Issue.list({ ...src, sort: ["title"] }))).toEqual([
       "Alpha",
       "Beta",
       "Gamma",
     ]);
-    expect(titles(await Todo.list({ ...src, sort: ["-title"] }))).toEqual([
+    expect(titles(await Issue.list({ ...src, sort: ["-title"] }))).toEqual([
       "Gamma",
       "Beta",
       "Alpha",
@@ -30,13 +30,13 @@ describe("order", () => {
 
   withTestUser("applies keys in priority order", async () => {
     const src = project();
-    await Todo.create({ title: "B", status: "active", ...src });
-    await Todo.create({ title: "A", status: "active", ...src });
-    await Todo.create({ title: "C", status: "backlog", ...src });
+    await Issue.create({ title: "B", status: "active", ...src });
+    await Issue.create({ title: "A", status: "active", ...src });
+    await Issue.create({ title: "C", status: "backlog", ...src });
 
     // Status ranks by pipeline, so backlog leads active; title then breaks the tie.
-    expect(titles(await Todo.list({ ...src, sort: ["status", "title"] }))).toEqual(["C", "A", "B"]);
-    expect(titles(await Todo.list({ ...src, sort: ["status", "-title"] }))).toEqual([
+    expect(titles(await Issue.list({ ...src, sort: ["status", "title"] }))).toEqual(["C", "A", "B"]);
+    expect(titles(await Issue.list({ ...src, sort: ["status", "-title"] }))).toEqual([
       "C",
       "B",
       "A",
@@ -49,26 +49,26 @@ describe("order", () => {
     // reverse makes an id sort and a name sort disagree.
     const zoe = await mint("Zoe");
     const amy = await mint("Amy");
-    await Todo.create({ title: "Zoe's", assignee: zoe, ...src });
-    await Todo.create({ title: "Amy's", assignee: amy, ...src });
+    await Issue.create({ title: "Zoe's", assignee: zoe, ...src });
+    await Issue.create({ title: "Amy's", assignee: amy, ...src });
     expect(zoe < amy).toBe(true);
 
-    expect(titles(await Todo.list({ ...src, sort: ["assignee"] }))).toEqual(["Amy's", "Zoe's"]);
-    expect(titles(await Todo.list({ ...src, sort: ["-assignee"] }))).toEqual(["Zoe's", "Amy's"]);
+    expect(titles(await Issue.list({ ...src, sort: ["assignee"] }))).toEqual(["Amy's", "Zoe's"]);
+    expect(titles(await Issue.list({ ...src, sort: ["-assignee"] }))).toEqual(["Zoe's", "Amy's"]);
   });
 
   withTestUser("keeps nulls last in both directions", async () => {
     const src = project();
-    await Todo.create({ title: "Later", dueDate: "2030-06-01T00:00:00.000Z", ...src });
-    await Todo.create({ title: "Nothing", ...src });
-    await Todo.create({ title: "Sooner", dueDate: "2030-01-01T00:00:00.000Z", ...src });
+    await Issue.create({ title: "Later", dueDate: "2030-06-01T00:00:00.000Z", ...src });
+    await Issue.create({ title: "Nothing", ...src });
+    await Issue.create({ title: "Sooner", dueDate: "2030-01-01T00:00:00.000Z", ...src });
 
-    expect(titles(await Todo.list({ ...src, sort: ["dueDate"] }))).toEqual([
+    expect(titles(await Issue.list({ ...src, sort: ["dueDate"] }))).toEqual([
       "Sooner",
       "Later",
       "Nothing",
     ]);
-    expect(titles(await Todo.list({ ...src, sort: ["-dueDate"] }))).toEqual([
+    expect(titles(await Issue.list({ ...src, sort: ["-dueDate"] }))).toEqual([
       "Later",
       "Sooner",
       "Nothing",
@@ -78,13 +78,13 @@ describe("order", () => {
   withTestUser("pages a non-unique sort without repeating or dropping rows", async () => {
     const src = project();
     for (const title of ["A", "B", "C", "D", "E"]) {
-      await Todo.create({ title, status: "active", ...src });
+      await Issue.create({ title, status: "active", ...src });
     }
 
     // Every row ties on status, so only the id tiebreak keeps the window stable.
     const seen = [];
     for (const page of [1, 2, 3]) {
-      seen.push(...titles(await Todo.list({ ...src, sort: ["status"], page, pageSize: 2 })));
+      seen.push(...titles(await Issue.list({ ...src, sort: ["status"], page, pageSize: 2 })));
     }
     expect(seen).toHaveLength(5);
     expect(new Set(seen).size).toBe(5);
@@ -92,18 +92,18 @@ describe("order", () => {
 
   withTestUser("rejects keys outside the schema", async () => {
     // `fn()` parses before it calls, so this throws rather than rejecting.
-    expect(() => Todo.list({ ...project(), sort: ["bogus" as never] })).toThrow();
+    expect(() => Issue.list({ ...project(), sort: ["bogus" as never] })).toThrow();
   });
 
   withTestUser("falls back rather than trusting an unvalidated key", async () => {
     const src = project();
-    await Todo.create({ title: "Only", ...src });
+    await Issue.create({ title: "Only", ...src });
 
     // `force` skips the enum, so the helper's own guard is what stops a prototype key
     // reaching drizzle.
     const keys: any = [["constructor"], ["toString"], ["missing"]];
     for (const sort of keys) {
-      expect(titles(await Todo.list.force({ ...src, sort }))).toEqual(["Only"]);
+      expect(titles(await Issue.list.force({ ...src, sort }))).toEqual(["Only"]);
     }
   });
 });
@@ -129,11 +129,11 @@ describe("order across namespaces", () => {
   withTestUser(
     "sorts the event log by type within a scope",
     async () => {
-      const { id } = await Todo.create({ title: "Audited" });
-      await Todo.update({ id, status: "active" });
+      const { id } = await Issue.create({ title: "Audited" });
+      await Issue.update({ id, status: "active" });
 
-      // A todo's own event stream — scoped so other tests cannot leak into the assertion.
-      const scope = { source: "todo", sourceID: id };
+      // An issue's own event stream — scoped so other tests cannot leak into the assertion.
+      const scope = { source: "issue", sourceID: id };
       const asc = (await Event.list({ ...scope, sort: ["type"], pageSize: 100 })).data;
       const desc = (await Event.list({ ...scope, sort: ["-type"], pageSize: 100 })).data;
 

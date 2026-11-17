@@ -16,7 +16,7 @@ import { invalidate, type Ctx, type Opts } from "#lib/query.ts";
 // Its Logs timeline sits under `events`, so the new entry shows too.
 const project = [{ tags: ["Project"] }];
 // The stage picker groups by project name, so a rename or delete reshapes its options.
-const labels = ["todos", "labels"];
+const labels = ["issues", "labels"];
 const touched = [project, ["events"], labels];
 
 // A new search keeps the old rows on screen until its results land.

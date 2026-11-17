@@ -3,7 +3,7 @@ import type { Permission } from "@agents/core/permission";
 import ChartLine from "@lucide/svelte/icons/chart-line";
 import Files from "@lucide/svelte/icons/files";
 import FolderKanban from "@lucide/svelte/icons/folder-kanban";
-import ListTodo from "@lucide/svelte/icons/list-todo";
+import ListIssue from "@lucide/svelte/icons/list-todo";
 import Gauge from "@lucide/svelte/icons/gauge";
 
 // What the home shows per role. Reaching a module is still enforced by its route.
@@ -12,15 +12,15 @@ const modules = {
   projects: {
     href: "/projects",
     label: "Projects",
-    hint: "Todos grouped by project",
+    hint: "Issues grouped by project",
     icon: FolderKanban,
   },
-  todos: { href: "/todos", label: "Todos", hint: "All todos", icon: ListTodo },
+  issues: { href: "/issues", label: "Issues", hint: "All issues", icon: ListIssue },
   files: { href: "/files", label: "Files", hint: "Uploaded attachments", icon: Files },
   insights: {
     href: "/insights",
     label: "Insights",
-    hint: "Charts of todo activity",
+    hint: "Charts of issue activity",
     icon: ChartLine,
   },
   admin: {
@@ -38,13 +38,13 @@ type Config = { modules: (keyof typeof modules)[]; widgets: Key[] };
 
 /** What a role gets when `pages` says nothing about it, field by field. */
 const base: Config = {
-  modules: ["todos", "projects", "files", "insights"],
+  modules: ["issues", "projects", "files", "insights"],
   widgets: ["status", "calendar", "recent", "shortcuts"],
 };
 
 /** Per-role overrides of `base`. Leave a field out to inherit it. */
 const pages: { [R in Permission.Role]?: Partial<Config> } = {
-  admin: { modules: ["todos", "projects", "files", "insights", "admin"] },
+  admin: { modules: ["issues", "projects", "files", "insights", "admin"] },
 };
 
 export type Module = (typeof modules)[keyof typeof modules] & { key: keyof typeof modules };

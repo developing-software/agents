@@ -17,7 +17,7 @@ export namespace Sql {
   export const Tables = {
     user: "user",
     project: "project",
-    todo: "todo",
+    issue: "issue",
     event: "admin",
   } as const satisfies Record<string, keyof typeof Permission.Statement>;
 

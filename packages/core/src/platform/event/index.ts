@@ -40,13 +40,13 @@ export namespace Event {
         .nullable()
         .meta({ description: "That user, joined in so a log row can name them." }),
       // Role, zone, scope and credential are an admin's business, not a teammate's reading a
-      // todo's history — so everyone else gets null and the `user` above.
+      // issue's history — so everyone else gets null and the `user` above.
       identity: Identity.Info.nullable().meta({
         description:
           "Who acted, in full: agent name, scope, credential. Null unless you are an admin.",
       }),
       type: z.string().min(1).max(128).meta({
-        description: "What happened, like `todo.created`.",
+        description: "What happened, like `issue.created`.",
         example: Examples.Event.type,
       }),
       source: z
@@ -54,7 +54,7 @@ export namespace Event {
         .min(1)
         .max(64)
         .nullable()
-        .meta({ description: "Kind of entity it happened to, like `todo`." }),
+        .meta({ description: "Kind of entity it happened to, like `issue`." }),
       sourceID: z.string().nullable().meta({ description: "Id of that entity." }),
       tags: Tags.meta({
         description: "Filter labels. Always carries the actor kind, like `actor:user`.",
@@ -123,7 +123,7 @@ export namespace Event {
   );
 
   const pinned: Record<string, Permission.Grants | undefined> = {
-    todo: { todo: ["read"] },
+    issue: { issue: ["read"] },
     project: { project: ["read"] },
   };
 
@@ -138,7 +138,7 @@ export namespace Event {
       search: z.string().optional(),
     }),
     (input) => {
-      // A reader of one todo or project may see its trail; any other read is the back office.
+      // A reader of one issue or project may see its trail; any other read is the back office.
       Identity.check((input.sourceID && pinned[input.source ?? ""]) || { admin: ["read"] });
 
       const { page, pageSize, limit, offset } = Common.page(input);

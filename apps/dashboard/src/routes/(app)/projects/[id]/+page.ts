@@ -1,4 +1,4 @@
-import { list, stages } from "#lib/features/todos/api/todos.query.ts";
+import { list, stages } from "#lib/features/issues/api/issues.query.ts";
 import { warm } from "#lib/query.ts";
 import type { PageLoad } from "./$types";
 

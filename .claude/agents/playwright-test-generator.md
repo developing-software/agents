@@ -31,29 +31,29 @@ application behavior.
    For following plan:
 
   ```markdown file=specs/plan.md
-  ### 1. Adding New Todos
+  ### 1. Adding New Issues
 
   **Seed:** `tests/seed.spec.ts`
 
-  #### 1.1 Add Valid Todo
+  #### 1.1 Add Valid Issue
 
   **Steps:**
 
   1. Click in the "What needs to be done?" input field
 
-  #### 1.2 Add Multiple Todos
+  #### 1.2 Add Multiple Issues
 
   ...
   ```
 
   Following file is generated:
 
-  ```ts file=add-valid-todo.spec.ts
+  ```ts file=add-valid-issue.spec.ts
   // spec: specs/plan.md
   // seed: tests/seed.spec.ts
 
-  test.describe('Adding New Todos', () => {
-    test('Add Valid Todo', async { page } => {
+  test.describe('Adding New Issues', () => {
+    test('Add Valid Issue', async { page } => {
       // 1. Click in the "What needs to be done?" input field
       await page.click(...);
 

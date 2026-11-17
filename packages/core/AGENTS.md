@@ -32,7 +32,7 @@
 ## Module Layout
 
 - Default: one module = one `index.ts` exporting a `namespace Foo { ... }`
-  (see `todo/`).
+  (see `issue/`).
 - Split into multiple files inside the module directory when `index.ts`
   grows hard to navigate or mixes unrelated concerns (see `auth/`, which
   splits credentials (`index.ts`, `Auth`) from sessions (`session.ts`) and
@@ -40,12 +40,12 @@
 - No top-level shim files at `src/<module>.ts` alongside `src/<module>/`.
   Consumers import through the directory via `@agents/core/<module>`.
 - SQL schemas live next to the module they belong to (`user/user.sql.ts`,
-  `auth/provider.sql.ts`, `todo/todo.sql.ts`).
+  `auth/provider.sql.ts`, `issue/issue.sql.ts`).
 - Inside a file, order for a reader asking what the module does, not how:
   schemas and their inferred types, shared constants, exported operations in
   lifecycle order (`create`, `list`, `fromID`, `update`, `remove`), then
   `serialize`, then a `// === UTILS ===` marker with the private helpers below
-  it (see `todo/index.ts`). Nothing above the marker is a helper, nothing below
+  it (see `issue/index.ts`). Nothing above the marker is a helper, nothing below
   it is exported. Only `function` declarations hoist, so a value another schema
   derives from — like `Patch` — stays above its use.
 - Modules are grouped by tier: `lib/` for swappable infrastructure, `platform/`

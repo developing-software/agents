@@ -42,9 +42,9 @@
 		},
 		{
 			icon: ListChecks,
-			title: 'My open todos',
+			title: 'My open issues',
 			sub: 'What is on my plate, by due date',
-			text: 'What are my open todos, ordered by due date?'
+			text: 'What are my open issues, ordered by due date?'
 		},
 		{
 			icon: Help,
@@ -76,7 +76,7 @@
 		<div class="empty">
 			<span class="mark"><Avatar size={56} /></span>
 			<h2>How can I help?</h2>
-			<p>Ask about your projects and todos, or about what is on this page.</p>
+			<p>Ask about your projects and issues, or about what is on this page.</p>
 			<div class="cards">
 				{#each cards as item (item.title)}
 					<button class="card" type="button" onclick={() => ctx.send(item.text)}>

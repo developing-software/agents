@@ -245,7 +245,7 @@ describe("${name}", () => {
   });
 
   withTestUser("a scoped agent needs the ${name} grant", async () => {
-    await Identity.delegate("copilot", { todo: ["read"] }, () =>
+    await Identity.delegate("copilot", { issue: ["read"] }, () =>
       expect(() => ${pascal}.create({ title: "Nope" })).toThrow(/${name}:create/),
     );
   });
@@ -535,12 +535,12 @@ await wire(
   "packages/functions/src/api/routes.ts",
   [
     [
-      `import { TodoApi } from "./handler/todo";`,
-      `import { TodoApi } from "./handler/todo";\nimport { ${pascal}Api } from "./handler/${name}";`,
+      `import { IssueApi } from "./handler/issue";`,
+      `import { IssueApi } from "./handler/issue";\nimport { ${pascal}Api } from "./handler/${name}";`,
     ],
     [
-      `.route("/todo", TodoApi.route)`,
-      `.route("/todo", TodoApi.route)\n  .route("/${name}", ${pascal}Api.route)`,
+      `.route("/issue", IssueApi.route)`,
+      `.route("/issue", IssueApi.route)\n  .route("/${name}", ${pascal}Api.route)`,
     ],
   ],
   [`import { ${pascal}Api } from "./handler/${name}";`, `.route("/${name}", ${pascal}Api.route)`],
@@ -550,10 +550,10 @@ await wire(
   "packages/functions/src/mcp/index.ts",
   [
     [
-      `import { todo } from "./tool/todo";`,
-      `import { todo } from "./tool/todo";\nimport { ${name} } from "./tool/${name}";`,
+      `import { issue } from "./tool/issue";`,
+      `import { issue } from "./tool/issue";\nimport { ${name} } from "./tool/${name}";`,
     ],
-    ["  todo(s);", `  todo(s);\n  ${name}(s);`],
+    ["  issue(s);", `  issue(s);\n  ${name}(s);`],
   ],
   [`import { ${name} } from "./tool/${name}";`, `${name}(s);`],
 );

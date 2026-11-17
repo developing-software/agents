@@ -107,7 +107,7 @@
         "patterns": ["apps/*/src/routes/**"],
       },
       // autoDiscover splits features/* into per-slice zones (features/auth,
-      // features/todos, …) so siblings can't import each other. It needs a literal
+      // features/issues, …) so siblings can't import each other. It needs a literal
       // directory and can't glob apps/*, so add one line per app. Uncomment admin
       // when apps/admin lands.
       {
@@ -167,7 +167,7 @@
         "from": "features",
         // `events` has no pages of its own — it's a self-contained activity-log
         // widget (Timeline + its own remote fetch) embedded by other slices
-        // (todos today, keys/links later), not a private feature. Every slice
+        // (issues today, keys/links later), not a private feature. Every slice
         // may depend on it, same as server/shared/core/ui.
         "allow": ["server", "shared", "core", "ui", "features/events"],
       },

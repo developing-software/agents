@@ -6,7 +6,7 @@ export namespace Identifier {
     user: "usr",
     provider: "prv",
     project: "prj",
-    todo: "tod",
+    issue: "iss",
     key: "key",
     event: "evt",
     job: "job",

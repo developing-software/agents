@@ -12,14 +12,14 @@
 		of: Popover
 	};
 
-	const statuses = ['Backlog', 'Todo', 'In progress', 'Done'];
+	const statuses = ['Backlog', 'Issue', 'In progress', 'Done'];
 </script>
 
 <script lang="ts">
 	// import { Popover, Button, Input, Kbd } from '@agents/ui';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 
-	let status = $state('Todo');
+	let status = $state('Issue');
 	let picking = $state(false);
 	let open = $state(false);
 	let link = $state('');

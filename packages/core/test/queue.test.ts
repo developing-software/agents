@@ -168,7 +168,7 @@ describe("queue", () => {
 
   it("an internal job replays as that internal, scope intact", async () => {
     seen.length = 0;
-    const scope = { todo: ["read"] } as const;
+    const scope = { issue: ["read"] } as const;
     const stamp = Identity.internal("sync", scope, () => Identity.stamp());
     expect(stamp).toEqual({ type: "internal", name: "sync", scope });
     const replay = Queue.define("test.replay", z.object({}), async () => {
@@ -199,7 +199,7 @@ describe("queue", () => {
 
   withTestUser("an agent's job replays as that agent, scope intact", async ({ userID }) => {
     seen.length = 0;
-    const scope = { todo: ["read"] } as const;
+    const scope = { issue: ["read"] } as const;
     const stamp = await Identity.provide(
       "agent",
       { name: "copilot", userID, role: "member", scope },
