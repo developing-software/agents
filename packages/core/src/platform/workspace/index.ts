@@ -76,7 +76,7 @@ export namespace Workspaces {
       );
       if (!row) throw new Error(`No workspace ${input.id}`);
       const owner = input.owner ? await Account.fromID(input.owner) : undefined;
-      await inside(row, { schema: row.schema }, async () => {
+      await inside(at(row), async () => {
         await Migrations.tenant(row.schema);
         if (owner) await seat(owner, "owner");
       });
@@ -331,7 +331,7 @@ export namespace Workspaces {
         "Workspace is still being set up",
       );
     // An invite brings back someone removed earlier, at the role it offers.
-    await inside(offer.row, { schema: offer.row.schema }, () =>
+    await inside(at(offer.row), () =>
       Database.use((tx) =>
         tx
           .insert(UserTable)
@@ -415,7 +415,7 @@ export namespace Workspaces {
     );
     // A pending schema may not exist yet. Disk use is `usage`, which reads the catalogs in one go.
     const open = row.status === "ready";
-    const members = open ? await inside(row, { schema: row.schema }, roster) : [];
+    const members = open ? await inside(at(row), roster) : [];
     return {
       workspace: { ...serialize(row), schema: row.schema },
       access,
@@ -532,35 +532,31 @@ export namespace Workspaces {
     return found.info;
   }
 
+  /** Where a request runs: the registry row (none for the ambient schema) and the caller's place in it. */
+  export type Target = { row?: Row; info: Workspace.Info };
+
   /**
-   * Runs `fn` in the request's workspace; surfaces reach it through `Auth.enter`. An App runs in
-   * its own. Multi mode enters the `slug` picked; single mode its one workspace. Without a
-   * known caller, or before they belong anywhere, `fn` runs with none: the first-access screen.
+   * Decides where the request runs, before anything runs there. An App gets its own workspace;
+   * otherwise a pick (`slug`, multi mode only), else the caller's first workspace, so a single
+   * deploy switched to multi keeps working. Nothing for an unknown caller or one in no workspace.
+   * `strict` refuses a pick that doesn't open; off, it answers nothing so the caller can ask again.
    */
-  export async function enter<R>(slug: string | undefined, fn: () => Promise<R>) {
+  export async function target(slug?: string, strict = true): Promise<Target | undefined> {
     const info = Identity.peek();
-    if (info?.type === "system") return open(info.properties.workspace, fn);
-    if (!info || !Identity.known()) return fn();
-    // Multi mode refuses a pick you can't enter; single mode has no pick to refuse.
-    const multi = Workspace.mode() === "multi";
-    const pick = multi ? slug : (await only())?.slug;
-    const found = pick ? await locate(pick, multi) : undefined;
-    return found ? inside(found.row, found.info, fn) : fn();
+    if (info?.type === "system") return own(info.properties.workspace);
+    if (!info || !Identity.known()) return;
+    const pick = Workspace.mode() === "multi" ? slug : undefined;
+    return pick ? locate(pick, strict) : first();
+  }
+
+  /** Runs `fn` in `target`, or in no workspace when there is none: the first-access screen. */
+  export function enter<R>(target: Target | undefined, fn: () => Promise<R>) {
+    return target ? inside(target, fn) : fn();
   }
 
   /** Runs `fn` in the ready workspace on `schema`, unchecked: for an App's own key or replay. */
   export async function open<R>(schema: string, fn: () => Promise<R>) {
-    // Scripts and tests read one ambient schema with no registry row behind it.
-    if (schema === Database.ambient()) return Workspace.provide({ schema }, fn);
-    const row = await Central.use((tx) =>
-      tx
-        .select()
-        .from(WorkspaceTable)
-        .where(and(eq(WorkspaceTable.schema, schema), isNull(WorkspaceTable.timeDeleted)))
-        .then((rows) => rows.at(0)),
-    );
-    if (!row || row.status !== "ready") throw forbidden();
-    return inside(row, { schema: row.schema }, fn);
+    return inside(await own(schema), fn);
   }
 
   export function serialize(row: Row): Info {
@@ -607,7 +603,7 @@ export namespace Workspaces {
         ErrorCodes.Conflict.NOT_READY,
         "Workspace is still being set up",
       );
-    const member = await inside(row, { schema: row.schema }, () => held(user));
+    const member = await inside(at(row), () => held(user));
     if (!member && !strict) return;
     if (!member) throw forbidden();
     return { row, info: { schema: row.schema, role: member.role } satisfies Workspace.Info };
@@ -621,11 +617,30 @@ export namespace Workspaces {
     );
   }
 
-  /** `fn` in `info`'s schema, on the client `connect` picks for the row. */
-  function inside<R>(row: Row, info: Workspace.Info, fn: () => R): R {
-    const client = connect.use()(row);
-    const run = () => Workspace.provide(info, fn);
+  /** `fn` in the target's schema, on the client `connect` picks for its row. */
+  function inside<R>(target: Target, fn: () => R): R {
+    const client = target.row ? connect.use()(target.row) : undefined;
+    const run = () => Workspace.provide(target.info, fn);
     return client ? Database.provide(client, run) : run();
+  }
+
+  /** A registry row as a target, with no role read yet. */
+  function at(row: Row): Target {
+    return { row, info: { schema: row.schema } };
+  }
+
+  /** The ready workspace on `schema`; scripts and tests read an ambient one with no row behind it. */
+  async function own(schema: string): Promise<Target> {
+    if (schema === Database.ambient()) return { info: { schema } };
+    const row = await Central.use((tx) =>
+      tx
+        .select()
+        .from(WorkspaceTable)
+        .where(and(eq(WorkspaceTable.schema, schema), isNull(WorkspaceTable.timeDeleted)))
+        .then((rows) => rows.at(0)),
+    );
+    if (!row || row.status !== "ready") throw forbidden();
+    return at(row);
   }
 
   function single() {
@@ -640,7 +655,7 @@ export namespace Workspaces {
   async function manage(row: Row) {
     if (Identity.superadmin()) return;
     const user = Identity.userID();
-    const member = await inside(row, { schema: row.schema }, () => held(user));
+    const member = await inside(at(row), () => held(user));
     if (member?.role === "owner" || member?.role === "admin") return;
     throw new VisibleError(
       "forbidden",
@@ -673,6 +688,29 @@ export namespace Workspaces {
         .limit(1)
         .then((rows) => rows.at(0)),
     );
+  }
+
+  /** The caller's earliest ready workspace they still belong to, or nothing. */
+  async function first() {
+    const rows = await Central.use((tx) =>
+      tx
+        .select({ slug: WorkspaceTable.slug })
+        .from(AccessTable)
+        .innerJoin(WorkspaceTable, eq(WorkspaceTable.id, AccessTable.workspaceID))
+        .where(
+          and(
+            eq(AccessTable.userID, Identity.userID()),
+            eq(WorkspaceTable.status, "ready"),
+            isNull(WorkspaceTable.timeDeleted),
+          ),
+        )
+        .orderBy(AccessTable.timeCreated),
+    );
+    // Access outlives a removal, so the first row may hold no seat; try the next.
+    for (const row of rows) {
+      const found = await locate(row.slug, false);
+      if (found) return found;
+    }
   }
 
   /** An invite by id, only if it is addressed to `email`. */

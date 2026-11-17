@@ -1,13 +1,21 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Card, Skeleton } from '@agents/ui';
-	import { arrive, mine, offers, vacant } from '../api/workspaces.query';
+	import { goto } from '$app/navigation';
+	import { Card, Issue, Skeleton } from '@agents/ui';
+	import { arrive, mine, mode, offers, vacant } from '../api/workspaces.query';
 	import CreateForm from '../components/CreateForm.svelte';
+	import Mine from '../components/Mine.svelte';
 	import Offers from '../components/Offers.svelte';
+
+	// `gone` is a workspace the remembered pick pointed at that no longer opens.
+	let { gone }: { gone?: string | null } = $props();
 
 	const open = createQuery(vacant);
 	const invites = createQuery(offers);
 	const list = createQuery(mine);
+	const kind = createQuery(mode);
+	// Only multi mode picks; single mode enters its one workspace on its own.
+	const choosing = $derived(kind.data === 'multi' && (list.data?.length ?? 0) > 0);
 	const enter = arrive();
 
 	// Set once created; `mine` polls until the setup job marks it ready, then it is entered.
@@ -19,18 +27,29 @@
 	});
 </script>
 
+{#if gone}
+	<Issue>You can't open <b>{gone}</b> anymore: it was removed, or you were taken out of it.</Issue>
+{/if}
+
 {#if made}
 	<Card>
 		<p>Setting up <b>{made}</b>. You land inside it as soon as it's ready.</p>
 		<Skeleton h="2em" />
 	</Card>
 {:else if open.isSuccess && invites.isSuccess}
+	{#if choosing}
+		<section>
+			<h2>Your workspaces</h2>
+			<Mine onswitch={() => goto('/home')} />
+		</section>
+	{/if}
+
 	{#if open.data}
 		<section>
 			<h2>Create a workspace</h2>
 			<Card><CreateForm oncreated={(slug) => (made = slug)} /></Card>
 		</section>
-	{:else if invites.data.length === 0}
+	{:else if invites.data.length === 0 && !choosing}
 		<!-- Single mode, already set up: the only way in is an invite. -->
 		<Card>
 			<p>

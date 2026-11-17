@@ -6,7 +6,8 @@
 	import { choose, mine } from '../api/workspaces.query';
 
 	// `current` is the slug the request runs in, so its row shows as the one you're in.
-	let { current }: { current?: string } = $props();
+	// `onswitch` runs once the switch lands, for a page that should move on after it.
+	let { current, onswitch }: { current?: string; onswitch?: () => void } = $props();
 
 	const list = createQuery(mine);
 	const pick = choose();
@@ -26,7 +27,8 @@
 				<Button
 					disabled={one.status !== 'ready'}
 					pending={pick.isPending && pick.variables?.slug === one.slug}
-					onclick={() => pick.mutate({ slug: one.slug })}>Switch</Button
+					onclick={() => pick.mutate({ slug: one.slug }, { onSuccess: () => onswitch?.() })}
+					>Switch</Button
 				>
 			{/if}
 		</span>

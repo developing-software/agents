@@ -56,7 +56,8 @@ Surfaces call `Auth.enter(slug, fn)` once, after auth: it enters the workspace t
 Central modules read through `Central.use`/`transaction` (`drizzle/central`), tenant ones through
 `Database`. Single and multi mode share one path: every workspace is a registry row with its
 own schema. `WORKSPACES=single` (the default) is only a cap: `create` refuses a second one and
-`enter` uses the one there is, with no pick. `Workspaces.create` writes a `pending` row and
+the slug is never read. Without a pick, both modes enter the caller's first workspace, so a
+single deploy switched to `multi` (or back) keeps every workspace and lands people inside theirs. `Workspaces.create` writes a `pending` row and
 queues `workspace.setup` (migrate, seat the owner, mark `ready`); `resolve` 409s until then.
 
 Someone in no workspace lands on the dashboard's `/start`: create one (while `vacant`), or join

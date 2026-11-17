@@ -188,11 +188,11 @@ export namespace Auth {
   }
 
   /**
-   * Runs `fn` in the request's workspace as the caller holds it there: the identity made at the
-   * door is re-read against that workspace's user. What surfaces mount after `auth`.
+   * Runs `fn` in `target` (from `Workspaces.target`) as the caller holds it there: the identity
+   * made at the door is re-read against that workspace's user. What surfaces mount after `auth`.
    */
-  export function enter<R>(slug: string | undefined, fn: () => Promise<R>) {
-    return Workspaces.enter(slug, async () => {
+  export function enter<R>(target: Workspaces.Target | undefined, fn: () => Promise<R>) {
+    return Workspaces.enter(target, async () => {
       const info = Identity.peek();
       // An App's identity was read inside its workspace already; public and internal have no row.
       if (!info || (info.type !== "user" && info.type !== "agent") || !Workspace.peek())

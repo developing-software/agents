@@ -121,21 +121,34 @@ describe("workspace", () => {
   });
 
   it("enters nothing for a caller nobody knows", async () => {
-    expect(await Workspaces.enter("anything", async () => Workspace.provided())).toBeUndefined();
+    expect(await Workspaces.target("anything")).toBeUndefined();
   });
 });
 
 describe("single mode", () => {
   it("enters its one workspace for a member, and nothing for anyone else", async () => {
     expect(Workspace.mode()).toBe("single");
-    const here = await as(owner.id, () =>
-      Workspaces.enter(undefined, async () => Workspace.provided()),
-    );
+    const here = await as(owner.id, () => Workspaces.target().then((found) => found?.info));
     expect(here).toEqual({ schema: `ws_${slugs.a}`, role: "owner" });
-    const none = await as(stranger.id, () =>
-      Workspaces.enter(undefined, async () => Workspace.provided()),
-    );
+    const none = await as(stranger.id, () => Workspaces.target().then((found) => found?.info));
     expect(none).toBeUndefined();
+  });
+
+  it("multi mode without a pick enters the caller's first workspace", async () => {
+    // What a single deploy switched to multi sees: no cookie yet, and still lands inside.
+    const here = await multi(() =>
+      as(owner.id, () => Workspaces.target().then((found) => found?.info)),
+    );
+    expect(here?.schema).toBe(`ws_${slugs.a}`);
+  });
+
+  it("refuses an explicit pick that doesn't open, rather than entering none", async () => {
+    expect(await fail(multi(() => as(owner.id, () => Workspaces.target("missing"))))).toMatch(
+      /Not a member/,
+    );
+    expect(await fail(multi(() => as(stranger.id, () => Workspaces.target(slugs.b))))).toMatch(
+      /Not a member/,
+    );
   });
 
   it("is no longer vacant once a workspace exists", async () => {
@@ -155,7 +168,7 @@ describe("single mode", () => {
 
 // Through `Auth.enter`, which re-reads the caller's role inside the workspace.
 const inA = <R>(id: string, fn: () => Promise<R>) =>
-  multi(() => as(id, () => Auth.enter(slugs.a, fn)));
+  multi(() => as(id, async () => Auth.enter(await Workspaces.target(slugs.a), fn)));
 
 describe("workspace roles", () => {
   // Seats the stranger in `a` as a plain member, inline rather than through an invite flow.
@@ -259,7 +272,7 @@ describe("workspace admin", () => {
 describe("invites", () => {
   const guest = createUser({ name: "Guest", email: testEmail() });
   const inB = <R>(id: string, fn: () => Promise<R>) =>
-    multi(() => as(id, () => Auth.enter(slugs.b, fn)));
+    multi(() => as(id, async () => Auth.enter(await Workspaces.target(slugs.b), fn)));
   const sent: string[] = [];
   const mail = <R>(fn: () => Promise<R>) =>
     Email.provide({ send: async (msg) => void sent.push(msg.subject) }, fn);

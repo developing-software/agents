@@ -158,8 +158,8 @@ async function seed() {
   );
   // Invited and accepted the real way, with the mails swallowed.
   await Email.provide({ send: async () => {} }, () =>
-    me(() =>
-      Auth.enter(slug, async () => {
+    me(async () =>
+      Auth.enter(await Workspaces.target(slug), async () => {
         const seated = new Set((await Workspaces.members()).map((one) => one.email));
         for (const one of team)
           if (!seated.has(one.email)) await Workspaces.invite({ email: one.email });
@@ -174,8 +174,8 @@ async function seed() {
   const assignees = [userID, ...mates, null, ...mates];
 
   // Inside the workspace as its owner, so a check that would fail for real fails here too.
-  await me(() =>
-    Auth.enter(slug, async () => {
+  await me(async () =>
+    Auth.enter(await Workspaces.target(slug), async () => {
       const list = await Issue.list({ page: 1, pageSize: 100 });
       if (list.total > 0) return;
 

@@ -9,7 +9,7 @@
 	title="Your workspace"
 	lead="Signed in as {data.email}. Start a workspace, or join one you were invited to."
 >
-	<StartPage />
+	<StartPage gone={data.gone} />
 	<a class="out" href="/logout" data-sveltekit-reload>Not {data.email}? Log out</a>
 </Frame>
 
