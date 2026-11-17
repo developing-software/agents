@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Row from '../components/Row.svelte';
+	import Rows from '../components/Rows.svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { Badge, Button, Empty, Issue, Section, Skeleton } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
@@ -21,15 +23,15 @@
 	{#if rows.length === 0}
 		<Empty>Nobody has access.</Empty>
 	{:else}
-		<ul>
+		<Rows>
 			{#each rows as who (who.userID)}
-				<li>
+				<Row dense>
 					<a href={`/u/${who.userID}`}>{who.name}</a>
 					<span class="dim">{who.email}</span>
 					<span class="dim end">since {f.date(who.timeCreated)}</span>
-				</li>
+				</Row>
 			{/each}
-		</ul>
+		</Rows>
 	{/if}
 {/snippet}
 
@@ -92,26 +94,6 @@
 {/if}
 
 <style>
-	ul {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35em;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	li {
-		display: flex;
-		align-items: center;
-		gap: 0.75em;
-		padding: 0.5em 0.9em;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		background: var(--surface);
-		font-size: 0.9em;
-	}
-
 	a {
 		font-weight: 500;
 		color: inherit;

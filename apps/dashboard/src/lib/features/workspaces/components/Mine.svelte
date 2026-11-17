@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Row from './Row.svelte';
+	import Rows from './Rows.svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { Badge, Button, Empty, Issue, Skeleton } from '@agents/ui';
 	import { choose, mine } from '../api/workspaces.query';
@@ -11,7 +13,7 @@
 </script>
 
 {#snippet row(one: { name: string; slug: string; status: string })}
-	<li>
+	<Row>
 		<span class="name">{one.name}</span>
 		<span class="slug">{one.slug}</span>
 		{#if one.status === 'pending'}
@@ -28,7 +30,7 @@
 				>
 			{/if}
 		</span>
-	</li>
+	</Row>
 {/snippet}
 
 {#if list.isError}
@@ -40,36 +42,17 @@
 		{#if pick.isError}
 			<Issue>{pick.error.message}</Issue>
 		{/if}
-		<ul>
+		<Rows>
 			{#each list.data as one (one.id)}
 				{@render row(one)}
 			{/each}
-		</ul>
+		</Rows>
 	{/if}
 {:else}
 	<Skeleton h="6em" />
 {/if}
 
 <style>
-	ul {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35em;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	li {
-		display: flex;
-		align-items: center;
-		gap: 0.75em;
-		padding: 0.5em 0.9em;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		background: var(--surface);
-	}
-
 	.name {
 		font-weight: 500;
 	}

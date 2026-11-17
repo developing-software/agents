@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Row from './Row.svelte';
+	import Rows from './Rows.svelte';
 	import { Badge, Button, Issue } from '@agents/ui';
 	import type { Workspaces } from '@agents/core/workspaces';
 	import { accept, decline } from '../api/workspaces.query';
@@ -15,9 +17,9 @@
 	<Issue>{join.error.message}</Issue>
 {/if}
 
-<ul>
+<Rows>
 	{#each rows as one (one.id)}
-		<li>
+		<Row>
 			<span class="name">{one.workspace.name}</span>
 			<Badge>{one.role}</Badge>
 			{#if one.workspace.status !== 'ready'}
@@ -36,30 +38,11 @@
 					onclick={() => join.mutate({ id: one.id })}>Join</Button
 				>
 			</span>
-		</li>
+		</Row>
 	{/each}
-</ul>
+</Rows>
 
 <style>
-	ul {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35em;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	li {
-		display: flex;
-		align-items: center;
-		gap: 0.75em;
-		padding: 0.5em 0.9em;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		background: var(--surface);
-	}
-
 	.name {
 		font-weight: 500;
 	}
