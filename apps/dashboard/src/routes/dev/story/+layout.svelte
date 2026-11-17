@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { stories } from '@template/ui/story';
+	import { stories } from '@agents/ui/story';
 	import Nav from '../Nav.svelte';
 
 	let { children } = $props();

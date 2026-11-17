@@ -22,7 +22,7 @@ first.
 
 ## Call the API
 
-The method list is reflected off the generated `@template/sdk`, so it always matches the
+The method list is reflected off the generated `@agents/sdk`, so it always matches the
 current endpoints. Discover before guessing:
 
 ```sh

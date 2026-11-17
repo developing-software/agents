@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	// import { Tabs } from '@template/ui';
+	// import { Tabs } from '@agents/ui';
 	import * as Tabs from './index';
 
 	let view = $state('board');

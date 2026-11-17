@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { handleError } from "../src/hooks/server/error";
-import { VisibleError } from "@template/core/error";
+import { VisibleError } from "@agents/core/error";
 
 const event = { url: new URL("http://localhost/todos") };
 const call = (error: unknown, kind = "unknown") =>

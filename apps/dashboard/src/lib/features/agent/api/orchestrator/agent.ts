@@ -5,7 +5,7 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "@tanstack/ai";
-import { Model } from "@template/agent";
+import { Model } from "@agents/agent";
 import { Agent } from "../core";
 import { delegate, panel } from "../panel/agent";
 import { relax } from "../tools";

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Themes, type Prefs } from '@template/core/user/prefs';
+	import { Themes, type Prefs } from '@agents/core/user/prefs';
 
 	let { value, onpick }: { value: Prefs['theme']; onpick: (theme: Prefs['theme']) => void } =
 		$props();

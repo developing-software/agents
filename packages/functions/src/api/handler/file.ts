@@ -3,9 +3,9 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { validator, authRequired } from "../common";
 import { describe } from "../doc";
-import { File } from "@template/core/file";
-import { Storage } from "@template/core/storage";
-import { VisibleError, ErrorCodes } from "@template/core/error";
+import { File } from "@agents/core/file";
+import { Storage } from "@agents/core/storage";
+import { VisibleError, ErrorCodes } from "@agents/core/error";
 
 export namespace FileApi {
   const doc = describe("File");

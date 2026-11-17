@@ -96,7 +96,7 @@
     // Only for bundlers: standard-json 0.4 imports it behind importIfInstalled (zod v3 path).
     "zod-to-json-schema",
   ],
-  "ignoreUnresolvedImports": ["@template/ui"],
+  "ignoreUnresolvedImports": ["@agents/ui"],
   "boundaries": {
     // Zones glob over `apps/*` (not a fixed `root`) so every SvelteKit app under
     // apps/ — the current dashboard and a future apps/admin — inherits the same

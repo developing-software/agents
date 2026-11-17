@@ -14,7 +14,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { Toaster, Button, toast } from '@template/ui';
+	// import { Toaster, Button, toast } from '@agents/ui';
 
 	const wait = (ok: boolean) =>
 		new Promise<string>((done, fail) =>

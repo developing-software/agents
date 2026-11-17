@@ -13,7 +13,7 @@
 </script>
 
 <script lang="ts">
-	// import { Inline } from '@template/ui';
+	// import { Inline } from '@agents/ui';
 
 	let title = $state('Ship the onboarding checklist');
 	let notes = $state('First line\nSecond line');

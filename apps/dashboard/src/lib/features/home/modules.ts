@@ -1,5 +1,5 @@
 import type { Component, Snippet } from "svelte";
-import type { Permission } from "@template/core/permission";
+import type { Permission } from "@agents/core/permission";
 import ChartLine from "@lucide/svelte/icons/chart-line";
 import Files from "@lucide/svelte/icons/files";
 import FolderKanban from "@lucide/svelte/icons/folder-kanban";

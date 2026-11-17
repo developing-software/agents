@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Admin } from '@template/core/admin';
+	import type { Admin } from '@agents/core/admin';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Issue, Skeleton, Stat } from '@template/ui';
+	import { Issue, Skeleton, Stat } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import Rule from '#lib/components/Rule.svelte';
 	import { fmt } from '#lib/utils/fmt.ts';

@@ -38,7 +38,7 @@
   splits credentials (`index.ts`, `Auth`) from sessions (`session.ts`) and
   agent delegations (`delegation.ts`)).
 - No top-level shim files at `src/<module>.ts` alongside `src/<module>/`.
-  Consumers import through the directory via `@template/core/<module>`.
+  Consumers import through the directory via `@agents/core/<module>`.
 - SQL schemas live next to the module they belong to (`user/user.sql.ts`,
   `auth/provider.sql.ts`, `todo/todo.sql.ts`).
 - Inside a file, order for a reader asking what the module does, not how:
@@ -50,6 +50,6 @@
   derives from — like `Patch` — stays above its use.
 - Modules are grouped by tier: `lib/` for swappable infrastructure, `platform/`
   for app-agnostic features, the rest at the top level for the product itself.
-  Grouping stays off the import path — `@template/core/key`, not
+  Grouping stays off the import path — `@agents/core/key`, not
   `.../platform/key` — so a grouped module needs its own `exports` entry. Which
   tier a new module belongs to: `docs/core.md`.

@@ -1,4 +1,4 @@
-# @template/cli
+# @agents/cli
 
 One entrypoint to run and talk to the template.
 
@@ -49,7 +49,7 @@ shows up. What the three probes mean: `infra/docker/README.md`.
 
 ## API (built-in SDK)
 
-The `api` command reflects the generated `@template/sdk`, so every endpoint is callable and
+The `api` command reflects the generated `@agents/sdk`, so every endpoint is callable and
 new ones show up automatically after `bun run gen`.
 
 ```sh

@@ -22,9 +22,9 @@ import {
   postTodoMutation,
   type GetTodoData,
   type Todo,
-} from "@template/sdk/query";
-import { zone, type Prefs } from "@template/core/user/prefs";
-import { today } from "@template/ui/day";
+} from "@agents/sdk/query";
+import { zone, type Prefs } from "@agents/core/user/prefs";
+import { today } from "@agents/ui/day";
 import { read, type Ctx } from "#lib/query.ts";
 import { parse } from "#lib/utils/params.ts";
 import { period, schema, span, where } from "../filter";

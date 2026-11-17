@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, it, mock } from "bun:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { Session } from "@template/core/auth/session";
-import { Delegation } from "@template/core/auth/delegation";
-import { Event } from "@template/core/event";
-import { Identity } from "@template/core/identity";
-import { Permission } from "@template/core/permission";
+import { Session } from "@agents/core/auth/session";
+import { Delegation } from "@agents/core/auth/delegation";
+import { Event } from "@agents/core/event";
+import { Identity } from "@agents/core/identity";
+import { Permission } from "@agents/core/permission";
 import { app } from "../src/mcp";
 import { createUser } from "./api/util";
 

@@ -5,7 +5,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 	import { hotkeys } from '#lib/hotkeys.ts';
-	import { Button, Drawer, Empty, Issue, Kbd, Skeleton, Status, modal } from '@template/ui';
+	import { Button, Drawer, Empty, Issue, Kbd, Skeleton, Status, modal } from '@agents/ui';
 	import { list } from '../api/todos.query';
 	import Source from '#lib/features/events/components/Source.svelte';
 	import { keep, schema, where } from '../filter';

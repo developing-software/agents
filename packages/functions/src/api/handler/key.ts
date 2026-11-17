@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { validator, authRequired } from "../common";
 import { describe } from "../doc";
-import { Key } from "@template/core/key";
+import { Key } from "@agents/core/key";
 
 export namespace KeyApi {
   const doc = describe("Key");

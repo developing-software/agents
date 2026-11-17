@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ErrorResponse, ErrorCodes, VisibleError } from "@template/core/error";
+import { ErrorResponse, ErrorCodes, VisibleError } from "@agents/core/error";
 import { validator as zodValidator, resolver } from "hono-openapi";
 import type { MiddlewareHandler, ValidationTargets } from "hono";
-import { Identity } from "@template/core/identity";
+import { Identity } from "@agents/core/identity";
 
 const num = (v: unknown) => (typeof v === "string" ? Number(v) : v);
 

@@ -1,8 +1,8 @@
 # dashboard
 
-SvelteKit 3 (Svelte 5, runes) on :5173. Calls `@template/core` **directly** from remote
+SvelteKit 3 (Svelte 5, runes) on :5173. Calls `@agents/core` **directly** from remote
 functions — same process, no HTTP hop. From the one generated SDK it uses only the TanStack
-Query helpers, via `@template/sdk/query` (an alias of the SDK barrel; below).
+Query helpers, via `@agents/sdk/query` (an alias of the SDK barrel; below).
 
 TypeScript, plain scoped CSS (no Tailwind), bun. Svelte components: use the Svelte MCP server
 (`list-sections` → `get-documentation` → `svelte-autofixer`) before writing, and keep
@@ -132,9 +132,9 @@ from other slices as snippets. Header and filter-row rules: `components/header/R
   with `read(...)` and read it with `createQuery`. Form results are read bare (`form.result`).
 - **Guard `[id]` pages** with `{#if params.id}` — params are empty mid-navigation and will
   fire a query with `undefined`.
-- **No global CSS.** `routes/layout.css` imports `@template/ui/tokens.css` and holds
+- **No global CSS.** `routes/layout.css` imports `@agents/ui/tokens.css` and holds
   the app-only tokens (charts, shell frame) and the document reset, nothing else. A look shared by more than one screen becomes a component in
-  `@template/ui` (`Field`, `Issue`, `Tabs`); a look used once stays scoped in the file
+  `@agents/ui` (`Field`, `Issue`, `Tabs`); a look used once stays scoped in the file
   that uses it. Scoped styles can't cross into a child, so pass a one-off layout tweak to
   a component as `style="..."` rather than reaching in with `:global`.
 - `resolve()` typing breaks past ~30 routes; nav components cast untyped rather than fight it.

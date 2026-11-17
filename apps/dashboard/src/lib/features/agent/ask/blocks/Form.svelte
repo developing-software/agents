@@ -1,7 +1,7 @@
 <!-- The form's root: title, its questions and context blocks, then send or discuss. -->
 <script lang="ts">
 	import { createHotkeyAttachment } from '@tanstack/svelte-hotkeys';
-	import { Button, Kbd } from '@template/ui';
+	import { Button, Kbd } from '@agents/ui';
 	import Help from '@lucide/svelte/icons/message-circle-question-mark';
 	import type { Block } from '../catalog';
 	import { form } from '../state.svelte';

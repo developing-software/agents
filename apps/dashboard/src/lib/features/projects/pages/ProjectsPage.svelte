@@ -6,7 +6,7 @@
 	import { hotkeys } from '#lib/hotkeys.ts';
 	import { query } from '#lib/utils/params.ts';
 	import { debounce } from '#lib/utils/debounce.ts';
-	import { Button, Empty, Input, Issue, Kbd, List, modal } from '@template/ui';
+	import { Button, Empty, Input, Issue, Kbd, List, modal } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import ProjectForm from '../components/ProjectForm.svelte';
 	import Row from '../components/Row.svelte';

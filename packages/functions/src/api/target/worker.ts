@@ -1,5 +1,5 @@
-import { Queue } from "@template/core/queue";
-import { Storage } from "@template/core/storage";
+import { Queue } from "@agents/core/queue";
+import { Storage } from "@agents/core/storage";
 import type { QueueEnv } from "../../cf";
 import { worker } from "../../target";
 import { app } from "../routes";

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Issue } from '@template/ui';
+	import { Issue } from '@agents/ui';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { page } from '$app/state';
 	import { spec } from '../api.query';

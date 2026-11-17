@@ -1,5 +1,5 @@
 {
-  "name": "@template/sdk",
+  "name": "@agents/sdk",
   "type": "module",
   "main": "src/index.ts",
   "module": "src/index.ts",

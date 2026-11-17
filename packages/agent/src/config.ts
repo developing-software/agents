@@ -1,4 +1,4 @@
-import { Context } from "@template/core/context";
+import { Context } from "@agents/core/context";
 
 export type AgentConfig = {
   inference: {

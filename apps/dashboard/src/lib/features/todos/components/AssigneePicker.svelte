@@ -1,7 +1,7 @@
 <!-- The directory as a searchable picker: you first, then nobody, then everyone else. -->
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Avatar, Combobox } from '@template/ui';
+	import { Avatar, Combobox } from '@agents/ui';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import { user } from '#lib/utils/context.ts';
 	import { users } from '../api/todos.query';

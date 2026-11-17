@@ -1,7 +1,7 @@
 <!-- Every todo opened in the last 90 days, as one rule split by where each stands now. -->
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Issue, last, today } from '@template/ui';
+	import { Issue, last, today } from '@agents/ui';
 	import Rule from '#lib/components/Rule.svelte';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { statuses } from '../api/todos.query';

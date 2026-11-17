@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { Key } from '@template/core/key';
+	import type { Key } from '@agents/core/key';
 	import ClockAlert from '@lucide/svelte/icons/clock-alert';
 	import CircleOff from '@lucide/svelte/icons/circle-off';
-	import { List, Menu, Tooltip } from '@template/ui';
+	import { List, Menu, Tooltip } from '@agents/ui';
 	import { ask } from '#lib/ask.ts';
 	import { copy } from '#lib/utils/copy.ts';
 	import { fmt } from '#lib/utils/fmt.ts';

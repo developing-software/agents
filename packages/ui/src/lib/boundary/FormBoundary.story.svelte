@@ -12,7 +12,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { FormBoundary, Button } from '@template/ui';
+	// import { FormBoundary, Button } from '@agents/ui';
 
 	let broken = $state(false);
 

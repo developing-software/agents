@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Dialog, Field, Input, Tabs, modal } from '@template/ui';
+	import { Dialog, Field, Input, Tabs, modal } from '@agents/ui';
 	import { mint } from '../../api/apps.query';
 	import { create } from '../../api/keys.query';
 	import Reveal from '../Reveal.svelte';

@@ -1,9 +1,9 @@
 import { error, redirect } from "@sveltejs/kit";
-import { Identity } from "@template/core/identity";
-import { Storage } from "@template/core/storage";
-import { Project } from "@template/core/project";
-import { App } from "@template/core/app";
-import { User } from "@template/core/user";
+import { Identity } from "@agents/core/identity";
+import { Storage } from "@agents/core/storage";
+import { Project } from "@agents/core/project";
+import { App } from "@agents/core/app";
+import { User } from "@agents/core/user";
 import type { RequestHandler } from "./$types";
 
 const MAX = 5 * 1024 * 1024;

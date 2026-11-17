@@ -1,8 +1,8 @@
 import { describe, expect } from "bun:test";
 import { setupApiTest } from "./util";
 import { app } from "../../src/api/routes";
-import { Key } from "@template/core/key";
-import { Delegation } from "@template/core/auth/delegation";
+import { Key } from "@agents/core/key";
+import { Delegation } from "@agents/core/auth/delegation";
 
 const { test, validateOpenAPIRoute, noAuth, get, userID } = setupApiTest();
 

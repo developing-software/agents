@@ -1,6 +1,6 @@
 <!-- The drawer's facts, since a peek has no header: each field saves on its own through a picker. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import Source from '#lib/features/events/components/Source.svelte';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import Assignee from '../Assignee.svelte';

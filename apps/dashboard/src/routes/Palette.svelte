@@ -8,9 +8,9 @@
 	import { page } from '$app/state';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { Themes, type Prefs } from '@template/core/user/prefs';
-	import { getProjectQueryKey, type Project } from '@template/sdk/query';
-	import { Command, Kbd, modal, toast, type Action } from '@template/ui';
+	import { Themes, type Prefs } from '@agents/core/user/prefs';
+	import { getProjectQueryKey, type Project } from '@agents/sdk/query';
+	import { Command, Kbd, modal, toast, type Action } from '@agents/ui';
 	import Keys from '#lib/components/layout/Keys.svelte';
 	import { account, home, type Nav } from '#lib/components/layout/nav.ts';
 	import { sidebar } from '#lib/components/layout/rail.svelte.ts';

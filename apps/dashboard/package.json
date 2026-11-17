@@ -20,6 +20,11 @@
     "test:e2e:ui": "playwright test -c e2e/playwright.config.ts --ui"
   },
   "dependencies": {
+    "@agents/agent": "workspace:*",
+    "@agents/core": "workspace:*",
+    "@agents/functions": "workspace:*",
+    "@agents/sdk": "workspace:*",
+    "@agents/ui": "workspace:*",
     "@json-render/core": "0.22.0",
     "@json-render/svelte": "0.22.0",
     "@lucide/svelte": "^1.73.0",
@@ -32,11 +37,6 @@
     "@tanstack/svelte-hotkeys": "catalog:frontend",
     "@tanstack/svelte-query": "catalog:frontend",
     "@tanstack/svelte-table": "^9.3.2",
-    "@template/agent": "workspace:*",
-    "@template/core": "workspace:*",
-    "@template/functions": "workspace:*",
-    "@template/sdk": "workspace:*",
-    "@template/ui": "workspace:*",
     "d3-scale": "^4.0.3",
     "sst": "catalog:",
     "zod": "catalog:"

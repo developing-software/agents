@@ -1,9 +1,9 @@
 import { chatParamsFromRequestBody, toServerSentEventsResponse } from "@tanstack/ai";
 import { error, type RequestEvent } from "@sveltejs/kit";
 import { z } from "zod";
-import { Model } from "@template/agent";
-import { Identity } from "@template/core/identity";
-import { Delegation } from "@template/core/auth/delegation";
+import { Model } from "@agents/agent";
+import { Identity } from "@agents/core/identity";
+import { Delegation } from "@agents/core/auth/delegation";
 import { agents } from "./agents";
 
 /** What the browser forwards with each message: model and page. */

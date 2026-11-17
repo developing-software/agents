@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { Scroll } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Scroll } from '@agents/ui';
 	import TodoCard from '../card/TodoCard.svelte';
 	import { group, type By } from '../../group';
 

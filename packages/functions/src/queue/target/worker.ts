@@ -1,12 +1,12 @@
 import type { Message, MessageBatch } from "@cloudflare/workers-types";
-import { Context } from "@template/core/context";
-import { Database } from "@template/core/drizzle";
-import { Email } from "@template/core/email";
-import { Queue } from "@template/core/queue";
-import type { Job } from "@template/core/queue/port";
-import { Storage } from "@template/core/storage";
-import { Log } from "@template/core/util/log";
-import { run } from "@template/core/jobs";
+import { Context } from "@agents/core/context";
+import { Database } from "@agents/core/drizzle";
+import { Email } from "@agents/core/email";
+import { Queue } from "@agents/core/queue";
+import type { Job } from "@agents/core/queue/port";
+import { Storage } from "@agents/core/storage";
+import { Log } from "@agents/core/util/log";
+import { run } from "@agents/core/jobs";
 import type { EmailEnv, QueueEnv } from "../../cf";
 
 /** Handlers may enqueue follow-ups and send mail, so this worker needs both bindings. */

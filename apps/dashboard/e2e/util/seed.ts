@@ -1,8 +1,8 @@
-import { Database } from "@template/core/drizzle";
-import { Identity } from "@template/core/identity";
-import { Project } from "@template/core/project";
-import { Queue } from "@template/core/queue";
-import { Todo } from "@template/core/todo";
+import { Database } from "@agents/core/drizzle";
+import { Identity } from "@agents/core/identity";
+import { Project } from "@agents/core/project";
+import { Queue } from "@agents/core/queue";
+import { Todo } from "@agents/core/todo";
 import { db } from "./db";
 
 const DAY = 86_400_000;

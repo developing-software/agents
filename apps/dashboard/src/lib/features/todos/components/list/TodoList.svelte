@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import Row from './Row.svelte';
 	import { tree } from '../../tree';
 

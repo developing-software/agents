@@ -1,7 +1,7 @@
 <!-- One todo on the calendar: a chip, a bar run or an hour block. A press that travels drags it. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { Status, type State } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Status, type State } from '@agents/ui';
 	import { color } from '../../status';
 	import type { Kind } from './drag.svelte';
 

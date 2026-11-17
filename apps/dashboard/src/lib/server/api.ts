@@ -1,6 +1,6 @@
 // fallow-ignore-file unused-file
-import { createClient } from "@template/sdk/client";
-import { app } from "@template/functions/api";
+import { createClient } from "@agents/sdk/client";
+import { app } from "@agents/functions/api";
 
 /**
  * Unused by the dashboard (it calls core directly); kept as an example of calling the

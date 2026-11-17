@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { User } from '@template/core/user';
-	import { Button, Field, FormBoundary, Input, Issue, toast } from '@template/ui';
+	import type { User } from '@agents/core/user';
+	import { Button, Field, FormBoundary, Input, Issue, toast } from '@agents/ui';
 	import AvatarUpload from '#lib/components/AvatarUpload.svelte';
 	import { invalidate } from '#lib/query.ts';
 	import { rename } from '../api/profile.remote';

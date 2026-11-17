@@ -1,5 +1,5 @@
 import { generateSpecs } from "hono-openapi";
-import { memo } from "@template/core/util/memo";
+import { memo } from "@agents/core/util/memo";
 import { routes } from "./routes";
 import pkg from "../../package.json";
 

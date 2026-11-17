@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Button, Empty, Issue, List, Section, Skeleton, Status, modal } from '@template/ui';
+	import { Button, Empty, Issue, List, Section, Skeleton, Status, modal } from '@agents/ui';
 	import { ask } from '#lib/ask.ts';
 	import { get, keys, remove } from '../../api/apps.query';
 	import { list } from '../../api/webhooks.query';

@@ -16,7 +16,7 @@
 </script>
 
 <script lang="ts">
-	// import { Popover, Button, Input, Kbd } from '@template/ui';
+	// import { Popover, Button, Input, Kbd } from '@agents/ui';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 
 	let status = $state('Todo');

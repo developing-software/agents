@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { User } from '@template/core/user';
+	import type { User } from '@agents/core/user';
 	import ProviderRow from './ProviderRow.svelte';
 
 	let { providers }: { providers: User.Provider[] } = $props();

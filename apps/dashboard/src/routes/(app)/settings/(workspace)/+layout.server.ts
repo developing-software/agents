@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { Identity } from "@template/core/identity";
+import { Identity } from "@agents/core/identity";
 import type { LayoutServerLoad } from "./$types";
 
 // Apps and webhooks both see the whole workspace; core re-checks every read and write anyway.

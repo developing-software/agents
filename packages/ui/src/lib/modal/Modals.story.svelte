@@ -15,7 +15,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { Modals, Button, Pagination, modal, type Ask } from '@template/ui';
+	// import { Modals, Button, Pagination, modal, type Ask } from '@agents/ui';
 
 	let said = $state('—');
 

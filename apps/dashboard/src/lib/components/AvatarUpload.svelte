@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Avatar } from '@template/ui';
+	import { Avatar } from '@agents/ui';
 
 	let {
 		name,

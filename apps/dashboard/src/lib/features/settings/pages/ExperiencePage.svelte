@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Field, Section, Select, Status } from '@template/ui';
-	import { Locales, Prefs, type Patch } from '@template/core/user/prefs';
+	import { Field, Section, Select, Status } from '@agents/ui';
+	import { Locales, Prefs, type Patch } from '@agents/core/user/prefs';
 	import { user } from '#lib/utils/context.ts';
 	import * as Header from '#lib/components/header/index.ts';
 	import { update } from '../api/prefs.query';

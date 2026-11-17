@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	// import { Skeleton } from '@template/ui';
+	// import { Skeleton } from '@agents/ui';
 </script>
 
 <div class="stack">

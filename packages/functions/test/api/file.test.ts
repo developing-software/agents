@@ -1,11 +1,11 @@
 import { describe, expect } from "bun:test";
 import { createUser, setupApiTest } from "./util";
 import { app } from "../../src/api/routes";
-import { Key } from "@template/core/key";
-import { Delegation } from "@template/core/auth/delegation";
-import { Signing } from "@template/core/key/signing";
-import { Storage } from "@template/core/storage";
-import { serve } from "@template/core/storage/adapter/serve";
+import { Key } from "@agents/core/key";
+import { Delegation } from "@agents/core/auth/delegation";
+import { Signing } from "@agents/core/key/signing";
+import { Storage } from "@agents/core/storage";
+import { serve } from "@agents/core/storage/adapter/serve";
 
 // 1x1 transparent PNG.
 const PNG_BASE64 =

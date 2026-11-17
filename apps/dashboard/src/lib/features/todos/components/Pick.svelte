@@ -2,7 +2,7 @@
      `compact` drops the text, so a board card or row shows the dot alone. -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Menu } from '@template/ui';
+	import { Menu } from '@agents/ui';
 
 	let {
 		label,

@@ -1,9 +1,9 @@
 import { bun } from "../../target";
-import { Database } from "@template/core/drizzle";
-import { Kv } from "@template/core/kv";
-import { redis } from "@template/core/kv/adapter/redis";
-import { Queue } from "@template/core/queue";
-import { Storage } from "@template/core/storage";
+import { Database } from "@agents/core/drizzle";
+import { Kv } from "@agents/core/kv";
+import { redis } from "@agents/core/kv/adapter/redis";
+import { Queue } from "@agents/core/queue";
+import { Storage } from "@agents/core/storage";
 import { app } from "../routes";
 
 const port = parseInt(process.env.API_PORT!) || 3000;

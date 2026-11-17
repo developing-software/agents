@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import type { Picks } from '../filter';
 
 	export type Filters = Picks & { search: string };
@@ -13,7 +13,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 	import { hotkeys } from '#lib/hotkeys.ts';
-	import { Avatar, Button, Combobox, Input } from '@template/ui';
+	import { Avatar, Button, Combobox, Input } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import { user } from '#lib/utils/context.ts';
 	import { debounce } from '#lib/utils/debounce.ts';

@@ -1,5 +1,5 @@
 import { createRawSnippet } from "svelte";
-import { modal } from "@template/ui";
+import { modal } from "@agents/ui";
 
 /**
  * The one destructive confirm. `{name}` in `warn` renders bold; `verify` makes the reader type

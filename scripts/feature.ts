@@ -259,7 +259,7 @@ await Bun.write(
 import { Hono } from "hono";
 import { validator, PaginatedQuery, authRequired } from "../common";
 import { describe } from "../doc";
-import { ${pascal} } from "@template/core/${name}";
+import { ${pascal} } from "@agents/core/${name}";
 
 export namespace ${pascal}Api {
   const doc = describe("${pascal}");
@@ -329,7 +329,7 @@ export namespace ${pascal}Api {
 await Bun.write(
   targets.mcp,
   `import type { McpServer } from "@modelcontextprotocol/server";
-import { ${pascal} } from "@template/core/${name}";
+import { ${pascal} } from "@agents/core/${name}";
 import { tools } from "../common";
 
 export function ${name}(server: McpServer) {
@@ -356,7 +356,7 @@ import {
   get${pascal}Options,
   get${pascal}QueryKey,
   post${pascal}Mutation,
-} from "@template/sdk/query";
+} from "@agents/sdk/query";
 
 export const list = () => get${pascal}Options({ query: { pageSize: 100 } });
 
@@ -379,7 +379,7 @@ export const remove = (opts?: Pick<ReturnType<typeof delete${pascal}ByIdMutation
 await Bun.write(
   targets.form,
   `<script lang="ts">
-	import { Button, Input, Issue } from '@template/ui';
+	import { Button, Input, Issue } from '@agents/ui';
 	import { create } from '../api/${plural}.query';
 
 	const add = create();
@@ -411,8 +411,8 @@ await Bun.write(
 await Bun.write(
   targets.row,
   `<script lang="ts">
-	import type { ${pascal} } from '@template/core/${name}';
-	import { Button, toast } from '@template/ui';
+	import type { ${pascal} } from '@agents/core/${name}';
+	import { Button, toast } from '@agents/ui';
 	import { remove } from '../api/${plural}.query';
 
 	let { ${name} }: { ${name}: ${pascal}.Info } = $props();
@@ -449,7 +449,7 @@ await Bun.write(
   targets.page,
   `<script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Empty, Issue, Skeleton } from '@template/ui';
+	import { Empty, Issue, Skeleton } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import ${pascal}Form from '../components/${pascal}Form.svelte';
 	import Row from '../components/Row.svelte';

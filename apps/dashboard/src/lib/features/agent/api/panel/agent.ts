@@ -1,8 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { chat, defineAgent, toolDefinition, type StreamChunk } from "@tanstack/ai";
 import type { z } from "zod";
-import { Model } from "@template/agent";
-import { Identity } from "@template/core/identity";
+import { Model } from "@agents/agent";
+import { Identity } from "@agents/core/identity";
 import { instructions, shape } from "../../panel/catalog";
 import { check } from "../../panel/check";
 import { Agent } from "../core";

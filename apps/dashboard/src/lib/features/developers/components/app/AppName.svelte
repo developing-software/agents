@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Inline } from '@template/ui';
+	import { Inline } from '@agents/ui';
 	import { rename } from '../../api/apps.query';
 
 	// The App's name, edited in place in its page header. `onchange` is the profile around it.

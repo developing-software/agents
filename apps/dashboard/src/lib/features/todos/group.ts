@@ -1,4 +1,4 @@
-import type { Todo } from "@template/core/todo";
+import type { Todo } from "@agents/core/todo";
 import { STATUSES, color, label } from "./status";
 
 export type By = "status" | "stage" | "assignee";

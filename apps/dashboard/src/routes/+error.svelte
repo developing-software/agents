@@ -3,7 +3,7 @@
 	import { dev } from '$app/env';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { Button } from '@template/ui';
+	import { Button } from '@agents/ui';
 	import { brand } from '#lib/brand.ts';
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import SearchX from '@lucide/svelte/icons/search-x';

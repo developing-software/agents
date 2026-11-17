@@ -18,7 +18,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
 	import Star from '@lucide/svelte/icons/star';
-	import { Button, Drawer, Field, Input, Issue, Popover, Tabs, toast } from '@template/ui';
+	import { Button, Drawer, Field, Input, Issue, Popover, Tabs, toast } from '@agents/ui';
 	import { query } from '#lib/utils/params.ts';
 	import { tally, vote } from '../api/experiments.query';
 	import { expose } from '../api/experiments.remote';

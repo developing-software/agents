@@ -13,7 +13,7 @@
 </script>
 
 <script lang="ts">
-	// import { Empty, Button } from '@template/ui';
+	// import { Empty, Button } from '@agents/ui';
 </script>
 
 <div class="pair">

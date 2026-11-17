@@ -1,7 +1,7 @@
 <!-- Owns the confirm and the write; the caller renders whatever control calls `ask`. -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { modal, toast } from '@template/ui';
+	import { modal, toast } from '@agents/ui';
 	import { remove } from '../api/todos.query';
 
 	let {

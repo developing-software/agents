@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Avatar, Combobox, Tooltip } from '@template/ui';
+	import { Avatar, Combobox, Tooltip } from '@agents/ui';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { list } from '../api/projects.query';
 

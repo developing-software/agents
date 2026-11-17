@@ -2,10 +2,10 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { authRequired, validator } from "../common";
 import { describe } from "../doc";
-import { User } from "@template/core/user";
-import { Event } from "@template/core/event";
-import { ErrorCodes, VisibleError } from "@template/core/error";
-import { Identity } from "@template/core/identity";
+import { User } from "@agents/core/user";
+import { Event } from "@agents/core/event";
+import { ErrorCodes, VisibleError } from "@agents/core/error";
+import { Identity } from "@agents/core/identity";
 
 export namespace UserApi {
   const doc = describe("User");

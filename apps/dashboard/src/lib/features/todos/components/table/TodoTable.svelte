@@ -2,9 +2,9 @@
 	import { z } from 'zod';
 	import { createTable, renderSnippet } from '@tanstack/svelte-table';
 	import type { ColumnDef, Row } from '@tanstack/svelte-table';
-	import { DataTable, Menu, Status, features } from '@template/ui';
+	import { DataTable, Menu, Status, features } from '@agents/ui';
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import { query } from '#lib/utils/params.ts';
 	import { peek } from '#lib/utils/peek.ts';
 	import Day from '../Day.svelte';

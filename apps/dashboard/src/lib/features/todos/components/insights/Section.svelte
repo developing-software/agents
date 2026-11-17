@@ -1,6 +1,6 @@
 <script lang="ts" generics="T">
 	import type { Snippet } from 'svelte';
-	import { Issue, Skeleton } from '@template/ui';
+	import { Issue, Skeleton } from '@agents/ui';
 
 	let {
 		title,

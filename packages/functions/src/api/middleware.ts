@@ -1,7 +1,7 @@
 import { type MiddlewareHandler } from "hono";
-import { VisibleError, ErrorCodes } from "@template/core/error";
-import { Identity } from "@template/core/identity";
-import { Auth } from "@template/core/auth";
+import { VisibleError, ErrorCodes } from "@agents/core/error";
+import { Identity } from "@agents/core/identity";
+import { Auth } from "@agents/core/auth";
 import { verifier } from "../auth/subject";
 import { client } from "./auth";
 

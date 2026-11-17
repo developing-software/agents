@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 
-import { Identity } from "@template/core/identity";
-import { Permission } from "@template/core/permission";
-import { Database, sql } from "@template/core/drizzle";
-import { Project } from "@template/core/project";
-import { Queue } from "@template/core/queue";
-import { Todo } from "@template/core/todo";
-import { Auth } from "@template/core/auth";
-import { User } from "@template/core/user";
-import { Key } from "@template/core/key";
+import { Identity } from "@agents/core/identity";
+import { Permission } from "@agents/core/permission";
+import { Database, sql } from "@agents/core/drizzle";
+import { Project } from "@agents/core/project";
+import { Queue } from "@agents/core/queue";
+import { Todo } from "@agents/core/todo";
+import { Auth } from "@agents/core/auth";
+import { User } from "@agents/core/user";
+import { Key } from "@agents/core/key";
 import { boxed } from "./utils/box";
 
 // Seeding writes hundreds of rows; the per-write core logs bury the two lines that matter.

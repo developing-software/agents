@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Insights } from '@template/core/todo';
+	import type { Insights } from '@agents/core/todo';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Empty } from '@template/ui';
+	import { Empty } from '@agents/ui';
 	import { barX, defineChart, stack, text } from '@tanstack/charts';
 	import { scaleBand } from '@tanstack/charts/scales/band';
 	import { scaleLinear } from '@tanstack/charts/scales/linear';

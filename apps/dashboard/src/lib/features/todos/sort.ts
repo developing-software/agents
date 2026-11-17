@@ -1,4 +1,4 @@
-import type { Todo } from "@template/core/todo";
+import type { Todo } from "@agents/core/todo";
 import { sorted } from "#lib/utils/sort.ts";
 
 /** Mirrored from core, type-only — `satisfies` fails the build if a key is renamed there. */

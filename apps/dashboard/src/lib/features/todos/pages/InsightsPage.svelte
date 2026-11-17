@@ -2,7 +2,7 @@
 	import { query } from '#lib/utils/params.ts';
 	import * as Header from '#lib/components/header/index.ts';
 	import { useIsFetching } from '@tanstack/svelte-query';
-	import { RangePicker, Status, today } from '@template/ui';
+	import { RangePicker, Status, today } from '@agents/ui';
 	import { period, span } from '../filter';
 	import { debounce } from '#lib/utils/debounce.ts';
 	import { fmt } from '#lib/utils/fmt.ts';

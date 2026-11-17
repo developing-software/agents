@@ -1,7 +1,7 @@
 // fallow-ignore-file duplicate-export -- session.ts exposes the same deliberate
 // cookie read/write pair; parallel namespace-style APIs, not a duplicate to merge.
 import type { RequestEvent } from "@sveltejs/kit";
-import { Prefs } from "@template/core/user/prefs";
+import { Prefs } from "@agents/core/user/prefs";
 
 // The theme must be on `<html>` before first paint, so it rides its own cookie instead
 // of a per-request database read. Unsigned — the worst a forged value does is flip the theme.

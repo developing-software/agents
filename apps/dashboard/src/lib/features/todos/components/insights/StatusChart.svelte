@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import { defineChart } from '@tanstack/charts';
 	import { colorLegend } from '@tanstack/charts/legend';
 	import { pie, polar, radialArc } from '@tanstack/charts/polar';

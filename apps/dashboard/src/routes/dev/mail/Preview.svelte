@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Code, Full, Tabs } from '@template/ui';
+	import { Code, Full, Tabs } from '@agents/ui';
 
 	let { mail }: { mail: { subject: string; body: string; html: string } } = $props();
 

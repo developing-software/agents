@@ -11,7 +11,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { Spinner } from '@template/ui';
+	// import { Spinner } from '@agents/ui';
 </script>
 
 <p class="sizes">

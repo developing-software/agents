@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { MutationObserver, QueryObserver, matchQuery, type QueryKey } from "@tanstack/svelte-query";
-import { getProjectByIdQueryKey, getProjectQueryKey } from "@template/sdk/query";
+import { getProjectByIdQueryKey, getProjectQueryKey } from "@agents/sdk/query";
 import { list } from "../src/lib/features/projects/api/projects.query";
 import { queryClient } from "../src/lib/query";
 

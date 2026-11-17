@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { parsePartialJSON } from '@tanstack/ai/client';
 	import type { Spec } from '@json-render/svelte';
-	import { Button, Issue, Status } from '@template/ui';
+	import { Button, Issue, Status } from '@agents/ui';
 	import Busy from '../components/Busy.svelte';
 	import Save from '@lucide/svelte/icons/save';
 	import ExternalLink from '@lucide/svelte/icons/external-link';

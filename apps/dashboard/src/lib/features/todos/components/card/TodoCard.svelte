@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import TagList from '../TagList.svelte';
 	import StatusPicker from '../StatusPicker.svelte';
 	import Assignee from '../Assignee.svelte';

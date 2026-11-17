@@ -13,7 +13,7 @@
 </script>
 
 <script lang="ts">
-	// import { Field, Input } from '@template/ui';
+	// import { Field, Input } from '@agents/ui';
 	import Input from '../input/Input.svelte';
 </script>
 

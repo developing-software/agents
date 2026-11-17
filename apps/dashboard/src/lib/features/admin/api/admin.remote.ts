@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { Admin } from "@template/core/admin";
-import { Event } from "@template/core/event";
-import { User } from "@template/core/user";
+import { Admin } from "@agents/core/admin";
+import { Event } from "@agents/core/event";
+import { User } from "@agents/core/user";
 import { remote } from "#lib/server/gate.ts";
 
 export const getUsers = remote.core(Admin.users).query();

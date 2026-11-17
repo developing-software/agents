@@ -3,7 +3,7 @@
 	the unchanged face. A save in flight keeps it mounted, so its dot and revert can show.
 -->
 <script lang="ts">
-	import { Inline } from '@template/ui';
+	import { Inline } from '@agents/ui';
 
 	let {
 		value,

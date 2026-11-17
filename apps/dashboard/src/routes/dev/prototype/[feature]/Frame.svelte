@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Full } from '@template/ui';
+	import { Full } from '@agents/ui';
 
 	// The raw html block, straight from the parser. Only an iframe becomes a real element;
 	// anything else stays inert text, exactly like the renderer's default.

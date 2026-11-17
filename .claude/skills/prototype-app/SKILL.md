@@ -17,10 +17,10 @@ This is the step after `/prototype`: the HTML mockups explored the UX; this make
 
 2. **Study one existing slice end to end** — `lib/features/<slice>/{api,components,pages}` plus its routes — and mirror its conventions rather than inventing new ones. Reuse shared components from `#lib/components` before writing new ones.
 
-3. **Create the mock namespace**: `apps/dashboard/src/lib/features/<feature>/api/mock.ts`. It stands in for the future `@template/core/<feature>` and must present the same surface a core slice would:
+3. **Create the mock namespace**: `apps/dashboard/src/lib/features/<feature>/api/mock.ts`. It stands in for the future `@agents/core/<feature>` and must present the same surface a core slice would:
 
    ```ts
-   // In-memory stand-in for @template/core/notification — this slice's frontend
+   // In-memory stand-in for @agents/core/notification — this slice's frontend
    // was built before core; swap this import for core to promote it.
    import { z } from "zod";
 

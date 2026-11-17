@@ -1,4 +1,4 @@
-import type { Prefs } from "@template/core/user/prefs";
+import type { Prefs } from "@agents/core/user/prefs";
 
 /**
  * Repaints at once, ahead of the save: the one preference allowed to lead. With `from` the

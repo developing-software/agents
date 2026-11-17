@@ -1,7 +1,7 @@
 <!-- Stages are free text, so the picker offers the labels in use and creates whatever is typed. -->
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Combobox } from '@template/ui';
+	import { Combobox } from '@agents/ui';
 	import { labels } from '../api/todos.query';
 
 	type Stage = { name: string; group: string; fresh?: boolean };

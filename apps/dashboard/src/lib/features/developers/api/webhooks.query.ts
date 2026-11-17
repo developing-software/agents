@@ -1,5 +1,5 @@
 import { createMutation } from "@tanstack/svelte-query";
-import type { Webhook } from "@template/core/webhook";
+import type { Webhook } from "@agents/core/webhook";
 import { call, read, type Done } from "#lib/query.ts";
 import { createWebhook, getWebhooks, removeWebhook, updateWebhook } from "./webhooks.remote";
 

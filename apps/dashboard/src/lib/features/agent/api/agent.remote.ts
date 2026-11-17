@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { Model } from "@template/agent";
-import { Conversation } from "@template/core/conversation";
+import { Model } from "@agents/agent";
+import { Conversation } from "@agents/core/conversation";
 import { remote } from "#lib/server/gate.ts";
 
 export const getModels = remote.query(z.void(), () => Model.list());

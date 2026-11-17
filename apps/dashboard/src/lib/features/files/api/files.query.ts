@@ -5,7 +5,7 @@ import {
   getFileQueryKey,
   patchFileByNameMutation,
   postFileMutation,
-} from "@template/sdk/query";
+} from "@agents/sdk/query";
 import type { Ctx, Opts } from "#lib/query.ts";
 
 export const list = (ctx?: Ctx) => getFileOptions(ctx);

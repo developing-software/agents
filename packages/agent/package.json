@@ -1,5 +1,5 @@
 {
-  "name": "@template/agent",
+  "name": "@agents/agent",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -15,14 +15,14 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@agents/core": "workspace:*",
     "@tanstack/ai": "^1.4.0",
     "@tanstack/ai-claude-code": "^1.0.2",
     "@tanstack/ai-codex": "^1.0.1",
     "@tanstack/ai-openai": "^1.1.1",
     "@tanstack/ai-sandbox": "^1.3.0",
     "@tanstack/ai-sandbox-cloudflare": "^1.1.0",
-    "@tanstack/ai-sandbox-docker": "^1.1.0",
-    "@template/core": "workspace:*"
+    "@tanstack/ai-sandbox-docker": "^1.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260715.1",

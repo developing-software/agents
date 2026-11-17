@@ -1,4 +1,4 @@
-import { getUserByIdHistoryOptions, getUserByIdOptions } from "@template/sdk/query";
+import { getUserByIdHistoryOptions, getUserByIdOptions } from "@agents/sdk/query";
 import type { Ctx } from "#lib/query.ts";
 
 export const get = (id: string, ctx?: Ctx) => getUserByIdOptions({ ...ctx, path: { id } });

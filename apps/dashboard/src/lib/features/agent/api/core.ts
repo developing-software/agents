@@ -1,8 +1,8 @@
 import type { ChatMiddleware, ModelMessage, TextOptions } from "@tanstack/ai";
 import { createMCPClient } from "@tanstack/ai-mcp";
-import { ready as configured } from "@template/agent";
-import { Log } from "@template/core/util/log";
-import { Conversation } from "@template/core/conversation";
+import { ready as configured } from "@agents/agent";
+import { Log } from "@agents/core/util/log";
+import { Conversation } from "@agents/core/conversation";
 
 const log = Log.create({ namespace: "agent" });
 

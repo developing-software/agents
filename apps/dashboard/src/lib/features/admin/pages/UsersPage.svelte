@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Button, Fill, Input, Issue, Pagination, Scroll, Skeleton, Toggle } from '@template/ui';
+	import { Button, Fill, Input, Issue, Pagination, Scroll, Skeleton, Toggle } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import { debounce } from '#lib/utils/debounce.ts';
 	import { query } from '#lib/utils/params.ts';

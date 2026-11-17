@@ -20,7 +20,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { DataTable, features } from '@template/ui';
+	// import { DataTable, features } from '@agents/ui';
 	// import type { Row } from '@tanstack/svelte-table';
 	// type Crew = { name: string; craft: string; year: number | null };
 	// type Cell = Row<typeof features, Crew>;   // snippets only see module scope

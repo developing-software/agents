@@ -1,7 +1,7 @@
 import { describe, expect, it, mock } from "bun:test";
-import { App } from "@template/core/app";
-import { Identity } from "@template/core/identity";
-import { sign } from "@template/core/util/sign";
+import { App } from "@agents/core/app";
+import { Identity } from "@agents/core/identity";
+import { sign } from "@agents/core/util/sign";
 import { app } from "../../src/api/routes";
 import { createUser } from "./util";
 

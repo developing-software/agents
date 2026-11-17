@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Event } from '@template/core/event';
+	import type { Event } from '@agents/core/event';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Empty, Issue, Skeleton } from '@template/ui';
+	import { Empty, Issue, Skeleton } from '@agents/ui';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { timeline } from '../api/events.query';
 

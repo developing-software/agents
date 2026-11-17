@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import { Empty, Markdown, Skeleton } from '@template/ui';
+	import { Empty, Markdown, Skeleton } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { issue } from '../api/feedback.query';

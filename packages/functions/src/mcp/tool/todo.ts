@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
-import { Todo } from "@template/core/todo";
+import { Todo } from "@agents/core/todo";
 import { tools } from "../common";
 
 export function todo(server: McpServer) {

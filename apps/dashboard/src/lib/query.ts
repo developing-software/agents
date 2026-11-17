@@ -8,7 +8,7 @@ import {
   type QueryFunctionContext,
   type QueryKey,
 } from "@tanstack/svelte-query";
-import { client } from "@template/sdk/client.gen";
+import { client } from "@agents/sdk/client.gen";
 
 declare module "@tanstack/svelte-query" {
   interface Register {

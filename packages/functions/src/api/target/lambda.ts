@@ -1,7 +1,7 @@
 import { lambda } from "../../target";
-import { Database } from "@template/core/drizzle";
-import { Queue } from "@template/core/queue";
-import { Storage } from "@template/core/storage";
+import { Database } from "@agents/core/drizzle";
+import { Queue } from "@agents/core/queue";
+import { Storage } from "@agents/core/storage";
 import { app } from "../routes";
 
 export const handler = lambda(

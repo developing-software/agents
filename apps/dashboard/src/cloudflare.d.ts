@@ -4,6 +4,6 @@ declare module "cloudflare:workers" {
   export const env: {
     Hyperdrive?: { connectionString: string };
     Files?: import("@cloudflare/workers-types").R2Bucket;
-    Jobs?: import("@cloudflare/workers-types").Queue<import("@template/core/queue/port").Job>;
+    Jobs?: import("@cloudflare/workers-types").Queue<import("@agents/core/queue/port").Job>;
   };
 }

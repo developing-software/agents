@@ -1,8 +1,8 @@
-import { Identity } from "@template/core/identity";
-import { Database } from "@template/core/drizzle";
-import { Permission } from "@template/core/permission";
-import { User } from "@template/core/user";
-import { Session } from "@template/core/auth/session";
+import { Identity } from "@agents/core/identity";
+import { Database } from "@agents/core/drizzle";
+import { Permission } from "@agents/core/permission";
+import { User } from "@agents/core/user";
+import { Session } from "@agents/core/auth/session";
 import { db } from "./db";
 
 // Creates a real user in the same database the app reads, then opens a session row the

@@ -1,4 +1,4 @@
-import { Feedback } from "@template/core/feedback";
+import { Feedback } from "@agents/core/feedback";
 import { remote } from "#lib/server/gate.ts";
 
 export const getTally = remote.core(Feedback.Experiment.tally).query();

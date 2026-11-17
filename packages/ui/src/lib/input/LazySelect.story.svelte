@@ -13,7 +13,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { LazySelect, type Option } from '@template/ui';
+	// import { LazySelect, type Option } from '@agents/ui';
 
 	const statics = [{ value: '', label: 'Any project' }];
 

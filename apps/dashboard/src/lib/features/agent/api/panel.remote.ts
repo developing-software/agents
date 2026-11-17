@@ -1,4 +1,4 @@
-import { Panel } from "@template/core/panel";
+import { Panel } from "@agents/core/panel";
 import { remote } from "#lib/server/gate.ts";
 import { Sql } from "./panel/sql";
 

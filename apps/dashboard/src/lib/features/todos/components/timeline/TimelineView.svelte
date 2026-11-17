@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { Empty } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Empty } from '@agents/ui';
 	import { user } from '#lib/utils/context.ts';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { group, type By } from '../../group';

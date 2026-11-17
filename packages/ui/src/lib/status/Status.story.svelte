@@ -14,7 +14,7 @@
 </script>
 
 <script lang="ts">
-	// import { Button, Status } from '@template/ui';
+	// import { Button, Status } from '@agents/ui';
 
 	// Stand-ins shaped like a TanStack mutation; a real one is `const save = update()`.
 	const idle = { isPending: false, isError: false, isSuccess: false, error: null };

@@ -6,7 +6,7 @@
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/env';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Button, Issue, Skeleton } from '@template/ui';
+	import { Button, Issue, Skeleton } from '@agents/ui';
 	import { rows, type Rows } from '../../api/panel.query';
 
 	let {

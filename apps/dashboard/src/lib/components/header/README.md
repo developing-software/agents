@@ -20,7 +20,7 @@ content       table / list / sections
 | `Header.Item`  | `label: string`, children = value. One fact on the facts band.                                                                                                                |
 | `Header.Group` | `label?: string` (muted caption), `end?: boolean` (push right), children.                                                                                                     |
 
-From `@template/ui`: `Input type="search"`, `Select`/`LazySelect`, `Toggle` (on/off chip),
+From `@agents/ui`: `Input type="search"`, `Select`/`LazySelect`, `Toggle` (on/off chip),
 `Button variant="ghost"` for "Clear filters", `RangePicker` for dates.
 
 ## Rules

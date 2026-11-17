@@ -1,7 +1,7 @@
 <!-- One chat message: the user's turn, or the agent's markdown and tool calls in order. -->
 <script lang="ts">
 	import type { UIMessage } from '@tanstack/ai-svelte';
-	import { Issue, Markdown } from '@template/ui';
+	import { Issue, Markdown } from '@agents/ui';
 	import type { ResultPart } from '../views';
 	import Tool from './Tool.svelte';
 

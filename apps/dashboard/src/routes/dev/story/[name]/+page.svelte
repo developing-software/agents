@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Issue } from '@template/ui';
+	import { Issue } from '@agents/ui';
 	import { page } from '$app/state';
-	import { stories } from '@template/ui/story';
+	import { stories } from '@agents/ui/story';
 	import Stage from '../Stage.svelte';
 
 	// `params` is briefly empty mid-navigation, so read it behind the guard.

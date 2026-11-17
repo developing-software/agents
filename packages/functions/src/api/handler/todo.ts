@@ -2,8 +2,8 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { validator, PaginatedQuery, authRequired } from "../common";
 import { describe } from "../doc";
-import { Todo } from "@template/core/todo";
-import { Link } from "@template/core/util/meta";
+import { Todo } from "@agents/core/todo";
+import { Link } from "@agents/core/util/meta";
 
 export namespace TodoApi {
   const doc = describe("Todo");

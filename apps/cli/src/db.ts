@@ -1,4 +1,4 @@
-import { Migrations } from "@template/core/drizzle/migrate";
+import { Migrations } from "@agents/core/drizzle/migrate";
 import { value } from "./args";
 
 const subcommands: Record<string, (rest: string[]) => Promise<void>> = {

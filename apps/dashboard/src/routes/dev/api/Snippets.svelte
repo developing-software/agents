@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Copy from '@lucide/svelte/icons/copy';
-	import { Code, IconButton, Tabs, toast } from '@template/ui';
+	import { Code, IconButton, Tabs, toast } from '@agents/ui';
 	import { cli, curl, fetch as js, sdk } from './snippets';
 
 	let { input }: { input: Parameters<typeof curl>[0] } = $props();

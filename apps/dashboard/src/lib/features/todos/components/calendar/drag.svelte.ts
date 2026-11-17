@@ -1,4 +1,4 @@
-import type { Todo } from "@template/core/todo";
+import type { Todo } from "@agents/core/todo";
 import { snap, type Spot } from "./layout";
 
 export type Kind = "move" | "resize";

@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
-	import { Drawer } from '@template/ui';
+	import { Drawer } from '@agents/ui';
 	import PanelLeft from '@lucide/svelte/icons/panel-left';
 	import { brand } from '#lib/brand.ts';
 	import { user } from '#lib/utils/context.ts';

@@ -11,7 +11,7 @@
 		Toggle,
 		modal,
 		toast
-	} from '@template/ui';
+	} from '@agents/ui';
 	import Trash from '@lucide/svelte/icons/trash-2';
 	import * as Header from '#lib/components/header/index.ts';
 	import { message } from '#lib/query.ts';

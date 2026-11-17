@@ -1,9 +1,9 @@
 import { getRequestEvent } from "$app/server";
 import { error, redirect } from "@sveltejs/kit";
 import { z } from "zod";
-import { User } from "@template/core/user";
-import { Auth } from "@template/core/auth";
-import { Identity } from "@template/core/identity";
+import { User } from "@agents/core/user";
+import { Auth } from "@agents/core/auth";
+import { Identity } from "@agents/core/identity";
 import { remote } from "#lib/server/gate.ts";
 import * as next from "#lib/server/next.ts";
 

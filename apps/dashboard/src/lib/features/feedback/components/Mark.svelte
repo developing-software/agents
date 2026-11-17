@@ -1,6 +1,6 @@
 <!-- A type, urgency or state as a badge: its tone, its icon and its word, the same on every screen. -->
 <script lang="ts">
-	import { Badge } from '@template/ui';
+	import { Badge } from '@agents/ui';
 	import type { Label } from '../labels';
 
 	let { label }: { label: Label } = $props();

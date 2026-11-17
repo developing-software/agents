@@ -1,4 +1,4 @@
-# @template/ui
+# @agents/ui
 
 Presentational Svelte 5 components. No app imports, no IO, no knowledge of core.
 

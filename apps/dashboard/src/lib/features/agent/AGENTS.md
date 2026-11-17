@@ -2,8 +2,8 @@
 
 The dashboard's AI agents, self-contained in this slice. Each agent is plain TanStack AI code:
 one `chat()` call built from the shared blocks in `api/core.ts`, returning the stream. What
-persists lives in core: `Conversation` (`@template/core/conversation`) and `Panel`
-(`@template/core/panel`).
+persists lives in core: `Conversation` (`@agents/core/conversation`) and `Panel`
+(`@agents/core/panel`).
 
 ## Layout
 
@@ -22,7 +22,7 @@ persists lives in core: `Conversation` (`@template/core/conversation`) and `Pane
   the `panel` subagent plus its `delegate` prompt.
 - `api/panel/` — the `panel` subagent (admins only, `undefined` for anyone else), plus its
   server tools: `sql.ts` (`Sql`, read-only SQL over a table→resource allowlist, a 20-row
-  sample for the model). Saved specs go through core's `Panel` (`@template/core/panel`, one
+  sample for the model). Saved specs go through core's `Panel` (`@agents/core/panel`, one
   JSON per panel in Storage under `panels/<userID>/`). Its `draft` tool checks a spec
   server-side; the last ok one is its result.
 - `api/serve.ts` — the SSE endpoint behind `routes/(app)/agent/+server.ts`. Records under

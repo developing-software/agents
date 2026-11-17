@@ -9,7 +9,7 @@ import {
   patchProjectByIdMutation,
   postProjectByIdLinkMutation,
   postProjectMutation,
-} from "@template/sdk/query";
+} from "@agents/sdk/query";
 import { invalidate, type Ctx, type Opts } from "#lib/query.ts";
 
 // Lists and rows both carry the tag, so a write to one project refreshes everything showing it.

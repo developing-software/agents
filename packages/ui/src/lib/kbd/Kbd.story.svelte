@@ -12,7 +12,7 @@
 </script>
 
 <script lang="ts">
-	// import { Kbd } from '@template/ui';
+	// import { Kbd } from '@agents/ui';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 
 	let hits = $state<string[]>([]);

@@ -37,8 +37,8 @@ Arrows are the only legal import direction. A cycle, or an arrow pointing up, is
 
 ## Import paths stay flat
 
-Grouping is a disk concern, invisible to consumers: `@template/core/key`, not
-`@template/core/platform/key` — same as `lib/queue` exporting as `@template/core/queue`.
+Grouping is a disk concern, invisible to consumers: `@agents/core/key`, not
+`@agents/core/platform/key` — same as `lib/queue` exporting as `@agents/core/queue`.
 The `"./*"` wildcard in `package.json` only covers top-level directories, so **a grouped
 module needs an explicit `exports` entry**. The Drizzle glob is `./src/**/*.sql.ts`, so
 nesting never affects migrations.
@@ -52,7 +52,7 @@ Slices declare and publish typed events through `platform/bus`. See [events.md](
 - `lib/storage` reaches `platform/key` for `Signing.current`, inside `fromEnv` only — the
   port itself takes the key as an option, so nothing in the port layer knows about it.
 - `lib/kv`'s redis adapter imports `"bun"`, so it stays out of `Kv.Providers` and the Worker
-  bundle; Bun targets import it as `@template/core/kv/adapter/redis`.
+  bundle; Bun targets import it as `@agents/core/kv/adapter/redis`.
 - `lib/limit` has a `port.ts` (the algorithm contract) but no `adapter/`: it counts in
   `lib/kv`, so its backend is whichever Kv the process provides.
 - `platform/event` joins `user/user.sql` to name the actor on a log row. Platform may reach

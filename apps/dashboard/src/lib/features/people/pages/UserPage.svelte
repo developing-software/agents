@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { createQuery } from '@tanstack/svelte-query';
-	import type { User } from '@template/core/user';
-	import { Avatar, Badge, Empty, Issue, Section, Skeleton } from '@template/ui';
+	import type { User } from '@agents/core/user';
+	import { Avatar, Badge, Empty, Issue, Section, Skeleton } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import { user } from '#lib/utils/context.ts';
 	import { fmt } from '#lib/utils/fmt.ts';

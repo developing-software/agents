@@ -1,7 +1,7 @@
 <!-- Every user table by size: a bar against the largest, its rows and its bytes. -->
 <script lang="ts">
-	import type { Admin } from '@template/core/admin';
-	import { Empty, Meter } from '@template/ui';
+	import type { Admin } from '@agents/core/admin';
+	import { Empty, Meter } from '@agents/ui';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { size } from '#lib/utils/size.ts';
 

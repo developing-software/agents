@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { Card } from '@template/ui';
+	import { Card } from '@agents/ui';
 	import { resolve } from '$app/paths';
-	import { stories } from '@template/ui/story';
+	import { stories } from '@agents/ui/story';
 	import * as Header from '#lib/components/header/index.ts';
 </script>
 
 <Header.Root title="Storybook">
 	{#snippet lead()}
-		Every component in <code>@template/ui</code>, {stories.length} of them. Stories live beside their
-		components and are listed in <code>src/lib/story.ts</code>.
+		Every component in <code>@agents/ui</code>, {stories.length} of them. Stories live beside their components
+		and are listed in <code>src/lib/story.ts</code>.
 	{/snippet}
 </Header.Root>
 

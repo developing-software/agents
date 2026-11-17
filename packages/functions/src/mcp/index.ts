@@ -1,7 +1,7 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
-import { VisibleError } from "@template/core/error";
+import { VisibleError } from "@agents/core/error";
 import { issuer } from "../api/auth";
 import { fail } from "../api/error";
 import { auth } from "../api/middleware";

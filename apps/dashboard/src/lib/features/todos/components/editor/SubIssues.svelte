@@ -1,8 +1,8 @@
 <!-- A todo's children and its parent; the widget around it carries the heading. -->
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Button, Input, Issue, Meter } from '@template/ui';
-	import type { Todo } from '@template/core/todo';
+	import { Button, Input, Issue, Meter } from '@agents/ui';
+	import type { Todo } from '@agents/core/todo';
 	import { create, get, list } from '../../api/todos.query';
 	import StatusPicker from '../StatusPicker.svelte';
 	import { peek } from '#lib/utils/peek.ts';

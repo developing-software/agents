@@ -13,7 +13,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { Pagination } from '@template/ui';
+	// import { Pagination } from '@agents/ui';
 
 	let page = $state(1);
 	let size = $state(20);

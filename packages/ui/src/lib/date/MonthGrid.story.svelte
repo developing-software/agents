@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	// import { MonthGrid, today, shift } from '@template/ui';
+	// import { MonthGrid, today, shift } from '@agents/ui';
 	import { shift, today } from './day';
 
 	const now = today();

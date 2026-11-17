@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { Menu, Status } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Menu, Status } from '@agents/ui';
 	import { update } from '../api/todos.query';
 	import { STATUSES, color, label } from '../status';
 	import Pick from './Pick.svelte';

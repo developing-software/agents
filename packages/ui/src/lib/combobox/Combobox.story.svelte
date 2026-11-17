@@ -73,7 +73,7 @@
 </script>
 
 <script lang="ts">
-	// import { Combobox } from '@template/ui';
+	// import { Combobox } from '@agents/ui';
 
 	let value = $state('openai/gpt-6-luna');
 	let filter = $state('');

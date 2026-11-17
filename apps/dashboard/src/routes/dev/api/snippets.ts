@@ -70,8 +70,8 @@ export function sdk(input: Input) {
     ? JSON.stringify(`Bearer ${input.token}`)
     : "`Bearer ${process.env.TEMPLATE_TOKEN}`";
   // `sdk.gen`, not the barrel: the barrel also pulls in the optional TanStack peer.
-  return `import { ${input.id} } from "@template/sdk/sdk.gen";
-import { createClient } from "@template/sdk/client";
+  return `import { ${input.id} } from "@agents/sdk/sdk.gen";
+import { createClient } from "@agents/sdk/client";
 
 const client = createClient({
   baseUrl: ${JSON.stringify(input.base)},

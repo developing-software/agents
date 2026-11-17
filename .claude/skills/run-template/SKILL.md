@@ -113,7 +113,7 @@ cd apps/dashboard && bun run test:e2e   # needs real postgres on :5432 (docker)
   re-seeds and prints `API key: sk-...`; grab it from the dev output, there is
   no other way to read it (keys are stored plaintext but you'd need psql).
 - **`bun cli --help` exits 1** after printing usage — cosmetic, not a failure.
-- **playwright/@template packages don't resolve from repo root** node_modules;
+- **playwright/@agents packages don't resolve from repo root** node_modules;
   the driver imports them by explicit relative path into `apps/dashboard/node_modules`
   and `packages/core/src`. Keep that if you edit it.
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { Button, Field, Input } from '@template/ui';
+	import { Button, Field, Input } from '@agents/ui';
 	import { create } from '#lib/features/developers/api/keys.query.ts';
 	import Nav from '../Nav.svelte';
 	import { createQuery } from '@tanstack/svelte-query';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Code as Syntax, toast } from '@template/ui';
+	import { Code as Syntax, toast } from '@agents/ui';
 
 	let { text, label = 'Usage' }: { text: string; label?: string } = $props();
 

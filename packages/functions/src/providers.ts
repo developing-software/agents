@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { Context } from "@template/core/context";
+import { Context } from "@agents/core/context";
 
 /** Runs each request inside the given contexts, e.g. `providers(Database.provider(db))`. */
 export function providers(...list: Context.Provider<Promise<void>>[]): MiddlewareHandler {

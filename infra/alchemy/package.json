@@ -1,5 +1,5 @@
 {
-  "name": "@template/infra-alchemy",
+  "name": "@agents/infra-alchemy",
   "private": true,
   "type": "module",
   "scripts": {

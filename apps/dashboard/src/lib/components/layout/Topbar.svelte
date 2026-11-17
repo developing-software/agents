@@ -3,7 +3,7 @@
 	import { dev } from '$app/env';
 	import { resolve } from '$app/paths';
 	import PanelLeft from '@lucide/svelte/icons/panel-left';
-	import type { User } from '@template/core/user';
+	import type { User } from '@agents/core/user';
 	import Brand from './Brand.svelte';
 	import Breadcrumbs from './Breadcrumbs.svelte';
 	import Me from './Me.svelte';

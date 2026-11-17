@@ -1,6 +1,6 @@
-import { createClient } from "@template/sdk/client";
+import { createClient } from "@agents/sdk/client";
 // Not the barrel: it also re-exports the TanStack helpers, an optional peer the CLI lacks.
-import * as ops from "@template/sdk/sdk.gen";
+import * as ops from "@agents/sdk/sdk.gen";
 import { strip, value } from "./args";
 import * as config from "./config";
 

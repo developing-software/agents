@@ -36,8 +36,8 @@ Infinite-query helpers are off: nothing pages by cursor, and the plugin mistook 
 ## Usage
 
 ```ts
-import { createClient } from "@template/sdk/client";
-import { getTodoById } from "@template/sdk/sdk.gen";
+import { createClient } from "@agents/sdk/client";
+import { getTodoById } from "@agents/sdk/sdk.gen";
 
 const client = createClient({ baseUrl: "http://localhost:3000" });
 const { data } = await getTodoById({ client, path: { id: "tod_123" } });
@@ -48,7 +48,7 @@ points at its `/api` proxy (`lib/query.ts`). Import `sdk.gen` rather than the ba
 `@tanstack/svelte-query` isn't installed: the barrel re-exports the TanStack helpers, and the
 peer is optional.
 
-The dashboard imports `@template/sdk/query` (`getXOptions`, `postXMutation`) from its
+The dashboard imports `@agents/sdk/query` (`getXOptions`, `postXMutation`) from its
 `api/<slice>.query.ts` files. `./query` is an alias of the barrel.
 
 `apps/cli` reflects the functions exported by `sdk.gen`, so a new endpoint appears there

@@ -1,6 +1,6 @@
 <!-- Six weeks of big MonthGrid cells; multi-day todos run as bars across each week row. -->
 <script lang="ts">
-	import { MonthGrid, shift, week, type Day, type Weekday } from '@template/ui';
+	import { MonthGrid, shift, week, type Day, type Weekday } from '@agents/ui';
 	import Chip from './Chip.svelte';
 	import { lanes, type Bar, type Item } from './layout';
 	import type { Chips } from './CalendarView.svelte';

@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import type { Env as HonoEnv, Schema } from "hono";
 import { handle, streamHandle } from "hono/aws-lambda";
 import type { ExecutionContext } from "@cloudflare/workers-types";
-import { Context } from "@template/core/context";
-import { Database } from "@template/core/drizzle";
+import { Context } from "@agents/core/context";
+import { Database } from "@agents/core/drizzle";
 import type { Env } from "./cf";
 import { providers } from "./providers";
 

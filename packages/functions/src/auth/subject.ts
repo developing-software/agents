@@ -1,6 +1,6 @@
 import { createSubjects } from "@openauthjs/openauth/subject";
 import type { Client } from "@openauthjs/openauth/client";
-import { Auth } from "@template/core/auth";
+import { Auth } from "@agents/core/auth";
 
 /** The issuer's one subject, app-agnostic: every app built from the template reads the same. */
 export const subjects = createSubjects({ identity: Auth.Subject });

@@ -1,5 +1,5 @@
 import { test as base, expect } from "@playwright/test";
-import type { Permission } from "@template/core/permission";
+import type { Permission } from "@agents/core/permission";
 import { mint } from "./mint";
 
 type Session = Awaited<ReturnType<typeof mint>>;

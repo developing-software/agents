@@ -1,6 +1,6 @@
 <!-- Pick one; the recommended option starts picked. "Other" takes free text as the answer. -->
 <script lang="ts">
-	import { Input } from '@template/ui';
+	import { Input } from '@agents/ui';
 	import type { Block } from '../catalog';
 	import { form } from '../state.svelte';
 	import Option from './Option.svelte';

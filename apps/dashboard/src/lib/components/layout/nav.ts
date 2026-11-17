@@ -4,7 +4,7 @@ import ChartLine from "@lucide/svelte/icons/chart-line";
 import Files from "@lucide/svelte/icons/files";
 import FolderKanban from "@lucide/svelte/icons/folder-kanban";
 import ListTodo from "@lucide/svelte/icons/list-todo";
-import type { Permission } from "@template/core/permission";
+import type { Permission } from "@agents/core/permission";
 import type { Component } from "svelte";
 
 export type Item = { href: string; label: string; icon?: LucideIcon; exact?: boolean };

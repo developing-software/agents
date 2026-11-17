@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test";
 import { setupApiTest } from "./util";
-import { Todo } from "@template/core/todo";
-import { Identifier } from "@template/core/identifier";
+import { Todo } from "@agents/core/todo";
+import { Identifier } from "@agents/core/identifier";
 
 const { test, validateOpenAPIRoute, get } = setupApiTest();
 

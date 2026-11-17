@@ -1,4 +1,4 @@
-import { Template } from "@template/core/email/template";
+import { Template } from "@agents/core/email/template";
 import type { LayoutServerLoad } from "./$types";
 
 // The section's own `+layout.server` already 404s outside dev, and this runs below it.

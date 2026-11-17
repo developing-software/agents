@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Feedback } from '@template/core/feedback';
+	import type { Feedback } from '@agents/core/feedback';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { states, tags } from '../labels';

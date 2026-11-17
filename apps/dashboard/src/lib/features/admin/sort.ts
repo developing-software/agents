@@ -1,5 +1,5 @@
-import type { Admin } from "@template/core/admin";
-import type { Event } from "@template/core/event";
+import type { Admin } from "@agents/core/admin";
+import type { Event } from "@agents/core/event";
 import { sorted } from "#lib/utils/sort.ts";
 
 /** Mirrored from core, type-only — `satisfies` fails the build if a key is renamed there. */

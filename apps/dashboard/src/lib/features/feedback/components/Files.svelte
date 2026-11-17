@@ -8,7 +8,7 @@
 	import FileText from '@lucide/svelte/icons/file-text';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import X from '@lucide/svelte/icons/x';
-	import { Field, Kbd } from '@template/ui';
+	import { Field, Kbd } from '@agents/ui';
 	import { size } from '#lib/utils/size.ts';
 
 	let { field, issues = [] }: { field: RemoteFormField<File[]>; issues?: { message: string }[] } =

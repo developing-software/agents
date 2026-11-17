@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Project } from "@template/core/project";
+import { Project } from "@agents/core/project";
 import { remote } from "#lib/server/gate.ts";
 
 /**

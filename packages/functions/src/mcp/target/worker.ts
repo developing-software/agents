@@ -1,4 +1,4 @@
-import { Queue } from "@template/core/queue";
+import { Queue } from "@agents/core/queue";
 import type { QueueEnv } from "../../cf";
 import { worker } from "../../target";
 import { app } from "../index";

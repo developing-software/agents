@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Combobox, Field, Select, Tabs } from '@template/ui';
-	import { Dates, Times, type Patch, type Prefs } from '@template/core/user/prefs';
+	import { Combobox, Field, Select, Tabs } from '@agents/ui';
+	import { Dates, Times, type Patch, type Prefs } from '@agents/core/user/prefs';
 	import { SAMPLE, date, local, stamp, time } from '#lib/utils/fmt.ts';
 
 	let { prefs, onpick }: { prefs: Prefs; onpick: (patch: Patch) => void } = $props();

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, mock } from "bun:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { Key } from "@template/core/key";
-import { Todo } from "@template/core/todo";
+import { Key } from "@agents/core/key";
+import { Todo } from "@agents/core/todo";
 import { app } from "../src/mcp";
 import { createUser } from "./api/util";
 

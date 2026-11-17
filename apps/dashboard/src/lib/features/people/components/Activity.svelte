@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import type { Event } from '@template/sdk/query';
-	import { Empty, Issue, Skeleton } from '@template/ui';
+	import type { Event } from '@agents/sdk/query';
+	import { Empty, Issue, Skeleton } from '@agents/ui';
 	import Pulse from '@lucide/svelte/icons/activity';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import Pencil from '@lucide/svelte/icons/pencil';

@@ -9,7 +9,7 @@
 		MarkdownEditor,
 		Select,
 		fromDay
-	} from '@template/ui';
+	} from '@agents/ui';
 	import { upload } from '#lib/upload.ts';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { create } from '../../api/todos.query';

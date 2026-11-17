@@ -1,11 +1,11 @@
-import { Context } from "@template/core/context";
-import { Database } from "@template/core/drizzle";
-import { Email } from "@template/core/email";
-import { run } from "@template/core/jobs";
-import { Kv } from "@template/core/kv";
-import { redis } from "@template/core/kv/adapter/redis";
-import { Queue } from "@template/core/queue";
-import { Storage } from "@template/core/storage";
+import { Context } from "@agents/core/context";
+import { Database } from "@agents/core/drizzle";
+import { Email } from "@agents/core/email";
+import { run } from "@agents/core/jobs";
+import { Kv } from "@agents/core/kv";
+import { redis } from "@agents/core/kv/adapter/redis";
+import { Queue } from "@agents/core/queue";
+import { Storage } from "@agents/core/storage";
 
 // Worker for the `db` driver; importing `run` from the jobs barrel registers every handler.
 // A hung db round-trip can't recheck the signal, so a second signal hard-exits.

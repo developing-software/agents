@@ -13,7 +13,7 @@
 </script>
 
 <script lang="ts">
-	// import { Command, Button, Kbd, type Action } from '@template/ui';
+	// import { Command, Button, Kbd, type Action } from '@agents/ui';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 
 	let open = $state(false);

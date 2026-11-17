@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { Todo } from "@template/core/todo";
-import { last, valid } from "@template/ui/day";
+import type { Todo } from "@agents/core/todo";
+import { last, valid } from "@agents/ui/day";
 import { sort } from "./sort";
 import { STATUSES } from "./status";
 

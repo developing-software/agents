@@ -1,7 +1,7 @@
 <!-- Planned start and finish edit as one transaction, so an invalid half-update never lands. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { DateSpanPicker, Status, type Span } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { DateSpanPicker, Status, type Span } from '@agents/ui';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { update } from '../api/todos.query';

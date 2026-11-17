@@ -3,7 +3,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import * as Header from '#lib/components/header/index.ts';
 	import Steps from '#lib/components/Steps.svelte';
-	import { toDay, today } from '@template/ui';
+	import { toDay, today } from '@agents/ui';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { list, stages } from '../api/todos.query';
 

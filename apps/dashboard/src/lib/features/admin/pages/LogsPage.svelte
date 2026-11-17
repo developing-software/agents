@@ -10,7 +10,7 @@
 		Scroll,
 		Skeleton,
 		Toggle
-	} from '@template/ui';
+	} from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import { debounce } from '#lib/utils/debounce.ts';
 	import { query } from '#lib/utils/params.ts';

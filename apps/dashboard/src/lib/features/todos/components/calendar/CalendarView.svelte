@@ -1,6 +1,6 @@
 <script module lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import type { Day, State } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import type { Day, State } from '@agents/ui';
 	import type { Kind } from './drag.svelte';
 	import type { Item } from './layout';
 
@@ -42,7 +42,7 @@
 		today,
 		week,
 		weekStart
-	} from '@template/ui';
+	} from '@agents/ui';
 	import Keys from '#lib/components/layout/Keys.svelte';
 	import { user } from '#lib/utils/context.ts';
 	import { fmt } from '#lib/utils/fmt.ts';

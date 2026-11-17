@@ -4,7 +4,7 @@
 	import { navigating, page } from '$app/state';
 	import PreLoadingIndicator from './PreLoadingIndicator.svelte';
 	import ViewTransitions from './ViewTransitions.svelte';
-	import { Button, Kbd, Modals, Toaster } from '@template/ui';
+	import { Button, Kbd, Modals, Toaster } from '@agents/ui';
 	import Palette from './Palette.svelte';
 	import Shell from '#lib/components/layout/Shell.svelte';
 	import ShellProvider from '#lib/components/layout/ShellProvider.svelte';

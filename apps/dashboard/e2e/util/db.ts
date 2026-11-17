@@ -1,4 +1,4 @@
-import { Database } from "@template/core/drizzle";
+import { Database } from "@agents/core/drizzle";
 
 // One pool for the test process — mint/seed run per test, and a client each would
 // pile up connections against the same Postgres the app under test is using.

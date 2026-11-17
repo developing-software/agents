@@ -1,6 +1,6 @@
-@import "@template/ui/tokens.css";
+@import "@agents/ui/tokens.css";
 
-/* The ui tokens live in `@template/ui/tokens.css`; these are the app's own: charts, the
+/* The ui tokens live in `@agents/ui/tokens.css`; these are the app's own: charts, the
    contribution ramp and the shell frame. */
 :root {
   --series-1: light-dark(#b06a1f, #cd8030);

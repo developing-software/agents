@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { App } from '@template/core/app';
+	import type { App } from '@agents/core/app';
 	import { goto } from '$app/navigation';
 	import ArrowDownToLine from '@lucide/svelte/icons/arrow-down-to-line';
-	import { List, Menu, Tooltip, modal } from '@template/ui';
+	import { List, Menu, Tooltip, modal } from '@agents/ui';
 	import Rename from '#lib/components/Rename.svelte';
 	import { ask } from '#lib/ask.ts';
 	import { fmt } from '#lib/utils/fmt.ts';

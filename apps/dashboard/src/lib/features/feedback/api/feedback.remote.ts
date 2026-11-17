@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getRequestEvent } from "$app/server";
-import { Feedback } from "@template/core/feedback";
+import { Feedback } from "@agents/core/feedback";
 import { remote } from "#lib/server/gate.ts";
 
 // Kit posts proxied LazyFiles, which Bun's `instanceof File` rejects: check the prototype, then

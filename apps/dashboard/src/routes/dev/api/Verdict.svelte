@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Badge, type Tone } from '@template/ui';
+	import { Badge, type Tone } from '@agents/ui';
 
 	let { status }: { status: number } = $props();
 

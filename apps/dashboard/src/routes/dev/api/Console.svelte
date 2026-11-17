@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
-	import { Button, Field, Kbd, Textarea } from '@template/ui';
+	import { Button, Field, Kbd, Textarea } from '@agents/ui';
 	import { message } from '#lib/query.ts';
 	import Params from './Params.svelte';
 	import Responses from './Responses.svelte';

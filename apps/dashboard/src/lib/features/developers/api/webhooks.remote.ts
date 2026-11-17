@@ -1,4 +1,4 @@
-import { Webhook } from "@template/core/webhook";
+import { Webhook } from "@agents/core/webhook";
 import { remote } from "#lib/server/gate.ts";
 
 // Admin configuration: no API route. `getWebhooks(owner)` narrows to one App's.

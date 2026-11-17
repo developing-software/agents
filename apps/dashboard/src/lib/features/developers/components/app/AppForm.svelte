@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { Dialog, Field, Input } from '@template/ui';
+	import { Dialog, Field, Input } from '@agents/ui';
 	import { create } from '../../api/apps.query';
 
 	// Modal content. An App is its account's profile, so that page is where it is configured.

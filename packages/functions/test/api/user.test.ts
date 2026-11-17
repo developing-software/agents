@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test";
-import { Todo } from "@template/core/todo";
+import { Todo } from "@agents/core/todo";
 import { createUser, setupApiTest } from "./util";
 
 const { test, validateOpenAPIRoute, userID } = setupApiTest();

@@ -12,7 +12,7 @@
 </script>
 
 <script lang="ts">
-	// import { RangePicker, last, valid } from '@template/ui';
+	// import { RangePicker, last, valid } from '@agents/ui';
 
 	let range = $state(last(30));
 	let fired = $state(0);

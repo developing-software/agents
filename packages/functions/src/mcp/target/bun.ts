@@ -1,8 +1,8 @@
 import { bun } from "../../target";
-import { Database } from "@template/core/drizzle";
-import { Kv } from "@template/core/kv";
-import { redis } from "@template/core/kv/adapter/redis";
-import { Queue } from "@template/core/queue";
+import { Database } from "@agents/core/drizzle";
+import { Kv } from "@agents/core/kv";
+import { redis } from "@agents/core/kv/adapter/redis";
+import { Queue } from "@agents/core/queue";
 import { app } from "../index";
 
 const port = parseInt(process.env.MCP_PORT!) || 3001;

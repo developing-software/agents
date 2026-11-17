@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Event } from "@template/core/event";
+import { Event } from "@agents/core/event";
 import { remote } from "#lib/server/gate.ts";
 
 // Pinned to one row, which keeps it readable without the admin grant; recent activity only.

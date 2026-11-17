@@ -1,7 +1,7 @@
 <!-- The topbar's way into the assistant: opens and closes the dock beside the page. -->
 <script lang="ts">
 	import { getFormatForDisplay } from '@tanstack/svelte-hotkeys';
-	import { IconButton } from '@template/ui';
+	import { IconButton } from '@agents/ui';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { agent } from '../agent.svelte';
 

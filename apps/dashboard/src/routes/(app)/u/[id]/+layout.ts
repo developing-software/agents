@@ -1,8 +1,8 @@
 import AppWindow from "@lucide/svelte/icons/app-window";
 import UserRound from "@lucide/svelte/icons/user-round";
 import Webhook from "@lucide/svelte/icons/webhook";
-import { Permission } from "@template/core/permission";
-import { getUserByIdOptions } from "@template/sdk/query";
+import { Permission } from "@agents/core/permission";
+import { getUserByIdOptions } from "@agents/sdk/query";
 import { section } from "#lib/components/layout/nav.ts";
 import type { LayoutLoad } from "./$types";
 

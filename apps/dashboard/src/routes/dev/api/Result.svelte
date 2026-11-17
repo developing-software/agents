@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Code } from '@template/ui';
+	import { Code } from '@agents/ui';
 	import Verdict from './Verdict.svelte';
 	import type { send } from './api.remote';
 

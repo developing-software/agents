@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { dev } from "$app/env";
 import { z } from "zod";
-import { Identity } from "@template/core/identity";
+import { Identity } from "@agents/core/identity";
 import { remote } from "#lib/server/gate.ts";
 import { call, ops } from "./api";
 

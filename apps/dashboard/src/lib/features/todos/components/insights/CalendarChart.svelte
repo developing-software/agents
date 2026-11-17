@@ -14,7 +14,7 @@
 	import { Chart } from '@tanstack/charts/svelte';
 	import { tooltip } from '@tanstack/charts/tooltip';
 	import { portal } from '@tanstack/charts/tooltip/portal';
-	import { dates } from '@template/ui';
+	import { dates } from '@agents/ui';
 
 	let { data }: { data: Data } = $props();
 

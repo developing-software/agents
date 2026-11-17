@@ -1,7 +1,7 @@
 <!-- A todo's stage, saved on pick: suggests the project's stages and creates whatever is new. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { Status } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Status } from '@agents/ui';
 	import { update } from '../../api/todos.query';
 	import StagePicker from '../StagePicker.svelte';
 

@@ -1,6 +1,6 @@
 <!-- How the board and timeline split their rows; a `Header.Group` for the filter strip. -->
 <script lang="ts">
-	import { Menu } from '@template/ui';
+	import { Menu } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import type { By } from '../group';
 	import Pick from './Pick.svelte';

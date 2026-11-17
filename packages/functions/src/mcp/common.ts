@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer, ToolAnnotations } from "@modelcontextprotocol/server";
-import type { Meta } from "@template/core/util/fn";
+import type { Meta } from "@agents/core/util/fn";
 
 /** Wraps data as an MCP text result — every tool returns through this. */
 function text(data: unknown) {

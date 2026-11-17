@@ -1,6 +1,6 @@
 <!-- A date, as `YYYY-MM-DD`. -->
 <script lang="ts">
-	import { DatePicker } from '@template/ui';
+	import { DatePicker } from '@agents/ui';
 	import type { Block } from '../catalog';
 	import { form } from '../state.svelte';
 	import Question from './Question.svelte';

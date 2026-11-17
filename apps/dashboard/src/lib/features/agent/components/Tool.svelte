@@ -1,6 +1,6 @@
 <!-- A tool call: its page view when one is registered, else a chip that opens on its I/O. -->
 <script lang="ts">
-	import { Code, Spinner, Status } from '@template/ui';
+	import { Code, Spinner, Status } from '@agents/ui';
 	import Wrench from '@lucide/svelte/icons/wrench';
 	import Chevron from '@lucide/svelte/icons/chevron-right';
 	import { agent } from '../agent.svelte';

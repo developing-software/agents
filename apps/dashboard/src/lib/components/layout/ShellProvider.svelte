@@ -4,10 +4,10 @@
 	import { DEVTOOLS } from '$app/env/public';
 	import { QueryClientProvider, type QueryClient } from '@tanstack/svelte-query';
 	import { HotkeysProvider, type HotkeyPlatform } from '@tanstack/svelte-hotkeys';
-	import { Permission } from '@template/core/permission';
-	import type { User } from '@template/core/user';
-	import { zone, type Prefs } from '@template/core/user/prefs';
-	import { setDates } from '@template/ui';
+	import { Permission } from '@agents/core/permission';
+	import type { User } from '@agents/core/user';
+	import { zone, type Prefs } from '@agents/core/user/prefs';
+	import { setDates } from '@agents/ui';
 	import { hotkeys } from '#lib/hotkeys.ts';
 	import { createUser } from '#lib/utils/context.ts';
 	import { createRail } from './rail.svelte';

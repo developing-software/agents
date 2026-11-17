@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import type { Control, Entry } from '@template/ui/story';
+	import type { Control, Entry } from '@agents/ui/story';
 	import Controls from './Controls.svelte';
 	import Listing from './Listing.svelte';
 	import { markup, snippet } from './snippet';

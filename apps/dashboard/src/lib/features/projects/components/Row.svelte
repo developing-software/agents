@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import type { Project } from '@template/core/project';
-	import { Avatar, List, Menu, modal } from '@template/ui';
+	import type { Project } from '@agents/core/project';
+	import { Avatar, List, Menu, modal } from '@agents/ui';
 	import LinkForm from '#lib/components/LinkForm.svelte';
 	import Rename from '#lib/components/Rename.svelte';
 	import { ask } from '#lib/ask.ts';

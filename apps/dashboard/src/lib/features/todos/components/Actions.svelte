@@ -5,8 +5,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { Todo } from '@template/core/todo';
-	import { Menu, modal } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Menu, modal } from '@agents/ui';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import LinkForm from '#lib/components/LinkForm.svelte';
 	import { link } from '../api/todos.query';

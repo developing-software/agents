@@ -1,7 +1,7 @@
 import type { HandleServerError } from "@sveltejs/kit/hooks";
 import { dev } from "$app/env";
-import { VisibleError } from "@template/core/error";
-import { Log } from "@template/core/util/log";
+import { VisibleError } from "@agents/core/error";
+import { Log } from "@agents/core/util/log";
 
 const log = Log.create({ namespace: "dashboard.hooks.server" });
 

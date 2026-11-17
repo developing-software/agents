@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { Database, sql } from "@template/core/drizzle";
+import { Database, sql } from "@agents/core/drizzle";
 
 // e2e runs on real Postgres in a dedicated database, which is
 // reset each run so dev data in `postgres` is never touched.

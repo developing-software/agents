@@ -1,4 +1,4 @@
-# @template/cli
+# @agents/cli
 
 The one entrypoint that runs and talks to the template. Bun-only, no build step —
 `src/index.ts` is the bin.
@@ -24,7 +24,7 @@ The one entrypoint that runs and talks to the template. Bun-only, no build step 
 
 ## Rules
 
-- **Never hardcode API method names.** `api.ts` reflects the functions `@template/sdk/sdk.gen` exports, so
+- **Never hardcode API method names.** `api.ts` reflects the functions `@agents/sdk/sdk.gen` exports, so
   new endpoints appear automatically after `bun run gen`. Adding a method to the
   command surface should require zero edits here. Import `sdk.gen`, never the barrel: it
   re-exports the TanStack helpers, an optional peer this package lacks.

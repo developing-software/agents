@@ -1,7 +1,7 @@
 <!-- The open conversation: its messages, what the agent is doing, and the last error. -->
 <script lang="ts">
 	import type { Attachment } from 'svelte/attachments';
-	import { Button, Issue, Scroll, Spinner } from '@template/ui';
+	import { Button, Issue, Scroll, Spinner } from '@agents/ui';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import { agent } from '../agent.svelte';
 	import Message from './Message.svelte';

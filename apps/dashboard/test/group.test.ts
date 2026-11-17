@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { Todo } from "@template/core/todo";
+import type { Todo } from "@agents/core/todo";
 import { group } from "../src/lib/features/todos/group";
 import { STATUSES } from "../src/lib/features/todos/status";
 

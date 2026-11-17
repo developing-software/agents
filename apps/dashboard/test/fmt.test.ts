@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { DEFAULTS } from "@template/core/user/prefs";
+import { DEFAULTS } from "@agents/core/user/prefs";
 import { ago, date, stamp, time } from "../src/lib/utils/fmt";
 
 const before = (ms: number) => new Date(Date.now() - ms).toISOString();

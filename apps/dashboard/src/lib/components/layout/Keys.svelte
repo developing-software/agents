@@ -1,7 +1,7 @@
 <!-- The `?` sheet, raised through `modal(Keys)`: every declared app key, live or not. -->
 <script lang="ts">
 	import { getAppHotkeyList } from '@tanstack/svelte-hotkeys';
-	import { Button, Kbd } from '@template/ui';
+	import { Button, Kbd } from '@agents/ui';
 
 	let { close }: { close: () => void } = $props();
 

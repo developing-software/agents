@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Key } from '@template/core/key';
-	import { Empty, List } from '@template/ui';
+	import type { Key } from '@agents/core/key';
+	import { Empty, List } from '@agents/ui';
 	import KeyRow from './KeyRow.svelte';
 
 	// An App's keys sit in a section of its profile, so they take the boxed list.

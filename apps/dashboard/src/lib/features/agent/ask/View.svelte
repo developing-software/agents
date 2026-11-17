@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import { parsePartialJSON } from '@tanstack/ai/client';
-	import { Issue } from '@template/ui';
+	import { Issue } from '@agents/ui';
 	import Busy from '../components/Busy.svelte';
 	import Message from '@lucide/svelte/icons/message-square-text';
 	import type { ViewProps } from '../views';

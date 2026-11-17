@@ -1,6 +1,6 @@
 import type { RequestEvent } from "@sveltejs/kit";
-import { User } from "@template/core/user";
-import { Prefs } from "@template/core/user/prefs";
+import { User } from "@agents/core/user";
+import { Prefs } from "@agents/core/user/prefs";
 
 // Only the browser knows where the reader is, so it writes this one itself (see
 // `routes/+layout.ts`) — unsigned and not httpOnly, unlike `theme`. The root layout seeds

@@ -1,6 +1,6 @@
 <!-- The drawer's bar: history, new conversation, full screen, close. Its mark is the one activity cue. -->
 <script lang="ts">
-	import { IconButton } from '@template/ui';
+	import { IconButton } from '@agents/ui';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
 	import X from '@lucide/svelte/icons/x';
 	import Maximize from '@lucide/svelte/icons/maximize-2';

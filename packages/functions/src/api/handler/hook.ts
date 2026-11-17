@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Hono } from "hono";
 import { describe } from "../doc";
-import { App } from "@template/core/app";
+import { App } from "@agents/core/app";
 
 /**
  * Inbound posts from a registered App. No bearer: the signature over the raw body is the

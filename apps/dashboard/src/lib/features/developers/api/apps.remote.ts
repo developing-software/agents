@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { API_URL } from "$app/env/private";
-import { App } from "@template/core/app";
-import { Key } from "@template/core/key";
+import { App } from "@agents/core/app";
+import { Key } from "@agents/core/key";
 import { remote } from "#lib/server/gate.ts";
 
 // Admin configuration: no API route, so these are the only way in. Core holds the grants.

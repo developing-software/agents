@@ -5,8 +5,8 @@
 <script lang="ts">
 	import { z } from 'zod';
 	import { createQuery } from '@tanstack/svelte-query';
-	import type { Feedback } from '@template/core/feedback';
-	import { Combobox, Empty, Issue, Skeleton, Tabs } from '@template/ui';
+	import type { Feedback } from '@agents/core/feedback';
+	import { Combobox, Empty, Issue, Skeleton, Tabs } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import { query } from '#lib/utils/params.ts';
 	import { issues } from '../api/feedback.query';

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { describeRoute, resolver } from "hono-openapi";
-import { Common } from "@template/core/common";
-import type { Meta } from "@template/core/util/fn";
+import { Common } from "@agents/core/common";
+import type { Meta } from "@agents/core/util/fn";
 import { ErrorResponses } from "./common";
 
 type Responses = NonNullable<Parameters<typeof describeRoute>[0]["responses"]>;

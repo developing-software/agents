@@ -1,7 +1,7 @@
 <!-- Todos with no dates yet; drag one onto a day to schedule it. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { Skeleton } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Skeleton } from '@agents/ui';
 	import Chip from './Chip.svelte';
 	import type { Chips } from './CalendarView.svelte';
 

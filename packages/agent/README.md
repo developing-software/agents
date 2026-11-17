@@ -1,6 +1,6 @@
-# `@template/agent`
+# `@agents/agent`
 
-`@template/agent` provides thin composition helpers around TanStack AI. Application code keeps the
+`@agents/agent` provides thin composition helpers around TanStack AI. Application code keeps the
 native TanStack shape: `chat()`, adapters, middleware, sandbox definitions, and sandbox handles stay
 visible.
 
@@ -38,12 +38,12 @@ Every run sees the same files in `workspace-42`; each thread keeps its own messa
 ## Public API
 
 ```text
-@template/agent
+@agents/agent
   AgentContext
   Model.list
   Model.text
 
-@template/agent/sandbox
+@agents/agent/sandbox
   Workspace.make
   Workspace.github
   Workspace.local
@@ -54,10 +54,10 @@ Every run sees the same files in `workspace-42`; each thread keeps its own messa
   Harness.Claude
   Harness.Codex
 
-@template/agent/docker
+@agents/agent/docker
   Docker.make
 
-@template/agent/cloudflare
+@agents/agent/cloudflare
   Cloudflare.make
   Cloudflare.agent
 ```
@@ -70,7 +70,7 @@ The helpers return TanStack-compatible values.
 There is no package-manager or install-command inference.
 
 ```ts
-import { Workspace } from "@template/agent/sandbox";
+import { Workspace } from "@agents/agent/sandbox";
 
 const workspace = Workspace.make({
   source: Workspace.github({
@@ -98,8 +98,8 @@ A sandbox is one concrete reusable workspace. Its `id` is the application-owned 
 find the same provider instance across chat threads.
 
 ```ts
-import { Sandbox } from "@template/agent/sandbox";
-import { Docker } from "@template/agent/docker";
+import { Sandbox } from "@agents/agent/sandbox";
+import { Docker } from "@agents/agent/docker";
 
 const sandbox = Sandbox.make({
   id: "workspace-42",
@@ -185,8 +185,8 @@ import { chat, memoryStream, toServerSentEventsResponse } from "@tanstack/ai";
 import { withLocks } from "@tanstack/ai/locks";
 import { withPersistence } from "@tanstack/ai-persistence";
 import { withSandbox } from "@tanstack/ai-sandbox";
-import { AgentContext } from "@template/agent";
-import { Harness } from "@template/agent/sandbox";
+import { AgentContext } from "@agents/agent";
+import { Harness } from "@agents/agent/sandbox";
 
 const config = await AgentContext.use().resolve({
   profile: "codex",
@@ -271,8 +271,8 @@ The Cloudflare container image contains both Claude Code and Codex. Each run sel
 the sandbox ID selects the shared workspace.
 
 ```ts
-import { Cloudflare } from "@template/agent/cloudflare";
-import { Harness, Sandbox, Workspace } from "@template/agent/sandbox";
+import { Cloudflare } from "@agents/agent/cloudflare";
+import { Harness, Sandbox, Workspace } from "@agents/agent/sandbox";
 
 const agent = Cloudflare.agent<Env>({
   adapter(input, env) {
@@ -348,7 +348,7 @@ Cancellation must destroy the Cloudflare container because its provider cannot s
 Normal assistants use the contextual model port and do not depend on sandbox concepts:
 
 ```ts
-import { Model } from "@template/agent";
+import { Model } from "@agents/agent";
 
 const stream = chat({
   adapter: Model.text(input.model),

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { Health } from "@template/core/health";
+import { Health } from "@agents/core/health";
 
 /** Mounted ahead of logging and auth, so probes stay unauthenticated and out of the logs. */
 export const health = new Hono()

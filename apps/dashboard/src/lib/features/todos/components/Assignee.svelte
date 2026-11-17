@@ -1,8 +1,8 @@
 <!-- Quick reassign from a row or card: the avatar opens the directory. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Avatar, Popover, Skeleton, Status } from '@template/ui';
+	import { Avatar, Popover, Skeleton, Status } from '@agents/ui';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import { update, users } from '../api/todos.query';
 

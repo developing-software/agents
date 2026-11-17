@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Button, Field, Inline, Issue, Section, Skeleton, Status } from '@template/ui';
+	import { Button, Field, Inline, Issue, Section, Skeleton, Status } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import AvatarUpload from '#lib/components/AvatarUpload.svelte';
 	import Can from '#lib/components/Can.svelte';

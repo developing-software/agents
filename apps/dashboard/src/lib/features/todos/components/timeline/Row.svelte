@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { peek } from '#lib/utils/peek.ts';
 	import { color, label, late } from '../../status';

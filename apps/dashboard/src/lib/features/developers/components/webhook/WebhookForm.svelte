@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { dev } from '$app/env';
-	import { Dialog, Field, Input } from '@template/ui';
-	import { Types } from '@template/core/webhook/types';
+	import { Dialog, Field, Input } from '@agents/ui';
+	import { Types } from '@agents/core/webhook/types';
 	import { create } from '../../api/webhooks.query';
 
 	// Modal content. `owner` files the subscription under that App.

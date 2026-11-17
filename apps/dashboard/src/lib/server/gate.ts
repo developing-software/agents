@@ -1,9 +1,9 @@
 import { error, invalid } from "@sveltejs/kit";
 import { command, form, query, type RemoteForm, type RemoteFormInput } from "$app/server";
 import type { z } from "zod";
-import { Identity } from "@template/core/identity";
-import { VisibleError } from "@template/core/error";
-import type { Permission } from "@template/core/permission";
+import { Identity } from "@agents/core/identity";
+import { VisibleError } from "@agents/core/error";
+import type { Permission } from "@agents/core/permission";
 
 // 401, not 403: no session at all is fixable by signing in, where a `forbidden` from
 // `Identity.check` is not. The client branches on the difference.

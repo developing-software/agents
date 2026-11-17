@@ -13,7 +13,7 @@
 </script>
 
 <script lang="ts">
-	// import { Menu } from '@template/ui';
+	// import { Menu } from '@agents/ui';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 
 	let last = $state('nothing yet');

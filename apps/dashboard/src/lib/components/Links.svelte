@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Status, modal } from '@template/ui';
-	import type { Link } from '@template/core/util/meta';
+	import { Status, modal } from '@agents/ui';
+	import type { Link } from '@agents/core/util/meta';
 	import { message } from '#lib/query.ts';
 	import { label } from '#lib/utils/link.ts';
 	import LinkForm from './LinkForm.svelte';

@@ -2,7 +2,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 	import { hotkeys } from '#lib/hotkeys.ts';
-	import { Button, Empty, Issue, Kbd, List, modal } from '@template/ui';
+	import { Button, Empty, Issue, Kbd, List, modal } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import { list } from '../api/apps.query';
 	import AppForm from '../components/app/AppForm.svelte';

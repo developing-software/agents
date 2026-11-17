@@ -1,5 +1,5 @@
 import { getRequestEvent } from "$app/server";
-import { User } from "@template/core/user";
+import { User } from "@agents/core/user";
 import { remote } from "#lib/server/gate.ts";
 import * as theme from "#lib/server/theme.ts";
 

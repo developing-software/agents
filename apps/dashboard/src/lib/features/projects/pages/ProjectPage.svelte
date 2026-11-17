@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { createQuery } from '@tanstack/svelte-query';
-	import type { Event } from '@template/core/event';
-	import { Inline } from '@template/ui';
+	import type { Event } from '@agents/core/event';
+	import { Inline } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import Widgets, { type Widget } from '#lib/components/Widgets.svelte';
 	import Timeline from '#lib/features/events/components/Timeline.svelte';

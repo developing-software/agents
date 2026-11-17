@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { File as Entry } from '@template/sdk/query';
-	import { List, Menu } from '@template/ui';
+	import type { File as Entry } from '@agents/sdk/query';
+	import { List, Menu } from '@agents/ui';
 	import Archive from '@lucide/svelte/icons/file-archive';
 	import Audio from '@lucide/svelte/icons/file-audio';
 	import Code from '@lucide/svelte/icons/file-code';

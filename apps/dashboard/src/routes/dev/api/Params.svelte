@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Combobox, Field, Input } from '@template/ui';
+	import { Combobox, Field, Input } from '@agents/ui';
 	import type { doc } from './api.remote';
 
 	type Param = Awaited<ReturnType<typeof doc>>['list'][number]['params'][number];

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Build context is the repo root (see compose.yml). This is a Bun workspace
 # monorepo with a catalog, so install/build must happen from the root — the
-# `@template/*` deps are `workspace:*` and won't resolve in isolation.
+# `@agents/*` deps are `workspace:*` and won't resolve in isolation.
 
 FROM oven/bun:1 AS base
 WORKDIR /app

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Insights } from '@template/core/todo';
+	import type { Insights } from '@agents/core/todo';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Issue, Skeleton } from '@template/ui';
+	import { Issue, Skeleton } from '@agents/ui';
 	import { stats } from '../../api/todos.query';
 	import StatTile from './StatTile.svelte';
 

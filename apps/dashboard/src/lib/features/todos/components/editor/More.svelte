@@ -1,7 +1,7 @@
 <!-- The record's ⋯ menu beside its primary action; destructive things live here, not in the body. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { IconButton, Menu } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { IconButton, Menu } from '@agents/ui';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import Delete from '../Delete.svelte';
 

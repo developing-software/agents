@@ -1,5 +1,5 @@
 {
-  "name": "@template/core",
+  "name": "@agents/core",
   "private": true,
   "type": "module",
   "sideEffects": false,

@@ -12,7 +12,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { MarkdownEditor } from '@template/ui';
+	// import { MarkdownEditor } from '@agents/ui';
 
 	let value = $state('Drop a png here, or use the + button.');
 

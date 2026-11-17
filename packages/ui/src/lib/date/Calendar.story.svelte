@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	// import { Calendar, setDates, today, shift, type Range } from '@template/ui';
+	// import { Calendar, setDates, today, shift, type Range } from '@agents/ui';
 	import { shift, today, type Range } from './day';
 
 	const now = today();

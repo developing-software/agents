@@ -1,4 +1,4 @@
-import { Identity } from "@template/core/identity";
+import { Identity } from "@agents/core/identity";
 import type { LayoutServerLoad } from "./$types";
 
 // Which groups the rail lists; the `(workspace)` and `(admin)` layouts are what refuse.

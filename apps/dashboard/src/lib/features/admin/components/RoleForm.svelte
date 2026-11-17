@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { FormBoundary, Issue, Select, Status, modal } from '@template/ui';
-	import { Permission } from '@template/core/permission';
-	import type { User } from '@template/core/user';
+	import { FormBoundary, Issue, Select, Status, modal } from '@agents/ui';
+	import { Permission } from '@agents/core/permission';
+	import type { User } from '@agents/core/user';
 	import { invalidate } from '#lib/query.ts';
 	import { assignRole } from '../api/admin.remote';
 

@@ -6,8 +6,8 @@ import SignalHigh from "@lucide/svelte/icons/signal-high";
 import SignalLow from "@lucide/svelte/icons/signal-low";
 import SignalMedium from "@lucide/svelte/icons/signal-medium";
 import Sparkles from "@lucide/svelte/icons/sparkles";
-import type { Tone } from "@template/ui";
-import type { Feedback } from "@template/core/feedback";
+import type { Tone } from "@agents/ui";
+import type { Feedback } from "@agents/core/feedback";
 
 // The one place a label gets its colour: every chip, badge and row reads `tone` from here.
 export type Label = { label: string; tone: Tone; icon: typeof Bug; hint?: string };

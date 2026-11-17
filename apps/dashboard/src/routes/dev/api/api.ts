@@ -1,5 +1,5 @@
-import { app } from "@template/functions/api";
-import { spec } from "@template/functions/api/spec";
+import { app } from "@agents/functions/api";
+import { spec } from "@agents/functions/api/spec";
 
 type Schema = {
   $ref?: string;

@@ -9,7 +9,7 @@
 	import { createHotkeyAttachment } from '@tanstack/svelte-hotkeys';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Send from '@lucide/svelte/icons/send';
-	import { Button, Field, FormBoundary, Issue, Kbd } from '@template/ui';
+	import { Button, Field, FormBoundary, Issue, Kbd } from '@agents/ui';
 	import { invalidate } from '#lib/query.ts';
 	import { send } from '../api/feedback.remote';
 	import { tags, urgencies } from '../labels';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import { color, label } from '../status';
 
 	let { status, reason }: { status: Todo.Status; reason?: string | null } = $props();

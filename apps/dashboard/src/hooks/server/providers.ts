@@ -1,11 +1,11 @@
 import type { Handle } from "@sveltejs/kit/hooks";
 import { DATABASE_URL, SVELTE_ADAPTER } from "$app/env/private";
-import { Context } from "@template/core/context";
-import { Database } from "@template/core/drizzle";
-import { Kv } from "@template/core/kv";
-import { Queue } from "@template/core/queue";
-import { Storage } from "@template/core/storage";
-import { Email } from "@template/core/email";
+import { Context } from "@agents/core/context";
+import { Database } from "@agents/core/drizzle";
+import { Kv } from "@agents/core/kv";
+import { Queue } from "@agents/core/queue";
+import { Storage } from "@agents/core/storage";
+import { Email } from "@agents/core/email";
 import { env as cf } from "cloudflare:workers";
 
 // Workers forbid reusing a socket across requests, so the pool is built per request. A

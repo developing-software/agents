@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { dev } from '$app/env';
-	import { Button, Field, FormBoundary, Input, Issue } from '@template/ui';
+	import { Button, Field, FormBoundary, Input, Issue } from '@agents/ui';
 	import { start, verify } from '../api/login.remote';
 
 	// The password is the escape hatch, not the default: its field only mounts once asked

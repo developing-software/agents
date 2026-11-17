@@ -5,8 +5,8 @@
 -->
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import type { User } from '@template/core/user';
-	import { Avatar, IconButton, Menu } from '@template/ui';
+	import type { User } from '@agents/core/user';
+	import { Avatar, IconButton, Menu } from '@agents/ui';
 	import { user as session } from '#lib/utils/context.ts';
 	import { account as links } from './nav';
 

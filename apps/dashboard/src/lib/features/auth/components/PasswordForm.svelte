@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Field, FormBoundary, Input, Issue, toast } from '@template/ui';
+	import { Button, Field, FormBoundary, Input, Issue, toast } from '@agents/ui';
 	import { invalidate } from '#lib/query.ts';
 	import { password } from '../api/profile.remote';
 	import { providers } from '../api/profile.query';

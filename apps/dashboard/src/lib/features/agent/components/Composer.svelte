@@ -1,6 +1,6 @@
 <!-- The message box, the model picker, and send or stop. Typed while a form waits, it answers it. -->
 <script lang="ts">
-	import { IconButton, Kbd, Textarea } from '@template/ui';
+	import { IconButton, Kbd, Textarea } from '@agents/ui';
 	import Send from '@lucide/svelte/icons/send-horizontal';
 	import Square from '@lucide/svelte/icons/square';
 	import { agent } from '../agent.svelte';

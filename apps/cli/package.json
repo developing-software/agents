@@ -1,5 +1,5 @@
 {
-  "name": "@template/cli",
+  "name": "@agents/cli",
   "version": "1.0.0",
   "private": true,
   "bin": {
@@ -13,10 +13,10 @@
     "build": "bun build --compile --outfile bin/template-cli src/index.ts"
   },
   "dependencies": {
-    "@openauthjs/openauth": "catalog:",
-    "@template/core": "workspace:*",
-    "@template/functions": "workspace:*",
-    "@template/sdk": "workspace:*"
+    "@agents/core": "workspace:*",
+    "@agents/functions": "workspace:*",
+    "@agents/sdk": "workspace:*",
+    "@openauthjs/openauth": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:"

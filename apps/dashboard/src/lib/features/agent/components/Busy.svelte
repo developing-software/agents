@@ -1,6 +1,6 @@
 <!-- A quiet spinner line while a tool's input streams in. -->
 <script lang="ts">
-	import { Spinner } from '@template/ui';
+	import { Spinner } from '@agents/ui';
 
 	let { label }: { label: string } = $props();
 </script>

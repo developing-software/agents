@@ -1,7 +1,7 @@
 <!-- Cosmetic; core re-checks every grant. `owner` (a row's `createdBy`) enables `:own` grants. -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Permission } from '@template/core/permission';
+	import type { Permission } from '@agents/core/permission';
 	import { user } from '#lib/utils/context.ts';
 
 	let {

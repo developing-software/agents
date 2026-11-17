@@ -1,13 +1,13 @@
 import { MemoryStorage } from "@openauthjs/openauth/storage/memory";
-import { Context } from "@template/core/context";
-import { Database } from "@template/core/drizzle";
-import { Kv } from "@template/core/kv";
-import { redis } from "@template/core/kv/adapter/redis";
-import { Queue } from "@template/core/queue";
-import { Storage } from "@template/core/storage";
-import { app as apiApp } from "@template/functions/api";
-import { app as mcpApp } from "@template/functions/mcp";
-import { createAuth } from "@template/functions/auth";
+import { Context } from "@agents/core/context";
+import { Database } from "@agents/core/drizzle";
+import { Kv } from "@agents/core/kv";
+import { redis } from "@agents/core/kv/adapter/redis";
+import { Queue } from "@agents/core/queue";
+import { Storage } from "@agents/core/storage";
+import { app as apiApp } from "@agents/functions/api";
+import { app as mcpApp } from "@agents/functions/mcp";
+import { createAuth } from "@agents/functions/auth";
 
 const dash = `${import.meta.dir}/../../dashboard`;
 const db = Database.connect();

@@ -17,7 +17,7 @@
 </script>
 
 <script lang="ts">
-	// import { DatePicker, setDates } from '@template/ui';
+	// import { DatePicker, setDates } from '@agents/ui';
 	import { setDates } from './ctx';
 
 	// The story pins the zone the way the app does from the user's stored preference.

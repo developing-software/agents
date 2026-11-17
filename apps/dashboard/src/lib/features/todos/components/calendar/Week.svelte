@@ -1,7 +1,7 @@
 <!-- Seven day columns: an all-day lane for dates and multi-day bars, an hour grid for times. -->
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { format, shift, split, today, week, type Day, type Weekday } from '@template/ui';
+	import { format, shift, split, today, week, type Day, type Weekday } from '@agents/ui';
 	import Chip from './Chip.svelte';
 	import { lanes, minutes, slots, timed, type Item } from './layout';
 	import type { Chips } from './CalendarView.svelte';

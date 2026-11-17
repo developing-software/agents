@@ -3,7 +3,7 @@
 <!-- fallow-ignore-file code-duplication -->
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Empty, Issue, Skeleton } from '@template/ui';
+	import { Empty, Issue, Skeleton } from '@agents/ui';
 	import { list } from '../api/todos.query';
 	import StatusPill from './StatusPill.svelte';
 	import { late } from '../status';

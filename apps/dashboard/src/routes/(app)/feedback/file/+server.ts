@@ -1,8 +1,8 @@
 import { error, redirect } from "@sveltejs/kit";
-import { Identity } from "@template/core/identity";
-import { VisibleError } from "@template/core/error";
-import { Feedback } from "@template/core/feedback";
-import { Storage } from "@template/core/storage";
+import { Identity } from "@agents/core/identity";
+import { VisibleError } from "@agents/core/error";
+import { Feedback } from "@agents/core/feedback";
+import { Storage } from "@agents/core/storage";
 import type { RequestHandler } from "./$types";
 
 /** A feedback attachment by storage key: what the issue links to and the back office renders. */

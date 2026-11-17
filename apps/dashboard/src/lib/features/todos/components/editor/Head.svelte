@@ -1,8 +1,8 @@
 <!-- The record header on the todo's own route: every fact edits in place, the status rides a
      stepper, and one primary action moves it a step along the flow. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { Button, Inline } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Button, Inline } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 	import Steps from '#lib/components/Steps.svelte';
 	import Source from '#lib/features/events/components/Source.svelte';

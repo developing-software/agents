@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import { browser } from '$app/env';
-	import { Badge, Combobox, Kbd, Skeleton, type Row } from '@template/ui';
+	import { Badge, Combobox, Kbd, Skeleton, type Row } from '@agents/ui';
 	import { createHotkey } from '@tanstack/svelte-hotkeys';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { hotkeys } from '#lib/hotkeys.ts';

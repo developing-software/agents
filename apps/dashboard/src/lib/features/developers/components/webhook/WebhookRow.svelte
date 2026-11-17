@@ -3,8 +3,8 @@
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import CircleDashed from '@lucide/svelte/icons/circle-dashed';
 	import Power from '@lucide/svelte/icons/power';
-	import { IconButton, Inline, List, Menu, Tooltip } from '@template/ui';
-	import type { Webhook } from '@template/core/webhook';
+	import { IconButton, Inline, List, Menu, Tooltip } from '@agents/ui';
+	import type { Webhook } from '@agents/core/webhook';
 	import { ask } from '#lib/ask.ts';
 	import { copy } from '#lib/utils/copy.ts';
 	import { fmt } from '#lib/utils/fmt.ts';

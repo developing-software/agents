@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { SQL } from "bun";
-import { sign } from "@template/core/util/sign";
+import { sign } from "@agents/core/util/sign";
 import { boxed } from "../utils/box";
 
 const port = Number(process.env.HOOK_PORT ?? 4000);

@@ -1,6 +1,6 @@
 <!-- The signed-out home: the pitch, the arc every todo travels, and the way in. -->
 <script lang="ts">
-	import { Button } from '@template/ui';
+	import { Button } from '@agents/ui';
 	import { brand } from '#lib/brand.ts';
 	import Rule from '#lib/components/Rule.svelte';
 

@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { Template } from "@template/core/email/template";
+import { Template } from "@agents/core/email/template";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = ({ params }) => {

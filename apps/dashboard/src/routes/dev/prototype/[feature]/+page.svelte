@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Markdown, Tabs } from '@template/ui';
+	import { Markdown, Tabs } from '@agents/ui';
 	import Frame from './Frame.svelte';
 	import Link from './Link.svelte';
 

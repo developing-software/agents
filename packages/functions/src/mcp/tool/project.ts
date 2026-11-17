@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
-import { Project } from "@template/core/project";
+import { Project } from "@agents/core/project";
 import { tools } from "../common";
 
 export function project(server: McpServer) {

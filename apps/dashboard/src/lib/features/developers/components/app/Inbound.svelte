@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { App } from '@template/core/app';
+	import type { App } from '@agents/core/app';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Button, Issue, Section, Skeleton, Status } from '@template/ui';
+	import { Button, Issue, Section, Skeleton, Status } from '@agents/ui';
 	import { endpoint } from '../../api/apps.query';
 	import { secret } from './secret';
 

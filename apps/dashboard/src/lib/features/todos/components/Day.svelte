@@ -1,7 +1,7 @@
 <!-- A planned date as quiet meta; clicking it opens a date picker that saves on pick. -->
 <script lang="ts">
-	import type { Todo } from '@template/core/todo';
-	import { DatePicker, Status } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { DatePicker, Status } from '@agents/ui';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { update } from '../api/todos.query';

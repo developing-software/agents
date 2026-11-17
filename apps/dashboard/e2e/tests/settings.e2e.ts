@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
-import { Database } from "@template/core/drizzle";
-import { Queue } from "@template/core/queue";
-import { Identity } from "@template/core/identity";
-import { Todo } from "@template/core/todo";
+import { Database } from "@agents/core/drizzle";
+import { Queue } from "@agents/core/queue";
+import { Identity } from "@agents/core/identity";
+import { Todo } from "@agents/core/todo";
 import { test, expect } from "../util/fixtures";
 import { db } from "../util/db";
 

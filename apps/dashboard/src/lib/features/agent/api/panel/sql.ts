@@ -1,11 +1,11 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { toolDefinition } from "@tanstack/ai";
 import { z } from "zod";
-import { Identity } from "@template/core/identity";
-import { Database, sql, type SQL } from "@template/core/drizzle";
-import { ErrorCodes, VisibleError } from "@template/core/error";
-import type { Permission } from "@template/core/permission";
-import { fn } from "@template/core/util/fn";
+import { Identity } from "@agents/core/identity";
+import { Database, sql, type SQL } from "@agents/core/drizzle";
+import { ErrorCodes, VisibleError } from "@agents/core/error";
+import type { Permission } from "@agents/core/permission";
+import { fn } from "@agents/core/util/fn";
 
 /**
  * The `panel` agent's read-only SQL, for admins and never on the MCP. The model only explores,

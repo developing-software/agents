@@ -1,6 +1,6 @@
 <!-- A short markdown paragraph: context, or a reading of the numbers. -->
 <script lang="ts">
-	import { Markdown } from '@template/ui';
+	import { Markdown } from '@agents/ui';
 	import type { Layout } from '../catalog';
 
 	let { props }: Layout<'Text'> = $props();

@@ -1,6 +1,6 @@
 <!-- A file on its way up: pulses while it sends, stays red with the reason if it fails. -->
 <script lang="ts">
-	import { IconButton, List } from '@template/ui';
+	import { IconButton, List } from '@agents/ui';
 	import Upload from '@lucide/svelte/icons/upload';
 	import X from '@lucide/svelte/icons/x';
 	import { size } from '#lib/utils/size.ts';

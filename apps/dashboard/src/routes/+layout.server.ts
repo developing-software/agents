@@ -1,8 +1,8 @@
 import { detectPlatform } from "@tanstack/svelte-hotkeys";
-import { Identity } from "@template/core/identity";
-import { Feedback } from "@template/core/feedback";
-import { User } from "@template/core/user";
-import { DEFAULTS } from "@template/core/user/prefs";
+import { Identity } from "@agents/core/identity";
+import { Feedback } from "@agents/core/feedback";
+import { User } from "@agents/core/user";
+import { DEFAULTS } from "@agents/core/user/prefs";
 import { Agent } from "#lib/features/agent/api/core.ts";
 import * as theme from "#lib/server/theme.ts";
 import * as zone from "#lib/server/zone.ts";

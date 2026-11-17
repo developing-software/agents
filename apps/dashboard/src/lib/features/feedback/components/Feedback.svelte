@@ -7,7 +7,7 @@
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
-	import { Drawer, IconButton, Tabs } from '@template/ui';
+	import { Drawer, IconButton, Tabs } from '@agents/ui';
 	import Form from './Form.svelte';
 	import Mine from './Mine.svelte';
 

@@ -1,4 +1,4 @@
-import type { Todo } from "@template/core/todo";
+import type { Todo } from "@agents/core/todo";
 
 /** A todo in tree order, with its depth and the progress of everything beneath it. */
 export type Node = Todo.Info & { depth: number; total: number; done: number };

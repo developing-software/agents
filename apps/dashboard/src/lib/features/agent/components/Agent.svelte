@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createRegisterWebMCPTools } from '@tanstack/ai-svelte';
-	import { Scroll } from '@template/ui';
+	import { Scroll } from '@agents/ui';
 	import FolderKanban from '@lucide/svelte/icons/folder-kanban';
 	import ListChecks from '@lucide/svelte/icons/list-checks';
 	import Help from '@lucide/svelte/icons/circle-question-mark';

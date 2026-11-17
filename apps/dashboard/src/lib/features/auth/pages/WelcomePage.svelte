@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Card, Field, FormBoundary, Input, Issue } from '@template/ui';
+	import { Button, Card, Field, FormBoundary, Input, Issue } from '@agents/ui';
 	import { onboard } from '../api/profile.remote';
 	import Frame from '../components/Frame.svelte';
 

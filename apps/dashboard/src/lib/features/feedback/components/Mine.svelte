@@ -1,7 +1,7 @@
 <!-- What the viewer filed, newest first; a row links out when the tracker has a page for it. -->
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Button, Empty, Issue, Skeleton } from '@template/ui';
+	import { Button, Empty, Issue, Skeleton } from '@agents/ui';
 	import { mine } from '../api/feedback.query';
 	import { states } from '../labels';
 	import Line from './Line.svelte';

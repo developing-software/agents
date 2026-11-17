@@ -1,7 +1,7 @@
 <!-- Raised through `modal(ProjectForm)`, which passes `close`. -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { Dialog, Field, Input, Textarea } from '@template/ui';
+	import { Dialog, Field, Input, Textarea } from '@agents/ui';
 	import { create } from '../api/projects.query';
 
 	let { close }: { close: () => void } = $props();

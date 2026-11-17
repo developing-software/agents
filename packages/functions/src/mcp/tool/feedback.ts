@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
-import { Feedback } from "@template/core/feedback";
+import { Feedback } from "@agents/core/feedback";
 import { tools } from "../common";
 
 export function feedback(server: McpServer) {

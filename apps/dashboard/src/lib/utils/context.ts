@@ -1,7 +1,7 @@
 import { createContext } from "svelte";
-import type { User } from "@template/core/user";
-import type { Permission } from "@template/core/permission";
-import type { Prefs } from "@template/core/user/prefs";
+import type { User } from "@agents/core/user";
+import type { Permission } from "@agents/core/permission";
+import type { Prefs } from "@agents/core/user/prefs";
 
 /**
  * The signed-in user (or null) and their prefs, set once in the root layout. Context is

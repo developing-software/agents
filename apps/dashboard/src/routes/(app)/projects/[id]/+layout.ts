@@ -3,7 +3,7 @@ import ChartLine from "@lucide/svelte/icons/chart-line";
 import LayoutDashboard from "@lucide/svelte/icons/layout-dashboard";
 import ListTodo from "@lucide/svelte/icons/list-todo";
 import Settings from "@lucide/svelte/icons/settings";
-import { getProjectByIdOptions, getProjectQueryKey, type Project } from "@template/sdk/query";
+import { getProjectByIdOptions, getProjectQueryKey, type Project } from "@agents/sdk/query";
 import Head from "./Head.svelte";
 import type { LayoutLoad } from "./$types";
 

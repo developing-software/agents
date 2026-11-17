@@ -15,7 +15,7 @@
 </script>
 
 <script lang="ts">
-	// import { Tooltip, Button } from '@template/ui';
+	// import { Tooltip, Button } from '@agents/ui';
 </script>
 
 <div class="row">

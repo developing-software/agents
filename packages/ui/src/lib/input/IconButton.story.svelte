@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	// import { IconButton } from '@template/ui';
+	// import { IconButton } from '@agents/ui';
 
 	let starred = $state(false);
 </script>

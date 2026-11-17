@@ -1,4 +1,4 @@
-import type { Story } from "@template/ui/story";
+import type { Story } from "@agents/ui/story";
 
 /** Values that would not read well inline become a `{name}` shorthand the reader defines. */
 function attr(name: string, value: unknown) {
@@ -22,7 +22,7 @@ export function snippet(story: Story, props: Record<string, unknown>) {
       ? flat
       : `<${tag}\n${list.map((one) => `  ${one}\n`).join("")}${close.trimStart()}`;
   return `<script lang="ts">
-  import { ${tag} } from "@template/ui";
+  import { ${tag} } from "@agents/ui";
 </script>
 
 ${body}`;

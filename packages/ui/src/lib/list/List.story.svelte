@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	// import { List, Menu, Avatar, Inline } from '@template/ui';
+	// import { List, Menu, Avatar, Inline } from '@agents/ui';
 	import * as List from './index';
 	import * as Menu from '../menu';
 	import Avatar from '../avatar/Avatar.svelte';

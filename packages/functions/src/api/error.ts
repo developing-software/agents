@@ -1,7 +1,7 @@
 import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { VisibleError, ErrorCodes, type ErrorResponseType } from "@template/core/error";
-import { Log } from "@template/core/util/log";
+import { VisibleError, ErrorCodes, type ErrorResponseType } from "@agents/core/error";
+import { Log } from "@agents/core/util/log";
 
 const log = Log.create({ namespace: "api" });
 

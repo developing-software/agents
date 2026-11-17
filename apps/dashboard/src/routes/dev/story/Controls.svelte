@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Field, Input, Select } from '@template/ui';
-	import type { Control } from '@template/ui/story';
+	import { Field, Input, Select } from '@agents/ui';
+	import type { Control } from '@agents/ui/story';
 
 	// Bindable because the panel edits the bag in place — that is the whole job.
 	let {

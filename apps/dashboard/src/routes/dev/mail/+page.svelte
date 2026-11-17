@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Card } from '@template/ui';
+	import { Card } from '@agents/ui';
 	import * as Header from '#lib/components/header/index.ts';
 
 	let { data } = $props();

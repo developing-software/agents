@@ -1,7 +1,7 @@
 <!-- The user's past conversations with the agent, newest first; a row reopens it. -->
 <script lang="ts">
 	import { createInfiniteQuery } from '@tanstack/svelte-query';
-	import { Button, Empty, IconButton, Issue, Skeleton, Spinner, modal, toast } from '@template/ui';
+	import { Button, Empty, IconButton, Issue, Skeleton, Spinner, modal, toast } from '@agents/ui';
 	import Trash from '@lucide/svelte/icons/trash-2';
 	import { message } from '#lib/query.ts';
 	import { fmt } from '#lib/utils/fmt.ts';

@@ -3,8 +3,8 @@
 	import Component from '@lucide/svelte/icons/component';
 	import FileCode from '@lucide/svelte/icons/file-code';
 	import Mail from '@lucide/svelte/icons/mail';
-	import { Card } from '@template/ui';
-	import { stories } from '@template/ui/story';
+	import { Card } from '@agents/ui';
+	import { stories } from '@agents/ui/story';
 	import * as Header from '#lib/components/header/index.ts';
 
 	const tools = [
@@ -12,7 +12,7 @@
 			href: '/dev/story',
 			icon: Component,
 			title: 'Storybook',
-			blurb: `All ${stories.length} components in @template/ui, with live prop controls.`
+			blurb: `All ${stories.length} components in @agents/ui, with live prop controls.`
 		},
 		{
 			href: '/dev/api',

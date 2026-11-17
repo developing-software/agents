@@ -14,7 +14,7 @@
 
 <script lang="ts">
 	// Imports the markup below needs — they sit in the story's module block, which is not shown.
-	// import { Scroll } from '@template/ui';
+	// import { Scroll } from '@agents/ui';
 
 	let orientation = $state<'vertical' | 'horizontal' | 'both'>('vertical');
 

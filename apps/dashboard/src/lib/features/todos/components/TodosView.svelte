@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ComponentProps } from 'svelte';
-	import type { Todo } from '@template/core/todo';
+	import type { Todo } from '@agents/core/todo';
 	import type { By } from '../group';
 	import type { View } from './ViewSelector.svelte';
 	import TodoList from './list/TodoList.svelte';

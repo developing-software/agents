@@ -1,5 +1,5 @@
 import type { openaiCompatibleText } from "@tanstack/ai-openai/compatible";
-import { Context } from "@template/core/context";
+import { Context } from "@agents/core/context";
 import { fromEnv } from "../config";
 import { litellm } from "./litellm";
 

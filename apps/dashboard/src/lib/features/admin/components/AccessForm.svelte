@@ -1,8 +1,8 @@
 <script lang="ts">
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import UserX from '@lucide/svelte/icons/user-x';
-	import { Button, FormBoundary, IconButton, Issue, Status, modal } from '@template/ui';
-	import type { User } from '@template/core/user';
+	import { Button, FormBoundary, IconButton, Issue, Status, modal } from '@agents/ui';
+	import type { User } from '@agents/core/user';
 	import { invalidate } from '#lib/query.ts';
 	import { fmt } from '#lib/utils/fmt.ts';
 	import { disableUser, enableUser } from '../api/admin.remote';

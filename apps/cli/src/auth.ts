@@ -1,6 +1,6 @@
 import { createClient } from "@openauthjs/openauth/client";
 import { sdk, output } from "./api";
-import { getMe } from "@template/sdk/sdk.gen";
+import { getMe } from "@agents/sdk/sdk.gen";
 import { value } from "./args";
 import * as config from "./config";
 

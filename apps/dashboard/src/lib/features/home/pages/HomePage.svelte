@@ -2,7 +2,7 @@
      `frame` lets the route wrap the layouts (an A/B test, say); it gets the props and heading. -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Permission } from '@template/core/permission';
+	import type { Permission } from '@agents/core/permission';
 	import { page, type Key, type Props, type Widget } from '../modules';
 	import { layouts } from '../layouts';
 

@@ -2,8 +2,8 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { validator, PaginatedQuery, authRequired } from "../common";
 import { describe } from "../doc";
-import { Project } from "@template/core/project";
-import { Link } from "@template/core/util/meta";
+import { Project } from "@agents/core/project";
+import { Link } from "@agents/core/util/meta";
 
 export namespace ProjectApi {
   const doc = describe("Project");

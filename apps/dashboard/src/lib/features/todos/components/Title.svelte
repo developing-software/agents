@@ -1,8 +1,8 @@
 <!-- A todo's name: a link stretched over its row or card, swapped for Inline while renaming. -->
 <script lang="ts">
 	import { tick } from 'svelte';
-	import type { Todo } from '@template/core/todo';
-	import { Inline, Status } from '@template/ui';
+	import type { Todo } from '@agents/core/todo';
+	import { Inline, Status } from '@agents/ui';
 	import { peek } from '#lib/utils/peek.ts';
 	import { update } from '../api/todos.query';
 

@@ -1,6 +1,6 @@
 # functions/
 
-Hono services backed by `@template/core`: `api` (3000, OpenAPI-documented), `mcp` (3001),
+Hono services backed by `@agents/core`: `api` (3000, OpenAPI-documented), `mcp` (3001),
 `auth` (3002, OpenAuth issuer) and the `queue` worker. Transport only — no business logic here.
 
 ## Structure
@@ -37,7 +37,7 @@ environment it runs in, so the app itself never knows where it runs. See `docs/r
 exactly its `scope`). There is no root: seeds and test setup run as `internal` holding `Permission.all`.
 
 ```ts
-import { Identity } from "@template/core/identity";
+import { Identity } from "@agents/core/identity";
 
 Identity.use(); // the current identity ({ type, properties })
 Identity.userID(); // who answers for the act — the user, the agent's user, or the App
@@ -64,7 +64,7 @@ allowed redirect origins.
 **Errors** — throw `VisibleError` for client-safe error responses:
 
 ```ts
-import { VisibleError, ErrorCodes } from "@template/core/error";
+import { VisibleError, ErrorCodes } from "@agents/core/error";
 throw new VisibleError("not_found", ErrorCodes.NotFound.RESOURCE_NOT_FOUND, "Resource not found");
 ```
 
@@ -102,7 +102,7 @@ Pass a literal `{ title, description }` instead when a route reshapes its input 
 doesn't model — `/me` reads the actor rather than an id, and `POST /key` takes `expiresInDays`
 where core takes a date. Every public route needs request and response schemas.
 
-**Handlers** — keep handlers thin: validate input, call a `@template/core` function, return the result. No
+**Handlers** — keep handlers thin: validate input, call a `@agents/core` function, return the result. No
 business logic in handlers.
 
 ## Commands

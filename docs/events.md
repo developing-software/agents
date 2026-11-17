@@ -76,7 +76,7 @@ graph TD
 
 ## Where handlers run
 
-Only processes that import `@template/core/jobs` load `subscribers.ts`, and those are the
+Only processes that import `@agents/core/jobs` load `subscribers.ts`, and those are the
 queue targets.
 
 ```mermaid

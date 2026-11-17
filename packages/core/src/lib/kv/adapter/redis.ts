@@ -3,7 +3,7 @@ import type { Store } from "../port";
 
 /**
  * Redis via Bun's built-in client. Bun targets only: kept out of `Kv.Providers` so a Worker
- * bundle never reaches `"bun"`; import it as `@template/core/kv/adapter/redis`.
+ * bundle never reaches `"bun"`; import it as `@agents/core/kv/adapter/redis`.
  */
 export function redis(opts: { url?: string } = {}): Store {
   // No url falls back to Bun's own REDIS_URL default.

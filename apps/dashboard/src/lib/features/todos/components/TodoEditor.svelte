@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Inline, Issue, Skeleton } from '@template/ui';
-	import type { Event } from '@template/core/event';
+	import { Inline, Issue, Skeleton } from '@agents/ui';
+	import type { Event } from '@agents/core/event';
 	import { get, link, unlink, update } from '../api/todos.query';
 	import Timeline from '#lib/features/events/components/Timeline.svelte';
 	import Widgets, { type Widget } from '#lib/components/Widgets.svelte';

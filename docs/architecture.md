@@ -26,7 +26,7 @@ graph TD
 
 Two things that surprise people:
 
-- **The dashboard skips HTTP.** It imports `@template/core` directly from its remote
+- **The dashboard skips HTTP.** It imports `@agents/core` directly from its remote
   functions — same process, no network hop. Its TanStack queries use the SDK's helpers
   against `/api`, which a server hook answers from the Hono `api` router in-process.
 - **Core is a leaf.** It imports nothing from the workspace. Everything else may depend

@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	// import { Dialog, Field, Input } from '@template/ui';
+	// import { Dialog, Field, Input } from '@agents/ui';
 	import Field from '../field/Field.svelte';
 	import Input from '../input/Input.svelte';
 

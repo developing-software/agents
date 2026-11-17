@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-	import { Tabs } from '@template/ui';
+	import { Tabs } from '@agents/ui';
 
 	let { view = 'table', onchange }: { view?: View; onchange: (view: View) => void } = $props();
 </script>

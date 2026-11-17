@@ -3,7 +3,7 @@
 <!-- fallow-ignore-file code-duplication -->
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { Empty, Inline, Issue, Skeleton } from '@template/ui';
+	import { Empty, Inline, Issue, Skeleton } from '@agents/ui';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import { rename, stages } from '../api/todos.query';
 	import { fmt } from '#lib/utils/fmt.ts';

@@ -5,7 +5,7 @@ import type {
   R2Bucket,
   SendEmail,
 } from "@cloudflare/workers-types";
-import type { Job } from "@template/core/queue/port";
+import type { Job } from "@agents/core/queue/port";
 
 /** Bindings shared by every Cloudflare worker target. */
 export interface Env {

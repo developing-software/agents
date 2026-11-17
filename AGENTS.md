@@ -7,16 +7,16 @@
 
 Bun workspaces monorepo. Postgres via Drizzle, Hono services, SvelteKit dashboard.
 
-| Path                 | Package               | What                                                     |
-| -------------------- | --------------------- | -------------------------------------------------------- |
-| `packages/core`      | `@template/core`      | Domain logic, schema, migrations. A leaf.                |
-| `packages/functions` | `@template/functions` | Hono `api` 3000, `mcp` 3001, `auth` 3002, `queue` worker |
-| `apps/dashboard`     | `dashboard`           | SvelteKit 5173, calls core directly                      |
-| `apps/cli`           | `@template/cli`       | CLI over the SDK                                         |
-| `packages/ui`        | `@template/ui`        | Svelte components                                        |
-| `packages/sdk/ts`    | `@template/sdk`       | Generated, never hand-edit                               |
-| `scripts`            | —                     | dev, seed, feature scaffold                              |
-| `infra`              | —                     | SST 4, plus `infra/docker` compose                       |
+| Path                 | Package             | What                                                     |
+| -------------------- | ------------------- | -------------------------------------------------------- |
+| `packages/core`      | `@agents/core`      | Domain logic, schema, migrations. A leaf.                |
+| `packages/functions` | `@agents/functions` | Hono `api` 3000, `mcp` 3001, `auth` 3002, `queue` worker |
+| `apps/dashboard`     | `dashboard`         | SvelteKit 5173, calls core directly                      |
+| `apps/cli`           | `@agents/cli`       | CLI over the SDK                                         |
+| `packages/ui`        | `@agents/ui`        | Svelte components                                        |
+| `packages/sdk/ts`    | `@agents/sdk`       | Generated, never hand-edit                               |
+| `scripts`            | —                   | dev, seed, feature scaffold                              |
+| `infra`              | —                   | SST 4, plus `infra/docker` compose                       |
 
 Each package has its own `AGENTS.md` (symlinked as `CLAUDE.md`) with the rules for editing
 it. `docs/` holds the cross-cutting picture: [architecture](docs/architecture.md),

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check';
 	import Copy from '@lucide/svelte/icons/copy';
-	import { Dialog, IconButton, toast } from '@template/ui';
+	import { Dialog, IconButton, toast } from '@agents/ui';
 
 	// The only place a new secret exists: it lives in these props, never in a query.
 	let { title, secret, close }: { title: string; secret: string; close: () => void } = $props();
