@@ -60,7 +60,7 @@ create a database inside a branch. Migrations connect with `options=-c role=post
 | ------------------ | ------------------------------------------------------------------------ |
 | Cloudflare auth    | `alchemy profile edit --add Cloudflare`, or `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` with `CI=true` |
 | PlanetScale auth   | `alchemy profile edit --add Planetscale`, or `PLANETSCALE_API_TOKEN_ID`, `PLANETSCALE_API_TOKEN`, `PLANETSCALE_ORGANIZATION=andrebrandao` with `CI=true` |
-| App secrets        | Plain env vars / `.env` at deploy time: `SESSION_SECRET` (required), `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_PROVIDERS`, `EXAMPLE_SECRET` |
+| App secrets        | Plain env vars / `.env` at deploy time (`SESSION_SECRET` is generated per stage by `cf`; `docker` still requires it): `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_PROVIDERS`, `EXAMPLE_SECRET` |
 
 Values come from whoever runs the deploy, so keep
 per-stage values in the shell or CI secrets. They bind as `secret_text`.
@@ -83,8 +83,8 @@ State lives in Cloudflare (`Cloudflare.state()`): the first deploy offers to cre
 `.github/workflows/deploy.yml` deploys `cf` on push to `dev`/`prod` and per PR (`pr-<number>`),
 and destroys the PR stage on close. It needs secrets `CLOUDFLARE_API_TOKEN`,
 `CLOUDFLARE_DEFAULT_ACCOUNT_ID`, `PLANETSCALE_SERVICE_TOKEN_ID`, `PLANETSCALE_SERVICE_TOKEN`,
-`APP_SESSION_SECRET` (and optionally `GH_OAUTH_CLIENT_ID`/`_SECRET`, `GOOGLE_CLIENT_ID`/`_SECRET`),
-plus repo variables `PLANETSCALE_ORGANIZATION` and optionally `AUTH_PROVIDERS`.
+(and optionally `GH_OAUTH_CLIENT_ID`/`_SECRET`, `GOOGLE_CLIENT_ID`/`_SECRET`),
+plus optionally the repo variable `AUTH_PROVIDERS`.
 
 ## docker
 

@@ -22,8 +22,7 @@ env:
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
   PLANETSCALE_API_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
   PLANETSCALE_API_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
-  PLANETSCALE_ORGANIZATION: ${{ vars.PLANETSCALE_ORGANIZATION }}
-  SESSION_SECRET: ${{ secrets.APP_SESSION_SECRET }}
+  PLANETSCALE_ORGANIZATION: andrebrandao
   GITHUB_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
   GITHUB_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
   GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
@@ -140,7 +139,7 @@ jobs:
   # infra/terraform/envs/cloudflare/versions.tf. With local state the runner
   # starts empty every run, so `remove` finds nothing and the environment leaks.
   #
-  # Required secrets: the Alchemy ones above (APP_SESSION_SECRET included).
+  # Required secrets: the Alchemy ones above plus APP_SESSION_SECRET.
   # ---------------------------------------------------------------------------
   #
   # deploy-tofu:
