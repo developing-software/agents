@@ -11,7 +11,7 @@ import { permanent } from "./stage";
 
 const DB = "testing-alc";
 
-// The cluster is shared with the SST and terraform stacks: looked up by name, never created.
+// The cluster is shared with the terraform stack: looked up by name, never created.
 const cluster = "agents";
 // The seam for a branch per stage: swap in a `PostgresBranch` (or its `.ref`) here.
 const branch = "main";
@@ -25,7 +25,7 @@ const Role = Planetscale.PostgresRole("DatabaseRole", {
 export const Hyperdrive = Effect.gen(function* () {
   const role = yield* Role;
   return yield* Cloudflare.Hyperdrive.Connection("Hyperdrive", {
-    // PgBouncer, matching infra/sst/cf; alchemy's docs default to the direct `origin`.
+    // PgBouncer, as the old SST stack did; alchemy's docs default to the direct `origin`.
     origin: Output.map(role.pooledOrigin, (o) => ({ ...o, database: DB })),
   });
 });

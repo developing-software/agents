@@ -1,6 +1,6 @@
 # modules/queue/main.tf
 #
-# The jobs queue and its dead letter queue. infra/sst/cf/queue.ts passes the DLQ
+# The jobs queue and its dead letter queue. infra/alchemy/cf (queue) passes the DLQ
 # as a bare name and lets Cloudflare create it on first use; Terraform has to own
 # it, so it is a real resource here.
 #

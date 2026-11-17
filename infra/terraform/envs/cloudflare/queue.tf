@@ -1,4 +1,4 @@
-# envs/cloudflare/queue.tf — ports infra/sst/cf/queue.ts
+# envs/cloudflare/queue.tf — ports infra/alchemy/cf (queue)
 #
 # Retries and burial live here, not in the driver — the adapter only pushes, so
 # QUEUE_RETRIES/QUEUE_BACKOFF do not apply on Cloudflare.

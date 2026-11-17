@@ -9,7 +9,7 @@ Cloudflare root is visibly one of several rather than the only shape.
 `aws_lambda_function` + role + log group + function URL. It needs the same
 shape as `modules/worker` — the build hoisted out, entrypoint per service.
 
-The harder half is not the compute. `infra/sst/aws` reaches for a VPC, RDS and a
+The harder half is not the compute. The removed SST AWS wiring reached for a VPC, RDS and a
 Dynamo table for auth storage, none of which the Cloudflare path needs, and the
 `Files`/`Jobs` bindings have to become S3 and SQS behind the same
 `packages/core` ports.

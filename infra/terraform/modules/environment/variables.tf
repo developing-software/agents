@@ -13,7 +13,7 @@ variable "environment" {
 variable "base_domain" {
   description = "Root the environment domains hang off. The `tf.` label keeps every Terraform-managed hostname on a branch the SST stack never touches."
   type        = string
-  default     = "tf.template.developing.company"
+  default     = "tf.agents.v2.developing.company"
 }
 
 variable "permanent_environments" {

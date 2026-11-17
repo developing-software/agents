@@ -1,4 +1,4 @@
-# envs/cloudflare/mcp.tf — ports infra/sst/cf/mcp.ts
+# envs/cloudflare/mcp.tf — ports infra/alchemy/cf (mcp)
 
 module "build_mcp" {
   source = "../../modules/bun-build"

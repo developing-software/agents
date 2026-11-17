@@ -1,4 +1,4 @@
-# envs/cloudflare/storage.tf — ports infra/sst/cf/storage.ts
+# envs/cloudflare/storage.tf — ports infra/alchemy/cf (storage)
 
 resource "cloudflare_r2_bucket" "files" {
   account_id = var.account_id

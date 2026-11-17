@@ -1,4 +1,4 @@
-# envs/cloudflare/api.tf — ports infra/sst/cf/api.ts
+# envs/cloudflare/api.tf — ports infra/alchemy/cf (api)
 
 module "build_api" {
   source = "../../modules/bun-build"

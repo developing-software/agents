@@ -15,7 +15,7 @@ variable "default_environment" {
 variable "base_domain" {
   description = "Root the environment domains hang off. Unused while this stub declares no resources, but keeps both stacks on one naming scheme."
   type        = string
-  default     = "tf.template.developing.company"
+  default     = "tf.agents.v2.developing.company"
 }
 
 variable "aws_region" {

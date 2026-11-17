@@ -1,15 +1,15 @@
 # infra/alchemy
 
 The app deployed by [Alchemy v2](https://alchemy.run), one stack per target. Each
-`alchemy.run.ts` plays the role of `sst.config.ts`.
+`alchemy.run.ts` is its entrypoint. `cf/` is the main deploy, run by `.github/workflows/deploy.yml`.
 
 | Stack               | Target                                          | Mirrors          | State      |
 | ------------------- | ----------------------------------------------- | ---------------- | ---------- |
-| `cf/`               | Cloudflare Workers + Hyperdrive on PlanetScale  | `infra/sst/cf`   | Cloudflare |
+| `cf/`               | Cloudflare Workers + Hyperdrive on PlanetScale  | —                | Cloudflare |
 | `docker/`           | Containers on the local Docker daemon           | `infra/docker`   | `.alchemy` |
 
 `shared.ts` holds the repo root and the app secrets every stack reads. There is no AWS
-stack yet: `infra/sst/aws` is the reference when one is needed.
+stack yet.
 
 Alchemy v2 is **beta** (`2.0.0-beta.81`, pinned exactly in this folder's `package.json`, a workspace package
 so `alchemy` and `effect` stay out of the root).
@@ -17,7 +17,7 @@ Expect breaking changes between betas — bump deliberately.
 
 ## cf
 
-Unlike `terraform/`, it does not mirror `sst/cf/` file-for-file: all five workers live in
+Unlike `terraform/`, it is not split per worker: all five live in
 `workers.ts`, so their shared env and settings are written once and their differences read
 side by side.
 
@@ -30,11 +30,11 @@ cf/secrets.ts       shared secrets + the stage's AUTH_URL
 cf/stage.ts         stage -> hostname, permanent stages
 ```
 
-### Coexisting with SST and terraform
+### Coexisting with terraform and the template's SST stack
 
 All three Cloudflare paths deploy to the same account.
 
-- **Hostnames** live under `alc.template.developing.company`, one label below SST's.
+- **Hostnames** live under `agents.v2.developing.company`; terraform takes `tf.` below it.
 - **Account-scoped names** (queues, buckets, KV, Hyperdrive) are derived from the stack
   name `template-alc` + stage + id, so they never match SST's or terraform's.
 - The **PlanetScale cluster** `agents` is shared and only looked up; this stack takes its
@@ -42,9 +42,9 @@ All three Cloudflare paths deploy to the same account.
 
 | Stage    | API hostname                              |
 | -------- | ----------------------------------------- |
-| `prod`   | `api.alc.template.developing.company`     |
-| `dev`    | `api.dev.alc.template.developing.company` |
-| `pr-123` | `api.pr-123.dev.alc.template.developing.company` |
+| `prod`   | `api.agents.v2.developing.company`     |
+| `dev`    | `api.dev.agents.v2.developing.company` |
+| `pr-123` | `api.pr-123.dev.agents.v2.developing.company` |
 
 `prod` and `dev` are permanent: only they get a migrator role and a migration run
 (`bun run db:migrate` in `packages/core`, re-run when `migrations/**/*.sql` changes).
@@ -62,22 +62,29 @@ create a database inside a branch. Migrations connect with `options=-c role=post
 | PlanetScale auth   | `alchemy profile edit --add Planetscale`, or `PLANETSCALE_API_TOKEN_ID`, `PLANETSCALE_API_TOKEN`, `PLANETSCALE_ORGANIZATION=andrebrandao` with `CI=true` |
 | App secrets        | Plain env vars / `.env` at deploy time: `SESSION_SECRET` (required), `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_PROVIDERS`, `EXAMPLE_SECRET` |
 
-There is no `sst secret set` equivalent: values come from whoever runs the deploy, so keep
+Values come from whoever runs the deploy, so keep
 per-stage values in the shell or CI secrets. They bind as `secret_text`.
 
 State lives in Cloudflare (`Cloudflare.state()`): the first deploy offers to create an
 `alchemy-state-store` worker in the account.
 
 
-### Known gaps against infra/sst/cf
+### Known gaps against the old SST stack
 
 | Gap | Why |
 | --- | --- |
-| Hyperdrive points at PgBouncer (6432) | Kept to match `sst/cf`. Alchemy's docs recommend the direct `role.origin` (5432) since Hyperdrive pools itself — worth testing. |
+| Hyperdrive points at PgBouncer (6432) | Kept from the SST stack. Alchemy's docs recommend the direct `role.origin` (5432) since Hyperdrive pools itself — worth testing. |
 | Bundling is rolldown, not esbuild | Uses `workerd` export conditions by default, so `postgres` resolves its CF build. Smoke each worker after the first deploy. |
 | `new_module_registry` compat flag | Alchemy adds it by default for these compatibility dates; SST doesn't. |
 | Dashboard is a `Command.Build` + plain Worker | `Website.SvelteKit` needs `@sveltejs/kit` >= 3.0.0-next.27 (the dashboard is on 2.x), and its own build would skip `vite.config.ts`'s `SVELTE_ADAPTER`-gated `polyfillRequire: false`. The build re-runs when non-gitignored files in `apps/dashboard` change — not on `packages/*` changes, same as SST. |
-| No CI workflow | `.github/workflows/deploy.yml` still deploys SST only. |
+
+### CI
+
+`.github/workflows/deploy.yml` deploys `cf` on push to `dev`/`prod` and per PR (`pr-<number>`),
+and destroys the PR stage on close. It needs secrets `CLOUDFLARE_API_TOKEN`,
+`CLOUDFLARE_DEFAULT_ACCOUNT_ID`, `PLANETSCALE_SERVICE_TOKEN_ID`, `PLANETSCALE_SERVICE_TOKEN`,
+`APP_SESSION_SECRET` (and optionally `GH_OAUTH_CLIENT_ID`/`_SECRET`, `GOOGLE_CLIENT_ID`/`_SECRET`),
+plus repo variables `PLANETSCALE_ORGANIZATION` and optionally `AUTH_PROVIDERS`.
 
 ## docker
 

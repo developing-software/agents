@@ -1,6 +1,6 @@
 # modules/database/main.tf
 #
-# Ports infra/sst/cf/database.ts: a PlanetScale Postgres role, the Hyperdrive
+# Ports infra/alchemy/cf (database): a PlanetScale Postgres role, the Hyperdrive
 # config the workers connect through, and — on permanent environments only —
 # a migrator role and the drizzle migration run.
 #
@@ -47,7 +47,7 @@ resource "cloudflare_hyperdrive_config" "this" {
 
 # Schema changes need the `postgres` role, which the app role deliberately lacks.
 # Permanent environments only: ephemeral ones share the permanent branch's schema,
-# same as the `isPermanentStage` gate in infra/sst/cf/database.ts.
+# same as the `isPermanentStage` gate in infra/alchemy/cf (database).
 resource "planetscale_postgres_branch_role" "migrator" {
   count = var.migrator ? 1 : 0
 

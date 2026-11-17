@@ -3,9 +3,9 @@
 # Environment -> domain. That is the whole job: consumers build their own
 # hostnames on top of `domain`, so adding a service never touches this module.
 #
-#   prod    ->             tf.template.developing.company
-#   dev     ->         dev.tf.template.developing.company
-#   pr-123  ->  pr-123.dev.tf.template.developing.company
+#   prod    ->             tf.agents.v2.developing.company
+#   dev     ->         dev.tf.agents.v2.developing.company
+#   pr-123  ->  pr-123.dev.tf.agents.v2.developing.company
 
 terraform {
   required_version = ">= 1.4"

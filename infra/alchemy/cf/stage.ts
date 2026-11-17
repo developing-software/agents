@@ -1,6 +1,6 @@
-// One label below SST's `template.developing.company`, like terraform's `tf.`, so the
-// stacks never contend for a hostname.
-const base = "alc.template.developing.company";
+// The main stack owns the base domain; terraform sits one label below it (`tf.`), so the
+// two never contend for a hostname.
+const base = "agents.v2.developing.company";
 
 export const permanent = (stage: string) => ["prod", "dev"].includes(stage);
 

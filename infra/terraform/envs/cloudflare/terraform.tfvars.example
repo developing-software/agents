@@ -20,8 +20,8 @@
 # project = "template-tf"
 
 # Hostnames are <subdomain>.<environment domain>, e.g.
-# api.dev.tf.template.developing.company. Override either half:
-# base_domain = "tf.template.developing.company"
+# api.dev.tf.agents.v2.developing.company. Override either half:
+# base_domain = "tf.agents.v2.developing.company"
 # zone_name   = "developing.company"
 # api_subdomain       = "api"
 # mcp_subdomain       = "mcp"

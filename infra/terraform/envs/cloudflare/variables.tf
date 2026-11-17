@@ -19,7 +19,7 @@ variable "default_environment" {
 variable "base_domain" {
   description = "Root the environment domains hang off. The `tf.` label keeps these hostnames disjoint from the SST stack's."
   type        = string
-  default     = "tf.template.developing.company"
+  default     = "tf.agents.v2.developing.company"
 }
 
 variable "zone_name" {
@@ -123,7 +123,7 @@ variable "queue_max_wait_time_ms" {
 
 # --- Per-service subdomains --------------------------------------------------
 # Each is joined to the environment domain with a dot, so "api" in the dev
-# environment becomes api.dev.tf.template.developing.company. Adding a service
+# environment becomes api.dev.tf.agents.v2.developing.company. Adding a service
 # means another module call with its own subdomain.
 
 variable "api_subdomain" {

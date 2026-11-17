@@ -16,7 +16,7 @@ Bun workspaces monorepo. Postgres via Drizzle, Hono services, SvelteKit dashboar
 | `packages/ui`        | `@agents/ui`        | Svelte components                                        |
 | `packages/sdk/ts`    | `@agents/sdk`       | Generated, never hand-edit                               |
 | `scripts`            | —                   | dev, seed, feature scaffold                              |
-| `infra`              | —                   | SST 4, plus `infra/docker` compose                       |
+| `infra`              | —                   | Alchemy (Cloudflare, main), OpenTofu, `infra/docker`     |
 
 Each package has its own `AGENTS.md` (symlinked as `CLAUDE.md`) with the rules for editing
 it. `docs/` holds the cross-cutting picture: [architecture](docs/architecture.md),

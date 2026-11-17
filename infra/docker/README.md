@@ -1,8 +1,8 @@
 # Docker Compose deployment
 
-A self-contained stack that runs the whole app with no SST, Cloudflare, or
-PlanetScale — just containers. It's an alternative to the SST/Cloudflare path
-(`sst.config.ts`, `infra/sst/cf/*`); the two coexist.
+A self-contained stack that runs the whole app with no Cloudflare or PlanetScale —
+just containers. It's an alternative to the Alchemy/Cloudflare path
+(`infra/alchemy/cf`); the two coexist.
 
 ## Services
 
@@ -77,8 +77,8 @@ costs no retry, and the first success ends it. Liveness has nothing to hang off 
 Docker never restarts a container for going unhealthy, so the probe would be inert.
 
 On Kubernetes the three map straight onto `livenessProbe: /healthz`, `readinessProbe:
-/readyz` and `startupProbe: /startupz`. On Lambda and Cloudflare (`infra/sst/aws`,
-`infra/sst/cf`) nothing calls them — neither platform probes.
+/readyz` and `startupProbe: /startupz`. On Cloudflare (`infra/alchemy/cf`, `infra/terraform`)
+nothing calls them — the platform doesn't probe.
 
 ## Notes
 

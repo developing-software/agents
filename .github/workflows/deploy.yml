@@ -12,16 +12,30 @@ on:
       - dev
 
 concurrency:
-  group: sst-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+  group: alchemy-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+
+# Alchemy Cloudflare stack (infra/alchemy/cf). CI=true makes it read auth from env, not a profile.
+env:
+  STAGE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
+  CI: "true"
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+  PLANETSCALE_API_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
+  PLANETSCALE_API_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+  PLANETSCALE_ORGANIZATION: ${{ vars.PLANETSCALE_ORGANIZATION }}
+  SESSION_SECRET: ${{ secrets.APP_SESSION_SECRET }}
+  GITHUB_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+  GITHUB_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  AUTH_PROVIDERS: ${{ vars.AUTH_PROVIDERS }}
 
 jobs:
+  # `env` is not available in a job `if`, so the guards read `github` directly.
   deploy:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
-    env:
-      STAGE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
     permissions:
-      id-token: write
       contents: read
       pull-requests: write
 
@@ -29,17 +43,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
-          fetch-depth: 0
-
-      - uses: actions/cache@v5
-        with:
-          path: |
-            .sst
-          key: ${{ runner.os }}-sst
 
       - uses: oven-sh/setup-bun@v2
 
-      - uses: actions/setup-node@v1
+      # drizzle-kit needs node:sqlite, which Bun does not provide.
+      - uses: actions/setup-node@v4
         with:
           node-version: "24"
 
@@ -47,14 +55,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
-          PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
-          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
-        run: |
-          bunx sst install
-          bunx sst deploy --stage=${{ env.STAGE }}
+        working-directory: infra/alchemy
+        run: bun alchemy deploy cf/alchemy.run.ts --stage "$STAGE" --yes
 
       - name: Comment preview
         if: success() && github.event_name == 'pull_request'
@@ -62,42 +64,37 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const outputs = fs.existsSync('.sst/outputs.json')
-              ? JSON.parse(fs.readFileSync('.sst/outputs.json', 'utf8'))
-              : {};
-            const rows = Object.entries(outputs)
-              .filter(([, v]) => typeof v === 'string' && v)
-              .map(([k, v]) => `| \`${k}\` | ${/^https?:\/\//.test(v) ? v : `https://${v}`} |`);
+            // Mirrors host() in infra/alchemy/cf/stage.ts for a pr-* stage.
+            const stage = process.env.STAGE;
+            const rows = ['dashboard', 'api', 'auth', 'mcp'].map(
+              (name) => `| \`${name}\` | https://${name}.${stage}.dev.agents.v2.developing.company |`,
+            );
             const body = [
-              '<!-- deploy:sst -->',
-              '## SST preview deployed',
+              '<!-- deploy:alchemy -->',
+              '## Alchemy preview deployed',
               '',
-              `**Stage:** \`${process.env.STAGE}\``,
+              `**Stage:** \`${stage}\``,
               '',
-              ...(rows.length ? ['| Output | URL |', '| --- | --- |', ...rows] : ['_No outputs._']),
+              '| Worker | URL |',
+              '| --- | --- |',
+              ...rows,
             ].join('\n');
             await require('./.github/comment.cjs')({ github, context, body });
 
-  # Only ever removes ephemeral `pr-<number>` stages — never prod/dev.
+  # Only a closed PR reaches this job, so STAGE is always `pr-<number>` — never prod/dev.
   remove:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
-    env:
-      STAGE: pr-${{ github.event.pull_request.number }}
     permissions:
-      id-token: write
       contents: read
       pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v4
         with:
           node-version: "24"
 
@@ -105,14 +102,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Remove
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
-          PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
-          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
-        run: |
-          bunx sst install
-          bunx sst remove --stage=${{ env.STAGE }}
+        working-directory: infra/alchemy
+        run: bun alchemy destroy cf/alchemy.run.ts --stage "$STAGE" --yes
 
       - name: Comment removed
         if: always()
@@ -122,22 +113,22 @@ jobs:
           script: |
             const stage = process.env.STAGE;
             const body = [
-              '<!-- deploy:sst -->',
+              '<!-- deploy:alchemy -->',
               '## ⚠️ Preview environment removed',
               '',
-              `The SST stage \`${stage}\` was torn down because this PR was merged or closed.`,
+              `The Alchemy stage \`${stage}\` was torn down because this PR was merged or closed.`,
               '',
               'If anything is left over, remove it manually:',
               '',
               '```sh',
-              `bunx sst remove --stage=${stage}`,
+              `cd infra/alchemy && bun alchemy destroy cf/alchemy.run.ts --stage ${stage}`,
               '```',
             ].join('\n');
             await require('./.github/comment.cjs')({ github, context, body });
 
   # ---------------------------------------------------------------------------
   # OpenTofu target (infra/terraform). Commented out on purpose: it deploys the
-  # same app to the same Cloudflare account as the SST jobs above, and running
+  # same app to the same Cloudflare account as the Alchemy jobs above, and running
   # both on one event means two systems reconciling one set of resources.
   #
   # Uncomment only once you have decided which path owns a deploy. They do not
@@ -149,7 +140,7 @@ jobs:
   # infra/terraform/envs/cloudflare/versions.tf. With local state the runner
   # starts empty every run, so `remove` finds nothing and the environment leaks.
   #
-  # Required secrets on top of the SST ones: APP_SESSION_SECRET.
+  # Required secrets: the Alchemy ones above (APP_SESSION_SECRET included).
   # ---------------------------------------------------------------------------
   #
   # deploy-tofu:

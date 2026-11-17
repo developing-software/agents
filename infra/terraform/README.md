@@ -1,6 +1,7 @@
 # infra/terraform
 
-The same app as `infra/sst/cf`, deployed by OpenTofu instead of SST. Both paths
+The same app as `infra/alchemy/cf`, deployed by OpenTofu. It also coexists with the template's
+SST stack in the same account. All paths
 are live-capable and both can run at once, which is the reason for the first
 section below.
 
@@ -14,7 +15,7 @@ modules/
   database/        PlanetScale role -> Hyperdrive, plus the migration run
   queue/           cloudflare_queue + its dead letter queue
 envs/
-  cloudflare/      root module: the whole stack. Mirrors infra/sst/cf/*.ts file-for-file.
+  cloudflare/      root module: the whole stack. One .tf per concern (api, auth, mcp, ...).
   aws/             stub. See its README.
 ```
 
@@ -24,9 +25,9 @@ Both stacks deploy the same app to the same Cloudflare account, so they can
 collide in two different ways.
 
 **Hostnames** are handled for you: `base_domain` defaults to
-`tf.template.developing.company`, one label below the SST stack's
-`template.developing.company`. Nothing Terraform creates can contend for a
-hostname SST owns.
+`tf.agents.v2.developing.company`, one label below the Alchemy stack's
+`agents.v2.developing.company`. Nothing Terraform creates can contend for a
+hostname Alchemy owns.
 
 **Account-scoped names are not namespaced by DNS.** Queue names, R2 buckets, KV
 namespaces and Hyperdrive configs live in a flat per-account namespace. SST
@@ -72,7 +73,7 @@ five workers, which is correct — they all embed it.
 plan — but SvelteKit only writes `.svelte-kit/cloudflare` during apply. Routing
 the directory through the build gate's output makes the whole expression unknown
 at plan whenever a rebuild is pending, which is the HCL equivalent of what
-`infra/sst/cf/dashboard.ts` does with `build.stdout.apply(() => path)`.
+the old SST `dashboard.ts` did with `build.stdout.apply(() => path)`.
 
 If that ever misbehaves, build first and apply with `-var build=false`. That is
 the recommended CI path regardless.
@@ -189,16 +190,16 @@ tofu workspace new pr-123            # ephemeral
 
 | Environment | Domain | API hostname |
 |---|---|---|
-| `prod` | `tf.template.developing.company` | `api.tf.template.developing.company` |
-| `dev` | `dev.tf.template.developing.company` | `api.dev.tf.template.developing.company` |
-| `pr-123` | `pr-123.dev.tf.template.developing.company` | `api.pr-123.dev.tf.template.developing.company` |
+| `prod` | `tf.agents.v2.developing.company` | `api.tf.agents.v2.developing.company` |
+| `dev` | `dev.tf.agents.v2.developing.company` | `api.dev.tf.agents.v2.developing.company` |
+| `pr-123` | `pr-123.dev.tf.agents.v2.developing.company` | `api.pr-123.dev.tf.agents.v2.developing.company` |
 
 Hostnames are composed by the consuming module, not by `modules/environment` —
 `modules/worker` joins `var.subdomain` to `var.domain` with a dot. A second
 service is another module call with its own `subdomain`, and the environment
 module never changes.
 
-Note this differs from `infra/sst/cf/stage.ts`, which joins with a hyphen on
+Note this differs from the old SST `stage.ts`, which joins with a hyphen on
 ephemeral stages to stay one label under a wildcard certificate.
 `cloudflare_workers_custom_domain` provisions a certificate per hostname, so
 that constraint does not apply here.
@@ -215,7 +216,7 @@ environments, triggered by a content hash over `packages/core/migrations/**/*.sq
 
 It needs a real **`node`** on `PATH`: `drizzle-kit` reaches for `node:sqlite`,
 which Bun does not provide. This is the same reason `infra/docker` copies a Node
-binary into its migrate image and the SST deploy workflow installs Node 24. Set
+binary into its migrate image and the deploy workflow installs Node 24. Set
 `-var run_migrations=false` to skip it.
 
 ## CI
@@ -231,7 +232,7 @@ tofu -chdir=infra/terraform/envs/cloudflare apply -auto-approve -var build=false
 With `build = false` no `local-exec` runs, so every artifact must already exist —
 nothing else will create them.
 
-## Known gaps against infra/sst/cf
+## Known gaps against the old SST stack
 
 | Gap | Why |
 |---|---|

@@ -39,7 +39,7 @@ export const workers = Effect.gen(function* () {
     env: { ...env, AuthKv, SEND_EMAIL: Email },
   });
 
-  // Binds `Jobs`, which `mcp/target/worker.ts` reads and infra/sst/cf/mcp.ts forgets.
+  // Binds `Jobs`, which `mcp/target/worker.ts` reads.
   const mcp = yield* Cloudflare.Worker("Mcp", {
     ...base,
     main: path.join(root, "packages/functions/src/mcp/target/worker.ts"),

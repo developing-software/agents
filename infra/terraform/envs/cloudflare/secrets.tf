@@ -1,6 +1,6 @@
 # envs/cloudflare/secrets.tf
 #
-# The Terraform half of infra/sst/cf/secrets.ts. There is no `sst secret set`
+# The Terraform half of infra/alchemy/cf (secrets). There is no `sst secret set`
 # here: every value arrives as TF_VAR_<name>, which OpenTofu auto-loads. Each is
 # marked sensitive, so plan output shows (sensitive value) rather than the value.
 #

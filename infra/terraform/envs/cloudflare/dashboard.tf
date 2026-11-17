@@ -1,4 +1,4 @@
-# envs/cloudflare/dashboard.tf — ports infra/sst/cf/dashboard.ts
+# envs/cloudflare/dashboard.tf — ports infra/alchemy/cf (dashboard)
 #
 # The one worker that is not a bun-build: SvelteKit's cloudflare adapter emits
 # _worker.js plus a static asset tree, so the build is `bun run build` and the

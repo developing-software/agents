@@ -2,7 +2,7 @@
 #
 # An apply-time shell command with a content-hash rebuild trigger — the generic
 # half of bun-build, and the port of Pulumi's `command.local.Command` used by
-# infra/sst/cf/dashboard.ts (the SvelteKit build) and .../database.ts (migrations).
+# infra/alchemy/cf (dashboard) (the SvelteKit build) and .../database.ts (migrations).
 #
 # `build_id` is the load-bearing output: it is unknown at plan whenever a re-run
 # is pending, which is what lets consumers defer their file reads to apply time.

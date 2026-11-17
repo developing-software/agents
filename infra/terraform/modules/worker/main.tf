@@ -38,7 +38,7 @@ locals {
   # plan — but SvelteKit only writes that directory during apply. Routing it
   # through the gate's output makes the expression unknown-at-plan whenever a
   # rebuild is pending, which is the HCL equivalent of SST's
-  # `build.stdout.apply(() => path)` in infra/sst/cf/dashboard.ts.
+  # `build.stdout.apply(() => path)` in infra/alchemy/cf (dashboard).
   assets_directory = (
     var.assets_directory == null ? null :
     terraform_data.gate.output == "" ? null :

@@ -79,7 +79,7 @@ variable "bindings" {
 }
 
 variable "subdomain" {
-  description = "Service label joined to var.domain with a dot, so \"api\" + dev.tf.template.developing.company becomes api.dev.tf.template.developing.company. Null serves only on workers.dev / routes."
+  description = "Service label joined to var.domain with a dot, so \"api\" + dev.tf.agents.v2.developing.company becomes api.dev.tf.agents.v2.developing.company. Null serves only on workers.dev / routes."
   type        = string
   default     = null
 }
@@ -132,7 +132,7 @@ variable "previews_enabled" {
 variable "placement" {
   description = <<-EOT
     Worker placement. The provider exposes `mode` only ("smart"); the regional
-    pinning infra/sst/cf/* does with `placement.region = "aws:sa-east-1"` has no
+    pinning infra/alchemy/cf/* does with `placement.region = "aws:sa-east-1"` has no
     Terraform equivalent yet. Leave null on any worker that also ships assets —
     Cloudflare rejects smart placement combined with static assets.
   EOT

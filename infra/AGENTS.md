@@ -1,45 +1,37 @@
 # infra
 
-Five deployment paths, all optional to local development. Only `sst/cf/` and `docker/` are
-supported; [`README.md`](README.md) marks the rest experimental.
+Four deployment paths, all optional to local development. `alchemy/cf/` is the main one and
+`docker/` is supported; [`README.md`](README.md) marks the rest experimental.
 
-| Path             | What                                                                        |
-| ---------------- | --------------------------------------------------------------------------- |
-| `sst/cf/`        | **Live.** SST 4: Cloudflare Workers + Hyperdrive. `sst.config.ts` imports this. |
-| `sst/aws/`       | Alternate SST wiring: Lambda + VPC + RDS. Its dashboard has no SvelteKit 3 adapter yet. |
-| `terraform/`     | OpenTofu. `envs/cloudflare/` is the same stack as `sst/cf`, independently; `envs/aws/` a stub. See its `README.md`. |
-| `alchemy/`       | Alchemy v2 (beta): `cf/` mirrors `sst/cf`, `docker/` mirrors `docker/`. See its `README.md`. |
-| `docker/`        | Self-contained Compose stack, no SST. See its `README.md`.                  |
+| Path         | What                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `alchemy/`   | Alchemy v2 (beta). `cf/` is **the main deploy** (`.github/workflows/deploy.yml`), `docker/` mirrors `docker/`. See its `README.md`. |
+| `terraform/` | OpenTofu. `envs/cloudflare/` is the same stack as `alchemy/cf`, independently; `envs/aws/` a stub. See its `README.md`. |
+| `docker/`    | Self-contained Compose stack. See its `README.md`.                                       |
 
-Each SST module exports its resources plus an `outputs` object, which `sst.config.ts`
-collects by iterating the barrel. A new module is picked up by exporting it from
-`index.ts` — there is no registration list.
-
-`terraform/envs/cloudflare/` mirrors `sst/cf/` file-for-file (`api.tf` ↔ `api.ts`, and so on)
-so the two stay legible side by side. It reaches parity without any application change, because
-the workers read their bindings by name — `Hyperdrive`, `Files`, `Jobs`, `AuthKv`,
-`SEND_EMAIL`, declared in `packages/functions/src/cf.ts` (the dashboard reads them from
-`cloudflare:workers`) — and never import SST's `Resource`.
+Both Cloudflare paths reach parity without any application change, because the workers read
+their bindings by name — `Hyperdrive`, `Files`, `Jobs`, `AuthKv`, `SEND_EMAIL`, declared in
+`packages/functions/src/cf.ts` (the dashboard reads them from `cloudflare:workers`).
 
 Worker bundles keep `cloudflare:*` imports external (postgres.js 4's workerd entry needs
-`cloudflare:sockets`); `sst.config.ts` does it with a `$transform` on `sst.cloudflare.Worker`.
+`cloudflare:sockets`).
 
-Services map to `packages/functions/src/*/target/` — `sst/cf/`, `terraform/` and `alchemy/cf/` deploy the
-`worker` targets, `sst/aws/` the `lambda` ones. `docker/` and `alchemy/docker/` run
-`template-cli serve`, which wires the same providers as the `bun` targets. See
+Services map to `packages/functions/src/*/target/` — `alchemy/cf/` and `terraform/` deploy the
+`worker` targets. The `lambda` targets have no deploy path yet. `docker/` and `alchemy/docker/`
+run `template-cli serve`, which wires the same providers as the `bun` targets. See
 [`docs/runtime.md`](../docs/runtime.md).
 
 ## Rules
 
-- **Never deploy.** No `sst deploy`, `sst remove`, `tofu apply`, `tofu destroy`, `alchemy deploy`,
-  `alchemy destroy`, or any other infra-mutating command. Prepare the change, then hand the command to the user.
+- **Never deploy.** No `tofu apply`, `tofu destroy`, `alchemy deploy`, `alchemy destroy`, or any
+  other infra-mutating command. Prepare the change, then hand the command to the user.
   `tofu fmt`, `tofu validate` and `tofu init -backend=false` are fine — they touch nothing.
-- **Never edit `.env`, `.env.example`, `.envrc`, or SST secrets.** Name the variables a
-  change needs at handoff; the user sets them.
-- Adding a secret means adding it to `secrets.ts` (SST, Alchemy) or `secrets.tf` (Terraform) in
-  the relevant path *and* telling the user to run `sst secret set` or export the `TF_VAR_` /
-  plain env var (Alchemy).
+- **Never edit `.env`, `.env.example` or `.envrc`.** Name the variables a change needs at
+  handoff; the user sets them.
+- Adding a secret means adding it to `alchemy/shared.ts` (Alchemy) or `secrets.tf` (Terraform)
+  *and* telling the user to export the plain env var / `TF_VAR_`, and to add it to the deploy
+  workflow's `env`.
 - The Cloudflare paths must not contend for account-scoped names. `terraform/` keeps
   `var.project = "template-tf"` and a `tf.` domain, `alchemy/` the `template-alc` stack name
-  and an `alc.` domain, and `alchemy/docker/` compose's host ports + 10000, for exactly that reason —
+  and the base domain, and `alchemy/docker/` compose's host ports + 10000, for exactly that reason —
   don't align them "for consistency".

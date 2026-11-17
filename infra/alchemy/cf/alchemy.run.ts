@@ -9,7 +9,7 @@ import { migrate } from "./database";
 import { workers } from "./workers";
 
 export default Alchemy.Stack(
-  "template-alc",
+  "dev-agents",
   {
     providers: Layer.mergeAll(Cloudflare.providers(), Planetscale.providers()),
     state: Cloudflare.state(),

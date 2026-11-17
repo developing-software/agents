@@ -1,4 +1,4 @@
-# envs/cloudflare/database.tf — ports infra/sst/cf/database.ts
+# envs/cloudflare/database.tf — ports infra/alchemy/cf (database)
 
 module "environment" {
   source = "../../modules/environment"

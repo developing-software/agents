@@ -1,4 +1,4 @@
-# envs/cloudflare/auth.tf — ports infra/sst/cf/auth.ts
+# envs/cloudflare/auth.tf — ports infra/alchemy/cf (auth)
 
 resource "cloudflare_workers_kv_namespace" "auth" {
   account_id = var.account_id
