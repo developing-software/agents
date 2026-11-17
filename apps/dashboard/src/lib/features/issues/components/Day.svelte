@@ -7,7 +7,8 @@
 	import { update } from '../api/issues.query';
 	import { late } from '../status';
 
-	let { issue, field = 'dueDate' }: { issue: Issue.Info; field?: 'dueDate' | 'startDate' } = $props();
+	let { issue, field = 'dueDate' }: { issue: Issue.Info; field?: 'dueDate' | 'startDate' } =
+		$props();
 
 	const name = $derived(field === 'dueDate' ? 'Due' : 'Start');
 

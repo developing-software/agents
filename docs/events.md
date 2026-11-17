@@ -139,8 +139,8 @@ graph LR
   tags["publish tags"] --> row
 ```
 
-|                  | `data` | tags | actor                          | `source`        |
-| ---------------- | ------ | ---- | ------------------------------ | --------------- |
+|                  | `data` | tags | actor                          | `source`         |
+| ---------------- | ------ | ---- | ------------------------------ | ---------------- |
 | Event row        | ✓      | ✓    | `user_id` + `actor:*` tag      | `issue`          |
 | Subscriber       | ✓      | ✗    | `authtype`/`authid` + Identity | `template/issue` |
 | Webhook receiver | ✓      | ✗    | `authtype`/`authid`            | `template/issue` |

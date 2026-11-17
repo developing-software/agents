@@ -48,9 +48,9 @@ BASE=http://localhost:4174 bun .claude/skills/run-template/driver.ts shot / home
 BASE=http://localhost:4174 bun .claude/skills/run-template/driver.ts issue "My title" issue.png
 ```
 
-| command                  | what it does                                                                |
-| ------------------------ | --------------------------------------------------------------------------- |
-| `shot <route> [out.png]` | authenticated full-page screenshot of a route                               |
+| command                   | what it does                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `shot <route> [out.png]`  | authenticated full-page screenshot of a route                                  |
 | `issue <title> [out.png]` | creates an issue through the `/issues` form, waits for it to list, screenshots |
 
 It prints page console errors at the end. Env: `BASE`, `DATABASE_URL`, `ROLE` (admin|member, default admin),

@@ -37,7 +37,7 @@ import {
   unlink as detach,
 } from "../util/meta";
 import { Bus } from "../platform/bus";
-import { UserTable } from "../user/user.sql";
+import { UserTable } from "../user/user.central";
 import { ProjectTable } from "../project/project.sql";
 import { rank, StatusValues, IssueTable } from "./issue.sql";
 
@@ -619,12 +619,16 @@ export namespace Issue {
   /** A one-dated issue is a point; a null coalesce fails the compare, so undated rows drop. */
   function window(input: { from?: string; to?: string; unscheduled?: boolean }) {
     const from = input.from
-      ? [sql`coalesce(${IssueTable.dueDate}, ${IssueTable.startDate}) >= ${input.from}::timestamptz`]
+      ? [
+          sql`coalesce(${IssueTable.dueDate}, ${IssueTable.startDate}) >= ${input.from}::timestamptz`,
+        ]
       : [];
     const to = input.to
       ? [sql`coalesce(${IssueTable.startDate}, ${IssueTable.dueDate}) <= ${input.to}::timestamptz`]
       : [];
-    const none = input.unscheduled ? [isNull(IssueTable.startDate), isNull(IssueTable.dueDate)] : [];
+    const none = input.unscheduled
+      ? [isNull(IssueTable.startDate), isNull(IssueTable.dueDate)]
+      : [];
     return [...from, ...to, ...none];
   }
 

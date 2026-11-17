@@ -103,7 +103,9 @@
 
 	/** The window a group occupies, drawn behind its rows instead of above them. */
 	function band(items: Issue.Info[]) {
-		const all = items.flatMap((issue) => [issue.startDate, issue.dueDate]).filter((at) => at !== null);
+		const all = items
+			.flatMap((issue) => [issue.startDate, issue.dueDate])
+			.filter((at) => at !== null);
 		if (all.length === 0) return null;
 		const sorted = all.map(Date.parse).sort((a, b) => a - b);
 		return bar(new Date(sorted[0]!).toISOString(), new Date(sorted.at(-1)!).toISOString());

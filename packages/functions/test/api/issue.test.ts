@@ -73,7 +73,12 @@ describe("issue", () => {
 
   test("PATCH /issue/:id", async () => {
     const { id } = await Issue.create({ title: "Mark done" });
-    const response = await validateOpenAPIRoute("patch", "/issue/:id", { id }, { status: "active" });
+    const response = await validateOpenAPIRoute(
+      "patch",
+      "/issue/:id",
+      { id },
+      { status: "active" },
+    );
     expect(response.status).toBe("active");
     expect(response.timeStarted).not.toBeNull();
   });

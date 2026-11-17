@@ -13,6 +13,12 @@ import type {
   DeleteFileByNameData,
   DeleteFileByNameErrors,
   DeleteFileByNameResponses,
+  DeleteIssueByIdData,
+  DeleteIssueByIdErrors,
+  DeleteIssueByIdLinkData,
+  DeleteIssueByIdLinkErrors,
+  DeleteIssueByIdLinkResponses,
+  DeleteIssueByIdResponses,
   DeleteKeyByIdData,
   DeleteKeyByIdErrors,
   DeleteKeyByIdResponses,
@@ -22,12 +28,6 @@ import type {
   DeleteProjectByIdLinkErrors,
   DeleteProjectByIdLinkResponses,
   DeleteProjectByIdResponses,
-  DeleteTodoByIdData,
-  DeleteTodoByIdErrors,
-  DeleteTodoByIdLinkData,
-  DeleteTodoByIdLinkErrors,
-  DeleteTodoByIdLinkResponses,
-  DeleteTodoByIdResponses,
   GetFileByNameContentData,
   GetFileByNameContentErrors,
   GetFileByNameContentResponses,
@@ -55,6 +55,15 @@ import type {
   GetInsightsStatusData,
   GetInsightsStatusErrors,
   GetInsightsStatusResponses,
+  GetIssueByIdData,
+  GetIssueByIdErrors,
+  GetIssueByIdResponses,
+  GetIssueData,
+  GetIssueErrors,
+  GetIssueResponses,
+  GetIssueStageData,
+  GetIssueStageErrors,
+  GetIssueStageResponses,
   GetKeyData,
   GetKeyErrors,
   GetKeyResponses,
@@ -67,15 +76,6 @@ import type {
   GetProjectData,
   GetProjectErrors,
   GetProjectResponses,
-  GetTodoByIdData,
-  GetTodoByIdErrors,
-  GetTodoByIdResponses,
-  GetTodoData,
-  GetTodoErrors,
-  GetTodoResponses,
-  GetTodoStageData,
-  GetTodoStageErrors,
-  GetTodoStageResponses,
   GetUserByIdData,
   GetUserByIdErrors,
   GetUserByIdHistoryData,
@@ -88,21 +88,30 @@ import type {
   PatchFileByNameData,
   PatchFileByNameErrors,
   PatchFileByNameResponses,
+  PatchIssueByIdData,
+  PatchIssueByIdErrors,
+  PatchIssueByIdResponses,
+  PatchIssueStageData,
+  PatchIssueStageErrors,
+  PatchIssueStageResponses,
   PatchProjectByIdData,
   PatchProjectByIdErrors,
   PatchProjectByIdResponses,
-  PatchTodoByIdData,
-  PatchTodoByIdErrors,
-  PatchTodoByIdResponses,
-  PatchTodoStageData,
-  PatchTodoStageErrors,
-  PatchTodoStageResponses,
   PostFileData,
   PostFileErrors,
   PostFileResponses,
   PostHookByAppData,
   PostHookByAppErrors,
   PostHookByAppResponses,
+  PostIssueByIdLinkData,
+  PostIssueByIdLinkErrors,
+  PostIssueByIdLinkResponses,
+  PostIssueByIdMoveData,
+  PostIssueByIdMoveErrors,
+  PostIssueByIdMoveResponses,
+  PostIssueData,
+  PostIssueErrors,
+  PostIssueResponses,
   PostKeyData,
   PostKeyErrors,
   PostKeyResponses,
@@ -112,15 +121,6 @@ import type {
   PostProjectData,
   PostProjectErrors,
   PostProjectResponses,
-  PostTodoByIdLinkData,
-  PostTodoByIdLinkErrors,
-  PostTodoByIdLinkResponses,
-  PostTodoByIdMoveData,
-  PostTodoByIdMoveErrors,
-  PostTodoByIdMoveResponses,
-  PostTodoData,
-  PostTodoErrors,
-  PostTodoResponses,
 } from "./types.gen";
 
 export type Options<
@@ -248,30 +248,30 @@ export const deleteKeyById = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * List todos
+ * List issues
  *
- * List todos, optionally narrowed by status, assignee, stage, owning entity, parent, search, or a from/to window their planned span overlaps (`unscheduled` for undated ones). Paginated.
+ * List issues, optionally narrowed by status, assignee, stage, owning entity, parent, search, or a from/to window their planned span overlaps (`unscheduled` for undated ones). Paginated.
  */
-export const getTodo = <ThrowOnError extends boolean = false>(
-  options?: Options<GetTodoData, ThrowOnError>,
-): RequestResult<GetTodoResponses, GetTodoErrors, ThrowOnError> =>
-  (options?.client ?? client).get<GetTodoResponses, GetTodoErrors, ThrowOnError>({
+export const getIssue = <ThrowOnError extends boolean = false>(
+  options?: Options<GetIssueData, ThrowOnError>,
+): RequestResult<GetIssueResponses, GetIssueErrors, ThrowOnError> =>
+  (options?.client ?? client).get<GetIssueResponses, GetIssueErrors, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo",
+    url: "/issue",
     ...options,
   });
 
 /**
- * Create todo
+ * Create issue
  *
- * Create a todo. Attach it to an entity with source/sourceID (e.g. source "project"), and give it a stage, assignee and planned dates to place it on the timeline. Pass parentID to make it a sub-issue; it joins the parent's owner, last among its siblings.
+ * Create an issue. Attach it to an entity with source/sourceID (e.g. source "project"), and give it a stage, assignee and planned dates to place it on the timeline. Pass parentID to make it a sub-issue; it joins the parent's owner, last among its siblings.
  */
-export const postTodo = <ThrowOnError extends boolean = false>(
-  options: Options<PostTodoData, ThrowOnError>,
-): RequestResult<PostTodoResponses, PostTodoErrors, ThrowOnError> =>
-  (options.client ?? client).post<PostTodoResponses, PostTodoErrors, ThrowOnError>({
+export const postIssue = <ThrowOnError extends boolean = false>(
+  options: Options<PostIssueData, ThrowOnError>,
+): RequestResult<PostIssueResponses, PostIssueErrors, ThrowOnError> =>
+  (options.client ?? client).post<PostIssueResponses, PostIssueErrors, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo",
+    url: "/issue",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -282,28 +282,28 @@ export const postTodo = <ThrowOnError extends boolean = false>(
 /**
  * List stages
  *
- * The stage labels in use, with the span and counts derived from the todos in each. Call before staging a todo so labels stay consistent.
+ * The stage labels in use, with the span and counts derived from the issues in each. Call before staging an issue so labels stay consistent.
  */
-export const getTodoStage = <ThrowOnError extends boolean = false>(
-  options?: Options<GetTodoStageData, ThrowOnError>,
-): RequestResult<GetTodoStageResponses, GetTodoStageErrors, ThrowOnError> =>
-  (options?.client ?? client).get<GetTodoStageResponses, GetTodoStageErrors, ThrowOnError>({
+export const getIssueStage = <ThrowOnError extends boolean = false>(
+  options?: Options<GetIssueStageData, ThrowOnError>,
+): RequestResult<GetIssueStageResponses, GetIssueStageErrors, ThrowOnError> =>
+  (options?.client ?? client).get<GetIssueStageResponses, GetIssueStageErrors, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/stage",
+    url: "/issue/stage",
     ...options,
   });
 
 /**
  * Rename stage
  *
- * Rename a stage across every todo wearing it.
+ * Rename a stage across every issue wearing it.
  */
-export const patchTodoStage = <ThrowOnError extends boolean = false>(
-  options: Options<PatchTodoStageData, ThrowOnError>,
-): RequestResult<PatchTodoStageResponses, PatchTodoStageErrors, ThrowOnError> =>
-  (options.client ?? client).patch<PatchTodoStageResponses, PatchTodoStageErrors, ThrowOnError>({
+export const patchIssueStage = <ThrowOnError extends boolean = false>(
+  options: Options<PatchIssueStageData, ThrowOnError>,
+): RequestResult<PatchIssueStageResponses, PatchIssueStageErrors, ThrowOnError> =>
+  (options.client ?? client).patch<PatchIssueStageResponses, PatchIssueStageErrors, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/stage",
+    url: "/issue/stage",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -312,62 +312,44 @@ export const patchTodoStage = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Delete todo
+ * Delete issue
  *
- * Soft-delete a todo. Its sub-issues move up to its parent.
+ * Soft-delete an issue. Its sub-issues move up to its parent.
  */
-export const deleteTodoById = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTodoByIdData, ThrowOnError>,
-): RequestResult<DeleteTodoByIdResponses, DeleteTodoByIdErrors, ThrowOnError> =>
-  (options.client ?? client).delete<DeleteTodoByIdResponses, DeleteTodoByIdErrors, ThrowOnError>({
+export const deleteIssueById = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteIssueByIdData, ThrowOnError>,
+): RequestResult<DeleteIssueByIdResponses, DeleteIssueByIdErrors, ThrowOnError> =>
+  (options.client ?? client).delete<DeleteIssueByIdResponses, DeleteIssueByIdErrors, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/{id}",
+    url: "/issue/{id}",
     ...options,
   });
 
 /**
- * Get todo
+ * Get issue
  *
- * Fetch a single todo by id.
+ * Fetch a single issue by id.
  */
-export const getTodoById = <ThrowOnError extends boolean = false>(
-  options: Options<GetTodoByIdData, ThrowOnError>,
-): RequestResult<GetTodoByIdResponses, GetTodoByIdErrors, ThrowOnError> =>
-  (options.client ?? client).get<GetTodoByIdResponses, GetTodoByIdErrors, ThrowOnError>({
+export const getIssueById = <ThrowOnError extends boolean = false>(
+  options: Options<GetIssueByIdData, ThrowOnError>,
+): RequestResult<GetIssueByIdResponses, GetIssueByIdErrors, ThrowOnError> =>
+  (options.client ?? client).get<GetIssueByIdResponses, GetIssueByIdErrors, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/{id}",
+    url: "/issue/{id}",
     ...options,
   });
 
 /**
- * Update todo
+ * Update issue
  *
- * Update a todo's title, body, tags, stage, assignee, planned dates or status. Moving to `active` stamps the real start; `done` stamps the end.
+ * Update an issue's title, body, tags, stage, assignee, planned dates or status. Moving to `active` stamps the real start; `done` stamps the end.
  */
-export const patchTodoById = <ThrowOnError extends boolean = false>(
-  options: Options<PatchTodoByIdData, ThrowOnError>,
-): RequestResult<PatchTodoByIdResponses, PatchTodoByIdErrors, ThrowOnError> =>
-  (options.client ?? client).patch<PatchTodoByIdResponses, PatchTodoByIdErrors, ThrowOnError>({
+export const patchIssueById = <ThrowOnError extends boolean = false>(
+  options: Options<PatchIssueByIdData, ThrowOnError>,
+): RequestResult<PatchIssueByIdResponses, PatchIssueByIdErrors, ThrowOnError> =>
+  (options.client ?? client).patch<PatchIssueByIdResponses, PatchIssueByIdErrors, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/{id}",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-/**
- * Move todo
- *
- * Nest a todo under another (a sub-issue) or back to the top level with parentID null, at a position among its new siblings. The parent must share its owner and can't sit beneath it.
- */
-export const postTodoByIdMove = <ThrowOnError extends boolean = false>(
-  options: Options<PostTodoByIdMoveData, ThrowOnError>,
-): RequestResult<PostTodoByIdMoveResponses, PostTodoByIdMoveErrors, ThrowOnError> =>
-  (options.client ?? client).post<PostTodoByIdMoveResponses, PostTodoByIdMoveErrors, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/{id}/move",
+    url: "/issue/{id}",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -376,34 +358,20 @@ export const postTodoByIdMove = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Unlink todo
+ * Move issue
  *
- * Drop the link at a url from a todo.
+ * Nest an issue under another (a sub-issue) or back to the top level with parentID null, at a position among its new siblings. The parent must share its owner and can't sit beneath it.
  */
-export const deleteTodoByIdLink = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTodoByIdLinkData, ThrowOnError>,
-): RequestResult<DeleteTodoByIdLinkResponses, DeleteTodoByIdLinkErrors, ThrowOnError> =>
-  (options.client ?? client).delete<
-    DeleteTodoByIdLinkResponses,
-    DeleteTodoByIdLinkErrors,
+export const postIssueByIdMove = <ThrowOnError extends boolean = false>(
+  options: Options<PostIssueByIdMoveData, ThrowOnError>,
+): RequestResult<PostIssueByIdMoveResponses, PostIssueByIdMoveErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    PostIssueByIdMoveResponses,
+    PostIssueByIdMoveErrors,
     ThrowOnError
   >({
     security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/{id}/link",
-    ...options,
-  });
-
-/**
- * Link todo
- *
- * Attach an outside link to a todo, or retitle the one at that url.
- */
-export const postTodoByIdLink = <ThrowOnError extends boolean = false>(
-  options: Options<PostTodoByIdLinkData, ThrowOnError>,
-): RequestResult<PostTodoByIdLinkResponses, PostTodoByIdLinkErrors, ThrowOnError> =>
-  (options.client ?? client).post<PostTodoByIdLinkResponses, PostTodoByIdLinkErrors, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/todo/{id}/link",
+    url: "/issue/{id}/move",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -412,7 +380,47 @@ export const postTodoByIdLink = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Todo stats
+ * Unlink issue
+ *
+ * Drop the link at a url from an issue.
+ */
+export const deleteIssueByIdLink = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteIssueByIdLinkData, ThrowOnError>,
+): RequestResult<DeleteIssueByIdLinkResponses, DeleteIssueByIdLinkErrors, ThrowOnError> =>
+  (options.client ?? client).delete<
+    DeleteIssueByIdLinkResponses,
+    DeleteIssueByIdLinkErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/issue/{id}/link",
+    ...options,
+  });
+
+/**
+ * Link issue
+ *
+ * Attach an outside link to an issue, or retitle the one at that url.
+ */
+export const postIssueByIdLink = <ThrowOnError extends boolean = false>(
+  options: Options<PostIssueByIdLinkData, ThrowOnError>,
+): RequestResult<PostIssueByIdLinkResponses, PostIssueByIdLinkErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    PostIssueByIdLinkResponses,
+    PostIssueByIdLinkErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/issue/{id}/link",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Issue stats
  *
  * Created, done, active and blocked counts for a range, plus overdue all time.
  */
@@ -426,9 +434,9 @@ export const getInsightsStats = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Todos by status
+ * Issues by status
  *
- * Todos created in a range, totalled per status in pipeline order.
+ * Issues created in a range, totalled per status in pipeline order.
  */
 export const getInsightsStatus = <ThrowOnError extends boolean = false>(
   options: Options<GetInsightsStatusData, ThrowOnError>,
@@ -442,9 +450,9 @@ export const getInsightsStatus = <ThrowOnError extends boolean = false>(
   );
 
 /**
- * Todos by assignee
+ * Issues by assignee
  *
- * Todos created in a range, per assignee and status, busiest first.
+ * Issues created in a range, per assignee and status, busiest first.
  */
 export const getInsightsLoad = <ThrowOnError extends boolean = false>(
   options: Options<GetInsightsLoadData, ThrowOnError>,
@@ -456,9 +464,9 @@ export const getInsightsLoad = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Next due todos
+ * Next due issues
  *
- * The five open todos coming due soonest.
+ * The five open issues coming due soonest.
  */
 export const getInsightsDue = <ThrowOnError extends boolean = false>(
   options?: Options<GetInsightsDueData, ThrowOnError>,
@@ -470,9 +478,9 @@ export const getInsightsDue = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Todo calendar
+ * Issue calendar
  *
- * Todos created per day in a range, in the reader's timezone.
+ * Issues created per day in a range, in the reader's timezone.
  */
 export const getInsightsCalendar = <ThrowOnError extends boolean = false>(
   options: Options<GetInsightsCalendarData, ThrowOnError>,
@@ -488,9 +496,9 @@ export const getInsightsCalendar = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Todo activity
+ * Issue activity
  *
- * Todos created and completed per day, week or month, coarser as the range grows.
+ * Issues created and completed per day, week or month, coarser as the range grows.
  */
 export const getInsightsActivity = <ThrowOnError extends boolean = false>(
   options: Options<GetInsightsActivityData, ThrowOnError>,
@@ -508,7 +516,7 @@ export const getInsightsActivity = <ThrowOnError extends boolean = false>(
 /**
  * List projects
  *
- * List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on a todo, with source "project".
+ * List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on an issue, with source "project".
  */
 export const getProject = <ThrowOnError extends boolean = false>(
   options?: Options<GetProjectData, ThrowOnError>,
@@ -522,7 +530,7 @@ export const getProject = <ThrowOnError extends boolean = false>(
 /**
  * Create project
  *
- * Create a project to hang todos off.
+ * Create a project to hang issues off.
  */
 export const postProject = <ThrowOnError extends boolean = false>(
   options: Options<PostProjectData, ThrowOnError>,
@@ -540,7 +548,7 @@ export const postProject = <ThrowOnError extends boolean = false>(
 /**
  * Delete project
  *
- * Soft-delete a project. Its todos stay reachable from the unscoped views.
+ * Soft-delete a project. Its issues stay reachable from the unscoped views.
  */
 export const deleteProjectById = <ThrowOnError extends boolean = false>(
   options: Options<DeleteProjectByIdData, ThrowOnError>,

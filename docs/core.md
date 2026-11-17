@@ -6,9 +6,9 @@ visible as directories.
 ```mermaid
 graph TD
   domain["<b>the product</b><br/>project · issue · user"]
-  platform["<b>platform/</b><br/>admin · app · bus · connection · conversation · event<br/>feedback · file · health · key · panel · webhook"]
+  platform["<b>platform/</b><br/>admin · app · bus · connection · conversation · event<br/>feedback · file · health · key · panel · webhook · workspace"]
   lib["<b>lib/</b><br/>queue · storage · email · kv · limit"]
-  kernel["<b>kernel</b><br/>identity · context · error · permission · drizzle · util"]
+  kernel["<b>kernel</b><br/>identity · context · error · permission · workspace · drizzle · util"]
 
   domain --> platform
   domain --> lib
@@ -40,8 +40,29 @@ Arrows are the only legal import direction. A cycle, or an arrow pointing up, is
 Grouping is a disk concern, invisible to consumers: `@agents/core/key`, not
 `@agents/core/platform/key` — same as `lib/queue` exporting as `@agents/core/queue`.
 The `"./*"` wildcard in `package.json` only covers top-level directories, so **a grouped
-module needs an explicit `exports` entry**. The Drizzle glob is `./src/**/*.sql.ts`, so
-nesting never affects migrations.
+module needs an explicit `exports` entry**. The Drizzle globs are `./src/**/*.central.ts`
+and `./src/**/*.sql.ts`, so nesting never affects migrations.
+
+## Workspaces
+
+`*.central.ts` tables live in the `central` schema, shared by everyone (users, keys, auth,
+queue, kv, the `platform/workspace` registry). `*.sql.ts` tables are unqualified tenant tables:
+`Workspace.provide` sets the transaction's search_path to `public` (single mode, the default)
+or a `ws_*` schema (`WORKSPACES=multi`). Surfaces call `Workspaces.enter(slug, fn)` once,
+after auth. Migrations split the same way: `migrations/central` and `migrations/tenant`,
+each bundled to an `index.ts` by `db:generate`, so `Migrations` runs in a Worker too.
+
+Central modules read through `Central.use`/`transaction` (`drizzle/central`), tenant ones through
+`Database`. `central.access` says who can see a workspace; its tenant `member` table holds the
+role and is what tenant rows join. `Workspaces.create` writes a `pending` row and queues
+`workspace.setup` (migrate, seat the owner, mark `ready`); `resolve` 409s until then.
+Single mode refuses `create` and `resolve` (no switching); `current` seats its one `default`
+row and the caller (first one in owns it) on first read, so `update`, `members` and `role` work.
+
+Database per workspace, when an app needs it: add a `database` column to `WorkspaceTable`
+naming an env binding; `Workspaces.connect.provide((row) => clients[row.database], fn)` in the
+hooks/targets so `enter` and the setup job open that client; and `Central.provide(client, fn)`
+there too, so central work keeps its own pool and transaction instead of the tenant's.
 
 ## Events
 
@@ -55,7 +76,7 @@ Slices declare and publish typed events through `platform/bus`. See [events.md](
   bundle; Bun targets import it as `@agents/core/kv/adapter/redis`.
 - `lib/limit` has a `port.ts` (the algorithm contract) but no `adapter/`: it counts in
   `lib/kv`, so its backend is whichever Kv the process provides.
-- `platform/event` joins `user/user.sql` to name the actor on a log row. Platform may reach
+- `platform/event` joins `user/user.central` to name the actor on a log row. Platform may reach
   `user`, the identity anchor; nothing else in the product.
 - `platform/admin` reads `project` and `issue` tables for its counts — the one arrow that
   points up. A fork rewrites the tallies in `counts`; the rest of the back office is generic.

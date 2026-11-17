@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Template API",
-    "description": "Projects, todos, insights, users, keys, files and webhooks.",
+    "description": "Projects, issues, insights, users, keys, files and webhooks.",
     "version": "1.0.0"
   },
   "components": {
@@ -51,6 +51,7 @@
               "authentication",
               "forbidden",
               "not_found",
+              "conflict",
               "rate_limit",
               "internal"
             ],
@@ -531,8 +532,8 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 128,
-            "description": "What happened, like `todo.created`.",
-            "example": "todo.created"
+            "description": "What happened, like `issue.created`.",
+            "example": "issue.created"
           },
           "source": {
             "anyOf": [
@@ -545,7 +546,7 @@
                 "type": "null"
               }
             ],
-            "description": "Kind of entity it happened to, like `todo`."
+            "description": "Kind of entity it happened to, like `issue`."
           },
           "sourceID": {
             "description": "Id of that entity.",
@@ -607,9 +608,9 @@
               "timezone": "UTC"
             }
           },
-          "type": "todo.created",
-          "source": "todo",
-          "sourceID": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "type": "issue.created",
+          "source": "issue",
+          "sourceID": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "tags": ["actor:user"],
           "data": {
             "title": "Write the quarterly report"
@@ -738,13 +739,13 @@
         "additionalProperties": false,
         "description": "Backstage-style annotations and links."
       },
-      "Todo": {
+      "Issue": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "description": "Unique object identifier.\nThe format and length of IDs may change over time.",
-            "example": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX"
+            "example": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX"
           },
           "createdBy": {
             "type": "string",
@@ -791,7 +792,7 @@
             "type": ["string", "null"]
           },
           "parentID": {
-            "description": "The todo this is a sub-issue of. Null at the top level.",
+            "description": "The issue this is a sub-issue of. Null at the top level.",
             "type": ["string", "null"]
           },
           "position": {
@@ -943,7 +944,7 @@
         "additionalProperties": false,
         "description": "A unit of work, owned by whatever entity created it.",
         "example": {
-          "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+          "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "assignee": {
             "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -1010,7 +1011,7 @@
         },
         "required": ["name", "total", "done", "start", "end"],
         "additionalProperties": false,
-        "description": "A stage label, with the span and counts derived from its todos."
+        "description": "A stage label, with the span and counts derived from its issues."
       },
       "Link": {
         "type": "object",
@@ -1041,7 +1042,7 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991,
-            "description": "Todos created in range."
+            "description": "Issues created in range."
           },
           "done": {
             "type": "integer",
@@ -1069,7 +1070,7 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991,
-            "description": "Open todos past their due date, all time."
+            "description": "Open issues past their due date, all time."
           }
         },
         "required": ["total", "done", "active", "blocked", "rate", "overdue"],
@@ -1083,7 +1084,7 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991,
-            "description": "Todos created in range."
+            "description": "Issues created in range."
           },
           "rows": {
             "type": "array",
@@ -1111,7 +1112,7 @@
         },
         "required": ["total", "rows"],
         "additionalProperties": false,
-        "description": "Todos created in range, by status."
+        "description": "Issues created in range, by status."
       },
       "InsightLoad": {
         "type": "object",
@@ -1164,7 +1165,7 @@
         },
         "required": ["max", "rows"],
         "additionalProperties": false,
-        "description": "Todos created in range, by assignee and status."
+        "description": "Issues created in range, by assignee and status."
       },
       "InsightDue": {
         "type": "object",
@@ -1194,7 +1195,7 @@
         },
         "required": ["id", "title", "status", "dueDate"],
         "additionalProperties": false,
-        "description": "An open todo coming due."
+        "description": "An open issue coming due."
       },
       "InsightCalendar": {
         "type": "object",
@@ -1244,7 +1245,7 @@
         },
         "required": ["start", "end", "max", "total", "days"],
         "additionalProperties": false,
-        "description": "Todos created per day, for a contribution grid."
+        "description": "Issues created per day, for a contribution grid."
       },
       "InsightActivity": {
         "type": "object",
@@ -1330,7 +1331,7 @@
         },
         "required": ["id", "createdBy", "name", "description", "image", "metadata", "timeCreated"],
         "additionalProperties": false,
-        "description": "A container for todos. Todos point at it through source/sourceID.",
+        "description": "A container for issues. Issues point at it through source/sourceID.",
         "example": {
           "id": "prj_XXXXXXXXXXXXXXXXXXXXXXXXX",
           "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -1746,9 +1747,9 @@
                           "timezone": "UTC"
                         }
                       },
-                      "type": "todo.created",
-                      "source": "todo",
-                      "sourceID": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                      "type": "issue.created",
+                      "source": "issue",
+                      "sourceID": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                       "tags": ["actor:user"],
                       "data": {
                         "title": "Write the quarterly report"
@@ -1775,9 +1776,9 @@
                         "timezone": "UTC"
                       }
                     },
-                    "type": "todo.created",
-                    "source": "todo",
-                    "sourceID": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                    "type": "issue.created",
+                    "source": "issue",
+                    "sourceID": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                     "tags": ["actor:user"],
                     "data": {
                       "title": "Write the quarterly report"
@@ -2202,12 +2203,12 @@
         ]
       }
     },
-    "/todo": {
+    "/issue": {
       "get": {
-        "operationId": "getTodo",
-        "tags": ["Todo"],
-        "summary": "List todos",
-        "description": "List todos, optionally narrowed by status, assignee, stage, owning entity, parent, search, or a from/to window their planned span overlaps (`unscheduled` for undated ones). Paginated.",
+        "operationId": "getIssue",
+        "tags": ["Issue"],
+        "summary": "List issues",
+        "description": "List issues, optionally narrowed by status, assignee, stage, owning entity, parent, search, or a from/to window their planned span overlaps (`unscheduled` for undated ones). Paginated.",
         "responses": {
           "200": {
             "content": {
@@ -2218,7 +2219,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/Todo"
+                        "$ref": "#/components/schemas/Issue"
                       }
                     },
                     "page": {
@@ -2245,7 +2246,7 @@
                   "example": {
                     "data": [
                       {
-                        "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                        "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                         "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                         "assignee": {
                           "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -2281,7 +2282,7 @@
                 "example": {
                   "data": [
                     {
-                      "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                      "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                       "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                       "assignee": {
                         "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -2465,7 +2466,7 @@
               "type": "string",
               "maxLength": 64
             },
-            "description": "A stage name, or \"none\" for todos without one."
+            "description": "A stage name, or \"none\" for issues without one."
           },
           {
             "in": "query",
@@ -2497,7 +2498,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "A todo id for its sub-issues, or \"none\" for top-level todos."
+            "description": "An issue id for its sub-issues, or \"none\" for top-level issues."
           },
           {
             "in": "query",
@@ -2515,7 +2516,7 @@
               "format": "date-time",
               "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
             },
-            "description": "Window start (inclusive). Keeps todos whose start-to-due span reaches it."
+            "description": "Window start (inclusive). Keeps issues whose start-to-due span reaches it."
           },
           {
             "in": "query",
@@ -2526,7 +2527,7 @@
               "format": "date-time",
               "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
             },
-            "description": "Window end (inclusive). Keeps todos whose start-to-due span begins by it."
+            "description": "Window end (inclusive). Keeps issues whose start-to-due span begins by it."
           },
           {
             "in": "query",
@@ -2534,24 +2535,24 @@
             "schema": {
               "type": "boolean"
             },
-            "description": "Only todos with neither a start nor a due date; a window skips those."
+            "description": "Only issues with neither a start nor a due date; a window skips those."
           }
         ]
       },
       "post": {
-        "operationId": "postTodo",
-        "tags": ["Todo"],
-        "summary": "Create todo",
-        "description": "Create a todo. Attach it to an entity with source/sourceID (e.g. source \"project\"), and give it a stage, assignee and planned dates to place it on the timeline. Pass parentID to make it a sub-issue; it joins the parent's owner, last among its siblings.",
+        "operationId": "postIssue",
+        "tags": ["Issue"],
+        "summary": "Create issue",
+        "description": "Create an issue. Attach it to an entity with source/sourceID (e.g. source \"project\"), and give it a stage, assignee and planned dates to place it on the timeline. Pass parentID to make it a sub-issue; it joins the parent's owner, last among its siblings.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Todo"
+                  "$ref": "#/components/schemas/Issue"
                 },
                 "example": {
-                  "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "assignee": {
                     "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -2726,7 +2727,7 @@
                     "type": ["string", "null"]
                   },
                   "parentID": {
-                    "description": "The todo this is a sub-issue of. Null at the top level.",
+                    "description": "The issue this is a sub-issue of. Null at the top level.",
                     "type": ["string", "null"]
                   },
                   "status": {
@@ -2767,12 +2768,12 @@
         }
       }
     },
-    "/todo/stage": {
+    "/issue/stage": {
       "get": {
-        "operationId": "getTodoStage",
-        "tags": ["Todo"],
+        "operationId": "getIssueStage",
+        "tags": ["Issue"],
         "summary": "List stages",
-        "description": "The stage labels in use, with the span and counts derived from the todos in each. Call before staging a todo so labels stay consistent.",
+        "description": "The stage labels in use, with the span and counts derived from the issues in each. Call before staging an issue so labels stay consistent.",
         "responses": {
           "200": {
             "content": {
@@ -2782,11 +2783,11 @@
                   "items": {
                     "$ref": "#/components/schemas/Stage"
                   },
-                  "description": "A stage label, with the span and counts derived from its todos."
+                  "description": "A stage label, with the span and counts derived from its issues."
                 }
               }
             },
-            "description": "A stage label, with the span and counts derived from its todos."
+            "description": "A stage label, with the span and counts derived from its issues."
           },
           "400": {
             "content": {
@@ -2877,10 +2878,10 @@
         ]
       },
       "patch": {
-        "operationId": "patchTodoStage",
-        "tags": ["Todo"],
+        "operationId": "patchIssueStage",
+        "tags": ["Issue"],
         "summary": "Rename stage",
-        "description": "Rename a stage across every todo wearing it.",
+        "description": "Rename a stage across every issue wearing it.",
         "responses": {
           "200": {
             "content": {
@@ -2996,21 +2997,21 @@
         }
       }
     },
-    "/todo/{id}": {
+    "/issue/{id}": {
       "get": {
-        "operationId": "getTodoById",
-        "tags": ["Todo"],
-        "summary": "Get todo",
-        "description": "Fetch a single todo by id.",
+        "operationId": "getIssueById",
+        "tags": ["Issue"],
+        "summary": "Get issue",
+        "description": "Fetch a single issue by id.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Todo"
+                  "$ref": "#/components/schemas/Issue"
                 },
                 "example": {
-                  "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "assignee": {
                     "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -3132,7 +3133,7 @@
             "name": "id",
             "schema": {
               "type": "string",
-              "example": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX"
+              "example": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX"
             },
             "required": true,
             "description": "Unique object identifier.\nThe format and length of IDs may change over time."
@@ -3140,19 +3141,19 @@
         ]
       },
       "patch": {
-        "operationId": "patchTodoById",
-        "tags": ["Todo"],
-        "summary": "Update todo",
-        "description": "Update a todo's title, body, tags, stage, assignee, planned dates or status. Moving to `active` stamps the real start; `done` stamps the end.",
+        "operationId": "patchIssueById",
+        "tags": ["Issue"],
+        "summary": "Update issue",
+        "description": "Update an issue's title, body, tags, stage, assignee, planned dates or status. Moving to `active` stamps the real start; `done` stamps the end.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Todo"
+                  "$ref": "#/components/schemas/Issue"
                 },
                 "example": {
-                  "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "assignee": {
                     "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -3274,7 +3275,7 @@
             "name": "id",
             "schema": {
               "type": "string",
-              "example": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX"
+              "example": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX"
             },
             "required": true,
             "description": "Unique object identifier.\nThe format and length of IDs may change over time."
@@ -3386,10 +3387,10 @@
         }
       },
       "delete": {
-        "operationId": "deleteTodoById",
-        "tags": ["Todo"],
-        "summary": "Delete todo",
-        "description": "Soft-delete a todo. Its sub-issues move up to its parent.",
+        "operationId": "deleteIssueById",
+        "tags": ["Issue"],
+        "summary": "Delete issue",
+        "description": "Soft-delete an issue. Its sub-issues move up to its parent.",
         "responses": {
           "200": {
             "content": {
@@ -3494,7 +3495,7 @@
             "name": "id",
             "schema": {
               "type": "string",
-              "example": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX"
+              "example": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX"
             },
             "required": true,
             "description": "Unique object identifier.\nThe format and length of IDs may change over time."
@@ -3502,21 +3503,21 @@
         ]
       }
     },
-    "/todo/{id}/move": {
+    "/issue/{id}/move": {
       "post": {
-        "operationId": "postTodoByIdMove",
-        "tags": ["Todo"],
-        "summary": "Move todo",
-        "description": "Nest a todo under another (a sub-issue) or back to the top level with parentID null, at a position among its new siblings. The parent must share its owner and can't sit beneath it.",
+        "operationId": "postIssueByIdMove",
+        "tags": ["Issue"],
+        "summary": "Move issue",
+        "description": "Nest an issue under another (a sub-issue) or back to the top level with parentID null, at a position among its new siblings. The parent must share its owner and can't sit beneath it.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Todo"
+                  "$ref": "#/components/schemas/Issue"
                 },
                 "example": {
-                  "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "assignee": {
                     "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -3638,7 +3639,7 @@
             "name": "id",
             "schema": {
               "type": "string",
-              "example": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX"
+              "example": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX"
             },
             "required": true,
             "description": "Unique object identifier.\nThe format and length of IDs may change over time."
@@ -3652,7 +3653,7 @@
                 "type": "object",
                 "properties": {
                   "parentID": {
-                    "description": "The todo this is a sub-issue of. Null at the top level.",
+                    "description": "The issue this is a sub-issue of. Null at the top level.",
                     "type": ["string", "null"]
                   },
                   "position": {
@@ -3669,21 +3670,21 @@
         }
       }
     },
-    "/todo/{id}/link": {
+    "/issue/{id}/link": {
       "post": {
-        "operationId": "postTodoByIdLink",
-        "tags": ["Todo"],
-        "summary": "Link todo",
-        "description": "Attach an outside link to a todo, or retitle the one at that url.",
+        "operationId": "postIssueByIdLink",
+        "tags": ["Issue"],
+        "summary": "Link issue",
+        "description": "Attach an outside link to an issue, or retitle the one at that url.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Todo"
+                  "$ref": "#/components/schemas/Issue"
                 },
                 "example": {
-                  "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "assignee": {
                     "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -3805,7 +3806,7 @@
             "name": "id",
             "schema": {
               "type": "string",
-              "example": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX"
+              "example": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX"
             },
             "required": true,
             "description": "Unique object identifier.\nThe format and length of IDs may change over time."
@@ -3823,19 +3824,19 @@
         }
       },
       "delete": {
-        "operationId": "deleteTodoByIdLink",
-        "tags": ["Todo"],
-        "summary": "Unlink todo",
-        "description": "Drop the link at a url from a todo.",
+        "operationId": "deleteIssueByIdLink",
+        "tags": ["Issue"],
+        "summary": "Unlink issue",
+        "description": "Drop the link at a url from an issue.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Todo"
+                  "$ref": "#/components/schemas/Issue"
                 },
                 "example": {
-                  "id": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX",
+                  "id": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "createdBy": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
                   "assignee": {
                     "id": "usr_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -3957,7 +3958,7 @@
             "name": "id",
             "schema": {
               "type": "string",
-              "example": "tod_XXXXXXXXXXXXXXXXXXXXXXXXX"
+              "example": "iss_XXXXXXXXXXXXXXXXXXXXXXXXX"
             },
             "required": true,
             "description": "Unique object identifier.\nThe format and length of IDs may change over time."
@@ -3978,7 +3979,7 @@
       "get": {
         "operationId": "getInsightsStats",
         "tags": ["Insights"],
-        "summary": "Todo stats",
+        "summary": "Issue stats",
         "description": "Created, done, active and blocked counts for a range, plus overdue all time.",
         "responses": {
           "200": {
@@ -4109,8 +4110,8 @@
       "get": {
         "operationId": "getInsightsStatus",
         "tags": ["Insights"],
-        "summary": "Todos by status",
-        "description": "Todos created in a range, totalled per status in pipeline order.",
+        "summary": "Issues by status",
+        "description": "Issues created in a range, totalled per status in pipeline order.",
         "responses": {
           "200": {
             "content": {
@@ -4120,7 +4121,7 @@
                 }
               }
             },
-            "description": "Todos created in range, by status."
+            "description": "Issues created in range, by status."
           },
           "400": {
             "content": {
@@ -4240,8 +4241,8 @@
       "get": {
         "operationId": "getInsightsLoad",
         "tags": ["Insights"],
-        "summary": "Todos by assignee",
-        "description": "Todos created in a range, per assignee and status, busiest first.",
+        "summary": "Issues by assignee",
+        "description": "Issues created in a range, per assignee and status, busiest first.",
         "responses": {
           "200": {
             "content": {
@@ -4251,7 +4252,7 @@
                 }
               }
             },
-            "description": "Todos created in range, by assignee and status."
+            "description": "Issues created in range, by assignee and status."
           },
           "400": {
             "content": {
@@ -4371,8 +4372,8 @@
       "get": {
         "operationId": "getInsightsDue",
         "tags": ["Insights"],
-        "summary": "Next due todos",
-        "description": "The five open todos coming due soonest.",
+        "summary": "Next due issues",
+        "description": "The five open issues coming due soonest.",
         "responses": {
           "200": {
             "content": {
@@ -4382,11 +4383,11 @@
                   "items": {
                     "$ref": "#/components/schemas/InsightDue"
                   },
-                  "description": "An open todo coming due."
+                  "description": "An open issue coming due."
                 }
               }
             },
-            "description": "An open todo coming due."
+            "description": "An open issue coming due."
           },
           "400": {
             "content": {
@@ -4482,8 +4483,8 @@
       "get": {
         "operationId": "getInsightsCalendar",
         "tags": ["Insights"],
-        "summary": "Todo calendar",
-        "description": "Todos created per day in a range, in the reader's timezone.",
+        "summary": "Issue calendar",
+        "description": "Issues created per day in a range, in the reader's timezone.",
         "responses": {
           "200": {
             "content": {
@@ -4493,7 +4494,7 @@
                 }
               }
             },
-            "description": "Todos created per day, for a contribution grid."
+            "description": "Issues created per day, for a contribution grid."
           },
           "400": {
             "content": {
@@ -4613,8 +4614,8 @@
       "get": {
         "operationId": "getInsightsActivity",
         "tags": ["Insights"],
-        "summary": "Todo activity",
-        "description": "Todos created and completed per day, week or month, coarser as the range grows.",
+        "summary": "Issue activity",
+        "description": "Issues created and completed per day, week or month, coarser as the range grows.",
         "responses": {
           "200": {
             "content": {
@@ -4745,7 +4746,7 @@
         "operationId": "getProject",
         "tags": ["Project"],
         "summary": "List projects",
-        "description": "List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on a todo, with source \"project\".",
+        "description": "List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on an issue, with source \"project\".",
         "responses": {
           "200": {
             "content": {
@@ -4944,7 +4945,7 @@
         "operationId": "postProject",
         "tags": ["Project"],
         "summary": "Create project",
-        "description": "Create a project to hang todos off.",
+        "description": "Create a project to hang issues off.",
         "responses": {
           "200": {
             "content": {
@@ -4966,7 +4967,7 @@
                 }
               }
             },
-            "description": "A container for todos. Todos point at it through source/sourceID."
+            "description": "A container for issues. Issues point at it through source/sourceID."
           },
           "400": {
             "content": {
@@ -5098,7 +5099,7 @@
                 }
               }
             },
-            "description": "A container for todos. Todos point at it through source/sourceID."
+            "description": "A container for issues. Issues point at it through source/sourceID."
           },
           "400": {
             "content": {
@@ -5224,7 +5225,7 @@
                 }
               }
             },
-            "description": "A container for todos. Todos point at it through source/sourceID."
+            "description": "A container for issues. Issues point at it through source/sourceID."
           },
           "400": {
             "content": {
@@ -5368,7 +5369,7 @@
         "operationId": "deleteProjectById",
         "tags": ["Project"],
         "summary": "Delete project",
-        "description": "Soft-delete a project. Its todos stay reachable from the unscoped views.",
+        "description": "Soft-delete a project. Its issues stay reachable from the unscoped views.",
         "responses": {
           "200": {
             "content": {
@@ -5508,7 +5509,7 @@
                 }
               }
             },
-            "description": "A container for todos. Todos point at it through source/sourceID."
+            "description": "A container for issues. Issues point at it through source/sourceID."
           },
           "400": {
             "content": {
@@ -5644,7 +5645,7 @@
                 }
               }
             },
-            "description": "A container for todos. Todos point at it through source/sourceID."
+            "description": "A container for issues. Issues point at it through source/sourceID."
           },
           "400": {
             "content": {

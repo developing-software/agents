@@ -35,7 +35,12 @@ type Range = Scope & { start: string; end: string };
 
 // Rows, lists and stages carry the Issue tag; insights and project pages count issues, so they refresh too.
 // Picker options sit under the plain `issues` root.
-const issue = [[{ tags: ["Issue"] }], [{ tags: ["Insights"] }], [{ tags: ["Project"] }], ["issues"]];
+const issue = [
+  [{ tags: ["Issue"] }],
+  [{ tags: ["Insights"] }],
+  [{ tags: ["Project"] }],
+  ["issues"],
+];
 
 // Everything but rows: a removed issue's own query would refetch straight into a 404.
 const views = () => [

@@ -29,7 +29,11 @@
 	</Field>
 </div>
 
-<Pagination of={{ page, pageSize: size, total }} onchange={(next) => (page = next)} label="issues" />
+<Pagination
+	of={{ page, pageSize: size, total }}
+	onchange={(next) => (page = next)}
+	label="issues"
+/>
 
 <p class="note">Set total below pageSize and the control disappears.</p>
 

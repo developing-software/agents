@@ -166,7 +166,9 @@ describe("issue", () => {
       // `list` guards before it touches a promise; `remove` is async, so the identical
       // throw surfaces as a rejection.
       expect(() => Issue.list({})).toThrow(/issue:read/);
-      expect(() => Insights.stats({ start: "2026-01-01", end: "2026-01-31" })).toThrow(/issue:read/);
+      expect(() => Insights.stats({ start: "2026-01-01", end: "2026-01-31" })).toThrow(
+        /issue:read/,
+      );
       await expect(Issue.remove(id)).rejects.toThrow(/issue:read/);
     });
   });
@@ -233,7 +235,9 @@ describe("issue", () => {
 
   withTestUser("concurrent link edits all land; a repeated url retitles", async () => {
     const { id } = await Issue.create({ title: "Linked" });
-    await Promise.all(["a", "b", "c"].map((name) => Issue.link({ id, url: `https://${name}.dev` })));
+    await Promise.all(
+      ["a", "b", "c"].map((name) => Issue.link({ id, url: `https://${name}.dev` })),
+    );
     await Issue.link({ id, url: "https://b.dev", title: "B" });
     const after = await Issue.unlink({ id, url: "https://a.dev" });
     expect(after.metadata.links.map((item) => item.url).sort()).toEqual([

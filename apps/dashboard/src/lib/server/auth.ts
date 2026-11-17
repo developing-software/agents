@@ -2,7 +2,7 @@ import { createClient } from "@openauthjs/openauth/client";
 import { subjects } from "@agents/functions/auth/subject";
 import { error } from "@sveltejs/kit";
 import { AUTH_PROVIDERS, AUTH_URL, GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from "$app/env/private";
-import { OauthIds } from "@agents/core/auth/provider.sql";
+import { OauthIds } from "@agents/core/auth/provider.central";
 import { Auth } from "@agents/core/auth";
 
 export const client = createClient({

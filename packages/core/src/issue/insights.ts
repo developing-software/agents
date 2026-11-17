@@ -4,7 +4,7 @@ import { fn } from "../util/fn";
 import { Identity } from "../identity";
 import { Database } from "../drizzle";
 import { iso } from "../util/fmt";
-import { UserTable } from "../user/user.sql";
+import { UserTable } from "../user/user.central";
 import { StatusValues, IssueTable } from "./issue.sql";
 
 export namespace Insights {
@@ -159,7 +159,11 @@ export namespace Insights {
             .select({ total: count() })
             .from(IssueTable)
             .where(
-              and(visible(input), ne(IssueTable.status, "done"), lt(IssueTable.dueDate, new Date())),
+              and(
+                visible(input),
+                ne(IssueTable.status, "done"),
+                lt(IssueTable.dueDate, new Date()),
+              ),
             )
             .then((rows) => rows[0]?.total ?? 0),
         ),

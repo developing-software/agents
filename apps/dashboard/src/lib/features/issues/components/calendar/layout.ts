@@ -117,7 +117,8 @@ const instant = (to: Spot, zone: string) =>
 
 // Within the hour grid it slides by the pointer; from a lane or the tray its start lands there.
 function hours(issue: Issue.Info, first: string, origin: Spot | undefined, to: Spot, zone: string) {
-  if (origin?.minute === undefined || to.minute === undefined) return pair(issue, instant(to, zone));
+  if (origin?.minute === undefined || to.minute === undefined)
+    return pair(issue, instant(to, zone));
   const a = split(first, zone);
   const day = shift(a.day, { days: gap(origin.day, to.day) });
   return pair(issue, at(day, clock(snap(minutes(a.clock) + to.minute - origin.minute)), zone));

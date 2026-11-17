@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Card } from '@agents/ui';
-	import type { ProviderId } from '@agents/core/auth/provider.sql';
+	import type { ProviderId } from '@agents/core/auth/provider.central';
 	import Frame from '../components/Frame.svelte';
 	import LoginForm from '../components/LoginForm.svelte';
 	import OauthList from '../components/OauthList.svelte';

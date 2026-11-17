@@ -21,7 +21,7 @@
   run gets its own in-process Postgres on a free port
 - **Documentation**: Annotate every Zod schema with `.meta({ description, example })`. These
   schemas are where the OpenAPI spec starts, so a missing description ships all the way to the SDK
-- **Database**: Use Drizzle ORM via `Database.use()` for shared db/tx access and `Database.transaction()` when you need an explicit transaction
+- **Database**: Use Drizzle ORM via `Database.use()` for shared db/tx access and `Database.transaction()` when you need an explicit transaction; modules on `*.central.ts` tables use `Central.use()`/`Central.transaction()` instead
 - **Pools**: `Database.connect()` builds a pool (`max: 10`). A long-lived process connects once
   and `Database.provide`s it per request; a script or test setup `Database.release`s it when
   done, since an idle pool holds the process open for 20s
@@ -39,8 +39,10 @@
   agent delegations (`delegation.ts`)).
 - No top-level shim files at `src/<module>.ts` alongside `src/<module>/`.
   Consumers import through the directory via `@agents/core/<module>`.
-- SQL schemas live next to the module they belong to (`user/user.sql.ts`,
-  `auth/provider.sql.ts`, `issue/issue.sql.ts`).
+- SQL schemas live next to the module they belong to. Shared tables are
+  `*.central.ts` on `central.table` (`user/user.central.ts`, `auth/provider.central.ts`);
+  per-workspace tables are `*.sql.ts` on `snakeCase.table` (`issue/issue.sql.ts`). See
+  `docs/core.md#workspaces`.
 - Inside a file, order for a reader asking what the module does, not how:
   schemas and their inferred types, shared constants, exported operations in
   lifecycle order (`create`, `list`, `fromID`, `update`, `remove`), then

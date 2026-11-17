@@ -100,7 +100,9 @@ describe("mcp as a delegated agent", () => {
 
   it("annotates issues and projects", async () => {
     const client = await connect();
-    const issue = read(await client.callTool({ name: "issue_create", arguments: { title: "Tag" } }));
+    const issue = read(
+      await client.callTool({ name: "issue_create", arguments: { title: "Tag" } }),
+    );
     const after = read(
       await client.callTool({
         name: "issue_annotate",
