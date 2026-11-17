@@ -2,15 +2,14 @@ import { z } from "zod";
 import { and, eq, isNull } from "drizzle-orm";
 import { fn } from "../util/fn";
 import { Common } from "../common";
-import { Database } from "../drizzle";
+import { Central } from "../drizzle/central";
 import { Examples } from "../examples";
 import { Identifier } from "../identifier";
-import { Permission } from "../permission";
 import { decode, digest, encode, equal } from "../util/hash";
 import { token } from "../util/token";
 import { Prefs, zone } from "../user/prefs";
-import { UserTable } from "../user/user.sql";
-import { KeyTable, TOUCH, live } from "../platform/key/key.sql";
+import { AccountRoles, AccountTable } from "../user/account.central";
+import { KeyTable, TOUCH, live } from "../platform/key/key.central";
 
 /**
  * Dashboard logins. Nothing is signed, so there is no secret to hold or rotate: the cookie
@@ -26,8 +25,9 @@ export namespace Session {
         description: "Login address on the account.",
         example: Examples.User.email,
       }),
-      role: z.enum(Permission.roles).meta({
-        description: "Read off the user row on every request, so a change takes effect at once.",
+      appRole: z.enum(AccountRoles).meta({
+        description:
+          "The app-wide role, read off the account on every request. Workspace roles come later, per workspace.",
       }),
       timezone: z.string().meta({
         description: "The zone the session's times belong in, resolved from the user's prefs.",
@@ -50,7 +50,7 @@ export namespace Session {
     const secret = token("ses-");
     const hash = encode(await digest(secret));
     const now = new Date();
-    await Database.use((tx) =>
+    await Central.use((tx) =>
       tx.insert(KeyTable).values({
         id,
         userID: user,
@@ -72,24 +72,24 @@ export namespace Session {
     const [id, secret] = raw.split(".");
     if (!id || !secret) return null;
 
-    const row = await Database.use((tx) =>
+    const row = await Central.use((tx) =>
       tx
         .select({
           hash: KeyTable.key,
           used: KeyTable.timeUsed,
-          userID: UserTable.id,
-          email: UserTable.email,
-          role: UserTable.role,
-          prefs: UserTable.prefs,
+          userID: AccountTable.id,
+          email: AccountTable.email,
+          appRole: AccountTable.role,
+          prefs: AccountTable.prefs,
         })
         .from(KeyTable)
-        .innerJoin(UserTable, eq(UserTable.id, KeyTable.userID))
+        .innerJoin(AccountTable, eq(AccountTable.id, KeyTable.userID))
         .where(
           and(
             eq(KeyTable.id, id),
             eq(KeyTable.type, "session"),
             isNull(KeyTable.timeDeleted),
-            isNull(UserTable.timeDeleted),
+            isNull(AccountTable.timeDeleted),
             live(),
           ),
         )
@@ -105,7 +105,7 @@ export namespace Session {
     return {
       userID: row.userID,
       email: row.email,
-      role: row.role,
+      appRole: row.appRole,
       // Parsed: a row written before a preference existed is missing that key.
       timezone: zone(Prefs.parse(row.prefs)),
     };
@@ -117,7 +117,7 @@ export namespace Session {
     if (!id || !secret) return;
     // Matching the secret too, so knowing an id is not enough to end someone's session.
     const hash = encode(await digest(secret));
-    await Database.use((tx) =>
+    await Central.use((tx) =>
       tx.delete(KeyTable).where(and(eq(KeyTable.id, id), eq(KeyTable.key, hash))),
     );
   });
@@ -126,7 +126,7 @@ export namespace Session {
 
   function touch(id: string) {
     const now = new Date();
-    return Database.use((tx) =>
+    return Central.use((tx) =>
       tx
         .update(KeyTable)
         .set({ timeUsed: now, expiresAt: new Date(now.getTime() + TTL * 1000) })

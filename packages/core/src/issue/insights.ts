@@ -159,7 +159,11 @@ export namespace Insights {
             .select({ total: count() })
             .from(IssueTable)
             .where(
-              and(visible(input), ne(IssueTable.status, "done"), lt(IssueTable.dueDate, new Date())),
+              and(
+                visible(input),
+                ne(IssueTable.status, "done"),
+                lt(IssueTable.dueDate, new Date()),
+              ),
             )
             .then((rows) => rows[0]?.total ?? 0),
         ),

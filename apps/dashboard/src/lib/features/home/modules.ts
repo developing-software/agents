@@ -43,18 +43,20 @@ const base: Config = {
 };
 
 /** Per-role overrides of `base`. Leave a field out to inherit it. */
-const pages: { [R in Permission.Role]?: Partial<Config> } = {
-  admin: { modules: ["issues", "projects", "files", "insights", "admin"] },
-};
+const admin: Partial<Config> = { modules: ["issues", "projects", "files", "insights", "admin"] };
+const pages: { [R in Permission.Role]?: Partial<Config> } = { owner: admin, admin };
 
 export type Module = (typeof modules)[keyof typeof modules] & { key: keyof typeof modules };
 export type Widget = { key: Key; title: string; hint?: string; body: Snippet; wide?: boolean };
 /** What every home layout takes. */
 export type Props = { modules: Module[]; widgets: Widget[] };
 
-/** A role's home, resolved against `base`, with the route's widget bodies slotted in. */
-export function page(role: Permission.Role, widgets: Record<Key, Omit<Widget, "key">>): Props {
-  const cfg = { ...base, ...pages[role] };
+/** A role's home, resolved against `base`, with the route's widget bodies slotted in. No role is outside a workspace. */
+export function page(
+  role: Permission.Role | null,
+  widgets: Record<Key, Omit<Widget, "key">>,
+): Props {
+  const cfg = { ...base, ...(role ? pages[role] : undefined) };
   return {
     modules: cfg.modules.map((key) => ({ key, ...modules[key] })),
     widgets: cfg.widgets.map((key) => ({ key, ...widgets[key] })),

@@ -21,6 +21,7 @@ describe("admin stats", () => {
       expect(stats.tables.every((t) => Number.isFinite(t.bytes))).toBe(true);
     },
     "admin",
+    true,
   );
 
   withTestUser(
@@ -31,12 +32,23 @@ describe("admin stats", () => {
       expect((await Admin.server()).version).not.toBe("unknown");
     },
     "admin",
+    true,
   );
 
+  // The deploy stats answer to the account, the counts to the workspace role.
   withTestUser("a member cannot read any of it", async () => {
-    expect(() => Admin.tables()).toThrow(/admin:read/);
+    expect(() => Admin.tables()).toThrow(/superadmin/);
     expect(() => Admin.counts()).toThrow(/admin:read/);
   });
+
+  withTestUser(
+    "a workspace admin still can't read the deploy",
+    async () => {
+      expect(() => Admin.queue()).toThrow(/superadmin/);
+      expect(() => Admin.server()).toThrow(/superadmin/);
+    },
+    "admin",
+  );
 });
 
 describe("admin users", () => {
@@ -63,7 +75,7 @@ describe("admin users", () => {
   );
 
   withTestUser(
-    "remove hides the user everywhere auth looks, restore brings them back",
+    "remove takes the user out of the workspace, restore brings them back",
     async () => {
       const one = await mate();
       await User.remove(one.id);
@@ -71,9 +83,11 @@ describe("admin users", () => {
       expect(await User.fromID(one.id)).toBeNull();
       expect((await Admin.users({ search: one.email })).total).toBe(0);
       expect((await Admin.users({ search: one.email, deleted: true })).total).toBe(1);
-      await expect(
-        Auth.link({ provider: "email", accountId: one.email, email: one.email }),
-      ).rejects.toThrow(/disabled/);
+      // The account stays alive and can sign in; signing in doesn't seat it again.
+      expect(await Auth.link({ provider: "email", accountId: one.email, email: one.email })).toBe(
+        one.id,
+      );
+      expect(await User.fromID(one.id)).toBeNull();
 
       await User.restore(one.id);
       expect(await User.fromID(one.id)).not.toBeNull();

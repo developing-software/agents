@@ -12,6 +12,8 @@ export namespace Identifier {
     job: "job",
     webhook: "whk",
     connection: "con",
+    workspace: "wsp",
+    invite: "inv",
   } as const;
 
   export function create(prefix: keyof typeof prefixes, given?: string): string {

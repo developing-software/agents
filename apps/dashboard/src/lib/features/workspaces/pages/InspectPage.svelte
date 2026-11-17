@@ -1,0 +1,109 @@
+<script lang="ts">
+	import Row from '../components/Row.svelte';
+	import Rows from '../components/Rows.svelte';
+	import { createQuery } from '@tanstack/svelte-query';
+	import { Badge, Button, Empty, Issue, Section, Skeleton } from '@agents/ui';
+	import * as Header from '#lib/components/header/index.ts';
+	import { fmt } from '#lib/utils/fmt.ts';
+	import { inspect, mode, retry, usage } from '../api/workspaces.query';
+	import GeneralForm from '../components/GeneralForm.svelte';
+	import MembersTable from '../components/MembersTable.svelte';
+	import Usage from '../components/Usage.svelte';
+
+	let { slug }: { slug: string } = $props();
+
+	const f = fmt();
+	const kind = createQuery(mode);
+	const one = createQuery(() => inspect(slug));
+	const disk = createQuery(() => usage(slug));
+	const again = retry();
+</script>
+
+{#snippet access(rows: { userID: string; name: string; email: string; timeCreated: string }[])}
+	{#if rows.length === 0}
+		<Empty>Nobody has access.</Empty>
+	{:else}
+		<Rows>
+			{#each rows as who (who.userID)}
+				<Row dense>
+					<a href={`/u/${who.userID}`}>{who.name}</a>
+					<span class="dim">{who.email}</span>
+					<span class="dim end">since {f.date(who.timeCreated)}</span>
+				</Row>
+			{/each}
+		</Rows>
+	{/if}
+{/snippet}
+
+{#snippet space()}
+	{#if disk.isError}
+		<Issue>{disk.error.message}</Issue>
+	{:else if disk.isSuccess && disk.data[0]}
+		<Usage usage={disk.data[0]} />
+	{:else if disk.isSuccess}
+		<Empty>Its schema holds no tables yet.</Empty>
+	{:else}
+		<Skeleton h="8em" />
+	{/if}
+{/snippet}
+
+{#if one.isError}
+	<Issue>{one.error.message}</Issue>
+{:else if one.isSuccess}
+	{@const ws = one.data.workspace}
+	<Header.Root title={ws.name} eyebrow="Workspace">
+		<Header.Item label="Slug">{ws.slug}</Header.Item>
+		<Header.Item label="Schema">{ws.schema}</Header.Item>
+		<Header.Item label="Status">
+			<Badge tone={ws.status === 'ready' ? 'done' : 'pending'}>{ws.status}</Badge>
+		</Header.Item>
+		<Header.Item label="Access">{one.data.access.length}</Header.Item>
+		<Header.Item label="Created">{f.date(ws.timeCreated)}</Header.Item>
+	</Header.Root>
+
+	{#if ws.status === 'pending'}
+		<Section title="Setup" description="Its schema isn't migrated yet. The job is safe to rerun.">
+			{#if again.isError}
+				<Issue>{again.error.message}</Issue>
+			{/if}
+			<div>
+				<Button pending={again.isPending} onclick={() => again.mutate({ slug: ws.slug })}>
+					Retry setup
+				</Button>
+			</div>
+		</Section>
+	{/if}
+
+	<Section divider title="General">
+		<GeneralForm workspace={ws} multi={kind.data === 'multi'} />
+	</Section>
+
+	<Section divider wide title="Access" description="Who can see it, from central access.">
+		{@render access(one.data.access)}
+	</Section>
+
+	<Section divider wide title="Members" description="Roles, from the workspace's own table.">
+		<MembersTable rows={one.data.members} />
+	</Section>
+
+	<Section divider wide title="Usage" description="Disk use of its schema, from the catalogs.">
+		{@render space()}
+	</Section>
+{:else}
+	<Skeleton h="12em" />
+{/if}
+
+<style>
+	a {
+		font-weight: 500;
+		color: inherit;
+	}
+
+	.dim {
+		color: var(--muted);
+	}
+
+	.end {
+		margin-left: auto;
+	}
+</style>

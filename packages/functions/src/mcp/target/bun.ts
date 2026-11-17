@@ -1,5 +1,5 @@
 import { bun } from "../../target";
-import { Database } from "@agents/core/drizzle";
+import { Central } from "@agents/core/drizzle/central";
 import { Kv } from "@agents/core/kv";
 import { redis } from "@agents/core/kv/adapter/redis";
 import { Queue } from "@agents/core/queue";
@@ -12,6 +12,6 @@ console.log(`MCP running at http://localhost:${port}/mcp`);
 export default bun(
   app,
   port,
-  Queue.provider(Queue.fromEnv(process.env, Database.use)),
-  Kv.provider(Kv.fromEnv(process.env, Database.use, { redis })),
+  Queue.provider(Queue.fromEnv(process.env, Central.use)),
+  Kv.provider(Kv.fromEnv(process.env, Central.use, { redis })),
 );

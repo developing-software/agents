@@ -5,11 +5,11 @@ import { type MutationOptions, queryOptions } from "@tanstack/svelte-query";
 import { client } from "../client.gen";
 import {
   deleteFileByName,
+  deleteIssueById,
+  deleteIssueByIdLink,
   deleteKeyById,
   deleteProjectById,
   deleteProjectByIdLink,
-  deleteTodoById,
-  deleteTodoByIdLink,
   getFile,
   getFileByNameContent,
   getFileSigned,
@@ -19,34 +19,40 @@ import {
   getInsightsLoad,
   getInsightsStats,
   getInsightsStatus,
+  getIssue,
+  getIssueById,
+  getIssueStage,
   getKey,
   getMe,
   getProject,
   getProjectById,
-  getTodo,
-  getTodoById,
-  getTodoStage,
   getUser,
   getUserById,
   getUserByIdHistory,
   type Options,
   patchFileByName,
+  patchIssueById,
+  patchIssueStage,
   patchProjectById,
-  patchTodoById,
-  patchTodoStage,
   postFile,
   postHookByApp,
+  postIssue,
+  postIssueByIdLink,
+  postIssueByIdMove,
   postKey,
   postProject,
   postProjectByIdLink,
-  postTodo,
-  postTodoByIdLink,
-  postTodoByIdMove,
 } from "../sdk.gen";
 import type {
   DeleteFileByNameData,
   DeleteFileByNameError,
   DeleteFileByNameResponse,
+  DeleteIssueByIdData,
+  DeleteIssueByIdError,
+  DeleteIssueByIdLinkData,
+  DeleteIssueByIdLinkError,
+  DeleteIssueByIdLinkResponse,
+  DeleteIssueByIdResponse,
   DeleteKeyByIdData,
   DeleteKeyByIdError,
   DeleteKeyByIdResponse,
@@ -56,12 +62,6 @@ import type {
   DeleteProjectByIdLinkError,
   DeleteProjectByIdLinkResponse,
   DeleteProjectByIdResponse,
-  DeleteTodoByIdData,
-  DeleteTodoByIdError,
-  DeleteTodoByIdLinkData,
-  DeleteTodoByIdLinkError,
-  DeleteTodoByIdLinkResponse,
-  DeleteTodoByIdResponse,
   GetFileByNameContentData,
   GetFileByNameContentError,
   GetFileData,
@@ -87,6 +87,15 @@ import type {
   GetInsightsStatusData,
   GetInsightsStatusError,
   GetInsightsStatusResponse,
+  GetIssueByIdData,
+  GetIssueByIdError,
+  GetIssueByIdResponse,
+  GetIssueData,
+  GetIssueError,
+  GetIssueResponse,
+  GetIssueStageData,
+  GetIssueStageError,
+  GetIssueStageResponse,
   GetKeyData,
   GetKeyError,
   GetKeyResponse,
@@ -99,15 +108,6 @@ import type {
   GetProjectData,
   GetProjectError,
   GetProjectResponse,
-  GetTodoByIdData,
-  GetTodoByIdError,
-  GetTodoByIdResponse,
-  GetTodoData,
-  GetTodoError,
-  GetTodoResponse,
-  GetTodoStageData,
-  GetTodoStageError,
-  GetTodoStageResponse,
   GetUserByIdData,
   GetUserByIdError,
   GetUserByIdHistoryData,
@@ -120,21 +120,30 @@ import type {
   PatchFileByNameData,
   PatchFileByNameError,
   PatchFileByNameResponse,
+  PatchIssueByIdData,
+  PatchIssueByIdError,
+  PatchIssueByIdResponse,
+  PatchIssueStageData,
+  PatchIssueStageError,
+  PatchIssueStageResponse,
   PatchProjectByIdData,
   PatchProjectByIdError,
   PatchProjectByIdResponse,
-  PatchTodoByIdData,
-  PatchTodoByIdError,
-  PatchTodoByIdResponse,
-  PatchTodoStageData,
-  PatchTodoStageError,
-  PatchTodoStageResponse,
   PostFileData,
   PostFileError,
   PostFileResponse,
   PostHookByAppData,
   PostHookByAppError,
   PostHookByAppResponse,
+  PostIssueByIdLinkData,
+  PostIssueByIdLinkError,
+  PostIssueByIdLinkResponse,
+  PostIssueByIdMoveData,
+  PostIssueByIdMoveError,
+  PostIssueByIdMoveResponse,
+  PostIssueData,
+  PostIssueError,
+  PostIssueResponse,
   PostKeyData,
   PostKeyError,
   PostKeyResponse,
@@ -144,15 +153,6 @@ import type {
   PostProjectData,
   PostProjectError,
   PostProjectResponse,
-  PostTodoByIdLinkData,
-  PostTodoByIdLinkError,
-  PostTodoByIdLinkResponse,
-  PostTodoByIdMoveData,
-  PostTodoByIdMoveError,
-  PostTodoByIdMoveResponse,
-  PostTodoData,
-  PostTodoError,
-  PostTodoResponse,
 } from "../types.gen";
 
 export type QueryKey<TOptions extends Options> = [
@@ -360,18 +360,23 @@ export const deleteKeyByIdMutation = (
   return mutationOptions;
 };
 
-export const getTodoQueryKey = (options?: Options<GetTodoData>) =>
-  createQueryKey("getTodo", options, false, ["Todo"]);
+export const getIssueQueryKey = (options?: Options<GetIssueData>) =>
+  createQueryKey("getIssue", options, false, ["Issue"]);
 
 /**
- * List todos
+ * List issues
  *
- * List todos, optionally narrowed by status, assignee, stage, owning entity, parent, search, or a from/to window their planned span overlaps (`unscheduled` for undated ones). Paginated.
+ * List issues, optionally narrowed by status, assignee, stage, owning entity, parent, search, or a from/to window their planned span overlaps (`unscheduled` for undated ones). Paginated.
  */
-export const getTodoOptions = (options?: Options<GetTodoData>) =>
-  queryOptions<GetTodoResponse, GetTodoError, GetTodoResponse, ReturnType<typeof getTodoQueryKey>>({
+export const getIssueOptions = (options?: Options<GetIssueData>) =>
+  queryOptions<
+    GetIssueResponse,
+    GetIssueError,
+    GetIssueResponse,
+    ReturnType<typeof getIssueQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getTodo({
+      const { data } = await getIssue({
         ...options,
         ...queryKey[0],
         signal,
@@ -379,20 +384,24 @@ export const getTodoOptions = (options?: Options<GetTodoData>) =>
       });
       return data;
     },
-    queryKey: getTodoQueryKey(options),
+    queryKey: getIssueQueryKey(options),
   });
 
 /**
- * Create todo
+ * Create issue
  *
- * Create a todo. Attach it to an entity with source/sourceID (e.g. source "project"), and give it a stage, assignee and planned dates to place it on the timeline. Pass parentID to make it a sub-issue; it joins the parent's owner, last among its siblings.
+ * Create an issue. Attach it to an entity with source/sourceID (e.g. source "project"), and give it a stage, assignee and planned dates to place it on the timeline. Pass parentID to make it a sub-issue; it joins the parent's owner, last among its siblings.
  */
-export const postTodoMutation = (
-  options?: Partial<Options<PostTodoData>>,
-): MutationOptions<PostTodoResponse, PostTodoError, Options<PostTodoData>> => {
-  const mutationOptions: MutationOptions<PostTodoResponse, PostTodoError, Options<PostTodoData>> = {
+export const postIssueMutation = (
+  options?: Partial<Options<PostIssueData>>,
+): MutationOptions<PostIssueResponse, PostIssueError, Options<PostIssueData>> => {
+  const mutationOptions: MutationOptions<
+    PostIssueResponse,
+    PostIssueError,
+    Options<PostIssueData>
+  > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await postTodo({
+      const { data } = await postIssue({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -403,23 +412,23 @@ export const postTodoMutation = (
   return mutationOptions;
 };
 
-export const getTodoStageQueryKey = (options?: Options<GetTodoStageData>) =>
-  createQueryKey("getTodoStage", options, false, ["Todo"]);
+export const getIssueStageQueryKey = (options?: Options<GetIssueStageData>) =>
+  createQueryKey("getIssueStage", options, false, ["Issue"]);
 
 /**
  * List stages
  *
- * The stage labels in use, with the span and counts derived from the todos in each. Call before staging a todo so labels stay consistent.
+ * The stage labels in use, with the span and counts derived from the issues in each. Call before staging an issue so labels stay consistent.
  */
-export const getTodoStageOptions = (options?: Options<GetTodoStageData>) =>
+export const getIssueStageOptions = (options?: Options<GetIssueStageData>) =>
   queryOptions<
-    GetTodoStageResponse,
-    GetTodoStageError,
-    GetTodoStageResponse,
-    ReturnType<typeof getTodoStageQueryKey>
+    GetIssueStageResponse,
+    GetIssueStageError,
+    GetIssueStageResponse,
+    ReturnType<typeof getIssueStageQueryKey>
   >({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getTodoStage({
+      const { data } = await getIssueStage({
         ...options,
         ...queryKey[0],
         signal,
@@ -427,24 +436,24 @@ export const getTodoStageOptions = (options?: Options<GetTodoStageData>) =>
       });
       return data;
     },
-    queryKey: getTodoStageQueryKey(options),
+    queryKey: getIssueStageQueryKey(options),
   });
 
 /**
  * Rename stage
  *
- * Rename a stage across every todo wearing it.
+ * Rename a stage across every issue wearing it.
  */
-export const patchTodoStageMutation = (
-  options?: Partial<Options<PatchTodoStageData>>,
-): MutationOptions<PatchTodoStageResponse, PatchTodoStageError, Options<PatchTodoStageData>> => {
+export const patchIssueStageMutation = (
+  options?: Partial<Options<PatchIssueStageData>>,
+): MutationOptions<PatchIssueStageResponse, PatchIssueStageError, Options<PatchIssueStageData>> => {
   const mutationOptions: MutationOptions<
-    PatchTodoStageResponse,
-    PatchTodoStageError,
-    Options<PatchTodoStageData>
+    PatchIssueStageResponse,
+    PatchIssueStageError,
+    Options<PatchIssueStageData>
   > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await patchTodoStage({
+      const { data } = await patchIssueStage({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -456,20 +465,20 @@ export const patchTodoStageMutation = (
 };
 
 /**
- * Delete todo
+ * Delete issue
  *
- * Soft-delete a todo. Its sub-issues move up to its parent.
+ * Soft-delete an issue. Its sub-issues move up to its parent.
  */
-export const deleteTodoByIdMutation = (
-  options?: Partial<Options<DeleteTodoByIdData>>,
-): MutationOptions<DeleteTodoByIdResponse, DeleteTodoByIdError, Options<DeleteTodoByIdData>> => {
+export const deleteIssueByIdMutation = (
+  options?: Partial<Options<DeleteIssueByIdData>>,
+): MutationOptions<DeleteIssueByIdResponse, DeleteIssueByIdError, Options<DeleteIssueByIdData>> => {
   const mutationOptions: MutationOptions<
-    DeleteTodoByIdResponse,
-    DeleteTodoByIdError,
-    Options<DeleteTodoByIdData>
+    DeleteIssueByIdResponse,
+    DeleteIssueByIdError,
+    Options<DeleteIssueByIdData>
   > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await deleteTodoById({
+      const { data } = await deleteIssueById({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -480,23 +489,23 @@ export const deleteTodoByIdMutation = (
   return mutationOptions;
 };
 
-export const getTodoByIdQueryKey = (options: Options<GetTodoByIdData>) =>
-  createQueryKey("getTodoById", options, false, ["Todo"]);
+export const getIssueByIdQueryKey = (options: Options<GetIssueByIdData>) =>
+  createQueryKey("getIssueById", options, false, ["Issue"]);
 
 /**
- * Get todo
+ * Get issue
  *
- * Fetch a single todo by id.
+ * Fetch a single issue by id.
  */
-export const getTodoByIdOptions = (options: Options<GetTodoByIdData>) =>
+export const getIssueByIdOptions = (options: Options<GetIssueByIdData>) =>
   queryOptions<
-    GetTodoByIdResponse,
-    GetTodoByIdError,
-    GetTodoByIdResponse,
-    ReturnType<typeof getTodoByIdQueryKey>
+    GetIssueByIdResponse,
+    GetIssueByIdError,
+    GetIssueByIdResponse,
+    ReturnType<typeof getIssueByIdQueryKey>
   >({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getTodoById({
+      const { data } = await getIssueById({
         ...options,
         ...queryKey[0],
         signal,
@@ -504,24 +513,24 @@ export const getTodoByIdOptions = (options: Options<GetTodoByIdData>) =>
       });
       return data;
     },
-    queryKey: getTodoByIdQueryKey(options),
+    queryKey: getIssueByIdQueryKey(options),
   });
 
 /**
- * Update todo
+ * Update issue
  *
- * Update a todo's title, body, tags, stage, assignee, planned dates or status. Moving to `active` stamps the real start; `done` stamps the end.
+ * Update an issue's title, body, tags, stage, assignee, planned dates or status. Moving to `active` stamps the real start; `done` stamps the end.
  */
-export const patchTodoByIdMutation = (
-  options?: Partial<Options<PatchTodoByIdData>>,
-): MutationOptions<PatchTodoByIdResponse, PatchTodoByIdError, Options<PatchTodoByIdData>> => {
+export const patchIssueByIdMutation = (
+  options?: Partial<Options<PatchIssueByIdData>>,
+): MutationOptions<PatchIssueByIdResponse, PatchIssueByIdError, Options<PatchIssueByIdData>> => {
   const mutationOptions: MutationOptions<
-    PatchTodoByIdResponse,
-    PatchTodoByIdError,
-    Options<PatchTodoByIdData>
+    PatchIssueByIdResponse,
+    PatchIssueByIdError,
+    Options<PatchIssueByIdData>
   > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await patchTodoById({
+      const { data } = await patchIssueById({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -533,24 +542,24 @@ export const patchTodoByIdMutation = (
 };
 
 /**
- * Move todo
+ * Move issue
  *
- * Nest a todo under another (a sub-issue) or back to the top level with parentID null, at a position among its new siblings. The parent must share its owner and can't sit beneath it.
+ * Nest an issue under another (a sub-issue) or back to the top level with parentID null, at a position among its new siblings. The parent must share its owner and can't sit beneath it.
  */
-export const postTodoByIdMoveMutation = (
-  options?: Partial<Options<PostTodoByIdMoveData>>,
+export const postIssueByIdMoveMutation = (
+  options?: Partial<Options<PostIssueByIdMoveData>>,
 ): MutationOptions<
-  PostTodoByIdMoveResponse,
-  PostTodoByIdMoveError,
-  Options<PostTodoByIdMoveData>
+  PostIssueByIdMoveResponse,
+  PostIssueByIdMoveError,
+  Options<PostIssueByIdMoveData>
 > => {
   const mutationOptions: MutationOptions<
-    PostTodoByIdMoveResponse,
-    PostTodoByIdMoveError,
-    Options<PostTodoByIdMoveData>
+    PostIssueByIdMoveResponse,
+    PostIssueByIdMoveError,
+    Options<PostIssueByIdMoveData>
   > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await postTodoByIdMove({
+      const { data } = await postIssueByIdMove({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -562,24 +571,24 @@ export const postTodoByIdMoveMutation = (
 };
 
 /**
- * Unlink todo
+ * Unlink issue
  *
- * Drop the link at a url from a todo.
+ * Drop the link at a url from an issue.
  */
-export const deleteTodoByIdLinkMutation = (
-  options?: Partial<Options<DeleteTodoByIdLinkData>>,
+export const deleteIssueByIdLinkMutation = (
+  options?: Partial<Options<DeleteIssueByIdLinkData>>,
 ): MutationOptions<
-  DeleteTodoByIdLinkResponse,
-  DeleteTodoByIdLinkError,
-  Options<DeleteTodoByIdLinkData>
+  DeleteIssueByIdLinkResponse,
+  DeleteIssueByIdLinkError,
+  Options<DeleteIssueByIdLinkData>
 > => {
   const mutationOptions: MutationOptions<
-    DeleteTodoByIdLinkResponse,
-    DeleteTodoByIdLinkError,
-    Options<DeleteTodoByIdLinkData>
+    DeleteIssueByIdLinkResponse,
+    DeleteIssueByIdLinkError,
+    Options<DeleteIssueByIdLinkData>
   > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await deleteTodoByIdLink({
+      const { data } = await deleteIssueByIdLink({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -591,24 +600,24 @@ export const deleteTodoByIdLinkMutation = (
 };
 
 /**
- * Link todo
+ * Link issue
  *
- * Attach an outside link to a todo, or retitle the one at that url.
+ * Attach an outside link to an issue, or retitle the one at that url.
  */
-export const postTodoByIdLinkMutation = (
-  options?: Partial<Options<PostTodoByIdLinkData>>,
+export const postIssueByIdLinkMutation = (
+  options?: Partial<Options<PostIssueByIdLinkData>>,
 ): MutationOptions<
-  PostTodoByIdLinkResponse,
-  PostTodoByIdLinkError,
-  Options<PostTodoByIdLinkData>
+  PostIssueByIdLinkResponse,
+  PostIssueByIdLinkError,
+  Options<PostIssueByIdLinkData>
 > => {
   const mutationOptions: MutationOptions<
-    PostTodoByIdLinkResponse,
-    PostTodoByIdLinkError,
-    Options<PostTodoByIdLinkData>
+    PostIssueByIdLinkResponse,
+    PostIssueByIdLinkError,
+    Options<PostIssueByIdLinkData>
   > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await postTodoByIdLink({
+      const { data } = await postIssueByIdLink({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -623,7 +632,7 @@ export const getInsightsStatsQueryKey = (options: Options<GetInsightsStatsData>)
   createQueryKey("getInsightsStats", options, false, ["Insights"]);
 
 /**
- * Todo stats
+ * Issue stats
  *
  * Created, done, active and blocked counts for a range, plus overdue all time.
  */
@@ -650,9 +659,9 @@ export const getInsightsStatusQueryKey = (options: Options<GetInsightsStatusData
   createQueryKey("getInsightsStatus", options, false, ["Insights"]);
 
 /**
- * Todos by status
+ * Issues by status
  *
- * Todos created in a range, totalled per status in pipeline order.
+ * Issues created in a range, totalled per status in pipeline order.
  */
 export const getInsightsStatusOptions = (options: Options<GetInsightsStatusData>) =>
   queryOptions<
@@ -677,9 +686,9 @@ export const getInsightsLoadQueryKey = (options: Options<GetInsightsLoadData>) =
   createQueryKey("getInsightsLoad", options, false, ["Insights"]);
 
 /**
- * Todos by assignee
+ * Issues by assignee
  *
- * Todos created in a range, per assignee and status, busiest first.
+ * Issues created in a range, per assignee and status, busiest first.
  */
 export const getInsightsLoadOptions = (options: Options<GetInsightsLoadData>) =>
   queryOptions<
@@ -704,9 +713,9 @@ export const getInsightsDueQueryKey = (options?: Options<GetInsightsDueData>) =>
   createQueryKey("getInsightsDue", options, false, ["Insights"]);
 
 /**
- * Next due todos
+ * Next due issues
  *
- * The five open todos coming due soonest.
+ * The five open issues coming due soonest.
  */
 export const getInsightsDueOptions = (options?: Options<GetInsightsDueData>) =>
   queryOptions<
@@ -731,9 +740,9 @@ export const getInsightsCalendarQueryKey = (options: Options<GetInsightsCalendar
   createQueryKey("getInsightsCalendar", options, false, ["Insights"]);
 
 /**
- * Todo calendar
+ * Issue calendar
  *
- * Todos created per day in a range, in the reader's timezone.
+ * Issues created per day in a range, in the reader's timezone.
  */
 export const getInsightsCalendarOptions = (options: Options<GetInsightsCalendarData>) =>
   queryOptions<
@@ -758,9 +767,9 @@ export const getInsightsActivityQueryKey = (options: Options<GetInsightsActivity
   createQueryKey("getInsightsActivity", options, false, ["Insights"]);
 
 /**
- * Todo activity
+ * Issue activity
  *
- * Todos created and completed per day, week or month, coarser as the range grows.
+ * Issues created and completed per day, week or month, coarser as the range grows.
  */
 export const getInsightsActivityOptions = (options: Options<GetInsightsActivityData>) =>
   queryOptions<
@@ -787,7 +796,7 @@ export const getProjectQueryKey = (options?: Options<GetProjectData>) =>
 /**
  * List projects
  *
- * List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on a todo, with source "project".
+ * List projects, optionally filtered by name. Paginated. Use a project id as `sourceID` on an issue, with source "project".
  */
 export const getProjectOptions = (options?: Options<GetProjectData>) =>
   queryOptions<
@@ -811,7 +820,7 @@ export const getProjectOptions = (options?: Options<GetProjectData>) =>
 /**
  * Create project
  *
- * Create a project to hang todos off.
+ * Create a project to hang issues off.
  */
 export const postProjectMutation = (
   options?: Partial<Options<PostProjectData>>,
@@ -836,7 +845,7 @@ export const postProjectMutation = (
 /**
  * Delete project
  *
- * Soft-delete a project. Its todos stay reachable from the unscoped views.
+ * Soft-delete a project. Its issues stay reachable from the unscoped views.
  */
 export const deleteProjectByIdMutation = (
   options?: Partial<Options<DeleteProjectByIdData>>,

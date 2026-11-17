@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 
 import { Identity } from "@agents/core/identity";
-import { Permission } from "@agents/core/permission";
 import { Database, sql } from "@agents/core/drizzle";
 import { Project } from "@agents/core/project";
 import { Queue } from "@agents/core/queue";
 import { Issue } from "@agents/core/issue";
 import { Auth } from "@agents/core/auth";
-import { User } from "@agents/core/user";
+import { AccountTable } from "@agents/core/user/account.central";
+import { Email } from "@agents/core/email";
+import { Workspaces } from "@agents/core/workspaces";
 import { Key } from "@agents/core/key";
 import { boxed } from "./utils/box";
 
@@ -127,9 +128,25 @@ function status(due: number) {
 /** Writes the fixtures and returns the dev account's API key. Assumes its providers are set. */
 async function seed() {
   const userID = await Auth.link({ provider: "email", accountId: email, email, name });
-  // The dev account owns the instance: admin settings are otherwise unreachable without hand-writing
-  // the promotion SQL. The team below stay members, so both roles are represented locally.
-  await Identity.internal("seed", Permission.all, () => User.assign({ id: userID, role: "admin" }));
+  // The dev account runs the instance (otherwise unreachable without hand-writing the
+  // promotion SQL) and makes the workspace, which it owns; the team joins it by invite.
+  await Database.use((tx) =>
+    tx
+      .update(AccountTable)
+      .set({ role: "superadmin" })
+      .where(sql`${AccountTable.id} = ${userID}`),
+  );
+  const me = <R>(fn: () => Promise<R>) => Identity.provide("user", { userID }, fn);
+  // `sync` runs the setup job inline, so the workspace is ready before anything writes to it.
+  await Queue.provide(Queue.fromEnv({ QUEUE_DRIVER: "sync" }), () =>
+    me(async () => {
+      if (await Workspaces.vacant())
+        await Workspaces.create({ slug: "default", name: "Workspace" });
+    }),
+  );
+  const slug = (await me(() => Workspaces.list()))[0]?.slug;
+  if (!slug)
+    throw new Error("The dev account is in no workspace; reset the database and seed again");
   // The login screen prefills these credentials in dev, so the dev account needs a real
   // password row for them to match — an account gains one, it never signs up with one.
   await Identity.provide("user", { userID, role: "admin" }, () => Auth.Pass.set({ password: pw }));
@@ -139,45 +156,60 @@ async function seed() {
       Auth.link({ provider: "email", accountId: one.email, email: one.email, name: one.name }),
     ),
   );
+  // Invited and accepted the real way, with the mails swallowed.
+  await Email.provide({ send: async () => {} }, () =>
+    me(async () =>
+      Auth.enter(await Workspaces.target(slug), async () => {
+        const seated = new Set((await Workspaces.members()).map((one) => one.email));
+        for (const one of team)
+          if (!seated.has(one.email)) await Workspaces.invite({ email: one.email });
+      }),
+    ),
+  );
+  for (const mate of mates)
+    await Identity.provide("user", { userID: mate }, async () => {
+      for (const offer of await Workspaces.offers()) await Workspaces.accept({ id: offer.id });
+    });
   // Unassigned shows up as its own lane in the board and the load chart.
   const assignees = [userID, ...mates, null, ...mates];
 
-  // Matches the row the seed just wrote, so a check that would fail for real fails here too.
-  await Identity.provide("user", { userID, role: "admin" }, async () => {
-    const list = await Issue.list({ page: 1, pageSize: 100 });
-    if (list.total > 0) return;
+  // Inside the workspace as its owner, so a check that would fail for real fails here too.
+  await me(async () =>
+    Auth.enter(await Workspaces.target(slug), async () => {
+      const list = await Issue.list({ page: 1, pageSize: 100 });
+      if (list.total > 0) return;
 
-    const ids = await Promise.all(
-      projects.map((project) => Project.create({ name: project }).then((row) => row.id)),
-    );
+      const ids = await Promise.all(
+        projects.map((project) => Project.create({ name: project }).then((row) => row.id)),
+      );
 
-    await Promise.all(
-      Array.from({ length: count }, async () => {
-        const at = when();
-        const sourceID = pick(ids);
-        const planned = at.getTime() > now - PLANNED;
-        // Planned work starts a few days after it lands and runs for a week or two.
-        const start = at.getTime() + rand(0, 4) * DAY;
-        const due = start + rand(3, 16) * DAY;
-        const state = planned ? status(due) : Math.random() < 0.9 ? "done" : "blocked";
-        const started = state === "backlog" || state === "planned" ? null : new Date(start);
-        const done = state === "done" ? new Date(rand(start, Math.min(due, now))) : null;
+      await Promise.all(
+        Array.from({ length: count }, async () => {
+          const at = when();
+          const sourceID = pick(ids);
+          const planned = at.getTime() > now - PLANNED;
+          // Planned work starts a few days after it lands and runs for a week or two.
+          const start = at.getTime() + rand(0, 4) * DAY;
+          const due = start + rand(3, 16) * DAY;
+          const state = planned ? status(due) : Math.random() < 0.9 ? "done" : "blocked";
+          const started = state === "backlog" || state === "planned" ? null : new Date(start);
+          const done = state === "done" ? new Date(rand(start, Math.min(due, now))) : null;
 
-        const { id } = await Issue.create({
-          title: title(),
-          status: state,
-          source: "project",
-          sourceID,
-          assignee: pick(assignees),
-          stage: planned ? stage(start) : undefined,
-          startDate: planned ? new Date(start).toISOString() : undefined,
-          dueDate: new Date(due).toISOString(),
-        });
+          const { id } = await Issue.create({
+            title: title(),
+            status: state,
+            source: "project",
+            sourceID,
+            assignee: pick(assignees),
+            stage: planned ? stage(start) : undefined,
+            startDate: planned ? new Date(start).toISOString() : undefined,
+            dueDate: new Date(due).toISOString(),
+          });
 
-        // Issue.create stamps the clock to now; backdate the whole trail here.
-        await Database.use((tx) =>
-          tx.execute(
-            sql`
+          // Issue.create stamps the clock to now; backdate the whole trail here.
+          await Database.use((tx) =>
+            tx.execute(
+              sql`
             update issue
             set time_created = ${at.toISOString()}::timestamptz,
                 time_updated = ${(done ?? at).toISOString()}::timestamptz,
@@ -185,12 +217,13 @@ async function seed() {
                 time_done = ${done?.toISOString() ?? null}::timestamptz
             where id = ${id}
           `,
-            "objects",
-          ),
-        );
-      }),
-    );
-  });
+              "objects",
+            ),
+          );
+        }),
+      );
+    }),
+  );
 
   return key;
 }

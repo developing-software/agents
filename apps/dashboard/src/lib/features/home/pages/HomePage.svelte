@@ -13,7 +13,7 @@
 		frame
 	}: {
 		name: string;
-		role: Permission.Role;
+		role: Permission.Role | null;
 		widgets: Record<Key, Omit<Widget, 'key'>>;
 		frame?: Snippet<[Props, Snippet]>;
 	} = $props();

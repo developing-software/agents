@@ -10,19 +10,24 @@ export function testEmail() {
 /**
  * Creates a user directly (bypassing the register/login flow) and runs the callback as that
  * user. `role` overrides what the row holds — the actor is what checks read, so a test can
- * run as `admin` without touching the database.
+ * run as `admin` (or a `superadmin` account) without touching the database.
  */
 export function withTestUser(
   name: string,
   cb: (ctx: { userID: string; email: string }) => Promise<any>,
   role: Permission.Role = "member",
+  superadmin = false,
 ) {
   return it(name, async () => {
     const email = testEmail();
     const user = await createUser({ name: "Test User", email });
-    await Identity.provide("user", { userID: user.id, role }, async () => {
-      await cb({ userID: user.id, email });
-    });
+    await Identity.provide(
+      "user",
+      { userID: user.id, role, superadmin: superadmin || undefined },
+      async () => {
+        await cb({ userID: user.id, email });
+      },
+    );
   });
 }
 

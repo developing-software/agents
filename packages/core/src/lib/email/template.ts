@@ -1,7 +1,12 @@
 // fallow-ignore-file code-duplication
 import { Email } from "./index";
-import { code, head, preview, render, rule, small, text } from "./render";
+import { bold, button, code, head, preview, render, rule, small, text } from "./render";
+import { eq } from "drizzle-orm";
+import { Central } from "../../drizzle/central";
+import { Identity } from "../../identity";
 import { User } from "../../user";
+import { WorkspaceTable } from "../../platform/workspace/workspace.central";
+import { Workspace } from "../../workspace";
 
 /**
  * `Render` builds a mail, `Send` addresses one. Rendering takes no IO, so a mail can be read
@@ -39,6 +44,26 @@ export namespace Template {
       };
     }
 
+    export type Invite = { workspace: string; inviter: string; role: string; url: string };
+
+    export function invite(input: Invite) {
+      return {
+        subject: `${input.inviter} invited you to ${input.workspace}`,
+        ...render([
+          preview(`Join ${input.workspace} as ${input.role}.`),
+          head(`You're invited to ${input.workspace}`),
+          text(bold(input.inviter), ` invited you to join as ${input.role}.`),
+          text("Sign in with this address and the workspace is waiting for you."),
+          button("Accept invite", input.url),
+          small(
+            "If you weren't expecting this, you can ignore it: nothing happens until you sign in.",
+          ),
+          rule(),
+          small("– The Team"),
+        ]),
+      };
+    }
+
     export function profileUpdated(name: string) {
       return {
         subject: "Your profile was updated",
@@ -68,6 +93,31 @@ export namespace Template {
       await Email.send({ to: email, ...Render.loginCode(otp) });
     }
 
+    /** From whoever is acting, into the workspace the request runs in. */
+    export async function invite(email: string, role: string) {
+      const schema = Workspace.peek()?.schema;
+      if (!schema) return;
+      const [inviter, workspace] = await Promise.all([
+        User.fromID(Identity.userID()),
+        Central.use((tx) =>
+          tx
+            .select({ name: WorkspaceTable.name })
+            .from(WorkspaceTable)
+            .where(eq(WorkspaceTable.schema, schema))
+            .then((rows) => rows.at(0)),
+        ),
+      ]);
+      await Email.send({
+        to: email,
+        ...Render.invite({
+          workspace: workspace?.name ?? "a workspace",
+          inviter: inviter?.name ?? "Someone",
+          role,
+          url: `${process.env.ORIGIN ?? "http://localhost:5173"}/login`,
+        }),
+      });
+    }
+
     export async function updated(userID: string) {
       const user = await User.fromID(userID);
       if (!user?.email) return;
@@ -94,6 +144,18 @@ export namespace Template {
       label: "Login code",
       blurb: "The six-digit code behind passwordless sign-in.",
       render: () => Render.loginCode("482913"),
+    },
+    {
+      name: "invite",
+      label: "Workspace invite",
+      blurb: "Offers a seat in a workspace; signing in with the address claims it.",
+      render: () =>
+        Render.invite({
+          workspace: "Acme",
+          inviter: "Grace",
+          role: "member",
+          url: "https://example.com/login",
+        }),
     },
     {
       name: "updated",

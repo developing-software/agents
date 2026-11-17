@@ -3,6 +3,7 @@ import { Context } from "./context";
 import { Log } from "./util/log";
 import { Permission } from "./permission";
 import { ErrorCodes, VisibleError } from "./error";
+import { Workspace } from "./workspace";
 
 /**
  * Who is acting: a `user`, an `agent` for one, an App's `system` account, or the app's own
@@ -10,12 +11,20 @@ import { ErrorCodes, VisibleError } from "./error";
  */
 export namespace Identity {
   const id = z.string().meta({ description: "Who answers for the act." });
-  const role = z.enum(Permission.roles).meta({ description: "The role held at the time." });
+  const role = z
+    .enum(Permission.roles)
+    .meta({ description: "The workspace role held at the time." });
+  // A person outside any workspace holds no role: permissions exist only inside one.
+  const member = role.optional();
   const zone = z.string().optional().meta({ description: "IANA zone, when known." });
   const credential = z
     .string()
     .optional()
     .meta({ description: "The key or delegation that acted, so an audit can name it." });
+  const platform = z
+    .boolean()
+    .optional()
+    .meta({ description: "Whether the account behind it runs the whole app." });
   const grants = z
     .custom<Permission.Grants>((v) => typeof v === "object" && v !== null)
     .meta({ description: "Exactly what it may do." });
@@ -26,7 +35,13 @@ export namespace Identity {
       z.object({ type: z.literal("public"), properties: z.object({}) }),
       z.object({
         type: z.literal("user"),
-        properties: z.object({ userID: id, role, timezone: zone, credential }),
+        properties: z.object({
+          userID: id,
+          role: member,
+          superadmin: platform,
+          timezone: zone,
+          credential,
+        }),
       }),
       // Software acting for a person: their role, narrowed to `scope` when one is set.
       z.object({
@@ -36,14 +51,15 @@ export namespace Identity {
             description: "Which agent: `orchestrator`, or an MCP client like `claude`.",
           }),
           userID: id,
-          role,
+          role: member,
+          superadmin: platform,
           scope: grants.optional(),
           timezone: zone,
           credential,
         }),
       }),
-      // An App's account (`kind: "system"` row), acting through its keys. Never more than its
-      // owner: `can` checks both roles.
+      // An App (`kind: "system"` user), acting through its keys. Never more than its owner:
+      // `can` checks both roles. It lives in one workspace, so it can't pick another.
       z.object({
         type: z.literal("system"),
         properties: z.object({
@@ -52,6 +68,7 @@ export namespace Identity {
           owner: z
             .object({ userID: id, role })
             .meta({ description: "The person answerable for the App." }),
+          workspace: z.string().meta({ description: "The schema of the workspace it lives in." }),
           credential,
         }),
       }),
@@ -82,11 +99,17 @@ export namespace Identity {
     name: z.string().optional(),
     scope: grants.optional(),
     credential: z.string().optional(),
+    // The workspace it was pushed in; replay runs the job there.
+    workspace: z
+      .object({ schema: z.string(), role: z.enum(Workspace.roles).optional() })
+      .optional(),
   });
   export type Stamp = z.infer<typeof Stamp>;
 
   const ctx = Context.create<Info>();
   export const use = ctx.use;
+  /** The identity if one is provided — pre-auth paths and scripts have none. */
+  export const peek = ctx.peek;
 
   export function provide<R, T extends Type>(
     type: T,
@@ -121,6 +144,7 @@ export namespace Identity {
         name,
         userID: info.properties.userID,
         role: info.properties.role,
+        superadmin: info.properties.superadmin,
         scope: grants ?? held,
         timezone: info.properties.timezone,
         credential: info.properties.credential,
@@ -143,12 +167,44 @@ export namespace Identity {
     throw new Error(`Expected a known identity, got ${info.type}`);
   }
 
+  /** Whether a person (or an agent for one) whose account runs the whole app is acting. Apps never are. */
+  export function superadmin() {
+    const info = use();
+    return (info.type === "user" || info.type === "agent") && !!info.properties.superadmin;
+  }
+
+  export const assert = {
+    /** Throws a 403 with `message` unless `superadmin()`. */
+    superadmin(message = "Only a superadmin can do that") {
+      if (Identity.superadmin()) return;
+      throw new VisibleError("forbidden", ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS, message);
+    },
+  };
+
+  /**
+   * For the caller's own account, which no workspace role governs: a person, or an agent for one
+   * whose scope covers `grants`. Apps manage nothing of their own; their admin does.
+   */
+  export function self(grants: Permission.Grants) {
+    const info = use();
+    const person = info.type === "user" || info.type === "agent";
+    const scope = info.type === "agent" ? info.properties.scope : undefined;
+    if (person && (!scope || Permission.within(scope, grants))) return info.properties.userID;
+    throw refuse(grants);
+  }
+
   /** The current identity as a queue can carry it, or null for public. */
   export function stamp(): Stamp | null {
     const info = use();
+    const workspace = Workspace.provided();
     if (info.type === "public") return null;
     if (info.type === "internal")
-      return { type: "internal", name: info.properties.name, scope: info.properties.scope };
+      return {
+        type: "internal",
+        name: info.properties.name,
+        scope: info.properties.scope,
+        workspace,
+      };
     if (info.type === "agent")
       return {
         type: "agent",
@@ -156,11 +212,13 @@ export namespace Identity {
         name: info.properties.name,
         scope: info.properties.scope,
         credential: info.properties.credential,
+        workspace,
       };
     return {
       type: info.type,
       userID: info.properties.userID,
       credential: info.properties.credential,
+      workspace,
     };
   }
 
@@ -194,7 +252,13 @@ export namespace Identity {
   /** The throwing form. Surfaces as a 403 through `VisibleError.statusCode()`. */
   export function check(grants: Permission.Grants, owner?: string) {
     if (can(grants, owner)) return;
-    throw new VisibleError(
+    throw refuse(grants);
+  }
+
+  // === UTILS ===
+
+  function refuse(grants: Permission.Grants) {
+    return new VisibleError(
       "forbidden",
       ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
       `Requires ${Object.entries(grants)

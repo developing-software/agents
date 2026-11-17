@@ -14,6 +14,7 @@ import { Event } from "../src/platform/event";
 import { Feedback } from "../src/platform/feedback";
 import { Conversation } from "../src/platform/conversation";
 import { Panel } from "../src/platform/panel";
+import { Workspaces } from "../src/platform/workspace";
 import { createUser, testEmail } from "./util";
 
 type Res = keyof typeof Permission.Statement;
@@ -46,10 +47,7 @@ const panel = crypto.randomUUID();
 
 const ops = [
   entry("admin", "read", Admin.users, () => ({})),
-  entry("admin", "read", Admin.tables, () => undefined),
-  entry("admin", "read", Admin.queue, () => undefined),
   entry("admin", "read", Admin.counts, () => undefined),
-  entry("admin", "read", Admin.server, () => undefined),
   entry("admin", "read", Event.list, () => ({})),
   entry("admin", "read", Event.facets, () => undefined),
 
@@ -140,6 +138,17 @@ const ops = [
   entry("panel", "delete", Panel.remove, () => panel, true),
 ];
 
+/** Platform and deploy ops: no workspace grant opens them, only a superadmin account. */
+const platform = [
+  [Admin.tables, () => undefined],
+  [Admin.queue, () => undefined],
+  [Admin.server, () => undefined],
+  [Workspaces.registry, () => undefined],
+  [Workspaces.inspect, () => ({ slug: "sweep" })],
+  [Workspaces.retry, () => ({ slug: "sweep" })],
+  [Workspaces.usage, () => ({})],
+] as const;
+
 /** Ops that check nothing on purpose: a signature or the caller's own lookup is the gate. */
 const exempt = new Set<unknown>([
   Key.mint,
@@ -222,7 +231,7 @@ beforeAll(async () => {
 
 describe("permission sweep", () => {
   test("every exported op is swept or exempt", () => {
-    const swept = new Set<unknown>(ops.map((row) => row.op));
+    const swept = new Set<unknown>([...ops.map((row) => row.op), ...platform.map((row) => row[0])]);
     const missing = exported.filter((pair) => !swept.has(pair[1]) && !exempt.has(pair[1]));
     expect(missing.map((pair) => pair[0])).toEqual([]);
   });
@@ -244,6 +253,15 @@ describe("permission sweep", () => {
       ),
     );
   });
+
+  test.each(Permission.roles)("%s can't reach a platform op without a superadmin account", (role) =>
+    Identity.provide("user", { userID: fx.me, role }, async () => {
+      for (const [op, input] of platform) {
+        const call: any = op;
+        await expect(Promise.resolve().then(() => call(input()))).rejects.toThrow(/superadmin/);
+      }
+    }),
+  );
 
   describe.each(Permission.roles)("%s outside its grants", (role) => {
     const held: any = Permission.Roles[role];

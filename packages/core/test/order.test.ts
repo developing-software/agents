@@ -35,7 +35,11 @@ describe("order", () => {
     await Issue.create({ title: "C", status: "backlog", ...src });
 
     // Status ranks by pipeline, so backlog leads active; title then breaks the tie.
-    expect(titles(await Issue.list({ ...src, sort: ["status", "title"] }))).toEqual(["C", "A", "B"]);
+    expect(titles(await Issue.list({ ...src, sort: ["status", "title"] }))).toEqual([
+      "C",
+      "A",
+      "B",
+    ]);
     expect(titles(await Issue.list({ ...src, sort: ["status", "-title"] }))).toEqual([
       "C",
       "B",

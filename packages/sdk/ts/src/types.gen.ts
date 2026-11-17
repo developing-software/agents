@@ -34,7 +34,14 @@ export type ErrorResponse = {
   /**
    * The error type category
    */
-  type: "validation" | "authentication" | "forbidden" | "not_found" | "rate_limit" | "internal";
+  type:
+    | "validation"
+    | "authentication"
+    | "forbidden"
+    | "not_found"
+    | "conflict"
+    | "rate_limit"
+    | "internal";
   /**
    * Machine-readable error code identifier
    */
@@ -68,7 +75,7 @@ export type ErrorResponse = {
 };
 
 /**
- * A user account.
+ * A workspace's person or App. A person's id is their account id.
  */
 export type User = {
   /**
@@ -93,11 +100,11 @@ export type User = {
    */
   image: string | null;
   /**
-   * Decides everything the account may do. Only `user:assign` can change it.
+   * Decides everything the user may do in this workspace; null outside one. Only `user:assign` can change it.
    */
-  role: "admin" | "member";
+  role: "owner" | "admin" | "member" | null;
   /**
-   * A `system` account is an App: nobody logs in as it — an external system or CI acting through API keys.
+   * A `system` user is an App: nobody logs in as it — an external system or CI acting through API keys.
    */
   kind: "human" | "system";
   /**
@@ -115,11 +122,11 @@ export type User = {
     time: "system" | "h12" | "h24";
   };
   /**
-   * When the account was disabled. Null while it is active.
+   * When the user was removed. Null while they are active.
    */
   timeDeleted: string | null;
   /**
-   * When the account was created.
+   * When the user joined.
    */
   timeCreated: string;
 };
@@ -142,15 +149,15 @@ export type Profile = {
    */
   image: string | null;
   /**
-   * A `system` account is an App: nobody logs in as it — an external system or CI acting through API keys.
+   * A `system` user is an App: nobody logs in as it — an external system or CI acting through API keys.
    */
   kind: "human" | "system";
   /**
-   * Decides everything the account may do. Only `user:assign` can change it.
+   * Decides everything the user may do in this workspace; null outside one. Only `user:assign` can change it.
    */
-  role: "admin" | "member";
+  role: "owner" | "admin" | "member" | null;
   /**
-   * When the account was created.
+   * When the user joined.
    */
   timeCreated: string;
   email: string | null;
@@ -178,9 +185,13 @@ export type Identity =
          */
         userID: string;
         /**
-         * The role held at the time.
+         * The workspace role held at the time.
          */
-        role: "admin" | "member";
+        role?: "owner" | "admin" | "member";
+        /**
+         * Whether the account behind it runs the whole app.
+         */
+        superadmin?: boolean;
         /**
          * IANA zone, when known.
          */
@@ -203,9 +214,13 @@ export type Identity =
          */
         userID: string;
         /**
-         * The role held at the time.
+         * The workspace role held at the time.
          */
-        role: "admin" | "member";
+        role?: "owner" | "admin" | "member";
+        /**
+         * Whether the account behind it runs the whole app.
+         */
+        superadmin?: boolean;
         /**
          * Exactly what it may do.
          */
@@ -228,9 +243,9 @@ export type Identity =
          */
         userID: string;
         /**
-         * The role held at the time.
+         * The workspace role held at the time.
          */
-        role: "admin" | "member";
+        role: "owner" | "admin" | "member";
         /**
          * The person answerable for the App.
          */
@@ -240,10 +255,14 @@ export type Identity =
            */
           userID: string;
           /**
-           * The role held at the time.
+           * The workspace role held at the time.
            */
-          role: "admin" | "member";
+          role: "owner" | "admin" | "member";
         };
+        /**
+         * The schema of the workspace it lives in.
+         */
+        workspace: string;
         /**
          * The key or delegation that acted, so an audit can name it.
          */
@@ -290,11 +309,11 @@ export type Event = {
    */
   identity: Identity | null;
   /**
-   * What happened, like `todo.created`.
+   * What happened, like `issue.created`.
    */
   type: string;
   /**
-   * Kind of entity it happened to, like `todo`.
+   * Kind of entity it happened to, like `issue`.
    */
   source: string | null;
   /**
@@ -389,7 +408,7 @@ export type Metadata = {
 /**
  * A unit of work, owned by whatever entity created it.
  */
-export type Todo = {
+export type Issue = {
   /**
    * Unique object identifier.
    * The format and length of IDs may change over time.
@@ -416,7 +435,7 @@ export type Todo = {
    */
   sourceID: string | null;
   /**
-   * The todo this is a sub-issue of. Null at the top level.
+   * The issue this is a sub-issue of. Null at the top level.
    */
   parentID: string | null;
   /**
@@ -471,7 +490,7 @@ export type Todo = {
 };
 
 /**
- * A stage label, with the span and counts derived from its todos.
+ * A stage label, with the span and counts derived from its issues.
  */
 export type Stage = {
   name: string;
@@ -504,7 +523,7 @@ export type Link = {
  */
 export type InsightStats = {
   /**
-   * Todos created in range.
+   * Issues created in range.
    */
   total: number;
   /**
@@ -524,17 +543,17 @@ export type InsightStats = {
    */
   rate: number;
   /**
-   * Open todos past their due date, all time.
+   * Open issues past their due date, all time.
    */
   overdue: number;
 };
 
 /**
- * Todos created in range, by status.
+ * Issues created in range, by status.
  */
 export type InsightStatuses = {
   /**
-   * Todos created in range.
+   * Issues created in range.
    */
   total: number;
   rows: Array<{
@@ -548,7 +567,7 @@ export type InsightStatuses = {
 };
 
 /**
- * Todos created in range, by assignee and status.
+ * Issues created in range, by assignee and status.
  */
 export type InsightLoad = {
   /**
@@ -569,7 +588,7 @@ export type InsightLoad = {
 };
 
 /**
- * An open todo coming due.
+ * An open issue coming due.
  */
 export type InsightDue = {
   id: string;
@@ -579,7 +598,7 @@ export type InsightDue = {
 };
 
 /**
- * Todos created per day, for a contribution grid.
+ * Issues created per day, for a contribution grid.
  */
 export type InsightCalendar = {
   start: string;
@@ -617,7 +636,7 @@ export type InsightActivity = {
 };
 
 /**
- * A container for todos. Todos point at it through source/sourceID.
+ * A container for issues. Issues point at it through source/sourceID.
  */
 export type Project = {
   /**
@@ -731,7 +750,7 @@ export type GetMeError = GetMeErrors[keyof GetMeErrors];
 
 export type GetMeResponses = {
   /**
-   * A user account.
+   * A workspace's person or App. A person's id is their account id.
    */
   200: User;
 };
@@ -952,7 +971,7 @@ export type DeleteKeyByIdResponses = {
 
 export type DeleteKeyByIdResponse = DeleteKeyByIdResponses[keyof DeleteKeyByIdResponses];
 
-export type GetTodoData = {
+export type GetIssueData = {
   body?: never;
   path?: never;
   query?: {
@@ -991,7 +1010,7 @@ export type GetTodoData = {
      */
     assignee?: string;
     /**
-     * A stage name, or "none" for todos without one.
+     * A stage name, or "none" for issues without one.
      */
     stage?: string;
     /**
@@ -1004,27 +1023,27 @@ export type GetTodoData = {
      */
     createdBy?: string;
     /**
-     * A todo id for its sub-issues, or "none" for top-level todos.
+     * An issue id for its sub-issues, or "none" for top-level issues.
      */
     parentID?: string;
     search?: string;
     /**
-     * Window start (inclusive). Keeps todos whose start-to-due span reaches it.
+     * Window start (inclusive). Keeps issues whose start-to-due span reaches it.
      */
     from?: string;
     /**
-     * Window end (inclusive). Keeps todos whose start-to-due span begins by it.
+     * Window end (inclusive). Keeps issues whose start-to-due span begins by it.
      */
     to?: string;
     /**
-     * Only todos with neither a start nor a due date; a window skips those.
+     * Only issues with neither a start nor a due date; a window skips those.
      */
     unscheduled?: boolean;
   };
-  url: "/todo";
+  url: "/issue";
 };
 
-export type GetTodoErrors = {
+export type GetIssueErrors = {
   /**
    * Bad Request
    */
@@ -1043,14 +1062,14 @@ export type GetTodoErrors = {
   500: ErrorResponse;
 };
 
-export type GetTodoError = GetTodoErrors[keyof GetTodoErrors];
+export type GetIssueError = GetIssueErrors[keyof GetIssueErrors];
 
-export type GetTodoResponses = {
+export type GetIssueResponses = {
   /**
    * A page of results.
    */
   200: {
-    data: Array<Todo>;
+    data: Array<Issue>;
     /**
      * Page number returned.
      */
@@ -1066,9 +1085,9 @@ export type GetTodoResponses = {
   };
 };
 
-export type GetTodoResponse = GetTodoResponses[keyof GetTodoResponses];
+export type GetIssueResponse = GetIssueResponses[keyof GetIssueResponses];
 
-export type PostTodoData = {
+export type PostIssueData = {
   body: {
     /**
      * One-line summary.
@@ -1097,7 +1116,7 @@ export type PostTodoData = {
      */
     sourceID?: string | null;
     /**
-     * The todo this is a sub-issue of. Null at the top level.
+     * The issue this is a sub-issue of. Null at the top level.
      */
     parentID?: string | null;
     status?: "backlog" | "planned" | "active" | "blocked" | "done";
@@ -1112,10 +1131,10 @@ export type PostTodoData = {
   };
   path?: never;
   query?: never;
-  url: "/todo";
+  url: "/issue";
 };
 
-export type PostTodoErrors = {
+export type PostIssueErrors = {
   /**
    * Bad Request
    */
@@ -1134,28 +1153,28 @@ export type PostTodoErrors = {
   500: ErrorResponse;
 };
 
-export type PostTodoError = PostTodoErrors[keyof PostTodoErrors];
+export type PostIssueError = PostIssueErrors[keyof PostIssueErrors];
 
-export type PostTodoResponses = {
+export type PostIssueResponses = {
   /**
    * A unit of work, owned by whatever entity created it.
    */
-  200: Todo;
+  200: Issue;
 };
 
-export type PostTodoResponse = PostTodoResponses[keyof PostTodoResponses];
+export type PostIssueResponse = PostIssueResponses[keyof PostIssueResponses];
 
-export type GetTodoStageData = {
+export type GetIssueStageData = {
   body?: never;
   path?: never;
   query?: {
     source?: string;
     sourceID?: string;
   };
-  url: "/todo/stage";
+  url: "/issue/stage";
 };
 
-export type GetTodoStageErrors = {
+export type GetIssueStageErrors = {
   /**
    * Bad Request
    */
@@ -1174,18 +1193,18 @@ export type GetTodoStageErrors = {
   500: ErrorResponse;
 };
 
-export type GetTodoStageError = GetTodoStageErrors[keyof GetTodoStageErrors];
+export type GetIssueStageError = GetIssueStageErrors[keyof GetIssueStageErrors];
 
-export type GetTodoStageResponses = {
+export type GetIssueStageResponses = {
   /**
-   * A stage label, with the span and counts derived from its todos.
+   * A stage label, with the span and counts derived from its issues.
    */
   200: Array<Stage>;
 };
 
-export type GetTodoStageResponse = GetTodoStageResponses[keyof GetTodoStageResponses];
+export type GetIssueStageResponse = GetIssueStageResponses[keyof GetIssueStageResponses];
 
-export type PatchTodoStageData = {
+export type PatchIssueStageData = {
   body: {
     from: string;
     to: string;
@@ -1194,10 +1213,10 @@ export type PatchTodoStageData = {
   };
   path?: never;
   query?: never;
-  url: "/todo/stage";
+  url: "/issue/stage";
 };
 
-export type PatchTodoStageErrors = {
+export type PatchIssueStageErrors = {
   /**
    * Bad Request
    */
@@ -1216,18 +1235,18 @@ export type PatchTodoStageErrors = {
   500: ErrorResponse;
 };
 
-export type PatchTodoStageError = PatchTodoStageErrors[keyof PatchTodoStageErrors];
+export type PatchIssueStageError = PatchIssueStageErrors[keyof PatchIssueStageErrors];
 
-export type PatchTodoStageResponses = {
+export type PatchIssueStageResponses = {
   /**
    * Deleted.
    */
   200: "ok";
 };
 
-export type PatchTodoStageResponse = PatchTodoStageResponses[keyof PatchTodoStageResponses];
+export type PatchIssueStageResponse = PatchIssueStageResponses[keyof PatchIssueStageResponses];
 
-export type DeleteTodoByIdData = {
+export type DeleteIssueByIdData = {
   body?: never;
   path: {
     /**
@@ -1237,10 +1256,10 @@ export type DeleteTodoByIdData = {
     id: string;
   };
   query?: never;
-  url: "/todo/{id}";
+  url: "/issue/{id}";
 };
 
-export type DeleteTodoByIdErrors = {
+export type DeleteIssueByIdErrors = {
   /**
    * Bad Request
    */
@@ -1263,18 +1282,18 @@ export type DeleteTodoByIdErrors = {
   500: ErrorResponse;
 };
 
-export type DeleteTodoByIdError = DeleteTodoByIdErrors[keyof DeleteTodoByIdErrors];
+export type DeleteIssueByIdError = DeleteIssueByIdErrors[keyof DeleteIssueByIdErrors];
 
-export type DeleteTodoByIdResponses = {
+export type DeleteIssueByIdResponses = {
   /**
    * Deleted.
    */
   200: "ok";
 };
 
-export type DeleteTodoByIdResponse = DeleteTodoByIdResponses[keyof DeleteTodoByIdResponses];
+export type DeleteIssueByIdResponse = DeleteIssueByIdResponses[keyof DeleteIssueByIdResponses];
 
-export type GetTodoByIdData = {
+export type GetIssueByIdData = {
   body?: never;
   path: {
     /**
@@ -1284,10 +1303,10 @@ export type GetTodoByIdData = {
     id: string;
   };
   query?: never;
-  url: "/todo/{id}";
+  url: "/issue/{id}";
 };
 
-export type GetTodoByIdErrors = {
+export type GetIssueByIdErrors = {
   /**
    * Bad Request
    */
@@ -1310,18 +1329,18 @@ export type GetTodoByIdErrors = {
   500: ErrorResponse;
 };
 
-export type GetTodoByIdError = GetTodoByIdErrors[keyof GetTodoByIdErrors];
+export type GetIssueByIdError = GetIssueByIdErrors[keyof GetIssueByIdErrors];
 
-export type GetTodoByIdResponses = {
+export type GetIssueByIdResponses = {
   /**
    * A unit of work, owned by whatever entity created it.
    */
-  200: Todo;
+  200: Issue;
 };
 
-export type GetTodoByIdResponse = GetTodoByIdResponses[keyof GetTodoByIdResponses];
+export type GetIssueByIdResponse = GetIssueByIdResponses[keyof GetIssueByIdResponses];
 
-export type PatchTodoByIdData = {
+export type PatchIssueByIdData = {
   body?: {
     /**
      * One-line summary.
@@ -1366,10 +1385,10 @@ export type PatchTodoByIdData = {
     id: string;
   };
   query?: never;
-  url: "/todo/{id}";
+  url: "/issue/{id}";
 };
 
-export type PatchTodoByIdErrors = {
+export type PatchIssueByIdErrors = {
   /**
    * Bad Request
    */
@@ -1392,21 +1411,21 @@ export type PatchTodoByIdErrors = {
   500: ErrorResponse;
 };
 
-export type PatchTodoByIdError = PatchTodoByIdErrors[keyof PatchTodoByIdErrors];
+export type PatchIssueByIdError = PatchIssueByIdErrors[keyof PatchIssueByIdErrors];
 
-export type PatchTodoByIdResponses = {
+export type PatchIssueByIdResponses = {
   /**
    * A unit of work, owned by whatever entity created it.
    */
-  200: Todo;
+  200: Issue;
 };
 
-export type PatchTodoByIdResponse = PatchTodoByIdResponses[keyof PatchTodoByIdResponses];
+export type PatchIssueByIdResponse = PatchIssueByIdResponses[keyof PatchIssueByIdResponses];
 
-export type PostTodoByIdMoveData = {
+export type PostIssueByIdMoveData = {
   body: {
     /**
-     * The todo this is a sub-issue of. Null at the top level.
+     * The issue this is a sub-issue of. Null at the top level.
      */
     parentID: string | null;
     /**
@@ -1422,10 +1441,10 @@ export type PostTodoByIdMoveData = {
     id: string;
   };
   query?: never;
-  url: "/todo/{id}/move";
+  url: "/issue/{id}/move";
 };
 
-export type PostTodoByIdMoveErrors = {
+export type PostIssueByIdMoveErrors = {
   /**
    * Bad Request
    */
@@ -1448,18 +1467,19 @@ export type PostTodoByIdMoveErrors = {
   500: ErrorResponse;
 };
 
-export type PostTodoByIdMoveError = PostTodoByIdMoveErrors[keyof PostTodoByIdMoveErrors];
+export type PostIssueByIdMoveError = PostIssueByIdMoveErrors[keyof PostIssueByIdMoveErrors];
 
-export type PostTodoByIdMoveResponses = {
+export type PostIssueByIdMoveResponses = {
   /**
    * A unit of work, owned by whatever entity created it.
    */
-  200: Todo;
+  200: Issue;
 };
 
-export type PostTodoByIdMoveResponse = PostTodoByIdMoveResponses[keyof PostTodoByIdMoveResponses];
+export type PostIssueByIdMoveResponse =
+  PostIssueByIdMoveResponses[keyof PostIssueByIdMoveResponses];
 
-export type DeleteTodoByIdLinkData = {
+export type DeleteIssueByIdLinkData = {
   body?: never;
   path: {
     /**
@@ -1474,10 +1494,10 @@ export type DeleteTodoByIdLinkData = {
      */
     url: string;
   };
-  url: "/todo/{id}/link";
+  url: "/issue/{id}/link";
 };
 
-export type DeleteTodoByIdLinkErrors = {
+export type DeleteIssueByIdLinkErrors = {
   /**
    * Bad Request
    */
@@ -1500,19 +1520,19 @@ export type DeleteTodoByIdLinkErrors = {
   500: ErrorResponse;
 };
 
-export type DeleteTodoByIdLinkError = DeleteTodoByIdLinkErrors[keyof DeleteTodoByIdLinkErrors];
+export type DeleteIssueByIdLinkError = DeleteIssueByIdLinkErrors[keyof DeleteIssueByIdLinkErrors];
 
-export type DeleteTodoByIdLinkResponses = {
+export type DeleteIssueByIdLinkResponses = {
   /**
    * A unit of work, owned by whatever entity created it.
    */
-  200: Todo;
+  200: Issue;
 };
 
-export type DeleteTodoByIdLinkResponse =
-  DeleteTodoByIdLinkResponses[keyof DeleteTodoByIdLinkResponses];
+export type DeleteIssueByIdLinkResponse =
+  DeleteIssueByIdLinkResponses[keyof DeleteIssueByIdLinkResponses];
 
-export type PostTodoByIdLinkData = {
+export type PostIssueByIdLinkData = {
   body: Link;
   path: {
     /**
@@ -1522,10 +1542,10 @@ export type PostTodoByIdLinkData = {
     id: string;
   };
   query?: never;
-  url: "/todo/{id}/link";
+  url: "/issue/{id}/link";
 };
 
-export type PostTodoByIdLinkErrors = {
+export type PostIssueByIdLinkErrors = {
   /**
    * Bad Request
    */
@@ -1548,16 +1568,17 @@ export type PostTodoByIdLinkErrors = {
   500: ErrorResponse;
 };
 
-export type PostTodoByIdLinkError = PostTodoByIdLinkErrors[keyof PostTodoByIdLinkErrors];
+export type PostIssueByIdLinkError = PostIssueByIdLinkErrors[keyof PostIssueByIdLinkErrors];
 
-export type PostTodoByIdLinkResponses = {
+export type PostIssueByIdLinkResponses = {
   /**
    * A unit of work, owned by whatever entity created it.
    */
-  200: Todo;
+  200: Issue;
 };
 
-export type PostTodoByIdLinkResponse = PostTodoByIdLinkResponses[keyof PostTodoByIdLinkResponses];
+export type PostIssueByIdLinkResponse =
+  PostIssueByIdLinkResponses[keyof PostIssueByIdLinkResponses];
 
 export type GetInsightsStatsData = {
   body?: never;
@@ -1660,7 +1681,7 @@ export type GetInsightsStatusError = GetInsightsStatusErrors[keyof GetInsightsSt
 
 export type GetInsightsStatusResponses = {
   /**
-   * Todos created in range, by status.
+   * Issues created in range, by status.
    */
   200: InsightStatuses;
 };
@@ -1715,7 +1736,7 @@ export type GetInsightsLoadError = GetInsightsLoadErrors[keyof GetInsightsLoadEr
 
 export type GetInsightsLoadResponses = {
   /**
-   * Todos created in range, by assignee and status.
+   * Issues created in range, by assignee and status.
    */
   200: InsightLoad;
 };
@@ -1761,7 +1782,7 @@ export type GetInsightsDueError = GetInsightsDueErrors[keyof GetInsightsDueError
 
 export type GetInsightsDueResponses = {
   /**
-   * An open todo coming due.
+   * An open issue coming due.
    */
   200: Array<InsightDue>;
 };
@@ -1815,7 +1836,7 @@ export type GetInsightsCalendarError = GetInsightsCalendarErrors[keyof GetInsigh
 
 export type GetInsightsCalendarResponses = {
   /**
-   * Todos created per day, for a contribution grid.
+   * Issues created per day, for a contribution grid.
    */
   200: InsightCalendar;
 };
@@ -1982,7 +2003,7 @@ export type PostProjectError = PostProjectErrors[keyof PostProjectErrors];
 
 export type PostProjectResponses = {
   /**
-   * A container for todos. Todos point at it through source/sourceID.
+   * A container for issues. Issues point at it through source/sourceID.
    */
   200: Project;
 };
@@ -2077,7 +2098,7 @@ export type GetProjectByIdError = GetProjectByIdErrors[keyof GetProjectByIdError
 
 export type GetProjectByIdResponses = {
   /**
-   * A container for todos. Todos point at it through source/sourceID.
+   * A container for issues. Issues point at it through source/sourceID.
    */
   200: Project;
 };
@@ -2138,7 +2159,7 @@ export type PatchProjectByIdError = PatchProjectByIdErrors[keyof PatchProjectByI
 
 export type PatchProjectByIdResponses = {
   /**
-   * A container for todos. Todos point at it through source/sourceID.
+   * A container for issues. Issues point at it through source/sourceID.
    */
   200: Project;
 };
@@ -2191,7 +2212,7 @@ export type DeleteProjectByIdLinkError =
 
 export type DeleteProjectByIdLinkResponses = {
   /**
-   * A container for todos. Todos point at it through source/sourceID.
+   * A container for issues. Issues point at it through source/sourceID.
    */
   200: Project;
 };
@@ -2239,7 +2260,7 @@ export type PostProjectByIdLinkError = PostProjectByIdLinkErrors[keyof PostProje
 
 export type PostProjectByIdLinkResponses = {
   /**
-   * A container for todos. Todos point at it through source/sourceID.
+   * A container for issues. Issues point at it through source/sourceID.
    */
   200: Project;
 };

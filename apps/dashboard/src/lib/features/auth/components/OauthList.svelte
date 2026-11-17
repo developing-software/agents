@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '@agents/ui';
-	import type { ProviderId } from '@agents/core/auth/provider.sql';
+	import type { ProviderId } from '@agents/core/auth/provider.central';
 
 	let { providers }: { providers: ProviderId[] } = $props();
 
