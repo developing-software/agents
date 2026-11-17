@@ -2,7 +2,13 @@ import { invalidateAll } from "$app/navigation";
 import { createMutation } from "@tanstack/svelte-query";
 import { call, read } from "#lib/query.ts";
 import {
+  acceptInvite,
+  declineInvite,
+  enterWorkspace,
   getCurrent,
+  getInvites,
+  getOffers,
+  getVacant,
   getInspect,
   getMembers,
   getMine,
@@ -10,6 +16,7 @@ import {
   getRegistry,
   getUsage,
   retrySetup,
+  revokeInvite,
   switchWorkspace,
 } from "./workspaces.remote";
 
@@ -42,6 +49,21 @@ export const members = () => ({
   queryFn: read(() => getMembers()),
 });
 
+export const vacant = () => ({
+  queryKey: ["workspaces", "vacant"],
+  queryFn: read(() => getVacant()),
+});
+
+export const offers = () => ({
+  queryKey: ["workspaces", "offers"],
+  queryFn: read(() => getOffers()),
+});
+
+export const invites = () => ({
+  queryKey: ["workspaces", "invites"],
+  queryFn: read(() => getInvites()),
+});
+
 export const registry = () => ({
   queryKey: ["workspaces", "registry"],
   queryFn: read(() => getRegistry()),
@@ -66,6 +88,31 @@ export const choose = () =>
   createMutation(() => ({
     mutationFn: call(switchWorkspace),
     onSuccess: () => invalidateAll(),
+  }));
+
+// Entering a workspace swaps every query's tenant, so the whole cache goes, loads too.
+export const accept = () =>
+  createMutation(() => ({
+    mutationFn: call(acceptInvite),
+    onSuccess: () => invalidateAll(),
+  }));
+
+export const arrive = () =>
+  createMutation(() => ({
+    mutationFn: call(enterWorkspace),
+    onSuccess: () => invalidateAll(),
+  }));
+
+export const decline = () =>
+  createMutation(() => ({
+    mutationFn: call(declineInvite),
+    meta: { invalidates: [["workspaces"]] },
+  }));
+
+export const revoke = () =>
+  createMutation(() => ({
+    mutationFn: call(revokeInvite),
+    meta: { invalidates: [["workspaces"]] },
   }));
 
 export const retry = () =>

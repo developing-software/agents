@@ -58,6 +58,17 @@ CREATE TABLE "central"."access" (
 	"time_deleted" timestamp(3) with time zone
 );
 --> statement-breakpoint
+CREATE TABLE "central"."invite" (
+	"id" char(30) NOT NULL,
+	"time_created" timestamp(3) with time zone DEFAULT now() NOT NULL,
+	"time_updated" timestamp(3) with time zone DEFAULT now() NOT NULL,
+	"time_deleted" timestamp(3) with time zone,
+	"workspace_id" char(30) NOT NULL,
+	"email" text NOT NULL,
+	"role" text DEFAULT 'member' NOT NULL,
+	"invited_by" char(30) NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "central"."workspace" (
 	"id" char(30) NOT NULL,
 	"time_created" timestamp(3) with time zone DEFAULT now() NOT NULL,
@@ -89,6 +100,8 @@ CREATE UNIQUE INDEX "key_value" ON "central"."key" ("key");--> statement-breakpo
 CREATE INDEX "key_user" ON "central"."key" ("user_id");--> statement-breakpoint
 CREATE INDEX "key_type" ON "central"."key" ("type");--> statement-breakpoint
 CREATE UNIQUE INDEX "access_user_workspace" ON "central"."access" ("user_id","workspace_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "invite_workspace_email" ON "central"."invite" ("workspace_id","email");--> statement-breakpoint
+CREATE INDEX "invite_email" ON "central"."invite" ("email");--> statement-breakpoint
 CREATE UNIQUE INDEX "workspace_slug" ON "central"."workspace" ("slug");--> statement-breakpoint
 CREATE UNIQUE INDEX "workspace_schema" ON "central"."workspace" ("schema");--> statement-breakpoint
 CREATE UNIQUE INDEX "account_email" ON "central"."account" ("email");

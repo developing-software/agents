@@ -162,7 +162,7 @@ export namespace User {
    * Removed users and disabled accounts are invisible here, which is what locks them out.
    */
   export const fromID = fn(Info.shape.id, async (id) => {
-    if (!Workspace.here()) {
+    if (!Workspace.peek()) {
       const account = await Account.fromID(id);
       return account ? bare(account) : null;
     }
@@ -259,7 +259,7 @@ export namespace User {
       const set = { ...input, timeUpdated: new Date() };
       // The account is the default every new workspace copies; this one changes alongside it.
       await Central.use((tx) => tx.update(AccountTable).set(set).where(eq(AccountTable.id, id)));
-      if (Workspace.here())
+      if (Workspace.peek())
         await Database.use((tx) => tx.update(UserTable).set(set).where(eq(UserTable.id, id)));
     },
   );

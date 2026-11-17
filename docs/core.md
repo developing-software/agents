@@ -47,15 +47,26 @@ and `./src/**/*.sql.ts`, so nesting never affects migrations.
 
 `*.central.ts` tables live in the `central` schema, shared by everyone (accounts, keys, auth,
 queue, kv, the `platform/workspace` registry). `*.sql.ts` tables are unqualified tenant tables:
-`Workspace.provide` sets the transaction's search_path to `public` (single mode, the default)
-or a `ws_*` schema (`WORKSPACES=multi`). Surfaces call `Auth.enter(slug, fn)` once, after
-auth: it enters the workspace through `Workspaces.enter` and re-reads the caller there. Migrations split the same way: `migrations/central` and `migrations/tenant`,
-each bundled to an `index.ts` by `db:generate`, so `Migrations` runs in a Worker too.
+`Workspace.provide` sets the transaction's search_path to the workspace's `ws_*` schema.
+Surfaces call `Auth.enter(slug, fn)` once, after auth: it enters the workspace through
+`Workspaces.enter` and re-reads the caller there. Migrations split the same way:
+`migrations/central` and `migrations/tenant`, each bundled to an `index.ts` by `db:generate`, so
+`Migrations` runs in a Worker too.
 
 Central modules read through `Central.use`/`transaction` (`drizzle/central`), tenant ones through
-`Database`. `Workspaces.create` writes a `pending` row and queues `workspace.setup` (migrate,
-seat the owner, mark `ready`); `resolve` 409s until then. Single mode refuses `create` and
-`resolve` (no switching), and `enter` seats a newcomer on first request (the first one in owns it).
+`Database`. Single and multi mode share one path: every workspace is a registry row with its
+own schema. `WORKSPACES=single` (the default) is only a cap: `create` refuses a second one and
+`enter` uses the one there is, with no pick. `Workspaces.create` writes a `pending` row and
+queues `workspace.setup` (migrate, seat the owner, mark `ready`); `resolve` 409s until then.
+
+Someone in no workspace lands on the dashboard's `/start`: create one (while `vacant`), or join
+one from an invite. `Workspaces.invite` (needs `user:create`; only an owner offers `owner`)
+writes a `central.invite` and mails it; the invitee sees it in `offers` and takes it with
+`accept`, which seats them at its role, or turns it down with `decline`.
+
+`WORKSPACE_SCHEMA` names an ambient schema read when no workspace is provided. It is for scripts
+and tests only (the test preload sets `public`, where `db:push` lays every table); a deployed
+app leaves it unset.
 
 People are split the same way:
 

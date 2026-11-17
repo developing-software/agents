@@ -7,6 +7,7 @@
 	import CreateForm from '../components/CreateForm.svelte';
 	import GeneralForm from '../components/GeneralForm.svelte';
 	import MembersTable from '../components/MembersTable.svelte';
+	import Invites from '../components/Invites.svelte';
 	import Mine from '../components/Mine.svelte';
 
 	const me = user();
@@ -40,6 +41,16 @@
 				<Skeleton h="8em" />
 			{/if}
 		</Section>
+
+		{#if manager}
+			<Section
+				divider
+				title="Invite someone"
+				description="They get an email, and join from the start screen once signed in."
+			>
+				<Invites owner={here.data.role === 'owner'} />
+			</Section>
+		{/if}
 	{:else}
 		<Empty>Pick a workspace to work in.</Empty>
 	{/if}

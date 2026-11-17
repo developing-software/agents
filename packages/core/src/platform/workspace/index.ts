@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, count, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { fn } from "../../util/fn";
 import { Context } from "../../context";
 import { Database } from "../../drizzle";
@@ -43,10 +43,15 @@ export namespace Workspaces {
     .object({
       id: z.string().meta({ description: "Invite id.", example: "inv_01JZ8Q4N2V7T5X3M9K6R1B0C2D" }),
       email: z.email().meta({ description: "Who it was sent to.", example: "ada@example.com" }),
-      role: z.enum(Workspace.roles).meta({ description: "The role they join as.", example: "member" }),
+      role: z
+        .enum(Workspace.roles)
+        .meta({ description: "The role they join as.", example: "member" }),
       timeCreated: z.iso.datetime().meta({ description: "When it was sent." }),
     })
-    .meta({ ref: "WorkspaceInvite", description: "A seat offered to an address, claimed on sign-in." });
+    .meta({
+      ref: "WorkspaceInvite",
+      description: "A seat offered to an address, claimed on sign-in.",
+    });
   export type Invite = z.infer<typeof Invite>;
 
   /**
@@ -97,7 +102,8 @@ export namespace Workspaces {
       name: z.string().min(1).max(120).meta({ description: "Display name.", example: "Acme" }),
     }),
     async (input) => {
-      if (Workspace.mode() === "single") throw single();
+      // Single mode is a cap, not another path: the first workspace is made here too.
+      if (Workspace.mode() === "single" && (await only())) throw single();
       const id = Identifier.create("workspace");
       const schema = Workspace.valid(`ws_${input.slug}`);
       const owner = Identity.peek() && Identity.known() ? Identity.userID() : undefined;
@@ -107,24 +113,26 @@ export namespace Workspaces {
       });
       // Outside the transaction: the `sync` driver runs the job inline, which opens the workspace.
       await job.push({ id, owner });
-      return { id, schema };
+      return { id, slug: input.slug, schema };
     },
   );
 
-  /** The current user's workspaces, read off central access alone, after claiming any invites. */
-  export const list = fn(z.void(), async () => {
-    await claim(Identity.userID());
-    return Central.use((tx) =>
+  /** The current user's workspaces, read off central access alone. */
+  export const list = fn(z.void(), async () =>
+    Central.use((tx) =>
       tx
         .select({ row: WorkspaceTable })
         .from(AccessTable)
         .innerJoin(WorkspaceTable, eq(WorkspaceTable.id, AccessTable.workspaceID))
         .where(and(eq(AccessTable.userID, Identity.userID()), isNull(WorkspaceTable.timeDeleted)))
         .then((rows) => rows.map((item) => serialize(item.row))),
-    );
-  });
+    ),
+  );
 
-  /** The request's workspace with the caller's role, or `undefined` in multi mode before one is picked. */
+  /** Whether a workspace can still be started: always in multi mode, only the first in single. */
+  export const vacant = fn(z.void(), async () => Workspace.mode() === "multi" || !(await only()));
+
+  /** The request's workspace with the caller's role, or `undefined` before one is entered. */
   export const current = fn(z.void(), async () => {
     const row = await here();
     if (!row) return;
@@ -208,13 +216,16 @@ export namespace Workspaces {
   export const invite = fn(
     z.object({
       email: Invite.shape.email,
-      role: Invite.shape.role.default("member"),
+      role: Invite.shape.role
+        .optional()
+        .meta({ description: "The role they join as; member by default." }),
     }),
     async (input) => {
       const row = await here();
       if (!row) throw forbidden();
       Identity.check({ user: ["create"] });
-      if (input.role === "owner" && Workspace.peek()?.role !== "owner")
+      const role = input.role ?? "member";
+      if (role === "owner" && Workspace.peek()?.role !== "owner")
         throw new VisibleError(
           "forbidden",
           ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
@@ -239,15 +250,21 @@ export namespace Workspaces {
       const saved = await Central.use((tx) =>
         tx
           .insert(InviteTable)
-          .values({ id: Identifier.create("invite"), workspaceID: row.id, email, role: input.role, invitedBy: by })
+          .values({
+            id: Identifier.create("invite"),
+            workspaceID: row.id,
+            email,
+            role,
+            invitedBy: by,
+          })
           .onConflictDoUpdate({
             target: [InviteTable.workspaceID, InviteTable.email],
-            set: { role: input.role, invitedBy: by, timeUpdated: new Date() },
+            set: { role, invitedBy: by, timeUpdated: new Date() },
           })
           .returning()
           .then((rows) => rows[0]!),
       );
-      await Template.Send.invite(email, input.role);
+      await Template.Send.invite(email, role);
       return pending(saved);
     },
   );
@@ -279,20 +296,11 @@ export namespace Workspaces {
     );
   });
 
-  /** What signing in does: claims invites, and in single mode seats the account in the one workspace. */
-  export async function arrive(id: string) {
-    await claim(id);
-    if (Workspace.mode() === "single") await join(Workspace.single().schema, id);
-  }
-
-  /**
-   * Seats the account in every ready workspace that invited its address, then spends those
-   * invites. Runs at sign-in and when listing one's workspaces, so a live session picks them up.
-   */
-  export async function claim(id: string) {
-    const account = await Account.fromID(id);
-    if (!account) return;
-    const offers = await Central.use((tx) =>
+  /** Invites waiting for the caller's address, each with the workspace it opens. */
+  export const offers = fn(z.void(), async () => {
+    const account = await Account.fromID(Identity.self({ user: ["read"] }));
+    if (!account) return [];
+    return Central.use((tx) =>
       tx
         .select({ invite: InviteTable, row: WorkspaceTable })
         .from(InviteTable)
@@ -300,38 +308,72 @@ export namespace Workspaces {
         .where(
           and(
             eq(InviteTable.email, account.email.toLowerCase()),
-            eq(WorkspaceTable.status, "ready"),
             isNull(WorkspaceTable.timeDeleted),
           ),
+        )
+        .orderBy(sql`${InviteTable.timeCreated} desc`)
+        .then((rows) =>
+          rows.map((one) => ({ ...pending(one.invite), workspace: serialize(one.row) })),
         ),
     );
-    for (const offer of offers) {
-      // An invite brings back someone removed earlier, at the role it offers.
-      await inside(offer.row, { schema: offer.row.schema }, () =>
-        Database.use((tx) =>
-          tx
-            .insert(UserTable)
-            .values({ id: account.id, name: account.name, email: account.email, image: account.image, role: offer.invite.role })
-            .onConflictDoUpdate({
-              target: UserTable.email,
-              set: { role: offer.invite.role, timeDeleted: null, timeUpdated: new Date() },
-            }),
-        ),
+  });
+
+  /** Takes an invite meant for the caller's address: seats them at its role and spends it. */
+  export const accept = fn(z.object({ id: Invite.shape.id }), async (input) => {
+    const account = await Account.fromID(Identity.self({ user: ["update"] }));
+    const offer = account ? await mine(input.id, account.email) : undefined;
+    if (!account || !offer)
+      throw new VisibleError("not_found", ErrorCodes.NotFound.RESOURCE_NOT_FOUND, "No such invite");
+    if (offer.row.status !== "ready")
+      throw new VisibleError(
+        "conflict",
+        ErrorCodes.Conflict.NOT_READY,
+        "Workspace is still being set up",
       );
-      await Central.transaction(async (tx) => {
-        await tx
-          .insert(AccessTable)
-          .values({ userID: account.id, workspaceID: offer.row.id })
-          .onConflictDoNothing();
-        await tx.delete(InviteTable).where(eq(InviteTable.id, offer.invite.id));
-      });
-    }
-  }
+    // An invite brings back someone removed earlier, at the role it offers.
+    await inside(offer.row, { schema: offer.row.schema }, () =>
+      Database.use((tx) =>
+        tx
+          .insert(UserTable)
+          .values({
+            id: account.id,
+            name: account.name,
+            email: account.email,
+            image: account.image,
+            role: offer.invite.role,
+          })
+          .onConflictDoUpdate({
+            target: UserTable.email,
+            set: { role: offer.invite.role, timeDeleted: null, timeUpdated: new Date() },
+          }),
+      ),
+    );
+    await Central.transaction(async (tx) => {
+      await tx
+        .insert(AccessTable)
+        .values({ userID: account.id, workspaceID: offer.row.id })
+        .onConflictDoNothing();
+      await tx.delete(InviteTable).where(eq(InviteTable.id, offer.invite.id));
+    });
+    return serialize(offer.row);
+  });
+
+  /** Turns an invite down; the workspace can send another. */
+  export const decline = fn(z.object({ id: Invite.shape.id }), async (input) => {
+    const account = await Account.fromID(Identity.self({ user: ["update"] }));
+    if (!account) return;
+    await Central.use((tx) =>
+      tx
+        .delete(InviteTable)
+        .where(
+          and(eq(InviteTable.id, input.id), eq(InviteTable.email, account.email.toLowerCase())),
+        ),
+    );
+  });
 
   /** Every workspace for the back office, member counts read off central access in one query. */
   export const registry = fn(z.void(), async () => {
     Identity.assert.superadmin("Only a superadmin can list every workspace");
-    if (Workspace.mode() === "single") await fallback();
     return Central.use((tx) =>
       tx
         .select({
@@ -485,29 +527,31 @@ export namespace Workspaces {
   /** What a request runs in, which is also the switch check. Single mode has only the one. */
   export async function resolve(slug: string) {
     if (Workspace.mode() === "single") throw single();
-    return (await locate(slug)).info;
+    const found = await locate(slug);
+    if (!found) throw forbidden();
+    return found.info;
   }
 
   /**
    * Runs `fn` in the request's workspace; surfaces reach it through `Auth.enter`. An App runs in
-   * its own. Single mode ignores `slug` and seats a newcomer; multi mode needs a slug and a
-   * known caller, else `fn` runs with none.
+   * its own. Multi mode enters the `slug` picked; single mode its one workspace. Without a
+   * known caller, or before they belong anywhere, `fn` runs with none: the first-access screen.
    */
   export async function enter<R>(slug: string | undefined, fn: () => Promise<R>) {
     const info = Identity.peek();
     if (info?.type === "system") return open(info.properties.workspace, fn);
-    if (Workspace.mode() === "single") {
-      const schema = Workspace.single().schema;
-      const role = info && Identity.known() ? await join(schema) : undefined;
-      return Workspace.provide({ schema, role }, fn);
-    }
-    if (!slug || !info || !Identity.known()) return fn();
-    const found = await locate(slug);
-    return inside(found.row, found.info, fn);
+    if (!info || !Identity.known()) return fn();
+    // Multi mode refuses a pick you can't enter; single mode has no pick to refuse.
+    const multi = Workspace.mode() === "multi";
+    const pick = multi ? slug : (await only())?.slug;
+    const found = pick ? await locate(pick, multi) : undefined;
+    return found ? inside(found.row, found.info, fn) : fn();
   }
 
   /** Runs `fn` in the ready workspace on `schema`, unchecked: for an App's own key or replay. */
   export async function open<R>(schema: string, fn: () => Promise<R>) {
+    // Scripts and tests read one ambient schema with no registry row behind it.
+    if (schema === Database.ambient()) return Workspace.provide({ schema }, fn);
     const row = await Central.use((tx) =>
       tx
         .select()
@@ -540,8 +584,8 @@ export namespace Workspaces {
 
   // === UTILS ===
 
-  // Unknown slugs and outsiders both get a 403, so slugs don't leak.
-  async function locate(slug: string) {
+  // Unknown slugs and outsiders both get a 403, so slugs don't leak. `strict` off answers nothing instead.
+  async function locate(slug: string, strict = true) {
     const user = Identity.userID();
     const row = await Central.use((tx) =>
       tx
@@ -554,7 +598,9 @@ export namespace Workspaces {
         .where(and(eq(WorkspaceTable.slug, slug), isNull(WorkspaceTable.timeDeleted)))
         .then((rows) => rows.at(0)?.row),
     );
+    if (!row && !strict) return;
     if (!row) throw forbidden();
+    if (row.status !== "ready" && !strict) return;
     if (row.status !== "ready")
       throw new VisibleError(
         "conflict",
@@ -562,6 +608,7 @@ export namespace Workspaces {
         "Workspace is still being set up",
       );
     const member = await inside(row, { schema: row.schema }, () => held(user));
+    if (!member && !strict) return;
     if (!member) throw forbidden();
     return { row, info: { schema: row.schema, role: member.role } satisfies Workspace.Info };
   }
@@ -585,7 +632,7 @@ export namespace Workspaces {
     return new VisibleError(
       "conflict",
       ErrorCodes.Conflict.SINGLE_WORKSPACE,
-      "This app runs a single workspace: it can't create or switch workspaces",
+      "This app runs a single workspace: it can't create another or switch",
     );
   }
 
@@ -602,9 +649,8 @@ export namespace Workspaces {
     );
   }
 
-  /** The request workspace's row: single mode's default, or the one `enter` provided. */
+  /** The row of the workspace `enter` provided. */
   async function here() {
-    if (Workspace.mode() === "single") return fallback();
     const info = Workspace.peek();
     if (!info) return;
     return Central.use((tx) =>
@@ -616,30 +662,29 @@ export namespace Workspaces {
     );
   }
 
-  // Single mode never runs `create`, so its registry row is seated on first read.
-  async function fallback() {
-    const schema = Workspace.single().schema;
-    await Central.use((tx) =>
-      tx
-        .insert(WorkspaceTable)
-        .values({
-          id: Identifier.create("workspace"),
-          slug: "default",
-          name: "Workspace",
-          schema,
-          status: "ready",
-        })
-        .onConflictDoNothing(),
-    );
-    const row = await Central.use((tx) =>
+  /** Single mode's one workspace: the first ever made, if any. */
+  function only() {
+    return Central.use((tx) =>
       tx
         .select()
         .from(WorkspaceTable)
-        .where(eq(WorkspaceTable.schema, schema))
+        .where(isNull(WorkspaceTable.timeDeleted))
+        .orderBy(WorkspaceTable.timeCreated)
+        .limit(1)
         .then((rows) => rows.at(0)),
     );
-    if (!row) throw new Error(`Slug "default" is taken by a schema other than ${schema}`);
-    return row;
+  }
+
+  /** An invite by id, only if it is addressed to `email`. */
+  function mine(id: string, email: string) {
+    return Central.use((tx) =>
+      tx
+        .select({ invite: InviteTable, row: WorkspaceTable })
+        .from(InviteTable)
+        .innerJoin(WorkspaceTable, eq(WorkspaceTable.id, InviteTable.workspaceID))
+        .where(and(eq(InviteTable.id, id), eq(InviteTable.email, email.toLowerCase())))
+        .then((rows) => rows.at(0)),
+    );
   }
 
   /** The caller's live row in whichever schema is provided. */
@@ -666,39 +711,6 @@ export namespace Workspaces {
           role,
         })
         .onConflictDoNothing(),
-    );
-  }
-
-  // Single mode has no setup job to seat anyone: the first to arrive owns it, the rest join
-  // as members. Returns the caller's role; nothing for an App, a removed user or no account.
-  async function join(schema: string, user = Identity.userID()) {
-    const found = await Workspace.provide({ schema }, () =>
-      Database.use((tx) =>
-        tx
-          .select({ role: UserTable.role, timeDeleted: UserTable.timeDeleted })
-          .from(UserTable)
-          .where(eq(UserTable.id, user))
-          .then((rows) => rows.at(0)),
-      ),
-    );
-    if (found) return found.timeDeleted ? undefined : found.role;
-    const account = await Account.fromID(user);
-    if (!account) return;
-    const row = await fallback();
-    await Central.use((tx) =>
-      tx.insert(AccessTable).values({ userID: user, workspaceID: row.id }).onConflictDoNothing(),
-    );
-    return Workspace.provide({ schema }, () =>
-      Database.transaction(async (tx) => {
-        const empty = await tx
-          .select({ n: count() })
-          .from(UserTable)
-          .where(eq(UserTable.kind, "human"))
-          .then((rows) => (rows[0]?.n ?? 0) === 0);
-        const role: Workspace.Role = empty ? "owner" : "member";
-        await seat(account, role);
-        return role;
-      }),
     );
   }
 

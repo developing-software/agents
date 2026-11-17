@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import TENANT from "../migrations/tenant";
 import { Database, and, eq, ne, sql } from "../src/drizzle";
+import { Auth } from "../src/auth";
 import { Identity } from "../src/identity";
+import { Email } from "../src/lib/email";
 import { Queue } from "../src/lib/queue";
 import { memory } from "../src/lib/queue/adapter/memory";
 import { Project } from "../src/project";
@@ -118,40 +120,27 @@ describe("workspace", () => {
     expect(Workspace.valid("public")).toBe("public");
   });
 
-  it("single mode ignores the slug", async () => {
-    expect(Workspace.mode()).toBe("single");
-    expect(await Workspaces.enter("anything", async () => Workspace.peek())).toEqual({
-      schema: "public",
-    });
+  it("enters nothing for a caller nobody knows", async () => {
+    expect(await Workspaces.enter("anything", async () => Workspace.provided())).toBeUndefined();
   });
 });
 
 describe("single mode", () => {
-  const boss = createUser({ name: "Boss", email: testEmail() });
-
-  it("seats a default row and the caller on first read", async () => {
-    const id = (await boss).id;
-    const first = await as(id, () => Workspaces.current());
-    expect(first).toMatchObject({ slug: "default", status: "ready" });
-    expect(first?.role).toBeDefined();
-    expect((await as(id, () => Workspaces.current()))?.id).toBe(first?.id);
-    const people = await as(id, () => Workspaces.members());
-    expect(people.map((one) => one.userID)).toContain(id);
+  it("enters its one workspace for a member, and nothing for anyone else", async () => {
+    expect(Workspace.mode()).toBe("single");
+    const here = await as(owner.id, () =>
+      Workspaces.enter(undefined, async () => Workspace.provided()),
+    );
+    expect(here).toEqual({ schema: `ws_${slugs.a}`, role: "owner" });
+    const none = await as(stranger.id, () =>
+      Workspaces.enter(undefined, async () => Workspace.provided()),
+    );
+    expect(none).toBeUndefined();
   });
 
-  it("lets an owner rename it but never move its slug", async () => {
-    const id = (await boss).id;
-    // Earlier tests may have seated someone first; make this caller an owner outright.
-    await Database.use((tx) =>
-      tx.update(UserTable).set({ role: "owner" }).where(eq(UserTable.id, id)),
-    );
-    const row = await as(id, () => Workspaces.current());
-    if (!row) throw new Error("no default workspace");
-    const next = await as(id, () => Workspaces.update({ id: row.id, name: `Renamed ${tag}` }));
-    expect(next.name).toBe(`Renamed ${tag}`);
-    await expect(
-      as(id, () => Workspaces.update({ id: row.id, name: "x", slug: `moved_${tag}` })),
-    ).rejects.toThrow(/single workspace/);
+  it("is no longer vacant once a workspace exists", async () => {
+    expect(await as(owner.id, () => Workspaces.vacant())).toBe(false);
+    expect(await multi(() => as(owner.id, () => Workspaces.vacant()))).toBe(true);
   });
 
   it("refuses create and switch", async () => {
@@ -163,6 +152,10 @@ describe("single mode", () => {
     );
   });
 });
+
+// Through `Auth.enter`, which re-reads the caller's role inside the workspace.
+const inA = <R>(id: string, fn: () => Promise<R>) =>
+  multi(() => as(id, () => Auth.enter(slugs.a, fn)));
 
 describe("workspace roles", () => {
   // Seats the stranger in `a` as a plain member, inline rather than through an invite flow.
@@ -179,9 +172,6 @@ describe("workspace roles", () => {
     );
   });
 
-  const inA = <R>(id: string, fn: () => Promise<R>) =>
-    multi(() => as(id, () => Workspaces.enter(slugs.a, fn)));
-
   it("keeps a member from editing or reassigning", async () => {
     const row = await inA(stranger.id, () => Workspaces.current());
     expect(row?.role).toBe("member");
@@ -189,14 +179,14 @@ describe("workspace roles", () => {
       await fail(inA(stranger.id, () => Workspaces.update({ id: row?.id ?? "", name: "nope" }))),
     ).toMatch(/owner or admin/);
     expect(
-      await fail(inA(stranger.id, () => Workspaces.role({ userID: stranger.id, role: "owner" }))),
-    ).toMatch(/owner or admin/);
+      await fail(inA(stranger.id, () => Workspaces.role({ userID: owner.id, role: "member" }))),
+    ).toMatch(/user:assign/);
   });
 
   it("never changes your own role, nor demotes the last owner", async () => {
     expect(
       await fail(inA(owner.id, () => Workspaces.role({ userID: owner.id, role: "member" }))),
-    ).toMatch(/your own role/);
+    ).toMatch(/your own account/);
     await inA(owner.id, () => Workspaces.role({ userID: stranger.id, role: "owner" }));
     await inA(stranger.id, () => Workspaces.role({ userID: owner.id, role: "admin" }));
     expect(
@@ -225,7 +215,7 @@ describe("workspace roles", () => {
 
 describe("workspace admin", () => {
   const admin = <R>(fn: () => R) =>
-    Identity.provide("user", { userID: owner.id, role: "admin" }, fn);
+    Identity.provide("user", { userID: owner.id, superadmin: true }, fn);
 
   it("inspects one workspace from inside it", async () => {
     const found = await admin(() => Workspaces.inspect({ slug: slugs.a }));
@@ -255,13 +245,74 @@ describe("workspace admin", () => {
     expect(ours.every((one) => one.bytes > 0)).toBe(true);
     const [a] = await admin(() => Workspaces.usage({ slug: slugs.a }));
     expect(a?.schema).toBe(`ws_${slugs.a}`);
-    expect(a?.breakdown.map((one) => one.name)).toContain("member");
+    expect(a?.breakdown.map((one) => one.name)).toContain("user");
     expect(a?.tables).toBe(a?.breakdown.length);
   });
 
-  it("is closed to a member", () => {
+  it("is closed to anyone but a superadmin", () => {
     expect(() => as(stranger.id, () => Workspaces.inspect({ slug: slugs.a }))).toThrow(
-      /admin:read/,
+      /superadmin/,
     );
+  });
+});
+
+describe("invites", () => {
+  const guest = createUser({ name: "Guest", email: testEmail() });
+  const inB = <R>(id: string, fn: () => Promise<R>) =>
+    multi(() => as(id, () => Auth.enter(slugs.b, fn)));
+  const sent: string[] = [];
+  const mail = <R>(fn: () => Promise<R>) =>
+    Email.provide({ send: async (msg) => void sent.push(msg.subject) }, fn);
+
+  it("mails the address and lists it until it is taken", async () => {
+    const { email } = await guest;
+    const offered = await mail(() => inB(owner.id, () => Workspaces.invite({ email })));
+    expect(offered).toMatchObject({ email: email.toLowerCase(), role: "member" });
+    expect(sent.at(-1)).toMatch(/invited you to/);
+    expect((await inB(owner.id, () => Workspaces.invites())).map((one) => one.email)).toContain(
+      email.toLowerCase(),
+    );
+  });
+
+  it("accepting seats the invitee at its role and spends it", async () => {
+    const id = (await guest).id;
+    const offers = await as(id, () => Workspaces.offers());
+    expect(offers.map((one) => one.workspace.slug)).toEqual([slugs.b]);
+    await as(id, () => Workspaces.accept({ id: offers[0]!.id }));
+    expect(await as(id, () => Workspaces.offers())).toEqual([]);
+    expect(await inB(id, () => Workspaces.current())).toMatchObject({
+      slug: slugs.b,
+      role: "member",
+    });
+  });
+
+  it("only an owner offers ownership, and a member can't invite at all", async () => {
+    // `owner` was demoted to admin in `a` by the roles suite; the guest is a member of `b`.
+    expect(
+      await fail(
+        mail(() => inA(owner.id, () => Workspaces.invite({ email: testEmail(), role: "owner" }))),
+      ),
+    ).toMatch(/Only an owner/);
+    const id = (await guest).id;
+    expect(await fail(inB(id, () => Workspaces.invite({ email: testEmail() })))).toMatch(
+      /user:create/,
+    );
+  });
+
+  it("refuses to invite someone already in", async () => {
+    const { email } = await guest;
+    expect(await fail(mail(() => inB(owner.id, () => Workspaces.invite({ email }))))).toMatch(
+      /already in this workspace/,
+    );
+  });
+
+  it("declining drops it, and nobody else can take it", async () => {
+    const other = await createUser({ name: "Other", email: testEmail() });
+    const sent = await mail(() => inB(owner.id, () => Workspaces.invite({ email: other.email })));
+    expect(await fail(as(stranger.id, () => Workspaces.accept({ id: sent.id })))).toMatch(
+      /No such invite/,
+    );
+    await as(other.id, () => Workspaces.decline({ id: sent.id }));
+    expect(await as(other.id, () => Workspaces.offers())).toEqual([]);
   });
 });

@@ -43,7 +43,7 @@ The one entrypoint that runs and talks to the template. Bun-only, no build step 
 - Output goes through `output()` in `api.ts`: JSON to stdout, errors to stderr with a
   non-zero exit. Keep the CLI pipeable.
 - Env read by this package: `API_URL`, `AUTH_URL`, `TEMPLATE_TOKEN`, `PORT`, `API_PORT`, `MCP_PORT`,
-  `DATABASE_URL`, `AUTH_PERSIST`, `XDG_CONFIG_HOME`, `WORKSPACE_SCHEMA` (via `Migrations.apply`).
+  `DATABASE_URL`, `AUTH_PERSIST`, `XDG_CONFIG_HOME`.
 
 ## Tests
 

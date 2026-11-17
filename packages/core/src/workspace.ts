@@ -25,22 +25,22 @@ export namespace Workspace {
     return Database.Tenant.provide(info, fn);
   }
 
-  export function peek() {
+  /** Only a workspace someone provided, never the ambient one: what a job stamp should carry. */
+  export function provided() {
     return Database.Tenant.peek();
   }
 
-  /** The workspace tenant tables read from: the provided one, else single mode's. Multi mode without one has none. */
-  export function here() {
-    return peek() ?? (mode() === "single" ? single() : undefined);
+  /** The workspace the request runs in, else `Database.ambient`'s (scripts and tests only). */
+  export function peek(): Info | undefined {
+    const schema = Database.ambient();
+    return Database.Tenant.peek() ?? (schema ? { schema } : undefined);
   }
 
-  /** `WORKSPACES=multi` gives each workspace its own schema; `single` (default) shares one. */
+  /**
+   * `single` (default) caps the app at one workspace and enters it without a pick; `multi` allows
+   * any number, picked per request. Every workspace is a registry row with its own schema either way.
+   */
   export function mode() {
     return process.env.WORKSPACES === "multi" ? "multi" : "single";
-  }
-
-  /** The one workspace of a single-workspace app: `WORKSPACE_SCHEMA` › `public`. */
-  export function single(): Info {
-    return { schema: valid(process.env.WORKSPACE_SCHEMA ?? "public") };
   }
 }

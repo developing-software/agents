@@ -7,10 +7,7 @@ import { Database, sql } from "./index";
 
 // The sets are bundled into modules by `bundle.ts`, so nothing here reads the disk: a worker runs it too.
 export namespace Migrations {
-  /**
-   * Central first (journal in `drizzle.__drizzle_migrations`), then the tenant set into the
-   * single-mode schema (`public` by default) and every registered workspace.
-   */
+  /** Central first (journal in `drizzle.__drizzle_migrations`), then the tenant set into every registered workspace. */
   export async function apply(url = process.env.DATABASE_URL ?? Database.DEFAULT_URL) {
     const client = Database.connect(url, { max: 1 });
     await Database.provide(client, async () => {
@@ -19,8 +16,7 @@ export namespace Migrations {
       const rows = await Central.use((tx) =>
         tx.execute<{ schema: string }>(sql`select schema from central.workspace`, "objects"),
       );
-      const schemas = new Set([Workspace.single().schema, ...rows.map((row) => row.schema)]);
-      for (const schema of schemas) await tenant(schema);
+      for (const row of rows) await tenant(row.schema);
     });
     await Database.release(client);
   }

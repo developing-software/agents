@@ -196,7 +196,7 @@ export namespace Identity {
   /** The current identity as a queue can carry it, or null for public. */
   export function stamp(): Stamp | null {
     const info = use();
-    const workspace = Workspace.peek();
+    const workspace = Workspace.provided();
     if (info.type === "public") return null;
     if (info.type === "internal")
       return {

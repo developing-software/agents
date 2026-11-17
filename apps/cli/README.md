@@ -30,8 +30,7 @@ template-cli db migrate --workspace ws_acme # one tenant schema only
 ```
 
 Runs drizzle-orm's migrator under Bun: `migrations/central` first (journal in
-`drizzle.__drizzle_migrations`), then `migrations/tenant` into the single-mode schema
-(`WORKSPACE_SCHEMA` › `public`) and every schema in `central.workspace`, each keeping its own
+`drizzle.__drizzle_migrations`), then `migrations/tenant` into every schema in `central.workspace`, each keeping its own
 journal. The sets are bundled into `migrations/{central,tenant}/index.ts` by `db:generate`, so it reads
 no files at runtime.
 

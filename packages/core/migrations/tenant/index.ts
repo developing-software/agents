@@ -34,9 +34,9 @@ const migrations: MigrationMeta[] = [
       '\nCREATE UNIQUE INDEX "user_email" ON "user" ("email");',
     ],
     bps: true,
-    folderMillis: 1794880822000,
+    folderMillis: 1794882958000,
     hash: "fde86b053598517dc40d370c1a4fddd4decca364e31474fb6ed0f2aa237d865d",
-    name: "20261117020022_past_malcolm_colcord",
+    name: "20261117023558_kind_daredevil",
   },
 ];
 export default migrations;

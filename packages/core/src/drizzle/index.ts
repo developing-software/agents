@@ -166,9 +166,17 @@ export namespace Database {
     return result as T;
   }
 
+  /**
+   * The schema to read when no workspace is provided: `WORKSPACE_SCHEMA`, for scripts and tests.
+   * Unset in a deployed app, where tenant work always enters a workspace.
+   */
+  export function ambient() {
+    return process.env.WORKSPACE_SCHEMA;
+  }
+
   // `public` is already on the default search_path, so it needs no transaction.
   function path() {
-    const schema = Tenant.peek()?.schema;
+    const schema = Tenant.peek()?.schema ?? ambient();
     if (schema === "public") return;
     return schema;
   }

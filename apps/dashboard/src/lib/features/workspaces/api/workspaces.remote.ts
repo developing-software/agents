@@ -16,6 +16,12 @@ export const getMine = remote.core(Workspaces.list).query();
 
 export const getMembers = remote.core(Workspaces.members).query();
 
+export const getVacant = remote.core(Workspaces.vacant).query();
+
+export const getOffers = remote.core(Workspaces.offers).query();
+
+export const getInvites = remote.core(Workspaces.invites).query();
+
 // Sizes join in by schema: two queries in all, never one per workspace. Biggest first.
 export const getRegistry = remote.query(z.void(), async () => {
   const rows = await Workspaces.registry();
@@ -58,3 +64,29 @@ export const switchWorkspace = remote.command(
 );
 
 export const retrySetup = remote.core(Workspaces.retry).command();
+
+export const inviteMember = remote.form(Workspaces.invite.schema, (input) =>
+  Workspaces.invite(input),
+);
+
+export const revokeInvite = remote.core(Workspaces.uninvite).command();
+
+// Joining is also the pick: multi mode pins the cookie so the next request lands inside it.
+export const acceptInvite = remote.command(Workspaces.accept.schema, async (input) => {
+  const joined = await Workspaces.accept(input);
+  if (Workspace.mode() === "multi") pin(joined.slug);
+  return joined;
+});
+
+export const declineInvite = remote.core(Workspaces.decline).command();
+
+// A just-created workspace is entered once its setup job marks it ready.
+export const enterWorkspace = remote.command(
+  z.object({ slug: Workspaces.Info.shape.slug }),
+  async (input) => {
+    if (Workspace.mode() === "multi") {
+      await Workspaces.resolve(input.slug);
+      pin(input.slug);
+    }
+  },
+);

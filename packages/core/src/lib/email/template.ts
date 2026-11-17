@@ -55,7 +55,9 @@ export namespace Template {
           text(bold(input.inviter), ` invited you to join as ${input.role}.`),
           text("Sign in with this address and the workspace is waiting for you."),
           button("Accept invite", input.url),
-          small("If you weren't expecting this, you can ignore it: nothing happens until you sign in."),
+          small(
+            "If you weren't expecting this, you can ignore it: nothing happens until you sign in.",
+          ),
           rule(),
           small("– The Team"),
         ]),
@@ -93,7 +95,7 @@ export namespace Template {
 
     /** From whoever is acting, into the workspace the request runs in. */
     export async function invite(email: string, role: string) {
-      const schema = Workspace.here()?.schema;
+      const schema = Workspace.peek()?.schema;
       if (!schema) return;
       const [inviter, workspace] = await Promise.all([
         User.fromID(Identity.userID()),

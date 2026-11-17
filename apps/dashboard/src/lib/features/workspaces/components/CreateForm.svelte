@@ -3,6 +3,9 @@
 	import { invalidate } from '#lib/query.ts';
 	import { createWorkspace } from '../api/workspaces.remote';
 
+	// `oncreated` hands back the slug, for a caller that waits to enter it.
+	let { oncreated }: { oncreated?: (slug: string) => void } = $props();
+
 	let el = $state<HTMLFormElement>();
 	const issues = $derived(createWorkspace.fields.allIssues() ?? []);
 </script>
@@ -17,9 +20,12 @@
 		bind:this={el}
 		{...createWorkspace.enhance(async (f) => {
 			await f.submit();
+			const made = createWorkspace.result;
+			if (!made) return;
 			await invalidate(['workspaces']);
 			el?.reset();
 			toast.success('Workspace created');
+			oncreated?.(made.slug);
 		})}
 	>
 		<Field label="Name">

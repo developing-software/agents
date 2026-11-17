@@ -32,6 +32,9 @@ process.env.DATABASE_URL ??= `postgresql://postgres:password@${host}:${port}/pos
 process.env.QUEUE_DRIVER ??= "memory";
 // Same for kv: its `pg` default needs a runner, and the kv suite builds its own drivers.
 process.env.KV_DRIVER ??= "memory";
+// `db:push` lays every table into `public`; tests read it as the ambient workspace, so a case
+// needs no `enter`. Workspace suites still provide their own.
+process.env.WORKSPACE_SCHEMA ??= "public";
 
 const db = await PGlite.create({
   // dataDir: "/tmp/pglite/hono"

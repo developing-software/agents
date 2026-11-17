@@ -7,15 +7,16 @@ import { Email } from "../src/lib/email";
 import { Key } from "../src/platform/key";
 import { Delegation } from "../src/auth/delegation";
 import { Limit } from "../src/lib/limit";
+import { Account } from "../src/user/account";
 import { createUser, testEmail } from "./util";
 
 describe("auth", () => {
-  it("link creates a user on first sight", async () => {
+  it("link creates an account on first sight, in no workspace yet", async () => {
     const email = testEmail();
     const userID = await Auth.link({ provider: "email", accountId: email, email });
 
-    const user = await User.fromID(userID);
-    expect(user?.email).toBe(email);
+    expect((await Account.fromID(userID))?.email).toBe(email);
+    expect(await User.fromID(userID)).toBeNull();
   });
 
   it("link is idempotent for the same provider identity", async () => {
@@ -44,12 +45,11 @@ describe("auth", () => {
     expect(a).not.toBe(b);
   });
 
-  it("link refuses an App account", async () => {
+  it("never signs in as an App, which has no account", async () => {
     const email = testEmail();
-    await createUser({ name: "CI", email, kind: "system" });
-    await expect(Auth.link({ provider: "email", accountId: email, email })).rejects.toThrow(
-      "App accounts can't log in",
-    );
+    const app = await createUser({ name: "CI", email, kind: "system" });
+    expect(await Account.fromID(app.id)).toBeUndefined();
+    expect(await Auth.link({ provider: "email", accountId: email, email })).not.toBe(app.id);
   });
 });
 
@@ -127,8 +127,7 @@ describe("auth code", () => {
     const email = testEmail();
     const userID = await Auth.Code.verify({ email, code: await code(email) });
 
-    const user = await User.fromID(userID);
-    expect(user?.email).toBe(email);
+    expect((await Account.fromID(userID))?.email).toBe(email);
   });
 
   it("a second code for a known address lands on the same user", async () => {

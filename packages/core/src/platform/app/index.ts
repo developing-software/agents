@@ -121,7 +121,7 @@ export namespace App {
     { title: "Update app", description: "Rename an app or change its avatar. Admin-only." },
   );
 
-  /** Disables the account. Its keys stop resolving at once, and its webhooks stop with them. */
+  /** Removes the App: its keys and inbound secret are deleted, and its webhooks go with them. */
   export const remove = fn(
     Info.shape.id,
     async (id) => {
@@ -131,6 +131,8 @@ export namespace App {
         await tx.update(UserTable).set({ timeDeleted: new Date() }).where(eq(UserTable.id, id));
         for (const hook of await Webhook.list(id)) await Webhook.remove(hook.id);
       });
+      // Central, so not in that transaction; a key left behind still can't resolve a removed App.
+      await Central.use((tx) => tx.delete(KeyTable).where(eq(KeyTable.userID, id)));
     },
     {
       title: "Remove app",
@@ -237,7 +239,7 @@ export namespace App {
           .then((rows) => rows.at(0)),
       );
       const fresh = Number.isFinite(time) && Math.abs(Date.now() / 1000 - time) <= SKEW;
-      const expected = held && fresh ? await sign(held.secret, input.body, time) : "";
+      const expected = held?.workspace && fresh ? await sign(held.secret, input.body, time) : "";
       // One answer for every way it can fail, so a probe learns nothing about which App exists.
       // Constant-time, so the comparison can't be timed into revealing the signature.
       const text = new TextEncoder();
@@ -259,7 +261,7 @@ export namespace App {
         );
 
       const data = parsed.data;
-      return Workspaces.open(held!.workspace ?? Workspace.single().schema, async () =>
+      return Workspaces.open(held!.workspace!, async () =>
         Identity.enter(await Auth.identify(input.app), () =>
           Received.publish(
             { app: input.app, type: data.type, data: data.data },
@@ -326,7 +328,7 @@ export namespace App {
 
   // The schema an App lives in, which its keys carry so they can find it again.
   function home() {
-    const here = Workspace.here();
+    const here = Workspace.peek();
     if (!here) throw new Error("An App needs a workspace");
     return here.schema;
   }

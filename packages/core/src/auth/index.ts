@@ -18,7 +18,7 @@ import { Workspaces } from "../platform/workspace";
 import { User } from "../user";
 import { Account } from "../user/account";
 import { AccountTable } from "../user/account.central";
-import { zone } from "../user/prefs";
+import { Prefs, zone } from "../user/prefs";
 import { Workspace } from "../workspace";
 import { Delegation } from "./delegation";
 import { ProviderIds, ProviderTable } from "./provider.central";
@@ -107,8 +107,6 @@ export namespace Auth {
 
           return userID;
         });
-        // After the transaction: seating opens each workspace it joins.
-        await Workspaces.arrive(userID);
         return userID;
       }),
   );
@@ -148,8 +146,8 @@ export namespace Auth {
   }
 
   /**
-   * The identity a `userID` acts as in the current workspace, or as a bare account (a member's
-   * reach) when multi mode has none picked. The role always comes from the row, so no credential
+   * The identity a `userID` acts as in the current workspace, or as its bare account (no role,
+   * so no grants) where it holds no seat. The role always comes from the row, so no credential
    * can outlive the permissions behind it. A `name` makes it an agent acting for them; an App
    * carries its owner, and stops resolving once they are removed.
    */
@@ -159,10 +157,10 @@ export namespace Auth {
   ): Promise<Identity.Info> {
     // An App has no account, so it is never a superadmin.
     const [row, account] = await Promise.all([User.fromID(userID), Account.fromID(userID)]);
-    if (!row) invalid("Token belongs to a user that no longer exists");
-    const base = { userID, role: row.role ?? undefined, credential: opts.credential };
-    const here = Workspace.here();
-    if (row.kind === "system") {
+    if (!row && !account) invalid("Token belongs to a user that no longer exists");
+    const base = { userID, role: row?.role ?? undefined, credential: opts.credential };
+    const here = Workspace.peek();
+    if (row?.kind === "system") {
       const owner = row.ownerID ? await User.fromID(row.ownerID) : null;
       // Both rows are read inside the App's workspace, so both carry a role there.
       if (!owner?.role || !row.role || !here) invalid("This App's owner is no longer active");
@@ -176,8 +174,11 @@ export namespace Auth {
         },
       };
     }
-    const timezone = zone(row.prefs);
-    const superadmin = account?.role === "superadmin";
+    // A person's row only exists alongside a live account, so `account` is set from here on.
+    if (!account) invalid("Token belongs to a user that no longer exists");
+    const timezone = zone(Prefs.parse(account.prefs));
+    // Unset unless true, so an ordinary identity reads as it always has.
+    const superadmin = account.role === "superadmin" || undefined;
     if (opts.name)
       return {
         type: "agent",
@@ -232,7 +233,8 @@ export namespace Auth {
             ErrorCodes.Permission.FORBIDDEN,
             "Only a person can set their password",
           );
-        const me = await User.assert.exists(User.fromID(Identity.userID()));
+        // The password belongs to the login, not to any one workspace.
+        const me = await User.assert.exists(Account.fromID(Identity.userID()));
 
         const hash = await Password.hash(input.password);
         await Central.use((tx) =>
@@ -269,7 +271,6 @@ export namespace Auth {
         );
       alive(row);
       await Limits.auth.password.reset(subject);
-      await Workspaces.arrive(row.userID);
       return row.userID;
     });
   }

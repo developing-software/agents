@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "39a6ce56-03fb-479b-b6dd-4135885c2efb",
+  "id": "975fc6de-6408-4f01-8bd9-81b49331ba41",
   "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
@@ -35,6 +35,12 @@
     {
       "isRlsEnabled": false,
       "name": "access",
+      "entityType": "tables",
+      "schema": "central"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "invite",
       "entityType": "tables",
       "schema": "central"
     },
@@ -620,6 +626,110 @@
       "name": "id",
       "entityType": "columns",
       "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "timestamp(3) with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "timestamp(3) with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "time_updated",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "timestamp(3) with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "time_deleted",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "char(30)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "workspace_id",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "email",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'member'",
+      "generated": null,
+      "identity": null,
+      "name": "role",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "char(30)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "invited_by",
+      "entityType": "columns",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "type": "char(30)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "central",
       "table": "workspace"
     },
     {
@@ -1010,6 +1120,55 @@
       "entityType": "indexes",
       "schema": "central",
       "table": "access"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "workspace_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "email",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "invite_workspace_email",
+      "entityType": "indexes",
+      "schema": "central",
+      "table": "invite"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "email",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "invite_email",
+      "entityType": "indexes",
+      "schema": "central",
+      "table": "invite"
     },
     {
       "nameExplicit": true,
