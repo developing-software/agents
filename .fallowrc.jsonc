@@ -10,9 +10,6 @@
     "packages/functions/src/*/target/*.ts",
     "packages/functions/scripts/*.ts",
     "scripts/**/*.ts",
-    "sst.config.ts",
-    // Not imported by sst.config.ts, which loads only infra/sst/cf.
-    "infra/sst/aws/index.ts",
     "infra/alchemy/*/alchemy.run.ts",
     "infra/terraform/build.ts",
   ],
@@ -25,11 +22,6 @@
     {
       "file": "packages/core/src/**/port.ts",
       "exports": ["Adapter"],
-    },
-    // Every SST module exports `outputs`; sst.config.ts merges them off the barrel namespace.
-    {
-      "file": "infra/sst/*/*.ts",
-      "exports": ["outputs"],
     },
     {
       "file": "**/*.story.svelte",

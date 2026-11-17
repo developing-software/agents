@@ -29,7 +29,6 @@
     "@openauthjs/openauth": "catalog:",
     "hono": "catalog:",
     "hono-openapi": "^1.6.0",
-    "sst": "catalog:",
     "zod": "catalog:",
     "zod-to-json-schema": "^3.25.2"
   },

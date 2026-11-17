@@ -115,7 +115,7 @@ export function createAuth(storage: StorageAdapter) {
     theme: THEME_OPENAUTH,
     ttl: { access: 60 * 30 },
     providers: providers(),
-    allow: async (input) => !!process.env.SST_DEV || allow(input.redirectURI),
+    allow: async (input) => allow(input.redirectURI),
     success: async (ctx, response) => {
       if (response.provider === "github") {
         const headers = {

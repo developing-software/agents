@@ -3,7 +3,6 @@ node_modules
 .svelte-kit
 **/.svelte-kit
 apps/dashboard/build
-.sst
 .direnv
 .git
 .github

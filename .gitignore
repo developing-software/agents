@@ -45,10 +45,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # test reports
 junit.xml
-# sst
-.sst
-
-sst-env.d.ts
 
 # alchemy
 .alchemy

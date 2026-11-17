@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env as HonoEnv, Schema } from "hono";
-import { handle, streamHandle } from "hono/aws-lambda";
+import { streamHandle } from "hono/aws-lambda";
 import type { ExecutionContext } from "@cloudflare/workers-types";
 import { Context } from "@agents/core/context";
 import { Database } from "@agents/core/drizzle";
@@ -36,7 +36,7 @@ export function worker<E extends Env>(
   };
 }
 
-/** Lambda entry — db from env; streams unless running in sst dev's live lambda. */
+/** Lambda entry — db from env, streamed responses. */
 export function lambda<E extends HonoEnv, S extends Schema, P extends string>(
   app: Hono<E, S, P>,
   ...extra: Context.Provider<Promise<void>>[]
@@ -44,7 +44,7 @@ export function lambda<E extends HonoEnv, S extends Schema, P extends string>(
   const aws = new Hono()
     .use(providers(Database.provider(Database.connect()), ...extra))
     .route("/", app);
-  return process.env.SST_LIVE ? handle(aws) : streamHandle(aws);
+  return streamHandle(aws);
 }
 
 /** Bun dev server — one pool for the process. */
