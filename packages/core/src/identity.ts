@@ -190,11 +190,7 @@ export namespace Identity {
     const person = info.type === "user" || info.type === "agent";
     const scope = info.type === "agent" ? info.properties.scope : undefined;
     if (person && (!scope || Permission.within(scope, grants))) return info.properties.userID;
-    throw new VisibleError(
-      "forbidden",
-      ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
-      "Only the account's own person can do that",
-    );
+    throw refuse(grants);
   }
 
   /** The current identity as a queue can carry it, or null for public. */
@@ -256,7 +252,13 @@ export namespace Identity {
   /** The throwing form. Surfaces as a 403 through `VisibleError.statusCode()`. */
   export function check(grants: Permission.Grants, owner?: string) {
     if (can(grants, owner)) return;
-    throw new VisibleError(
+    throw refuse(grants);
+  }
+
+  // === UTILS ===
+
+  function refuse(grants: Permission.Grants) {
+    return new VisibleError(
       "forbidden",
       ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
       `Requires ${Object.entries(grants)

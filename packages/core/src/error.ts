@@ -90,6 +90,7 @@ export const ErrorCodes = {
     NOT_READY: "not_ready",
     SINGLE_WORKSPACE: "single_workspace",
     LAST_OWNER: "last_owner",
+    ALREADY_MEMBER: "already_member",
   },
 
   // Rate limit errors (429)

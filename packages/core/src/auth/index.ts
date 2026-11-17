@@ -69,8 +69,8 @@ export namespace Auth {
       name: z.string().min(1).optional(),
     }),
     (input) =>
-      Identity.internal("auth", { user: ["create"] }, () =>
-        Central.transaction(async (tx) => {
+      Identity.internal("auth", { user: ["create"] }, async () => {
+        const userID = await Central.transaction(async (tx) => {
           const linked = await tx
             .select({ userID: ProviderTable.userID, timeDeleted: AccountTable.timeDeleted })
             .from(ProviderTable)
@@ -106,8 +106,11 @@ export namespace Auth {
             await User.Event.Linked.publish({ provider: input.provider }, { subject: userID });
 
           return userID;
-        }),
-      ),
+        });
+        // After the transaction: seating opens each workspace it joins.
+        await Workspaces.arrive(userID);
+        return userID;
+      }),
   );
 
   /**
@@ -266,6 +269,7 @@ export namespace Auth {
         );
       alive(row);
       await Limits.auth.password.reset(subject);
+      await Workspaces.arrive(row.userID);
       return row.userID;
     });
   }

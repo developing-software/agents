@@ -1,5 +1,6 @@
-import { text, uniqueIndex } from "drizzle-orm/pg-core";
+import { index, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { central, id, timestamps, ulid } from "../../drizzle/types";
+import type { Permission } from "../../permission";
 
 /** A tenant: its rows live in their own Postgres schema, named by `schema`. */
 export const WorkspaceTable = central.table(
@@ -28,4 +29,24 @@ export const AccessTable = central.table(
     ...timestamps,
   },
   (table) => [uniqueIndex("access_user_workspace").on(table.userID, table.workspaceID)],
+);
+
+/**
+ * A seat offered to an address that may have no account yet. Central, so a login finds every
+ * workspace inviting it in one read; claiming it seats the account and deletes the row.
+ */
+export const InviteTable = central.table(
+  "invite",
+  {
+    id: id(),
+    ...timestamps,
+    workspaceID: ulid().notNull(),
+    email: text().notNull(),
+    role: text().$type<Permission.Role>().notNull().default("member"),
+    invitedBy: ulid().notNull(),
+  },
+  (table) => [
+    uniqueIndex("invite_workspace_email").on(table.workspaceID, table.email),
+    index("invite_email").on(table.email),
+  ],
 );

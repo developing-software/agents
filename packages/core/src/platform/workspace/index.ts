@@ -9,12 +9,13 @@ import { ErrorCodes, VisibleError } from "../../error";
 import { Identifier } from "../../identifier";
 import { Identity } from "../../identity";
 import { Queue } from "../../lib/queue";
+import { Template } from "../../lib/email/template";
 import { User } from "../../user";
 import { Account } from "../../user/account";
 import { AccountTable } from "../../user/account.central";
 import { UserTable } from "../../user/user.sql";
 import { Workspace } from "../../workspace";
-import { AccessTable, WorkspaceTable } from "./workspace.central";
+import { AccessTable, InviteTable, WorkspaceTable } from "./workspace.central";
 
 /**
  * The registry: which workspaces exist and who can see each. Plural so it reads apart from
@@ -37,6 +38,16 @@ export namespace Workspaces {
     })
     .meta({ ref: "Workspace", description: "A tenant with its own schema." });
   export type Info = z.infer<typeof Info>;
+
+  export const Invite = z
+    .object({
+      id: z.string().meta({ description: "Invite id.", example: "inv_01JZ8Q4N2V7T5X3M9K6R1B0C2D" }),
+      email: z.email().meta({ description: "Who it was sent to.", example: "ada@example.com" }),
+      role: z.enum(Workspace.roles).meta({ description: "The role they join as.", example: "member" }),
+      timeCreated: z.iso.datetime().meta({ description: "When it was sent." }),
+    })
+    .meta({ ref: "WorkspaceInvite", description: "A seat offered to an address, claimed on sign-in." });
+  export type Invite = z.infer<typeof Invite>;
 
   /**
    * Which client a workspace's tables live on; `undefined` is the shared pool. An app with a
@@ -100,17 +111,18 @@ export namespace Workspaces {
     },
   );
 
-  /** The current user's workspaces, read off central access alone. */
-  export const list = fn(z.void(), () =>
-    Central.use((tx) =>
+  /** The current user's workspaces, read off central access alone, after claiming any invites. */
+  export const list = fn(z.void(), async () => {
+    await claim(Identity.userID());
+    return Central.use((tx) =>
       tx
         .select({ row: WorkspaceTable })
         .from(AccessTable)
         .innerJoin(WorkspaceTable, eq(WorkspaceTable.id, AccessTable.workspaceID))
         .where(and(eq(AccessTable.userID, Identity.userID()), isNull(WorkspaceTable.timeDeleted)))
         .then((rows) => rows.map((item) => serialize(item.row))),
-    ),
-  );
+    );
+  });
 
   /** The request's workspace with the caller's role, or `undefined` in multi mode before one is picked. */
   export const current = fn(z.void(), async () => {
@@ -188,6 +200,133 @@ export namespace Workspaces {
       await User.assign({ id: input.userID, role: input.role });
     },
   );
+
+  /**
+   * Offers the request's workspace to `email` and mails them; signing in with it claims the seat.
+   * Whoever may add users may invite, but only an owner offers ownership. Sending again resends.
+   */
+  export const invite = fn(
+    z.object({
+      email: Invite.shape.email,
+      role: Invite.shape.role.default("member"),
+    }),
+    async (input) => {
+      const row = await here();
+      if (!row) throw forbidden();
+      Identity.check({ user: ["create"] });
+      if (input.role === "owner" && Workspace.peek()?.role !== "owner")
+        throw new VisibleError(
+          "forbidden",
+          ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
+          "Only an owner can invite an owner",
+        );
+      const email = input.email.trim().toLowerCase();
+      const seated = await Database.use((tx) =>
+        tx
+          .select({ id: UserTable.id })
+          .from(UserTable)
+          .where(and(eq(UserTable.email, email), isNull(UserTable.timeDeleted)))
+          .then((rows) => rows.length > 0),
+      );
+      if (seated)
+        throw new VisibleError(
+          "conflict",
+          ErrorCodes.Conflict.ALREADY_MEMBER,
+          "That address is already in this workspace",
+          "email",
+        );
+      const by = Identity.userID();
+      const saved = await Central.use((tx) =>
+        tx
+          .insert(InviteTable)
+          .values({ id: Identifier.create("invite"), workspaceID: row.id, email, role: input.role, invitedBy: by })
+          .onConflictDoUpdate({
+            target: [InviteTable.workspaceID, InviteTable.email],
+            set: { role: input.role, invitedBy: by, timeUpdated: new Date() },
+          })
+          .returning()
+          .then((rows) => rows[0]!),
+      );
+      await Template.Send.invite(email, input.role);
+      return pending(saved);
+    },
+  );
+
+  /** The request workspace's invites nobody has claimed yet, newest first. */
+  export const invites = fn(z.void(), async () => {
+    const row = await here();
+    if (!row) throw forbidden();
+    Identity.check({ user: ["create"] });
+    return Central.use((tx) =>
+      tx
+        .select()
+        .from(InviteTable)
+        .where(eq(InviteTable.workspaceID, row.id))
+        .orderBy(sql`${InviteTable.timeCreated} desc`)
+        .then((rows) => rows.map(pending)),
+    );
+  });
+
+  /** Withdraws an invite before it is claimed. */
+  export const uninvite = fn(z.object({ id: Invite.shape.id }), async (input) => {
+    const row = await here();
+    if (!row) throw forbidden();
+    Identity.check({ user: ["create"] });
+    await Central.use((tx) =>
+      tx
+        .delete(InviteTable)
+        .where(and(eq(InviteTable.id, input.id), eq(InviteTable.workspaceID, row.id))),
+    );
+  });
+
+  /** What signing in does: claims invites, and in single mode seats the account in the one workspace. */
+  export async function arrive(id: string) {
+    await claim(id);
+    if (Workspace.mode() === "single") await join(Workspace.single().schema, id);
+  }
+
+  /**
+   * Seats the account in every ready workspace that invited its address, then spends those
+   * invites. Runs at sign-in and when listing one's workspaces, so a live session picks them up.
+   */
+  export async function claim(id: string) {
+    const account = await Account.fromID(id);
+    if (!account) return;
+    const offers = await Central.use((tx) =>
+      tx
+        .select({ invite: InviteTable, row: WorkspaceTable })
+        .from(InviteTable)
+        .innerJoin(WorkspaceTable, eq(WorkspaceTable.id, InviteTable.workspaceID))
+        .where(
+          and(
+            eq(InviteTable.email, account.email.toLowerCase()),
+            eq(WorkspaceTable.status, "ready"),
+            isNull(WorkspaceTable.timeDeleted),
+          ),
+        ),
+    );
+    for (const offer of offers) {
+      // An invite brings back someone removed earlier, at the role it offers.
+      await inside(offer.row, { schema: offer.row.schema }, () =>
+        Database.use((tx) =>
+          tx
+            .insert(UserTable)
+            .values({ id: account.id, name: account.name, email: account.email, image: account.image, role: offer.invite.role })
+            .onConflictDoUpdate({
+              target: UserTable.email,
+              set: { role: offer.invite.role, timeDeleted: null, timeUpdated: new Date() },
+            }),
+        ),
+      );
+      await Central.transaction(async (tx) => {
+        await tx
+          .insert(AccessTable)
+          .values({ userID: account.id, workspaceID: offer.row.id })
+          .onConflictDoNothing();
+        await tx.delete(InviteTable).where(eq(InviteTable.id, offer.invite.id));
+      });
+    }
+  }
 
   /** Every workspace for the back office, member counts read off central access in one query. */
   export const registry = fn(z.void(), async () => {
@@ -390,6 +529,15 @@ export namespace Workspaces {
     };
   }
 
+  function pending(row: typeof InviteTable.$inferSelect): Invite {
+    return {
+      id: row.id,
+      email: row.email,
+      role: row.role,
+      timeCreated: row.timeCreated.toISOString(),
+    };
+  }
+
   // === UTILS ===
 
   // Unknown slugs and outsiders both get a 403, so slugs don't leak.
@@ -523,8 +671,7 @@ export namespace Workspaces {
 
   // Single mode has no setup job to seat anyone: the first to arrive owns it, the rest join
   // as members. Returns the caller's role; nothing for an App, a removed user or no account.
-  async function join(schema: string) {
-    const user = Identity.userID();
+  async function join(schema: string, user = Identity.userID()) {
     const found = await Workspace.provide({ schema }, () =>
       Database.use((tx) =>
         tx
